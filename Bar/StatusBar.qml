@@ -239,8 +239,8 @@ Scope {
                                     anchors.centerIn: parent
                                     font.family: Theme.iconFont
                                     font.pixelSize: Theme.iconSize
-                                    color: bellMouse2.containsMouse ? Theme.accent
-                                         : root.doNotDisturb ? Theme.fgDim
+                                    color: root.doNotDisturb ? Theme.red
+                                         : bellMouse2.containsMouse ? Theme.accent
                                          : root.unreadNotifications > 0 ? Theme.accent
                                          : Theme.fg
                                     text: root.doNotDisturb ? Theme.iconDndOn : Theme.iconBell

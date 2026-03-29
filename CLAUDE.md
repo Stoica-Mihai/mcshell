@@ -57,3 +57,4 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 - Animations use short durations (80-250ms) with `Easing.OutCubic` or `Easing.InOutQuad`.
 - Popup windows (`PopupWindow`) anchor to their trigger widget via `anchor.item` / `anchor.rect`.
 - **DRY — extract shared components.** Any UI pattern or logic used more than once must be refactored into a reusable QML component. Never copy-paste slider tracks, toggle rows, popup animations, or similar across files. Example: `SliderTrack.qml` is the single slider implementation used by volume, brightness, and per-app controls.
+- **Disabled/muted state convention:** When a feature is disabled (volume muted, DND active), its icon must be red (`Theme.red`) with a slashed variant. Red takes priority over hover color — never let hover override the disabled state.
