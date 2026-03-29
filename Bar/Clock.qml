@@ -64,7 +64,6 @@ Item {
 
         anchor.item: root
         anchor.rect.x: -(implicitWidth / 2 - root.width / 2)
-        anchor.rect.y: (Theme.barHeight + root.height) / 2 - 2
 
         function prevMonth() { viewDate = new Date(viewYear, viewMonth - 1, 1); }
         function nextMonth() { viewDate = new Date(viewYear, viewMonth + 1, 1); }
@@ -76,17 +75,10 @@ Item {
         function selectMonth(m) { viewDate = new Date(viewYear, m, 1); viewMode = "days"; }
         function selectYear(y) { viewDate = new Date(y, viewMonth, 1); viewMode = "months"; }
 
-        Rectangle {
+        ColumnLayout {
+            id: calContent
             anchors.fill: parent
-            radius: 8
-            color: Theme.bgSolid
-            border.width: 1
-            border.color: Theme.border
-
-            ColumnLayout {
-                id: calContent
-                anchors.fill: parent
-                anchors.margins: 8
+            anchors.margins: 8
                 spacing: 6
 
                 // ── Header with nav ────────────────────────
@@ -384,4 +376,4 @@ Item {
             }
         }
     }
-}
+

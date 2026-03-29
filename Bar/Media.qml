@@ -145,7 +145,6 @@ Item {
 
         anchor.item: trackLabel
         anchor.rect.x: -(popupWidth / 2 - trackLabel.width / 2)
-        anchor.rect.y: (Theme.barHeight + trackLabel.height) / 2 - 2
 
         // Reactively update position every frame while playing and popup is open
         FrameAnimation {
@@ -169,19 +168,11 @@ Item {
             }
         }
 
-        Rectangle {
-            anchors.fill: parent
-            radius: 10
-            color: Theme.bgSolid
-            border.width: 1
-            border.color: Theme.border
-            clip: true
-
-            ColumnLayout {
-                id: popupContent
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.top: parent.top
+        ColumnLayout {
+            id: popupContent
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
                 anchors.margins: 12
                 spacing: 10
 
@@ -347,4 +338,4 @@ Item {
             }
         }
     }
-}
+

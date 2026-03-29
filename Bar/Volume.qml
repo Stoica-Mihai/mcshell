@@ -1,17 +1,11 @@
 import QtQuick
-import QtQuick.Layouts
 import Quickshell.Services.Pipewire
 import qs.Config
 
+// Volume state provider — PipeWire bindings only.
+// UI is handled by SystemCapsule in StatusBar.
 Item {
     id: root
-
-    implicitWidth: row.implicitWidth
-    implicitHeight: row.implicitHeight
-
-    // Expose popup state for StatusBar click-catcher
-    property bool popupVisible: volumePanel.isOpen
-    function dismissPopup() { volumePanel.close(); }
 
     // ── PipeWire native binding ─────────────────────────
     readonly property PwNode sink: Pipewire.ready ? Pipewire.defaultAudioSink : null
@@ -31,56 +25,5 @@ Item {
     function toggleMute() {
         if (!sink?.audio) return;
         sink.audio.muted = !sink.audio.muted;
-    }
-
-    // ── UI ──────────────────────────────────────────────
-    RowLayout {
-        id: row
-        anchors.verticalCenter: parent.verticalCenter
-        spacing: 5
-
-        Text {
-            color: root.muted ? Theme.red : Theme.fg
-            font.family: Theme.iconFont
-            font.pixelSize: Theme.iconSize
-            text: Theme.volumeIcon(root.volume / 100, root.muted)
-        }
-
-        Text {
-            color: root.muted ? Theme.red : Theme.fg
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            text: root.volume + "%"
-        }
-    }
-
-    MouseArea {
-        anchors.fill: parent
-        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-        onClicked: event => {
-            if (event.button === Qt.MiddleButton) {
-                root.toggleMute();
-            } else {
-                if (volumePanel.isOpen)
-                    volumePanel.close();
-                else {
-                    volumePanel.anchor.item = root;
-                    volumePanel.anchor.rect.x = -(volumePanel.implicitWidth - root.width);
-                    volumePanel.anchor.rect.y = (Theme.barHeight + root.height) / 2 - 2;
-                    volumePanel.open();
-                }
-            }
-        }
-        onWheel: wheel => {
-            const step = 0.02;
-            if (wheel.angleDelta.y > 0)
-                root.setVolume(root.rawVolume + step);
-            else
-                root.setVolume(root.rawVolume - step);
-        }
-    }
-
-    VolumePanel {
-        id: volumePanel
     }
 }

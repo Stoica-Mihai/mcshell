@@ -7,18 +7,24 @@ import Quickshell.Bluetooth
 import qs.Config
 import qs.Widgets
 
-AnimatedPopup {
+// Quick settings content panel.
+// Meant to be hosted inside a shared dropdown.
+Item {
     id: root
 
-    implicitWidth: 280
+    anchors.fill: parent
+    implicitHeight: content.implicitHeight + 24
 
-    fullHeight: content.implicitHeight + 24
-
-    function showAt(anchorItem) {
-        anchor.item = anchorItem;
-        anchor.rect.x = -(implicitWidth - anchorItem.width);
-        anchor.rect.y = (Theme.barHeight + anchorItem.height) / 2 - 2;
-        open();
+    property bool panelVisible: false
+    signal closeRequested()
+    onPanelVisibleChanged: {
+        if (panelVisible) {
+            nightLightCheck.running = true;
+            brightnessSlider.refresh();
+        } else {
+            rebootCol.confirming = false;
+            shutdownCol.confirming = false;
+        }
     }
 
     // ── Native API state (reactive, no polling) ─────────
@@ -43,16 +49,6 @@ AnimatedPopup {
 
     property bool nightLightActive: false
 
-    // ── Poll non-native states on open ──────────────────
-    onIsOpenChanged: {
-        if (isOpen) {
-            nightLightCheck.running = true;
-            brightnessSlider.refresh();
-        } else {
-            rebootCol.confirming = false;
-            shutdownCol.confirming = false;
-        }
-    }
 
     // ── Power actions ──────────────────────────────────
     Process {
@@ -99,36 +95,13 @@ AnimatedPopup {
         command: ["pkill", "-x", "wlsunset"]
     }
 
-    // ── Background ──────────────────────────────────────
-    Rectangle {
-        anchors.fill: parent
-        topLeftRadius: 0
-        topRightRadius: 0
-        bottomLeftRadius: Theme.barRadius
-        bottomRightRadius: Theme.barRadius
-        color: Theme.bgSolid
-        border.width: 1
-        border.color: Theme.border
-        clip: true
-
-        // Hide top border (it overlaps with bar)
-        Rectangle {
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.leftMargin: 1
-            anchors.rightMargin: 1
-            height: 2
-            color: Theme.bgSolid
-        }
-
-        ColumnLayout {
-            id: content
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.margins: 12
-            spacing: 4
+    ColumnLayout {
+        id: content
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.margins: 12
+        spacing: 4
 
             // ── Power Row ──────────────────────────────
             RowLayout {
@@ -146,7 +119,7 @@ AnimatedPopup {
                         icon: Theme.iconLock
                         size: 18
                         onClicked: {
-                            root.close();
+                            root.closeRequested();
                             lockProc.running = true;
                         }
                     }
@@ -345,5 +318,4 @@ AnimatedPopup {
                 }
             }
         }
-    }
 }

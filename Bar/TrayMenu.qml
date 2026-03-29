@@ -17,7 +17,6 @@ AnimatedPopup {
 
     anchor.item: anchorItem
     anchor.rect.x: anchorItem ? -(implicitWidth / 2 - anchorItem.width / 2) : 0
-    anchor.rect.y: anchorItem ? (Theme.barHeight + anchorItem.height) / 2 - 2 : 0
 
     function showMenu(item, anch) {
         if (closing) return;
@@ -62,17 +61,9 @@ AnimatedPopup {
         menu: root.trayItem ? root.trayItem.menu : null
     }
 
-    // Background
-    Rectangle {
+    Flickable {
         anchors.fill: parent
-        radius: 8
-        color: Theme.bgSolid
-        border.width: 1
-        border.color: Theme.border
-
-        Flickable {
-            anchors.fill: parent
-            anchors.margins: 6
+        anchors.margins: 6
             contentHeight: menuColumn.implicitHeight
             clip: true
 
@@ -106,7 +97,6 @@ AnimatedPopup {
                 }
             }
         }
-    }
 
     // ── Static submenu popup (reused, never destroyed) ──────
     PopupWindow {

@@ -12,7 +12,7 @@ Scope {
 
     property string screenName: ""
     property var screen: null
-    property bool hasPopup: qsPanel.isOpen || clock.popupVisible || sysTray.menuVisible || media.popupVisible || notifPanel.isOpen || volume.popupVisible
+    property bool hasPopup: capsule.activePanel !== "" || clock.popupVisible || sysTray.menuVisible || media.popupVisible
 
     property int unreadNotifications: 0
     property bool doNotDisturb: false
@@ -24,12 +24,10 @@ Scope {
     signal notifPanelOpened()
 
     function dismissPopups() {
-        qsPanel.close();
+        capsule.closePanel();
         clock.dismissPopup();
         sysTray.dismissMenu();
         media.dismissPopup();
-        notifPanel.close();
-        volume.dismissPopup();
     }
 
     // Fullscreen transparent click-catcher to dismiss popups
@@ -123,7 +121,7 @@ Scope {
 
                 Item { Layout.fillWidth: true }
 
-                // Right: media, network, volume, tray
+                // Right: media, tray, then system capsule
                 RowLayout {
                     Layout.alignment: Qt.AlignVCenter
                     spacing: Theme.itemSpacing
@@ -133,110 +131,287 @@ Scope {
                         Layout.alignment: Qt.AlignVCenter
                     }
 
-                    Volume {
-                        id: volume
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-
                     SysTray {
                         id: sysTray
                         Layout.alignment: Qt.AlignVCenter
                     }
 
-                    // Notification bell
+                    // ── System capsule ─────────────────────
                     Item {
-                        id: bellButton
-                        Layout.preferredWidth: Theme.iconSize
-                        Layout.preferredHeight: Theme.iconSize
+                        id: capsule
                         Layout.alignment: Qt.AlignVCenter
+                        implicitWidth: capsuleRow.implicitWidth + 16
+                        implicitHeight: Theme.barHeight - 10
 
-                        Item {
+                        property string activePanel: ""  // "volume", "notifications", "settings"
+
+                        function togglePanel(name) {
+                            if (activePanel === name) {
+                                closePanel();
+                            } else {
+                                sharedDropdown.close();
+                                activePanel = name;
+                                sharedDropdown.anchor.item = qsIcon;
+                                var barRightPadding = 12 + Theme.barMargin + 2;
+                                sharedDropdown.anchor.rect.x = -(sharedDropdown.implicitWidth - qsIcon.width - barRightPadding);
+                                sharedDropdown.open();
+                            }
+                        }
+
+                        function closePanel() {
+                            activePanel = "";
+                            sharedDropdown.close();
+                        }
+
+                        // Capsule background
+                        Rectangle {
                             anchors.fill: parent
+                            radius: (Theme.barHeight - 10) / 2
+                            color: capsule.activePanel !== "" ? Theme.bgHover : "transparent"
+                            border.width: capsule.activePanel !== "" ? 1 : 0
+                            border.color: Theme.border
 
-                            Text {
-                                anchors.centerIn: parent
-                                font.family: Theme.iconFont
-                                font.pixelSize: Theme.iconSize
-                                color: bellMouse.containsMouse ? Theme.accent
-                                     : root.doNotDisturb ? Theme.fgDim
-                                     : root.unreadNotifications > 0 ? Theme.accent
-                                     : Theme.fg
-                                text: root.doNotDisturb ? Theme.iconDndOn : Theme.iconBell
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                        }
 
-                                Behavior on color { ColorAnimation { duration: 100 } }
+                        RowLayout {
+                            id: capsuleRow
+                            anchors.centerIn: parent
+                            spacing: 10
+
+                            // Volume icon
+                            Item {
+                                implicitWidth: volIcon.implicitWidth
+                                implicitHeight: volIcon.implicitHeight
+
+                                Text {
+                                    id: volIcon
+                                    anchors.centerIn: parent
+                                    font.family: Theme.iconFont
+                                    font.pixelSize: Theme.iconSize
+                                    color: volMouse.containsMouse ? Theme.accent
+                                         : volume.muted ? Theme.red
+                                         : Theme.fg
+                                    text: Theme.volumeIcon(volume.rawVolume, volume.muted)
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+
+                                // Underline
+                                Rectangle {
+                                    visible: capsule.activePanel === "volume"
+                                    anchors.bottom: parent.bottom
+                                    anchors.bottomMargin: -4
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    width: parent.width + 4
+                                    height: 2
+                                    radius: 1
+                                    color: Theme.accent
+                                }
+
+                                MouseArea {
+                                    id: volMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                                    onClicked: event => {
+                                        if (event.button === Qt.MiddleButton)
+                                            volume.toggleMute();
+                                        else
+                                            capsule.togglePanel("volume");
+                                    }
+                                    onWheel: wheel => {
+                                        const step = 0.02;
+                                        if (wheel.angleDelta.y > 0)
+                                            volume.setVolume(volume.rawVolume + step);
+                                        else
+                                            volume.setVolume(volume.rawVolume - step);
+                                    }
+                                }
                             }
 
-                            MouseArea {
-                                id: bellMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-                                onClicked: event => {
-                                    if (event.button === Qt.MiddleButton) {
-                                        root.dndToggled();
-                                    } else {
-                                        if (notifPanel.isOpen)
-                                            notifPanel.close();
-                                        else
-                                            notifPanel.showAt(bellButton);
+                            // Notification bell
+                            Item {
+                                implicitWidth: Theme.iconSize
+                                implicitHeight: Theme.iconSize
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    font.family: Theme.iconFont
+                                    font.pixelSize: Theme.iconSize
+                                    color: bellMouse2.containsMouse ? Theme.accent
+                                         : root.doNotDisturb ? Theme.fgDim
+                                         : root.unreadNotifications > 0 ? Theme.accent
+                                         : Theme.fg
+                                    text: root.doNotDisturb ? Theme.iconDndOn : Theme.iconBell
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+
+                                // Underline
+                                Rectangle {
+                                    visible: capsule.activePanel === "notifications"
+                                    anchors.bottom: parent.bottom
+                                    anchors.bottomMargin: -4
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    width: parent.width + 4
+                                    height: 2
+                                    radius: 1
+                                    color: Theme.accent
+                                }
+
+                                // Unread badge
+                                Rectangle {
+                                    visible: root.unreadNotifications > 0 && !root.doNotDisturb
+                                    anchors.top: parent.top
+                                    anchors.right: parent.right
+                                    anchors.topMargin: -3
+                                    anchors.rightMargin: -5
+                                    width: Math.max(14, badgeText.implicitWidth + 6)
+                                    height: 14
+                                    radius: 7
+                                    color: Theme.red
+                                    z: 10
+
+                                    Text {
+                                        id: badgeText
+                                        anchors.centerIn: parent
+                                        text: root.unreadNotifications > 99 ? "99+" : root.unreadNotifications
+                                        color: Theme.bgSolid
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: 9
+                                        font.bold: true
                                     }
+                                }
+
+                                MouseArea {
+                                    id: bellMouse2
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                                    onClicked: event => {
+                                        if (event.button === Qt.MiddleButton)
+                                            root.dndToggled();
+                                        else
+                                            capsule.togglePanel("notifications");
+                                    }
+                                }
+                            }
+
+                            // Settings icon
+                            Item {
+                                id: qsIcon
+                                implicitWidth: Theme.iconSize
+                                implicitHeight: Theme.iconSize
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    font.family: Theme.iconFont
+                                    font.pixelSize: Theme.iconSize
+                                    color: settingsMouse.containsMouse ? Theme.accent : Theme.fg
+                                    text: Theme.iconSettings
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+
+                                // Underline
+                                Rectangle {
+                                    visible: capsule.activePanel === "settings"
+                                    anchors.bottom: parent.bottom
+                                    anchors.bottomMargin: -4
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    width: parent.width + 4
+                                    height: 2
+                                    radius: 1
+                                    color: Theme.accent
+                                }
+
+                                MouseArea {
+                                    id: settingsMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: capsule.togglePanel("settings")
                                 }
                             }
                         }
 
-                        // Unread count badge
-                        Rectangle {
-                            visible: root.unreadNotifications > 0 && !root.doNotDisturb
-                            anchors.top: parent.top
-                            anchors.right: parent.right
-                            anchors.topMargin: -3
-                            anchors.rightMargin: -5
-                            width: Math.max(14, badgeText.implicitWidth + 6)
-                            height: 14
-                            radius: 7
-                            color: Theme.red
+                        // ── Shared dropdown ───────────────
+                        AnimatedPopup {
+                            id: sharedDropdown
 
-                            Text {
-                                id: badgeText
-                                anchors.centerIn: parent
-                                text: root.unreadNotifications > 99 ? "99+" : root.unreadNotifications
-                                color: Theme.bgSolid
-                                font.family: Theme.fontFamily
-                                font.pixelSize: 9
-                                font.bold: true
+                            implicitWidth: capsule.activePanel === "notifications" ? 340 : 280
+
+                            fullHeight: {
+                                if (capsule.activePanel === "volume")
+                                    return volumeContent.implicitHeight + 24;
+                                if (capsule.activePanel === "notifications")
+                                    return notifContent.fullHeight;
+                                if (capsule.activePanel === "settings")
+                                    return settingsContent.implicitHeight;
+                                return 100;
                             }
-                        }
 
-                        NotificationHistory {
-                            id: notifPanel
-                            historyModel: root.notifHistoryModel
-                            onRemoveFromHistory: nid => root.notifRemoved(nid)
-                            onClearAllHistory: root.notifCleared()
                             onIsOpenChanged: {
-                                if (isOpen) root.notifPanelOpened();
+                                if (!isOpen) capsule.activePanel = "";
                             }
-                        }
-                    }
 
-                    // Quick settings button
-                    IconButton {
-                        id: qsButton
-                        icon: Theme.iconSettings
-                        Layout.alignment: Qt.AlignVCenter
-                        onClicked: {
-                            if (qsPanel.isOpen)
-                                qsPanel.close();
-                            else
-                                qsPanel.showAt(qsButton);
-                        }
+                            // Volume section
+                            ColumnLayout {
+                                id: volumeContent
+                                visible: capsule.activePanel === "volume"
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.top: parent.top
+                                anchors.margins: 12
+                                spacing: 4
 
-                        QuickSettingsPanel {
-                            id: qsPanel
+                                VolumeSlider {
+                                    Layout.fillWidth: true
+                                    Layout.bottomMargin: 2
+                                }
+
+                                Rectangle {
+                                    visible: appVolume.hasStreams
+                                    Layout.fillWidth: true
+                                    Layout.preferredHeight: 1
+                                    color: Theme.border
+                                }
+
+                                AppVolume {
+                                    id: appVolume
+                                    Layout.fillWidth: true
+                                }
+                            }
+
+                            // Notifications section
+                            NotificationHistory {
+                                id: notifContent
+                                visible: capsule.activePanel === "notifications"
+                                historyModel: root.notifHistoryModel
+                                onRemoveFromHistory: nid => root.notifRemoved(nid)
+                                onClearAllHistory: root.notifCleared()
+                                onVisibleChanged: {
+                                    if (visible) root.notifPanelOpened();
+                                }
+                            }
+
+                            // Settings section
+                            QuickSettingsPanel {
+                                id: settingsContent
+                                visible: capsule.activePanel === "settings"
+                                panelVisible: capsule.activePanel === "settings"
+                                onCloseRequested: capsule.closePanel()
+                            }
                         }
                     }
                 }
             }
         }
+    }
+
+    // Volume state — kept at root level for accessibility
+    Volume {
+        id: volume
+        visible: false
     }
 }

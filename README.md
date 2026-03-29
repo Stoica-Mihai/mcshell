@@ -9,10 +9,11 @@ A custom Wayland desktop shell built with [QuickShell](https://quickshell.org/) 
 - **Active Window** — title display, click to focus
 - **Clock** — date + time, click for calendar with month/year picker
 - **Media** — MPRIS controls (prev/play/next), click track title for expanded player with album art, seek bar, live stream detection
-- **Volume** — PipeWire native, scroll to adjust, middle-click mute, left-click for volume panel with per-app sliders
+- **System Capsule** — grouped volume, notifications, and settings icons sharing a single dropdown panel with accent underline on the active icon
+  - **Volume** — PipeWire native, scroll to adjust, middle-click mute, per-app sliders
+  - **Notifications** — unread badge, history list, middle-click for Do Not Disturb
+  - **Quick Settings** — power menu (lock/logout/reboot/shutdown), brightness slider, wifi, bluetooth, night light toggles
 - **System Tray** — colorized icons, right-click context menus, hover tooltips
-- **Notifications** — bell icon with unread badge, left-click for history dropdown, middle-click for Do Not Disturb
-- **Quick Settings** — power menu (lock/logout/reboot/shutdown), brightness slider, wifi, bluetooth, night light toggles
 
 ### App Launcher
 Horizontal filmstrip carousel with smooth sliding animation. Three tabs:
@@ -119,10 +120,10 @@ binds {
 | Active Window | Focus window | — | — | — |
 | Clock | Toggle calendar | — | — | — |
 | Media | Toggle expanded player | — | — | — |
-| Volume | Toggle volume panel | Toggle mute | — | Adjust volume |
+| Volume (capsule) | Toggle volume panel | Toggle mute | — | Adjust volume |
+| Bell (capsule) | Toggle notification history | Toggle DND | — | — |
+| Settings (capsule) | Toggle quick settings | — | — | — |
 | Tray Icon | Activate | Secondary activate | Context menu | — |
-| Bell | Notification history | Toggle DND | — | — |
-| Cogwheel | Toggle quick settings | — | — | — |
 
 ## Dependencies
 
@@ -156,7 +157,7 @@ Pure QML — no C++, no build system. QuickShell interprets QML directly. Each s
 | `Wallpaper/` | Background renderer + carousel picker |
 | `KeybindHints/` | Keybind hints overlay |
 | `OSD/` | Volume/brightness on-screen display (disabled) |
-| `Widgets/` | Shared components (AnimatedPopup, IconButton, SliderTrack, etc.) |
+| `Widgets/` | Shared components (AnimatedPopup with themed background, IconButton, etc.) |
 
 ## License
 
