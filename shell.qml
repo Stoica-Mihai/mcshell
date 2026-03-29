@@ -34,7 +34,11 @@ ShellRoot {
     }
 
     NotificationPopup { id: notifPopup }
-    AppLauncher { id: appLauncher }
+    AppLauncher {
+        id: appLauncher
+        notifHistoryModel: notifPopup.historyModel
+        onNotificationsViewed: notifPopup.markAllRead()
+    }
     KeybindPanel { id: keybindPanel }
     LockScreen { id: lockScreen }
     WallpaperRenderer { id: wallpaper }

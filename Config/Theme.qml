@@ -84,6 +84,7 @@ Singleton {
     readonly property string iconClock: "\uf017"
     readonly property string iconBellSlash: "\uf1f6"
     readonly property string iconClipboard: "\uf0ea"
+    readonly property string iconImage: "\uf03e"
     readonly property string iconApps: "\uf0e8"
 
     // Toggles

@@ -198,6 +198,7 @@ Item {
             Text {
                 visible: text.length > 0
                 text: card.summary
+                textFormat: Text.PlainText
                 color: Theme.fg
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize
@@ -212,6 +213,7 @@ Item {
             Text {
                 visible: text.length > 0
                 text: card.body
+                textFormat: Text.PlainText
                 color: Theme.fg
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeSmall
@@ -230,9 +232,8 @@ Item {
                 Layout.preferredHeight: visible ? width * 9 / 21 : 0
                 Layout.topMargin: 4
                 radius: 6
-                color: "transparent"
+                color: Theme.bgSolid
                 clip: true
-                layer.enabled: true
 
                 Image {
                     id: previewImage
