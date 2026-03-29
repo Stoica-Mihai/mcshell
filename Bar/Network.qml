@@ -59,18 +59,13 @@ Item {
         spacing: 5
 
         Text {
-            font.family: "Symbols Nerd Font"
+            font.family: Theme.iconFont
             font.pixelSize: Theme.iconSize
             color: root.status === "connected" ? Theme.fg : Theme.red
             text: {
-                if (root.status !== "connected") return "\uf467";     // 󰤭 disconnected
-                if (root.type === "wifi") {
-                    if (root.wifiSignal > 75) return "\uf1eb";        //  strong
-                    if (root.wifiSignal > 50) return "\uf1eb";        //  medium
-                    if (root.wifiSignal > 25) return "\uf1eb";        //  weak
-                    return "\uf1eb";                                   //  minimal
-                }
-                return "\u{f09e9}";                                    // 󰧩 ethernet
+                if (root.status !== "connected") return Theme.iconNetOff;
+                if (root.type === "wifi") return Theme.iconWifi;
+                return Theme.iconEthernet;
             }
         }
 

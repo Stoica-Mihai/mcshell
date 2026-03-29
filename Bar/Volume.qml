@@ -9,6 +9,10 @@ Item {
     implicitWidth: row.implicitWidth
     implicitHeight: row.implicitHeight
 
+    // Expose popup state for StatusBar click-catcher
+    property bool popupVisible: volumePanel.isOpen
+    function dismissPopup() { volumePanel.close(); }
+
     // ── PipeWire native binding ─────────────────────────
     readonly property PwNode sink: Pipewire.ready ? Pipewire.defaultAudioSink : null
     readonly property real rawVolume: sink?.audio?.volume ?? 0
@@ -37,12 +41,9 @@ Item {
 
         Text {
             color: root.muted ? Theme.red : Theme.fg
-            font.family: "Symbols Nerd Font"
+            font.family: Theme.iconFont
             font.pixelSize: Theme.iconSize
-            text: root.muted       ? "\uf466"
-                : root.volume < 30 ? "\uf026"
-                : root.volume < 70 ? "\uf027"
-                :                    "\uf028"
+            text: Theme.volumeIcon(root.volume / 100, root.muted)
         }
 
         Text {
@@ -56,7 +57,20 @@ Item {
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-        onClicked: root.toggleMute()
+        onClicked: event => {
+            if (event.button === Qt.MiddleButton) {
+                root.toggleMute();
+            } else {
+                if (volumePanel.isOpen)
+                    volumePanel.close();
+                else {
+                    volumePanel.anchor.item = root;
+                    volumePanel.anchor.rect.x = -(volumePanel.implicitWidth - root.width);
+                    volumePanel.anchor.rect.y = (Theme.barHeight + root.height) / 2 - 2;
+                    volumePanel.open();
+                }
+            }
+        }
         onWheel: wheel => {
             const step = 0.02;
             if (wheel.angleDelta.y > 0)
@@ -64,5 +78,9 @@ Item {
             else
                 root.setVolume(root.rawVolume - step);
         }
+    }
+
+    VolumePanel {
+        id: volumePanel
     }
 }

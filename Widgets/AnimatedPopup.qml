@@ -3,16 +3,18 @@ import Quickshell
 
 // PopupWindow with slide-down/up animation.
 // Set `fullHeight` to the content height. Call `open()` / `close()`.
+// After opening, `fullHeight` can be bound reactively — the popup auto-resizes.
 PopupWindow {
     id: root
 
     property real fullHeight: 100
     property real openFraction: 0
     property bool isOpen: false
+    property bool animating: openAnim.running || closeAnim.running
 
     visible: false
     color: "transparent"
-    implicitHeight: Math.max(1, fullHeight * openFraction)
+    implicitHeight: animating ? Math.max(1, fullHeight * openFraction) : (isOpen ? Math.max(1, fullHeight) : 1)
 
     function open() {
         visible = true;

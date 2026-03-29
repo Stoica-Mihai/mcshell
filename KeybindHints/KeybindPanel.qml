@@ -335,8 +335,8 @@ PanelWindow {
                 spacing: 10
 
                 Text {
-                    text: "\uf11c"
-                    font.family: "Symbols Nerd Font"
+                    text: Theme.iconKeyboard
+                    font.family: Theme.iconFont
                     font.pixelSize: 18
                     color: Theme.accent
                     Layout.alignment: Qt.AlignVCenter
@@ -479,7 +479,7 @@ PanelWindow {
 
                                 Text {
                                     text: delegateLoader.modelData.icon || ""
-                                    font.family: "Symbols Nerd Font"
+                                    font.family: Theme.iconFont
                                     font.pixelSize: 14
                                     color: Theme.accent
                                     Layout.alignment: Qt.AlignVCenter
@@ -581,7 +581,7 @@ PanelWindow {
 
                                 // Arrow separator
                                 Text {
-                                    text: "\u2192"
+                                    text: Theme.iconArrowTo
                                     font.pixelSize: Theme.fontSizeSmall
                                     color: Theme.fgDim
                                     Layout.alignment: Qt.AlignVCenter

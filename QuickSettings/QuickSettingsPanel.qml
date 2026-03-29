@@ -12,12 +12,13 @@ AnimatedPopup {
 
     implicitWidth: 280
 
-    function open(anchorItem) {
+    fullHeight: content.implicitHeight + 24
+
+    function showAt(anchorItem) {
         anchor.item = anchorItem;
         anchor.rect.x = -(implicitWidth - anchorItem.width);
         anchor.rect.y = (Theme.barHeight + anchorItem.height) / 2 - 2;
-        fullHeight = content.implicitHeight + 24;
-        open();  // AnimatedPopup.open()
+        open();
     }
 
     // ── Native API state (reactive, no polling) ─────────
@@ -40,7 +41,6 @@ AnimatedPopup {
     readonly property BluetoothAdapter btAdapter: Bluetooth.defaultAdapter
     readonly property bool bluetoothEnabled: btAdapter?.enabled ?? false
 
-    property bool doNotDisturb: false
     property bool nightLightActive: false
 
     // ── Poll non-native states on open ──────────────────
@@ -48,7 +48,31 @@ AnimatedPopup {
         if (isOpen) {
             nightLightCheck.running = true;
             brightnessSlider.refresh();
+        } else {
+            rebootCol.confirming = false;
+            shutdownCol.confirming = false;
         }
+    }
+
+    // ── Power actions ──────────────────────────────────
+    Process {
+        id: lockProc
+        command: ["qs", "-c", "mcshell", "ipc", "call", "mcshell", "lock"]
+    }
+
+    Process {
+        id: logoutSession
+        command: ["niri", "msg", "action", "quit"]
+    }
+
+    Process {
+        id: rebootSystem
+        command: ["systemctl", "reboot"]
+    }
+
+    Process {
+        id: shutdownSystem
+        command: ["systemctl", "poweroff"]
     }
 
     // ── Night light (wlsunset) — no native API ─────────
@@ -100,9 +124,151 @@ AnimatedPopup {
 
         ColumnLayout {
             id: content
-            anchors.fill: parent
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
             anchors.margins: 12
             spacing: 4
+
+            // ── Power Row ──────────────────────────────
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.bottomMargin: 2
+                spacing: 0
+
+                Item { Layout.fillWidth: true }
+
+                // Lock
+                ColumnLayout {
+                    spacing: 2
+                    IconButton {
+                        Layout.alignment: Qt.AlignHCenter
+                        icon: Theme.iconLock
+                        size: 18
+                        onClicked: {
+                            root.close();
+                            lockProc.running = true;
+                        }
+                    }
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: "Lock"
+                        color: Theme.fgDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 10
+                    }
+                }
+
+                Item { Layout.fillWidth: true }
+
+                // Logout
+                ColumnLayout {
+                    spacing: 2
+                    IconButton {
+                        Layout.alignment: Qt.AlignHCenter
+                        icon: Theme.iconLogout
+                        size: 18
+                        onClicked: logoutSession.running = true
+                    }
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: "Logout"
+                        color: Theme.fgDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 10
+                    }
+                }
+
+                Item { Layout.fillWidth: true }
+
+                // Reboot (with confirmation)
+                ColumnLayout {
+                    id: rebootCol
+                    spacing: 2
+                    property bool confirming: false
+
+                    Timer {
+                        id: rebootResetTimer
+                        interval: 3000
+                        onTriggered: rebootCol.confirming = false
+                    }
+
+                    IconButton {
+                        Layout.alignment: Qt.AlignHCenter
+                        icon: Theme.iconReboot
+                        size: 18
+                        normalColor: rebootCol.confirming ? Theme.red : Theme.fg
+                        hoverColor: rebootCol.confirming ? Theme.red : Theme.accent
+                        onClicked: {
+                            if (rebootCol.confirming) {
+                                rebootSystem.running = true;
+                            } else {
+                                rebootCol.confirming = true;
+                                rebootResetTimer.restart();
+                            }
+                        }
+                    }
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: rebootCol.confirming ? "Sure?" : "Reboot"
+                        color: rebootCol.confirming ? Theme.red : Theme.fgDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 10
+
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                    }
+                }
+
+                Item { Layout.fillWidth: true }
+
+                // Shutdown (with confirmation)
+                ColumnLayout {
+                    id: shutdownCol
+                    spacing: 2
+                    property bool confirming: false
+
+                    Timer {
+                        id: shutdownResetTimer
+                        interval: 3000
+                        onTriggered: shutdownCol.confirming = false
+                    }
+
+                    IconButton {
+                        Layout.alignment: Qt.AlignHCenter
+                        icon: Theme.iconShutdown
+                        size: 18
+                        normalColor: shutdownCol.confirming ? Theme.red : Theme.fg
+                        hoverColor: shutdownCol.confirming ? Theme.red : Theme.accent
+                        onClicked: {
+                            if (shutdownCol.confirming) {
+                                shutdownSystem.running = true;
+                            } else {
+                                shutdownCol.confirming = true;
+                                shutdownResetTimer.restart();
+                            }
+                        }
+                    }
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: shutdownCol.confirming ? "Sure?" : "Shutdown"
+                        color: shutdownCol.confirming ? Theme.red : Theme.fgDim
+                        font.family: Theme.fontFamily
+                        font.pixelSize: 10
+
+                        Behavior on color { ColorAnimation { duration: 150 } }
+                    }
+                }
+
+                Item { Layout.fillWidth: true }
+            }
+
+            // ── Separator (power row / quick settings) ─
+            Rectangle {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 1
+                color: Theme.border
+                Layout.bottomMargin: 2
+            }
 
             // ── Header ──────────────────────────────────
             Text {
@@ -122,32 +288,12 @@ AnimatedPopup {
                 color: Theme.border
             }
 
-            // ── Volume ──────────────────────────────────
-            VolumeSlider {
-                id: volumeSlider
-                Layout.fillWidth: true
-                Layout.topMargin: 4
-                Layout.bottomMargin: 2
-            }
-
             // ── Brightness ─────────────────────────────
             BrightnessSlider {
                 id: brightnessSlider
                 Layout.fillWidth: true
+                Layout.topMargin: 4
                 Layout.bottomMargin: 2
-            }
-
-            // ── App Volumes ────────────────────────────
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 1
-                color: Theme.border
-                visible: appVolume.hasStreams
-            }
-
-            AppVolume {
-                id: appVolume
-                Layout.fillWidth: true
             }
 
             // ── Separator ───────────────────────────────
@@ -160,7 +306,7 @@ AnimatedPopup {
             // ── Wifi toggle ─────────────────────────────
             ToggleRow {
                 Layout.fillWidth: true
-                icon: root.wifiEnabled ? "\uf1eb" : "\uf467"
+                icon: root.wifiEnabled ? Theme.iconWifi : Theme.iconNetOff
                 label: "Wi-Fi"
                 sublabel: root.wifiEnabled ? (root.wifiSsid !== "" ? root.wifiSsid : "On") : "Off"
                 checked: root.wifiEnabled
@@ -170,7 +316,7 @@ AnimatedPopup {
             // ── Bluetooth toggle ────────────────────────
             ToggleRow {
                 Layout.fillWidth: true
-                icon: root.bluetoothEnabled ? "\uf294" : "\uf294"
+                icon: Theme.iconBluetooth
                 label: "Bluetooth"
                 sublabel: root.bluetoothEnabled ? "On" : "Off"
                 checked: root.bluetoothEnabled
@@ -180,22 +326,12 @@ AnimatedPopup {
                 }
             }
 
-            // ── Do Not Disturb ──────────────────────────
-            ToggleRow {
-                Layout.fillWidth: true
-                icon: root.doNotDisturb ? "\uf59a" : "\uf599"
-                label: "Do Not Disturb"
-                sublabel: root.doNotDisturb ? "On" : "Off"
-                checked: root.doNotDisturb
-                onToggled: {
-                    root.doNotDisturb = !root.doNotDisturb;
-                }
-            }
+
 
             // ── Night Light ─────────────────────────────
             ToggleRow {
                 Layout.fillWidth: true
-                icon: root.nightLightActive ? "\ue228" : "\ue228"
+                icon: Theme.iconNightLight
                 label: "Night Light"
                 sublabel: root.nightLightActive ? "On" : "Off"
                 checked: root.nightLightActive
@@ -206,7 +342,6 @@ AnimatedPopup {
                         nightLightOn.running = true;
                     }
                     root.nightLightActive = !root.nightLightActive;
-                    toggleRefresh.restart();
                 }
             }
         }

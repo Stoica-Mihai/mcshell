@@ -10,8 +10,10 @@ import qs.Notifications
 import qs.Launcher
 import qs.QuickSettings
 import qs.KeybindHints
+import qs.LockScreen
 
 ShellRoot {
+    id: shell
     Variants {
         model: Quickshell.screens
 
@@ -19,13 +21,40 @@ ShellRoot {
             required property var modelData
             screen: modelData
             screenName: modelData.name
+            unreadNotifications: notifPopup.unreadCount
+            doNotDisturb: notifPopup.doNotDisturb
+            notifHistoryModel: notifPopup.historyModel
             onLauncherRequested: appLauncher.toggle()
+            onNotifRemoved: nid => notifPopup.removeHistoryById(nid)
+            onNotifCleared: notifPopup.clearHistory()
+            onNotifPanelOpened: notifPopup.markAllRead()
+            onDndToggled: notifPopup.doNotDisturb = !notifPopup.doNotDisturb
         }
     }
 
-    NotificationPopup {}
+    NotificationPopup { id: notifPopup }
     AppLauncher { id: appLauncher }
     KeybindPanel { id: keybindPanel }
+    LockScreen { id: lockScreen }
+
+    // ── Screenshot functions ────────────────────────────
+    function screenshotFull() {
+        Quickshell.execDetached({ command: ["sh", "-c",
+            "f=/tmp/mcshell-screenshot-$$.png && grim \"$f\" && wl-copy < \"$f\" && notify-send -t 5000 -h string:image-path:\"$f\" 'Screenshot' 'Full screen copied to clipboard'"
+        ] });
+    }
+
+    function screenshotArea() {
+        Quickshell.execDetached({ command: ["sh", "-c",
+            "f=/tmp/mcshell-screenshot-$$.png && grim -g \"$(slurp)\" \"$f\" && wl-copy < \"$f\" && notify-send -t 5000 -h string:image-path:\"$f\" 'Screenshot' 'Area copied to clipboard'"
+        ] });
+    }
+
+    function screenshotWindow() {
+        Quickshell.execDetached({ command: ["sh", "-c",
+            "f=/tmp/mcshell-screenshot-$$.png && niri msg action screenshot-window --path \"$f\" && wl-copy < \"$f\" && notify-send -t 5000 -h string:image-path:\"$f\" 'Screenshot' 'Window copied to clipboard'"
+        ] });
+    }
 
     // IPC — qs -c mcshell ipc call mcshell <function>
     IpcHandler {
@@ -33,5 +62,11 @@ ShellRoot {
 
         function toggleLauncher(): void { appLauncher.toggle(); }
         function toggleKeybinds(): void { keybindPanel.toggle(); }
+        function lock(): void { lockScreen.lock(); }
+        function toggleDnd(): void { notifPopup.doNotDisturb = !notifPopup.doNotDisturb; }
+
+        function screenshotFull(): void { shell.screenshotFull(); }
+        function screenshotArea(): void { shell.screenshotArea(); }
+        function screenshotWindow(): void { shell.screenshotWindow(); }
     }
 }

@@ -22,11 +22,56 @@ Item {
     readonly property int maxPopups: 5
     readonly property int topMargin: Theme.barHeight + Theme.barMargin * 2 + 8
     readonly property int rightMargin: Theme.barMargin + 4
+    readonly property int maxHistory: 50
+
+    // ── Unread tracking ─────────────────────────────────
+    property int unreadCount: 0
+    property bool doNotDisturb: false
+
+    function markAllRead() {
+        unreadCount = 0;
+    }
 
     // ── Internal notification list model ──────────────────
     ListModel {
         id: notifModel
-        // Each entry: { nid, appName, summary, body, iconUrl, urgency, timeout }
+        // Each entry: { notifId, appName, summary, body, iconUrl, urgency, timeout }
+    }
+
+    // ── Shared pause state (across all screens) ─────────
+    property var pausedNotifs: ({})
+    signal pauseStateChanged()
+
+    function setPaused(nid, paused) {
+        if (paused)
+            pausedNotifs[nid] = true;
+        else
+            delete pausedNotifs[nid];
+        pauseStateChanged();
+    }
+
+    function isPaused(nid) {
+        return !!pausedNotifs[nid];
+    }
+
+    // ── Notification history (persistent across dismissals) ──
+    property alias historyModel: _historyModel
+    ListModel {
+        id: _historyModel
+        // Each entry: { nid, appName, summary, body, iconUrl, urgency, timestamp }
+    }
+
+    function removeHistoryById(nid: string) {
+        for (let i = 0; i < _historyModel.count; i++) {
+            if (_historyModel.get(i).notifId === nid) {
+                _historyModel.remove(i);
+                return;
+            }
+        }
+    }
+
+    function clearHistory() {
+        _historyModel.clear();
     }
 
     // ── Notification server (DBus daemon) ─────────────────
@@ -56,8 +101,8 @@ Item {
             // Track the notification so QuickShell doesn't garbage-collect it
             notification.tracked = true;
 
-            notifModel.insert(0, {
-                nid: nid,
+            const entry = {
+                notifId: nid,
                 appName: notification.appName || "",
                 summary: notification.summary || "",
                 body:    notification.body    || "",
@@ -65,7 +110,26 @@ Item {
                 urgency: notification.urgency < 0 || notification.urgency > 2
                          ? 1 : notification.urgency,
                 timeout: timeout
+            };
+
+            // Show popup only if DND is off
+            if (!root.doNotDisturb)
+                notifModel.insert(0, entry);
+
+            // Always append to history
+            _historyModel.insert(0, {
+                notifId: nid,
+                appName: entry.appName,
+                summary: entry.summary,
+                body:    entry.body,
+                iconUrl: icon,
+                urgency: entry.urgency,
+                timestamp: new Date().toLocaleString(Qt.locale(), "hh:mm AP")
             });
+
+            // Cap history
+            while (_historyModel.count > root.maxHistory)
+                _historyModel.remove(_historyModel.count - 1);
 
             // Cap visible popups
             while (notifModel.count > root.maxPopups)
@@ -74,9 +138,15 @@ Item {
     }
 
     // ── Remove helper ─────────────────────────────────────
-    function removeById(nid: string) {
+    function removeById(nid, userDismissed) {
         for (let i = 0; i < notifModel.count; i++) {
-            if (notifModel.get(i).nid === nid) {
+            if (notifModel.get(i).notifId === nid) {
+                if (userDismissed) {
+                    // User acknowledged — remove from history too
+                    removeHistoryById(nid);
+                } else {
+                    unreadCount++;
+                }
                 notifModel.remove(i);
                 return;
             }
@@ -135,34 +205,31 @@ Item {
                     model: notifModel
 
                     delegate: NotificationCard {
-                        notifId: model.nid
-                        appName: model.appName
-                        summary: model.summary
-                        body: model.body
-                        iconUrl: model.iconUrl
-                        urgency: model.urgency
+                        id: notifCard
+                        // required properties auto-bind from ListModel roles:
+                        // notifId, appName, summary, body, iconUrl, urgency, timeout
 
                         Layout.fillWidth: true
 
-                        // Auto-dismiss timer
-                        Timer {
-                            id: autoDismiss
-                            interval: model.timeout
-                            running: true
-                            onTriggered: animateOut()
+                        // Hover sets shared pause state — all screens react
+                        HoverHandler {
+                            onHoveredChanged: root.setPaused(notifCard.notifId, hovered)
                         }
 
-                        // Pause timer on hover
-                        HoverHandler {
-                            onHoveredChanged: {
-                                if (hovered)
-                                    autoDismiss.running = false;
-                                else
-                                    autoDismiss.restart();
+                        // React to shared pause state
+                        Connections {
+                            target: root
+                            function onPauseStateChanged() {
+                                if (root.isPaused(notifCard.notifId) && !notifCard.countdownPaused)
+                                    notifCard.pauseCountdown();
+                                else if (!root.isPaused(notifCard.notifId) && notifCard.countdownPaused)
+                                    notifCard.resumeCountdown();
                             }
                         }
 
-                        onDismissed: nid => root.removeById(nid)
+                        onDismissed: nid => {
+                            root.removeById(nid, notifCard._userDismissed);
+                        }
                     }
                 }
             }

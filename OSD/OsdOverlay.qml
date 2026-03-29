@@ -170,15 +170,10 @@ Variants {
 
             // ── Computed display values ────────────────────────
             readonly property string displayIcon: {
-                if (activeType === "volume") {
-                    if (muted)       return "\uf466";    // 󰝦 muted
-                    if (volume < 30) return "\uf026";    //  low
-                    if (volume < 70) return "\uf027";    //  medium
-                    return "\uf028";                     //  high
-                }
-                if (activeType === "brightness") {
-                    return "\uf185"; // nf-fa-sun_o (brightness)
-                }
+                if (activeType === "volume")
+                    return Theme.volumeIcon(volume / 100, muted);
+                if (activeType === "brightness")
+                    return Theme.iconBrightness;
                 return "";
             }
 
@@ -253,7 +248,7 @@ Variants {
                         id: icon
                         text: overlay.displayIcon
                         color: overlay.iconColor
-                        font.family: "Symbols Nerd Font"
+                        font.family: Theme.iconFont
                         font.pixelSize: 20
                         Layout.alignment: Qt.AlignVCenter
 

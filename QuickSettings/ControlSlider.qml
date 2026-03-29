@@ -38,7 +38,7 @@ Item {
             spacing: 10
 
             Text {
-                font.family: "Symbols Nerd Font"
+                font.family: Theme.iconFont
                 font.pixelSize: root.iconSize
                 color: root.muted ? Theme.red : root.accentColor
                 text: root.icon

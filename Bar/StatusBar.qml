@@ -5,20 +5,31 @@ import Quickshell.Wayland
 import qs.Config
 import qs.Widgets
 import qs.QuickSettings
+import qs.NotificationHistory
 
 Scope {
     id: root
 
     property string screenName: ""
     property var screen: null
-    property bool hasPopup: qsPanel.isOpen || clock.popupVisible || sysTray.menuVisible
+    property bool hasPopup: qsPanel.isOpen || clock.popupVisible || sysTray.menuVisible || media.popupVisible || notifPanel.isOpen || volume.popupVisible
 
+    property int unreadNotifications: 0
+    property bool doNotDisturb: false
+    signal dndToggled()
+    property var notifHistoryModel: null
     signal launcherRequested()
+    signal notifRemoved(string nid)
+    signal notifCleared()
+    signal notifPanelOpened()
 
     function dismissPopups() {
         qsPanel.close();
         clock.dismissPopup();
         sysTray.dismissMenu();
+        media.dismissPopup();
+        notifPanel.close();
+        volume.dismissPopup();
     }
 
     // Fullscreen transparent click-catcher to dismiss popups
@@ -85,7 +96,7 @@ Scope {
 
                 // Left: launcher button + workspaces + window title
                 IconButton {
-                    icon: "\uf002"
+                    icon: Theme.iconSearch
                     Layout.alignment: Qt.AlignVCenter
                     Layout.rightMargin: 10
                     onClicked: root.launcherRequested()
@@ -118,10 +129,12 @@ Scope {
                     spacing: Theme.itemSpacing
 
                     Media {
+                        id: media
                         Layout.alignment: Qt.AlignVCenter
                     }
 
                     Volume {
+                        id: volume
                         Layout.alignment: Qt.AlignVCenter
                     }
 
@@ -130,16 +143,92 @@ Scope {
                         Layout.alignment: Qt.AlignVCenter
                     }
 
+                    // Notification bell
+                    Item {
+                        id: bellButton
+                        Layout.preferredWidth: Theme.iconSize
+                        Layout.preferredHeight: Theme.iconSize
+                        Layout.alignment: Qt.AlignVCenter
+
+                        Item {
+                            anchors.fill: parent
+
+                            Text {
+                                anchors.centerIn: parent
+                                font.family: Theme.iconFont
+                                font.pixelSize: Theme.iconSize
+                                color: bellMouse.containsMouse ? Theme.accent
+                                     : root.doNotDisturb ? Theme.fgDim
+                                     : root.unreadNotifications > 0 ? Theme.accent
+                                     : Theme.fg
+                                text: root.doNotDisturb ? Theme.iconDndOn : Theme.iconBell
+
+                                Behavior on color { ColorAnimation { duration: 100 } }
+                            }
+
+                            MouseArea {
+                                id: bellMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+                                onClicked: event => {
+                                    if (event.button === Qt.MiddleButton) {
+                                        root.dndToggled();
+                                    } else {
+                                        if (notifPanel.isOpen)
+                                            notifPanel.close();
+                                        else
+                                            notifPanel.showAt(bellButton);
+                                    }
+                                }
+                            }
+                        }
+
+                        // Unread count badge
+                        Rectangle {
+                            visible: root.unreadNotifications > 0 && !root.doNotDisturb
+                            anchors.top: parent.top
+                            anchors.right: parent.right
+                            anchors.topMargin: -3
+                            anchors.rightMargin: -5
+                            width: Math.max(14, badgeText.implicitWidth + 6)
+                            height: 14
+                            radius: 7
+                            color: Theme.red
+
+                            Text {
+                                id: badgeText
+                                anchors.centerIn: parent
+                                text: root.unreadNotifications > 99 ? "99+" : root.unreadNotifications
+                                color: Theme.bgSolid
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 9
+                                font.bold: true
+                            }
+                        }
+
+                        NotificationHistory {
+                            id: notifPanel
+                            historyModel: root.notifHistoryModel
+                            onRemoveFromHistory: nid => root.notifRemoved(nid)
+                            onClearAllHistory: root.notifCleared()
+                            onIsOpenChanged: {
+                                if (isOpen) root.notifPanelOpened();
+                            }
+                        }
+                    }
+
                     // Quick settings button
                     IconButton {
                         id: qsButton
-                        icon: "\uf013"
+                        icon: Theme.iconSettings
                         Layout.alignment: Qt.AlignVCenter
                         onClicked: {
                             if (qsPanel.isOpen)
                                 qsPanel.close();
                             else
-                                qsPanel.open(qsButton);
+                                qsPanel.showAt(qsButton);
                         }
 
                         QuickSettingsPanel {

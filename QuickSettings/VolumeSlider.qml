@@ -25,10 +25,7 @@ Item {
         label: "Volume"
         value: root.rawVolume
         muted: root.muted
-        icon: root.muted       ? "\uf466"
-            : root.rawVolume < 0.3 ? "\uf026"
-            : root.rawVolume < 0.7 ? "\uf027"
-            :                        "\uf028"
+        icon: Theme.volumeIcon(root.rawVolume, root.muted)
         onMoved: newValue => {
             if (root.sink?.audio)
                 root.sink.audio.volume = Math.max(0, Math.min(1.0, newValue));

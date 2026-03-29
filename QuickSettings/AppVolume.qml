@@ -3,35 +3,17 @@ import QtQuick.Layouts
 import Quickshell.Services.Pipewire
 import qs.Config
 
-// Per-application volume controls.
-// Shows a compact slider + mute button for each active audio stream.
+// Per-application volume controls (UI only).
+// Data comes from AppStreamProvider.
 Item {
     id: root
 
-    // Collect audio streams: nodes that are streams with audio, excluding sinks
-    readonly property var appStreams: {
-        if (!Pipewire.ready) return [];
-        var streams = [];
-        var nodes = Pipewire.nodes.values;
-        for (var i = 0; i < nodes.length; i++) {
-            var node = nodes[i];
-            if (node && node.isStream && node.audio) {
-                // Filter out quickshell's own streams
-                var name = node.name || "";
-                var mediaName = (node.properties && node.properties["media.name"]) || "";
-                if (name === "quickshell" || mediaName === "quickshell") continue;
-                streams.push(node);
-            }
-        }
-        return streams;
+    // Data source — filtering logic lives there, not here
+    AppStreamProvider {
+        id: provider
     }
 
-    readonly property bool hasStreams: appStreams.length > 0
-
-    // Keep bindings alive for all tracked stream nodes
-    PwObjectTracker {
-        objects: root.appStreams
-    }
+    readonly property bool hasStreams: provider.hasStreams
 
     implicitWidth: parent ? parent.width : 240
     implicitHeight: hasStreams ? col.implicitHeight : 0
@@ -43,7 +25,6 @@ Item {
         anchors.right: parent.right
         spacing: 6
 
-        // "Apps" header
         Text {
             text: "Apps"
             color: Theme.fgDim
@@ -55,9 +36,8 @@ Item {
             Layout.topMargin: 2
         }
 
-        // One row per app stream
         Repeater {
-            model: root.appStreams
+            model: provider.streams
 
             delegate: Item {
                 id: streamDelegate
@@ -89,10 +69,7 @@ Item {
                     trackHeight: 4
                     knobSize: 12
                     iconSize: 14
-                    icon: streamDelegate.muted       ? "\uf466"
-                        : streamDelegate.rawVolume < 0.3 ? "\uf026"
-                        : streamDelegate.rawVolume < 0.7 ? "\uf027"
-                        :                                  "\uf028"
+                    icon: Theme.volumeIcon(streamDelegate.rawVolume, streamDelegate.muted)
                     onMoved: newValue => {
                         if (streamDelegate.node?.audio)
                             streamDelegate.node.audio.volume = newValue;

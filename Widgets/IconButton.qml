@@ -19,7 +19,7 @@ Item {
     Text {
         id: label
         anchors.centerIn: parent
-        font.family: "Symbols Nerd Font"
+        font.family: Theme.iconFont
         font.pixelSize: root.size
         color: mouse.containsMouse && root.hasHover ? root.hoverColor : root.normalColor
         text: root.icon

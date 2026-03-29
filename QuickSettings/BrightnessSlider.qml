@@ -58,7 +58,7 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         label: "Brightness"
-        icon: "\uf185"
+        icon: Theme.iconBrightness
         value: root.fraction
         accentColor: Theme.yellow
         onMoved: newValue => root.setBrightness(newValue)

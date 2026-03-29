@@ -30,7 +30,7 @@ Item {
 
             // Icon
             Text {
-                font.family: "Symbols Nerd Font"
+                font.family: Theme.iconFont
                 font.pixelSize: 16
                 color: root.checked ? Theme.accent : Theme.fgDim
                 text: root.icon

@@ -42,13 +42,13 @@ Item {
                     const bt = root.modelData?.buttonType ?? QsMenuButtonType.None;
                     return bt !== QsMenuButtonType.None;
                 }
-                font.family: "Symbols Nerd Font"
+                font.family: Theme.iconFont
                 font.pixelSize: 10
                 color: Theme.accent
                 text: {
                     const checked = root.modelData?.checkState === Qt.Checked
                                  || (root.modelData?.checked ?? false);
-                    return checked ? "\uf00c" : " ";
+                    return checked ? Theme.iconCheck : " ";
                 }
             }
 
@@ -66,10 +66,10 @@ Item {
             // Submenu arrow
             Text {
                 visible: root.modelData?.hasChildren ?? false
-                font.family: "Symbols Nerd Font"
+                font.family: Theme.iconFont
                 font.pixelSize: 10
                 color: Theme.fgDim
-                text: "\uf054"
+                text: Theme.iconChevronRight
             }
         }
 

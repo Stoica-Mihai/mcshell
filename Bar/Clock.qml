@@ -45,6 +45,7 @@ Item {
                 calendarPopup.close();
             else {
                 calendarPopup.viewDate = new Date();
+                calendarPopup.viewMode = "days";
                 calendarPopup.open();
             }
         }
@@ -56,6 +57,7 @@ Item {
         property date viewDate: new Date()
         property int viewYear: viewDate.getFullYear()
         property int viewMonth: viewDate.getMonth()
+        property string viewMode: "days"  // "days", "months", "years"
 
         fullHeight: calContent.implicitHeight + 16
         implicitWidth: 240
@@ -64,14 +66,15 @@ Item {
         anchor.rect.x: -(implicitWidth / 2 - root.width / 2)
         anchor.rect.y: (Theme.barHeight + root.height) / 2 - 2
 
-        function prevMonth() {
-            const d = new Date(viewYear, viewMonth - 1, 1);
-            viewDate = d;
-        }
-        function nextMonth() {
-            const d = new Date(viewYear, viewMonth + 1, 1);
-            viewDate = d;
-        }
+        function prevMonth() { viewDate = new Date(viewYear, viewMonth - 1, 1); }
+        function nextMonth() { viewDate = new Date(viewYear, viewMonth + 1, 1); }
+        function prevYear() { viewDate = new Date(viewYear - 1, viewMonth, 1); }
+        function nextYear() { viewDate = new Date(viewYear + 1, viewMonth, 1); }
+        function prevYearPage() { viewDate = new Date(viewYear - 12, viewMonth, 1); }
+        function nextYearPage() { viewDate = new Date(viewYear + 12, viewMonth, 1); }
+
+        function selectMonth(m) { viewDate = new Date(viewYear, m, 1); viewMode = "days"; }
+        function selectYear(y) { viewDate = new Date(y, viewMonth, 1); viewMode = "months"; }
 
         Rectangle {
             anchors.fill: parent
@@ -86,31 +89,88 @@ Item {
                 anchors.margins: 8
                 spacing: 6
 
-                // Month/year header with nav
+                // ── Header with nav ────────────────────────
                 RowLayout {
                     Layout.fillWidth: true
                     spacing: 0
 
-                    Text {
-                        text: "\u25C0"
-                        color: prevMouse.containsMouse ? Theme.accent : Theme.fgDim
-                        font.pixelSize: 10
-                        MouseArea {
-                            id: prevMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: calendarPopup.prevMonth()
+                    IconButton {
+                        icon: Theme.iconArrowLeft
+                        size: 12
+                        normalColor: Theme.fgDim
+                        Layout.preferredWidth: 28
+                        Layout.preferredHeight: 28
+                        onClicked: {
+                            if (calendarPopup.viewMode === "days") calendarPopup.prevMonth();
+                            else if (calendarPopup.viewMode === "months") calendarPopup.prevYear();
+                            else calendarPopup.prevYearPage();
                         }
                     }
 
                     Item { Layout.fillWidth: true }
 
+                    // Clickable month
                     Text {
-                        text: {
-                            const d = new Date(calendarPopup.viewYear, calendarPopup.viewMonth, 1);
-                            return d.toLocaleDateString(Qt.locale(), "MMMM yyyy");
+                        visible: calendarPopup.viewMode === "days"
+                        text: new Date(calendarPopup.viewYear, calendarPopup.viewMonth, 1)
+                              .toLocaleDateString(Qt.locale(), "MMMM")
+                        color: monthMouse.containsMouse ? Theme.accent : Theme.fg
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize
+                        font.weight: Font.Medium
+                        MouseArea {
+                            id: monthMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: calendarPopup.viewMode = "months"
                         }
+                    }
+
+                    Text {
+                        visible: calendarPopup.viewMode === "days"
+                        text: "  "
+                    }
+
+                    // Clickable year
+                    Text {
+                        visible: calendarPopup.viewMode === "days"
+                        text: calendarPopup.viewYear
+                        color: yearMouse.containsMouse ? Theme.accent : Theme.fg
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize
+                        font.weight: Font.Medium
+                        MouseArea {
+                            id: yearMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: calendarPopup.viewMode = "years"
+                        }
+                    }
+
+                    // Month picker header
+                    Text {
+                        visible: calendarPopup.viewMode === "months"
+                        text: calendarPopup.viewYear
+                        color: yearMouse2.containsMouse ? Theme.accent : Theme.fg
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSize
+                        font.weight: Font.Medium
+                        MouseArea {
+                            id: yearMouse2
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: calendarPopup.viewMode = "years"
+                        }
+                    }
+
+                    // Year picker header
+                    Text {
+                        visible: calendarPopup.viewMode === "years"
+                        property int startYear: calendarPopup.viewYear - calendarPopup.viewYear % 12
+                        text: startYear + " – " + (startYear + 11)
                         color: Theme.fg
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize
@@ -119,22 +179,24 @@ Item {
 
                     Item { Layout.fillWidth: true }
 
-                    Text {
-                        text: "\u25B6"
-                        color: nextMouse.containsMouse ? Theme.accent : Theme.fgDim
-                        font.pixelSize: 10
-                        MouseArea {
-                            id: nextMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: calendarPopup.nextMonth()
+                    IconButton {
+                        icon: Theme.iconArrowRight
+                        size: 12
+                        normalColor: Theme.fgDim
+                        Layout.preferredWidth: 28
+                        Layout.preferredHeight: 28
+                        onClicked: {
+                            if (calendarPopup.viewMode === "days") calendarPopup.nextMonth();
+                            else if (calendarPopup.viewMode === "months") calendarPopup.nextYear();
+                            else calendarPopup.nextYearPage();
                         }
                     }
                 }
 
+                // ── DAYS VIEW ─────────────────────────────
                 // Day-of-week headers
                 Grid {
+                    visible: calendarPopup.viewMode === "days"
                     Layout.fillWidth: true
                     columns: 7
                     columnSpacing: 0
@@ -142,12 +204,10 @@ Item {
 
                     Repeater {
                         model: {
-                            const locale = Qt.locale();
                             const names = [];
-                            // Monday-first week
                             for (let i = 1; i <= 7; i++) {
-                                const d = new Date(2024, 0, i); // 2024-01-01 is Monday
-                                names.push(d.toLocaleDateString(locale, "ddd").substring(0, 2));
+                                const d = new Date(2024, 0, i);
+                                names.push(d.toLocaleDateString(Qt.locale(), "ddd").substring(0, 2));
                             }
                             return names;
                         }
@@ -166,6 +226,7 @@ Item {
 
                 // Day grid
                 Grid {
+                    visible: calendarPopup.viewMode === "days"
                     Layout.fillWidth: true
                     columns: 7
                     columnSpacing: 0
@@ -178,19 +239,15 @@ Item {
                             const firstDay = new Date(year, month, 1);
                             const lastDay = new Date(year, month + 1, 0);
 
-                            // Monday = 0, Sunday = 6
                             let startDow = firstDay.getDay() - 1;
                             if (startDow < 0) startDow = 6;
 
                             const cells = [];
-                            // Previous month padding
                             const prevLast = new Date(year, month, 0).getDate();
                             for (let i = startDow - 1; i >= 0; i--)
                                 cells.push({ day: prevLast - i, current: false });
-                            // Current month
                             for (let d = 1; d <= lastDay.getDate(); d++)
                                 cells.push({ day: d, current: true });
-                            // Next month padding
                             while (cells.length < 42)
                                 cells.push({ day: cells.length - startDow - lastDay.getDate() + 1, current: false });
 
@@ -227,6 +284,99 @@ Item {
                                     if (isToday) return Theme.bgSolid;
                                     return modelData.current ? Theme.fg : Theme.fgDim;
                                 }
+                            }
+                        }
+                    }
+                }
+
+                // ── MONTHS VIEW ───────────────────────────
+                Grid {
+                    visible: calendarPopup.viewMode === "months"
+                    Layout.fillWidth: true
+                    columns: 3
+                    columnSpacing: 4
+                    rowSpacing: 4
+
+                    Repeater {
+                        model: 12
+
+                        Rectangle {
+                            required property int index
+                            width: 70
+                            height: 32
+                            radius: 6
+                            color: {
+                                if (index === root.currentDate.getMonth()
+                                    && calendarPopup.viewYear === root.currentDate.getFullYear())
+                                    return Theme.accent;
+                                return mMouse.containsMouse ? Theme.bgHover : "transparent";
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: new Date(2024, index, 1).toLocaleDateString(Qt.locale(), "MMM")
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: {
+                                    if (index === root.currentDate.getMonth()
+                                        && calendarPopup.viewYear === root.currentDate.getFullYear())
+                                        return Theme.bgSolid;
+                                    return Theme.fg;
+                                }
+                            }
+
+                            MouseArea {
+                                id: mMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: calendarPopup.selectMonth(index)
+                            }
+                        }
+                    }
+                }
+
+                // ── YEARS VIEW ────────────────────────────
+                Grid {
+                    visible: calendarPopup.viewMode === "years"
+                    Layout.fillWidth: true
+                    columns: 3
+                    columnSpacing: 4
+                    rowSpacing: 4
+
+                    Repeater {
+                        model: 12
+
+                        Rectangle {
+                            required property int index
+                            property int year: calendarPopup.viewYear - calendarPopup.viewYear % 12 + index
+                            width: 70
+                            height: 32
+                            radius: 6
+                            color: {
+                                if (year === root.currentDate.getFullYear())
+                                    return Theme.accent;
+                                return yMouse.containsMouse ? Theme.bgHover : "transparent";
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: parent.year
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: {
+                                    if (parent.year === root.currentDate.getFullYear())
+                                        return Theme.bgSolid;
+                                    return Theme.fg;
+                                }
+                            }
+
+                            MouseArea {
+                                id: yMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: calendarPopup.selectYear(parent.year)
                             }
                         }
                     }

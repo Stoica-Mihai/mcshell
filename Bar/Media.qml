@@ -1,19 +1,34 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Services.Mpris
 import qs.Config
 import qs.Widgets
+import qs.QuickSettings
 
 Item {
     id: root
 
-    implicitWidth: row.visible ? row.implicitWidth : 0
+    readonly property bool hasMedia: player !== null && title !== ""
+    implicitWidth: hasMedia ? row.implicitWidth : 0
     implicitHeight: row.implicitHeight
-    visible: row.visible
+    visible: hasMedia
+
+    // Expose popup state for StatusBar click-catcher integration
+    property bool popupVisible: mediaPopup.isOpen
+
+    function dismissPopup() {
+        mediaPopup.close();
+    }
 
     // Pick the first active player, prefer one that's playing
-    property var player: {
-        if (!Mpris.players || !Mpris.players.values) return null;
+    property var player: null
+    property bool isPlaying: player ? player.playbackState === MprisPlaybackState.Playing : false
+    property string title: player ? (player.trackTitle || "").replace(/[\r\n]/g, "") : ""
+    property string artist: player ? (player.trackArtist || "") : ""
+
+    function updatePlayer() {
+        if (!Mpris.players || !Mpris.players.values) { player = null; return; }
 
         const all = Mpris.players.values;
         let playing = null;
@@ -28,22 +43,44 @@ Item {
             }
             if (!fallback) fallback = p;
         }
-        return playing || fallback;
+        player = playing || fallback;
     }
 
-    property bool isPlaying: player ? player.playbackState === MprisPlaybackState.Playing : false
-    property string title: player ? (player.trackTitle || "").replace(/[\r\n]/g, "") : ""
-    property string artist: player ? (player.trackArtist || "") : ""
+    // Format seconds to mm:ss (or h:mm:ss). Live streams get "LIVE".
+    readonly property real maxReasonableLength: 86400 // 24 hours
+
+    function formatTime(seconds) {
+        if (!isFinite(seconds) || seconds < 0 || seconds > maxReasonableLength) return "";
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        const pad = s < 10 ? "0" : "";
+        if (h > 0) return h + ":" + (m < 10 ? "0" : "") + m + ":" + pad + s;
+        return m + ":" + pad + s;
+    }
+
+    readonly property bool isLive: player && player.length > maxReasonableLength
+
+    Connections {
+        target: Mpris.players
+        function onValuesChanged() { root.updatePlayer() }
+    }
+
+    Connections {
+        target: root.player
+        function onPlaybackStateChanged() { root.updatePlayer() }
+        function onTrackTitleChanged() { root.title = (root.player?.trackTitle || "").replace(/[\r\n]/g, "") }
+        function onTrackArtistChanged() { root.artist = root.player?.trackArtist || "" }
+    }
 
     RowLayout {
         id: row
         anchors.verticalCenter: parent.verticalCenter
         spacing: 6
-        visible: root.player !== null && root.title !== ""
 
         // Previous
         IconButton {
-            icon: "\uf048"
+            icon: Theme.iconPrev
             size: Theme.iconSize - 2
             normalColor: Theme.fgDim
             visible: root.player && root.player.canGoPrevious
@@ -52,27 +89,262 @@ Item {
 
         // Play/Pause
         IconButton {
-            icon: root.isPlaying ? "\uf04c" : "\uf04b"
+            icon: root.isPlaying ? Theme.iconPause : Theme.iconPlay
             onClicked: root.isPlaying ? root.player.pause() : root.player.play()
         }
 
         // Next
         IconButton {
-            icon: "\uf051"
+            icon: Theme.iconNext
             size: Theme.iconSize - 2
             normalColor: Theme.fgDim
             visible: root.player && root.player.canGoNext
             onClicked: root.player.next()
         }
 
-        // Track info: "Artist - Title" (truncated)
+        // Track info: "Artist - Title" (truncated) — click to toggle popup
         Text {
+            id: trackLabel
             Layout.maximumWidth: 200
-            color: Theme.fgDim
+            color: trackMouse.containsMouse ? Theme.accent : Theme.fgDim
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeSmall
             elide: Text.ElideRight
             text: root.artist ? root.artist + " - " + root.title : root.title
+
+            Behavior on color { ColorAnimation { duration: 100 } }
+
+            MouseArea {
+                id: trackMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    if (mediaPopup.isOpen)
+                        mediaPopup.close();
+                    else
+                        mediaPopup.open();
+                }
+            }
+        }
+    }
+
+    // ── Expanded media player popup ──────────────────────
+    AnimatedPopup {
+        id: mediaPopup
+
+        readonly property real popupWidth: 320
+        readonly property real artSize: 160
+
+        // Position is read reactively via FrameAnimation when playing
+        property real currentPos: root.player ? root.player.position : 0
+        property real trackLen: root.player ? root.player.length : 0
+
+        fullHeight: popupContent.implicitHeight + 24
+        implicitWidth: popupWidth
+
+        anchor.item: trackLabel
+        anchor.rect.x: -(popupWidth / 2 - trackLabel.width / 2)
+        anchor.rect.y: (Theme.barHeight + trackLabel.height) / 2 - 2
+
+        // Reactively update position every frame while playing and popup is open
+        FrameAnimation {
+            running: root.isPlaying && mediaPopup.isOpen
+            onTriggered: {
+                if (root.player && !seekSlider.dragging)
+                    root.player.positionChanged();
+            }
+        }
+
+        // Re-read position properties when they change
+        Connections {
+            target: root.player
+            enabled: mediaPopup.isOpen
+            function onPositionChanged() {
+                if (!seekSlider.dragging)
+                    mediaPopup.currentPos = root.player ? root.player.position : 0;
+            }
+            function onLengthChanged() {
+                mediaPopup.trackLen = root.player ? root.player.length : 0;
+            }
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            radius: 10
+            color: Theme.bgSolid
+            border.width: 1
+            border.color: Theme.border
+            clip: true
+
+            ColumnLayout {
+                id: popupContent
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.margins: 12
+                spacing: 10
+
+                // ── Album art ────────────────────────────
+                Rectangle {
+                    Layout.alignment: Qt.AlignHCenter
+                    Layout.preferredWidth: mediaPopup.artSize
+                    Layout.preferredHeight: mediaPopup.artSize
+                    radius: 8
+                    color: Theme.bgHover
+                    clip: true
+                    // layer.enabled makes clip respect border radius
+                    layer.enabled: true
+
+                    Image {
+                        id: albumArt
+                        anchors.fill: parent
+                        source: root.player && root.player.trackArtUrl ? root.player.trackArtUrl : ""
+                        fillMode: Image.PreserveAspectCrop
+                        visible: status === Image.Ready
+                    }
+
+                    // Placeholder when no art
+                    Text {
+                        anchors.centerIn: parent
+                        visible: !albumArt.visible
+                        text: Theme.iconPlay
+                        font.family: Theme.iconFont
+                        font.pixelSize: 40
+                        color: Theme.fgDim
+                        opacity: 0.4
+                    }
+                }
+
+                // ── Track title ──────────────────────────
+                Text {
+                    Layout.fillWidth: true
+                    Layout.topMargin: 2
+                    text: root.title || "Unknown Title"
+                    color: Theme.fg
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSize
+                    font.weight: Font.Medium
+                    elide: Text.ElideRight
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                // ── Artist name ──────────────────────────
+                Text {
+                    Layout.fillWidth: true
+                    Layout.topMargin: -6
+                    text: root.artist || "Unknown Artist"
+                    color: Theme.fgDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                    elide: Text.ElideRight
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                // ── Album name ───────────────────────────
+                Text {
+                    Layout.fillWidth: true
+                    Layout.topMargin: -6
+                    visible: root.player && root.player.trackAlbum !== ""
+                    text: root.player ? (root.player.trackAlbum || "") : ""
+                    color: Theme.fgDim
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                    font.italic: true
+                    elide: Text.ElideRight
+                    horizontalAlignment: Text.AlignHCenter
+                    opacity: 0.8
+                }
+
+                // ── Seek bar ─────────────────────────────
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 4
+
+                    SliderTrack {
+                        id: seekSlider
+                        Layout.fillWidth: true
+                        visible: !root.isLive
+                        value: mediaPopup.trackLen > 0 ? Math.max(0, Math.min(1, mediaPopup.currentPos / mediaPopup.trackLen)) : 0
+                        accentColor: Theme.accent
+                        trackHeight: 4
+                        knobSize: 12
+                        step: 0.02
+
+                        onMoved: function(newValue) {
+                            if (root.player && root.player.canSeek && mediaPopup.trackLen > 0) {
+                                root.player.position = newValue * mediaPopup.trackLen;
+                                mediaPopup.currentPos = newValue * mediaPopup.trackLen;
+                            }
+                        }
+                    }
+
+                    // Time labels
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 0
+
+                        Text {
+                            visible: !root.isLive
+                            text: root.formatTime(mediaPopup.currentPos)
+                            color: Theme.fgDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 10
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        Text {
+                            visible: root.isLive
+                            text: "LIVE"
+                            color: Theme.red
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 10
+                            font.bold: true
+                            Layout.alignment: Qt.AlignHCenter
+                        }
+
+                        Item { Layout.fillWidth: true; visible: root.isLive }
+
+                        Text {
+                            visible: !root.isLive
+                            text: root.formatTime(mediaPopup.trackLen)
+                            color: Theme.fgDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 10
+                        }
+                    }
+                }
+
+                // ── Transport controls ───────────────────
+                RowLayout {
+                    Layout.alignment: Qt.AlignHCenter
+                    spacing: 20
+
+                    IconButton {
+                        icon: Theme.iconPrev
+                        size: Theme.iconSize
+                        normalColor: Theme.fg
+                        visible: root.player && root.player.canGoPrevious
+                        onClicked: root.player.previous()
+                    }
+
+                    IconButton {
+                        icon: root.isPlaying ? Theme.iconPause : Theme.iconPlay
+                        size: Theme.iconSize + 4
+                        normalColor: Theme.fg
+                        onClicked: root.isPlaying ? root.player.pause() : root.player.play()
+                    }
+
+                    IconButton {
+                        icon: Theme.iconNext
+                        size: Theme.iconSize
+                        normalColor: Theme.fg
+                        visible: root.player && root.player.canGoNext
+                        onClicked: root.player.next()
+                    }
+                }
+            }
         }
     }
 }
