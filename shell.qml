@@ -11,6 +11,7 @@ import qs.Launcher
 import qs.QuickSettings
 import qs.KeybindHints
 import qs.LockScreen
+import qs.Wallpaper
 
 ShellRoot {
     id: shell
@@ -36,6 +37,11 @@ ShellRoot {
     AppLauncher { id: appLauncher }
     KeybindPanel { id: keybindPanel }
     LockScreen { id: lockScreen }
+    WallpaperRenderer { id: wallpaper }
+    WallpaperPicker {
+        id: wallpaperPicker
+        onWallpaperSelected: path => wallpaper.setWallpaper(path)
+    }
 
     // ── Screenshot functions ────────────────────────────
     function screenshotFull() {
@@ -62,8 +68,10 @@ ShellRoot {
 
         function toggleLauncher(): void { appLauncher.toggle(); }
         function toggleKeybinds(): void { keybindPanel.toggle(); }
+        function toggleWallpaper(): void { wallpaperPicker.toggle(); }
         function lock(): void { lockScreen.lock(); }
         function toggleDnd(): void { notifPopup.doNotDisturb = !notifPopup.doNotDisturb; }
+        function setWallpaper(path: string): void { wallpaper.setWallpaper(path); }
 
         function screenshotFull(): void { shell.screenshotFull(); }
         function screenshotArea(): void { shell.screenshotArea(); }

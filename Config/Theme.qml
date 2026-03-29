@@ -91,6 +91,10 @@ Singleton {
     readonly property string iconDndOff: "\uf0f3"
     readonly property string iconNightLight: "\ue228"
 
+    // Wallpaper
+    readonly property string iconWallpaper: "\u{f00ab}"
+    readonly property string iconFolder: "\uf07b"
+
     // Volume helper — returns the right icon for a volume level
     function volumeIcon(volume, muted) {
         if (muted) return iconVolMuted;
