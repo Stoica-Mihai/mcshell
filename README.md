@@ -69,11 +69,23 @@ All commands use the format:
 qs -c mcshell ipc call mcshell <command>
 ```
 
-### Launcher & Panels
+### Launcher
 
 | Command | Description |
 |---|---|
 | `toggleLauncher` | Open/close the app launcher carousel |
+| `launcherApps` | Open launcher on the Apps tab |
+| `launcherClipboard` | Open launcher on the Clipboard tab |
+| `launcherNotifications` | Open launcher on the Notifications tab |
+
+### Bar Panels
+
+| Command | Description |
+|---|---|
+| `toggleCalendar` | Open/close the calendar popup |
+| `toggleVolume` | Open/close the volume panel |
+| `toggleNotifications` | Open/close the notification history |
+| `toggleSettings` | Open/close the quick settings panel |
 | `toggleKeybinds` | Open/close the keybind hints overlay |
 | `toggleWallpaper` | Open/close the wallpaper picker |
 

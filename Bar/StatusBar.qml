@@ -23,6 +23,13 @@ Scope {
     signal notifCleared()
     signal notifPanelOpened()
 
+    property int panelToggleTrigger: 0
+    property string panelToggleName: ""
+    onPanelToggleTriggerChanged: {
+        if (panelToggleName === "calendar") clock.togglePopup();
+        else if (panelToggleName) capsule.togglePanel(panelToggleName);
+    }
+
     function dismissPopups() {
         capsule.closePanel();
         clock.dismissPopup();
@@ -159,8 +166,8 @@ Scope {
                         }
 
                         function closePanel() {
-                            activePanel = "";
                             sharedDropdown.close();
+                            // activePanel is cleared in onVisibleChanged after animation finishes
                         }
 
                         // Capsule background
@@ -181,19 +188,33 @@ Scope {
 
                             // Volume icon
                             Item {
-                                implicitWidth: volIcon.implicitWidth
-                                implicitHeight: volIcon.implicitHeight
+                                implicitWidth: volRow.implicitWidth
+                                implicitHeight: volRow.implicitHeight
 
-                                Text {
-                                    id: volIcon
+                                Row {
+                                    id: volRow
                                     anchors.centerIn: parent
-                                    font.family: Theme.iconFont
-                                    font.pixelSize: Theme.iconSize
-                                    color: volMouse.containsMouse ? Theme.accent
-                                         : volume.muted ? Theme.red
-                                         : Theme.fg
-                                    text: Theme.volumeIcon(volume.rawVolume, volume.muted)
-                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                    spacing: 5
+
+                                    Text {
+                                        id: volIcon
+                                        font.family: Theme.iconFont
+                                        font.pixelSize: Theme.iconSize
+                                        color: volMouse.containsMouse ? Theme.accent
+                                             : volume.muted ? Theme.red
+                                             : Theme.fg
+                                        text: Theme.volumeIcon(volume.rawVolume, volume.muted)
+                                        Behavior on color { ColorAnimation { duration: 100 } }
+                                    }
+
+                                    Text {
+                                        color: volume.muted ? Theme.red : volMouse.containsMouse ? Theme.accent : Theme.fg
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSizeSmall
+                                        text: volume.volume + "%"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        Behavior on color { ColorAnimation { duration: 100 } }
+                                    }
                                 }
 
                                 // Underline
@@ -269,7 +290,7 @@ Scope {
                                     width: Math.max(14, badgeText.implicitWidth + 6)
                                     height: 14
                                     radius: 7
-                                    color: Theme.red
+                                    color: Theme.yellow
                                     z: 10
 
                                     Text {
@@ -351,8 +372,8 @@ Scope {
                                 return 100;
                             }
 
-                            onIsOpenChanged: {
-                                if (!isOpen) capsule.activePanel = "";
+                            onVisibleChanged: {
+                                if (!visible) capsule.activePanel = "";
                             }
 
                             // Volume section

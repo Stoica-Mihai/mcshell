@@ -17,6 +17,16 @@ Item {
         calendarPopup.close();
     }
 
+    function togglePopup() {
+        if (calendarPopup.isOpen) {
+            calendarPopup.close();
+        } else {
+            calendarPopup.viewDate = new Date();
+            calendarPopup.viewMode = "days";
+            calendarPopup.open();
+        }
+    }
+
     Timer {
         interval: 1000
         running: true

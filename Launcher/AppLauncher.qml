@@ -36,6 +36,11 @@ PanelWindow {
         if (isOpen) close(); else open();
     }
 
+    function openTab(tab) {
+        if (!isOpen) open();
+        switchTab(tab);
+    }
+
     // ── Window setup ────────────────────────────────────
     visible: false
     color: "transparent"

@@ -15,6 +15,8 @@ import qs.Wallpaper
 
 ShellRoot {
     id: shell
+    property string _togglePanel: ""
+    property int _toggleCounter: 0
     Variants {
         model: Quickshell.screens
 
@@ -30,6 +32,8 @@ ShellRoot {
             onNotifCleared: notifPopup.clearHistory()
             onNotifPanelOpened: notifPopup.markAllRead()
             onDndToggled: notifPopup.doNotDisturb = !notifPopup.doNotDisturb
+            panelToggleTrigger: shell._toggleCounter
+            panelToggleName: shell._togglePanel
         }
     }
 
@@ -71,12 +75,19 @@ ShellRoot {
         target: "mcshell"
 
         function toggleLauncher(): void { appLauncher.toggle(); }
+        function launcherApps(): void { appLauncher.openTab(0); }
+        function launcherClipboard(): void { appLauncher.openTab(1); }
+        function launcherNotifications(): void { appLauncher.openTab(2); }
         function toggleKeybinds(): void { keybindPanel.toggle(); }
         function toggleWallpaper(): void { wallpaperPicker.toggle(); }
         function lock(): void { lockScreen.lock(); }
         function toggleDnd(): void { notifPopup.doNotDisturb = !notifPopup.doNotDisturb; }
         function setWallpaper(path: string): void { wallpaper.setWallpaper(path); }
 
+        function toggleCalendar(): void { shell._togglePanel = "calendar"; shell._toggleCounter++; }
+        function toggleVolume(): void { shell._togglePanel = "volume"; shell._toggleCounter++; }
+        function toggleNotifications(): void { shell._togglePanel = "notifications"; shell._toggleCounter++; }
+        function toggleSettings(): void { shell._togglePanel = "settings"; shell._toggleCounter++; }
         function screenshotFull(): void { shell.screenshotFull(); }
         function screenshotArea(): void { shell.screenshotArea(); }
         function screenshotWindow(): void { shell.screenshotWindow(); }
