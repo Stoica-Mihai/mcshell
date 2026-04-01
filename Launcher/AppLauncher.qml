@@ -60,8 +60,8 @@ PanelWindow {
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
     // ── Tab state ───────────────────────────────────────
-    property int activeTab: 0  // 0 = Apps, 1 = Clipboard, 2 = Notifications, 3 = WiFi, 4 = Bluetooth
-    property int tabCount: 5
+    property int activeTab: 0  // 0 = Apps, 1 = Clipboard, 2 = Notifications, 3 = WiFi, 4 = Bluetooth, 5 = Settings
+    property int tabCount: 6
     property bool clipboardLoaded: false
     property var notifHistoryModel: null  // set from shell.qml
     property var filteredNotifs: []
@@ -263,11 +263,14 @@ PanelWindow {
     readonly property real carouselHeight: 350
     readonly property real stripSpacing: 6
 
+    readonly property var settingsCategories: [{id:"audio"},{id:"display"},{id:"power"}]
+    property var activeSettingsCard: null  // set by the settings Repeater delegate
     readonly property var currentList: activeTab === 0 ? filteredApps
         : activeTab === 1 ? filteredClipEntries
         : activeTab === 2 ? filteredNotifs
         : activeTab === 3 ? filteredWifiNetworks
-        : filteredBtDevices
+        : activeTab === 4 ? filteredBtDevices
+        : settingsCategories
 
     function navigate(delta) {
         if (currentList.length === 0) return;
@@ -396,6 +399,7 @@ PanelWindow {
         else if (activeTab === 2) applyNotifFilter();
         else if (activeTab === 3) refreshWifi();
         else if (activeTab === 4) refreshBt();
+        // Settings tab (5) doesn't need filtering
     }
 
     function applyNotifFilter() {
@@ -488,7 +492,7 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: carouselArea.top
         anchors.bottomMargin: 20
-        width: Math.min(600, parent.width - 160)
+        width: Math.min(740, parent.width - 80)
         height: 44
             radius: 10
             color: Theme.bg
@@ -508,17 +512,19 @@ PanelWindow {
                         { label: "Clip", icon: Theme.iconClipboard, tab: 1 },
                         { label: "Notifs", icon: Theme.iconBell, tab: 2 },
                         { label: "WiFi", icon: Networking.wifiEnabled ? Theme.iconWifi : Theme.iconWifiOff, tab: 3 },
-                        { label: "BT", icon: Theme.iconBluetooth, tab: 4 }
+                        { label: "BT", icon: Theme.iconBluetooth, tab: 4 },
+                        { label: "Settings", icon: Theme.iconSettings, tab: 5 }
                     ]
 
                     delegate: Rectangle {
                         required property var modelData
-                        Layout.preferredWidth: 60
+                        Layout.preferredWidth: tabContent.implicitWidth + 16
                         Layout.preferredHeight: 28
                         radius: 6
                         color: launcher.activeTab === modelData.tab ? Theme.accent : "transparent"
 
                         RowLayout {
+                            id: tabContent
                             anchors.centerIn: parent
                             spacing: 4
 
@@ -574,8 +580,28 @@ PanelWindow {
                         case Qt.Key_Escape: launcher.close(); event.accepted = true; break;
                         case Qt.Key_Left: launcher.navigate(-1); event.accepted = true; break;
                         case Qt.Key_Right: launcher.navigate(1); event.accepted = true; break;
+                        case Qt.Key_Up:
+                            if (launcher.activeTab === 5 && launcher.activeSettingsCard) {
+                                launcher.activeSettingsCard.navigateUp();
+                                event.accepted = true;
+                            }
+                            break;
+                        case Qt.Key_Down:
+                            if (launcher.activeTab === 5 && launcher.activeSettingsCard) {
+                                launcher.activeSettingsCard.navigateDown();
+                                event.accepted = true;
+                            }
+                            break;
                         case Qt.Key_Return:
-                        case Qt.Key_Enter: launcher.activate(); event.accepted = true; break;
+                        case Qt.Key_Enter:
+                            if (launcher.activeTab === 5 && launcher.activeSettingsCard) {
+                                launcher.activeSettingsCard.activateItem();
+                                event.accepted = true;
+                            } else {
+                                launcher.activate();
+                                event.accepted = true;
+                            }
+                            break;
                         case Qt.Key_Tab:
                             launcher.switchTab((launcher.activeTab + 1) % launcher.tabCount);
                             event.accepted = true;
@@ -601,7 +627,8 @@ PanelWindow {
                             : launcher.activeTab === 1 ? "Search clipboard..."
                             : launcher.activeTab === 2 ? "Search notifications..."
                             : launcher.activeTab === 3 ? "Search networks..."
-                            : "Search devices..."
+                            : launcher.activeTab === 4 ? "Search devices..."
+                            : "Settings"
                         color: Theme.fgDim
                         font: parent.font
                         visible: !parent.text
@@ -1224,6 +1251,44 @@ PanelWindow {
                         }
                     }
                 }
+                // Settings carousel
+                Repeater {
+                    model: launcher.activeTab === 5 ? launcher.settingsCategories : []
+
+                    delegate: CarouselStrip {
+                        selectedIndex: launcher.selectedIndex
+                        sideCount: launcher.sideCount
+                        expandedWidth: launcher.expandedWidth
+                        stripWidth: launcher.stripWidth
+                        carouselHeight: launcher.carouselHeight
+                        onActivated: settingsCard.activateItem()
+                        onSelected: launcher.selectedIndex = index
+
+                        // Collapsed icon
+                        Text {
+                            anchors.centerIn: parent
+                            visible: !parent.isCurrent
+                            text: settingsCard.collapsedIcon
+                            font.family: Theme.iconFont
+                            font.pixelSize: 24
+                            color: Theme.fgDim
+                        }
+
+                        // Expanded content via SettingsCard
+                        SettingsCard {
+                            id: settingsCard
+                            anchors.fill: parent
+                            visible: parent.isCurrent
+                            category: modelData.id
+                            active: parent.isCurrent && launcher.activeTab === 5
+
+                            // Register as active settings card for key handler
+                            onActiveChanged: {
+                                if (active) launcher.activeSettingsCard = settingsCard;
+                            }
+                        }
+                    }
+                }
             }
 
             // Bluetooth off — single card
@@ -1265,7 +1330,7 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: carouselArea.bottom
         anchors.topMargin: 16
-        visible: launcher.currentList.length > 0 || launcher.activeTab === 3 || launcher.activeTab === 4
+        visible: launcher.currentList.length > 0 || launcher.activeTab === 3 || launcher.activeTab === 4 || launcher.activeTab === 5
         text: {
             // WiFi/BT off states
             if (launcher.activeTab === 3 && !Networking.wifiEnabled)
@@ -1273,12 +1338,13 @@ PanelWindow {
             if (launcher.activeTab === 4 && !launcher.btEnabled)
                 return "Ctrl+B toggle Bluetooth  |  Tab switch  |  ESC close";
 
-            var t = (launcher.selectedIndex + 1) + " / " + launcher.currentList.length
+            var t = ((launcher.selectedIndex + 1) + " / " + launcher.currentList.length)
                   + "  |  ← → Navigate";
             if (launcher.activeTab === 0) t += "  |  Enter launch";
             else if (launcher.activeTab === 1) t += "  |  Enter copy";
             else if (launcher.activeTab === 3) t += "  |  Enter connect  |  Ctrl+W toggle WiFi";
             else if (launcher.activeTab === 4) t += "  |  Enter connect  |  Ctrl+B toggle Bluetooth";
+            else if (launcher.activeTab === 5) t += "  |  ↑ ↓ Items  |  Enter select";
             t += "  |  Tab switch  |  ESC close";
             return t;
         }

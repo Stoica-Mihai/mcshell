@@ -80,6 +80,7 @@ ShellRoot {
         function launcherNotifications(): void { appLauncher.openTab(2); }
         function launcherWifi(): void { appLauncher.openTab(3); }
         function launcherBluetooth(): void { appLauncher.openTab(4); }
+        function launcherSettings(): void { appLauncher.openTab(5); }
         function toggleKeybinds(): void { keybindPanel.toggle(); }
         function toggleWallpaper(): void { wallpaperPicker.toggle(); }
         function lock(): void { lockScreen.lock(); }

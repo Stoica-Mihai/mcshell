@@ -46,10 +46,19 @@ Item {
 
         Behavior on radius { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
 
+        // Fallback click for expanded card (below content so Flickable takes priority)
+        MouseArea {
+            anchors.fill: parent
+            visible: strip.isCurrent
+            cursorShape: Qt.PointingHandCursor
+            onClicked: strip.activated()
+        }
+
         Item {
             id: cardContent
             anchors.fill: parent
             property bool isCurrent: strip.isCurrent
+            property real cardPadding: 14
         }
     }
 
@@ -60,11 +69,9 @@ Item {
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            if (strip.isCurrent)
-                strip.activated();
-            else
-                strip.selected();
-        }
+        // Only intercept clicks on collapsed cards. When expanded,
+        // let content (Flickable, buttons, etc.) handle events.
+        enabled: !strip.isCurrent
+        onClicked: strip.selected()
     }
 }
