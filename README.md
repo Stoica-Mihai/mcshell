@@ -1,28 +1,32 @@
 # mcshell
 
-A custom Wayland desktop shell built with [QuickShell](https://quickshell.org/) for the [niri](https://github.com/YaLTeR/niri) compositor. Pure QML, no build step.
+A custom Wayland desktop shell built with [QuickShell](https://quickshell.outfoxxed.me/) for the [niri](https://github.com/YaLTeR/niri) compositor. Pure QML, no build step.
 
 ## Features
 
 ### Status Bar
-- **Workspaces** — animated pills, click to switch, scroll to cycle
-- **Active Window** — title display, click to focus
+- **Workspaces** — animated pills, click to switch, scroll to cycle (native Niri IPC, no polling)
+- **Active Window** — reactive title display via Niri IPC
 - **Clock** — date + time, click for calendar with month/year picker
 - **Media** — MPRIS controls (prev/play/next), click track title for expanded player with album art, seek bar, live stream detection
 - **System Capsule** — grouped volume, notifications, and settings icons sharing a single dropdown panel with accent underline on the active icon
   - **Volume** — PipeWire native, scroll to adjust, middle-click mute, per-app sliders
-  - **Notifications** — unread badge, history list, middle-click for Do Not Disturb
-  - **Quick Settings** — power menu (lock/logout/reboot/shutdown), brightness slider, wifi, bluetooth, night light toggles
+  - **Notifications** — unread badge, history list, middle-click for Do Not Disturb, action buttons
+  - **Quick Settings** — power menu (lock/logout/reboot/shutdown), brightness slider, night light toggle
+- **Network** — reactive status via native Networking API
 - **System Tray** — colorized icons, right-click context menus, hover tooltips
 
 ### App Launcher
-Horizontal filmstrip carousel with smooth sliding animation. Three tabs:
+Horizontal filmstrip carousel with smooth sliding animation. Five tabs:
 - **Apps** — fuzzy search, large icon + name + description in expanded view
 - **Clipboard** — cliphist integration, image entry detection with metadata display
 - **Notifications** — browse past notifications with search
+- **WiFi** — scan and connect to networks, inline password input, signal strength and security display. Press W to toggle WiFi on/off
+- **Bluetooth** — discover, pair, and connect devices with battery display. Press B to toggle Bluetooth on/off
 
 ### Notifications
 - Popup cards with circular donut countdown timer
+- Action buttons (Reply, Open, etc.) rendered as pill buttons
 - Click anywhere to dismiss, hover to pause countdown
 - Screenshot previews in notification body
 - History persists across dismissals
@@ -77,6 +81,8 @@ qs -c mcshell ipc call mcshell <command>
 | `launcherApps` | Open launcher on the Apps tab |
 | `launcherClipboard` | Open launcher on the Clipboard tab |
 | `launcherNotifications` | Open launcher on the Notifications tab |
+| `launcherWifi` | Open launcher on the WiFi tab |
+| `launcherBluetooth` | Open launcher on the Bluetooth tab |
 
 ### Bar Panels
 
@@ -118,6 +124,8 @@ binds {
     Mod+K { spawn "qs" "-c" "mcshell" "ipc" "call" "mcshell" "toggleKeybinds"; }
     Mod+W { spawn "qs" "-c" "mcshell" "ipc" "call" "mcshell" "toggleWallpaper"; }
     Mod+L { spawn "qs" "-c" "mcshell" "ipc" "call" "mcshell" "lock"; }
+    Mod+N { spawn "qs" "-c" "mcshell" "ipc" "call" "mcshell" "launcherWifi"; }
+    Mod+B { spawn "qs" "-c" "mcshell" "ipc" "call" "mcshell" "launcherBluetooth"; }
     Print { spawn "qs" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotArea"; }
     Shift+Print { spawn "qs" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotFull"; }
     Ctrl+Print { spawn "qs" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotWindow"; }
@@ -137,12 +145,23 @@ binds {
 | Settings (capsule) | Toggle quick settings | — | — | — |
 | Tray Icon | Activate | Secondary activate | Context menu | — |
 
+## Launcher Keyboard Shortcuts
+
+| Key | Action |
+|---|---|
+| ← → | Navigate between cards |
+| Enter | Activate selected card (launch app, copy clip, connect network, pair device) |
+| Tab | Switch to next tab |
+| W | Toggle WiFi on/off (WiFi tab, empty search) |
+| B | Toggle Bluetooth on/off (BT tab, empty search) |
+| Escape | Close launcher |
+
 ## Dependencies
 
-- [QuickShell](https://quickshell.org/) (`qs` binary)
+- [QuickShell](https://quickshell.outfoxxed.me/) (`qs` binary) with Niri module
 - [niri](https://github.com/YaLTeR/niri) compositor
 - PipeWire + WirePlumber
-- NetworkManager
+- NetworkManager + `nmcli` (for WiFi password connections)
 - `brightnessctl` — screen brightness
 - `wlsunset` — night light
 - `grim` + `slurp` + `wl-copy` — screenshots
@@ -160,16 +179,17 @@ Pure QML — no C++, no build system. QuickShell interprets QML directly. Each s
 | Module | Purpose |
 |---|---|
 | `Config/` | Theme singleton — colors, layout, typography, icons |
-| `Bar/` | Status bar with all widgets |
-| `Launcher/` | App launcher carousel with clipboard + notification tabs |
-| `Notifications/` | Notification daemon + popup cards |
+| `Core/` | Shared non-visual components — SafeProcess, SafePolledProcess |
+| `Bar/` | Status bar — workspaces (Niri IPC), active window, clock, media, network, volume, system tray |
+| `Launcher/` | App launcher carousel — apps, clipboard, notifications, WiFi, Bluetooth tabs |
+| `Notifications/` | Notification daemon + popup cards with action buttons |
 | `NotificationHistory/` | Notification history dropdown |
-| `QuickSettings/` | Quick settings panel with toggles |
+| `QuickSettings/` | Quick settings panel — brightness, night light, power actions |
 | `LockScreen/` | Wayland session lock with PAM auth |
 | `Wallpaper/` | Background renderer + carousel picker |
 | `KeybindHints/` | Keybind hints overlay |
-| `OSD/` | Volume/brightness on-screen display (disabled) |
-| `Widgets/` | Shared components (AnimatedPopup with themed background, IconButton, etc.) |
+| `OSD/` | Volume/brightness on-screen display |
+| `Widgets/` | Shared UI components — AnimatedPopup, IconButton, PolledProcess |
 
 ## License
 
