@@ -3,7 +3,6 @@ import QtQuick.Layouts
 import Quickshell
 import qs.Config
 import qs.Widgets
-import qs.QuickSettings
 
 // Volume dropdown panel — anchored to the volume bar widget.
 // Contains: main volume slider + per-app volume sliders.

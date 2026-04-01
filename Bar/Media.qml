@@ -4,7 +4,6 @@ import Quickshell
 import Quickshell.Services.Mpris
 import qs.Config
 import qs.Widgets
-import qs.QuickSettings
 
 Item {
     id: root

@@ -4,7 +4,6 @@ import Quickshell
 import Quickshell.Wayland
 import qs.Config
 import qs.Widgets
-import qs.QuickSettings
 import qs.NotificationHistory
 
 Scope {
@@ -150,7 +149,7 @@ Scope {
                         implicitWidth: capsuleRow.implicitWidth + 16
                         implicitHeight: Theme.barHeight - 10
 
-                        property string activePanel: ""  // "volume", "notifications", "settings"
+                        property string activePanel: ""  // "volume", "notifications"
 
                         function togglePanel(name) {
                             if (activePanel === name) {
@@ -158,9 +157,9 @@ Scope {
                             } else {
                                 sharedDropdown.close();
                                 activePanel = name;
-                                sharedDropdown.anchor.item = qsIcon;
+                                sharedDropdown.anchor.item = bellIcon;
                                 var barRightPadding = 12 + Theme.barMargin + 2;
-                                sharedDropdown.anchor.rect.x = -(sharedDropdown.implicitWidth - qsIcon.width - barRightPadding);
+                                sharedDropdown.anchor.rect.x = -(sharedDropdown.implicitWidth - bellIcon.width - barRightPadding);
                                 sharedDropdown.open();
                             }
                         }
@@ -253,6 +252,7 @@ Scope {
 
                             // Notification bell
                             Item {
+                                id: bellIcon
                                 implicitWidth: Theme.iconSize
                                 implicitHeight: Theme.iconSize
 
@@ -319,41 +319,6 @@ Scope {
                                 }
                             }
 
-                            // Settings icon
-                            Item {
-                                id: qsIcon
-                                implicitWidth: Theme.iconSize
-                                implicitHeight: Theme.iconSize
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    font.family: Theme.iconFont
-                                    font.pixelSize: Theme.iconSize
-                                    color: settingsMouse.containsMouse ? Theme.accent : Theme.fg
-                                    text: Theme.iconSettings
-                                    Behavior on color { ColorAnimation { duration: 100 } }
-                                }
-
-                                // Underline
-                                Rectangle {
-                                    visible: capsule.activePanel === "settings"
-                                    anchors.bottom: parent.bottom
-                                    anchors.bottomMargin: -4
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: parent.width + 4
-                                    height: 2
-                                    radius: 1
-                                    color: Theme.accent
-                                }
-
-                                MouseArea {
-                                    id: settingsMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: capsule.togglePanel("settings")
-                                }
-                            }
                         }
 
                         // ── Shared dropdown ───────────────
@@ -367,8 +332,6 @@ Scope {
                                     return volumeContent.implicitHeight + 24;
                                 if (capsule.activePanel === "notifications")
                                     return notifContent.fullHeight;
-                                if (capsule.activePanel === "settings")
-                                    return settingsContent.implicitHeight;
                                 return 100;
                             }
 
@@ -416,13 +379,6 @@ Scope {
                                 }
                             }
 
-                            // Settings section
-                            QuickSettingsPanel {
-                                id: settingsContent
-                                visible: capsule.activePanel === "settings"
-                                panelVisible: capsule.activePanel === "settings"
-                                onCloseRequested: capsule.closePanel()
-                            }
                         }
                     }
                 }

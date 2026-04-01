@@ -42,8 +42,12 @@ Item {
     PwObjectTracker { objects: root.defaultSink ? [root.defaultSink] : [] }
 
     // ── Selected item for keyboard nav ──
+    // Item 0 = volume bar, 1..N = outputs, N+1..M = inputs
     property int selectedItem: 0
-    readonly property int totalItems: outputNodes.length + inputNodes.length
+    readonly property int totalItems: 1 + outputNodes.length + inputNodes.length
+    readonly property bool volumeSelected: selectedItem === 0
+
+    function resetSelection() { selectedItem = 0; }
 
     function navigateUp() {
         if (selectedItem > 0) selectedItem--;
@@ -53,10 +57,23 @@ Item {
         if (selectedItem < totalItems - 1) selectedItem++;
         ensureVisible();
     }
+    function adjustLeft() {
+        if (volumeSelected && defaultSink && defaultSink.audio) {
+            defaultSink.audio.volume = Math.max(0, defaultSink.audio.volume - 0.02);
+            return true;
+        }
+        return false;
+    }
+    function adjustRight() {
+        if (volumeSelected && defaultSink && defaultSink.audio) {
+            defaultSink.audio.volume = Math.min(1, defaultSink.audio.volume + 0.02);
+            return true;
+        }
+        return false;
+    }
 
     // Scroll Flickable to keep the selected item visible
     function ensureVisible() {
-        // Each item is ~30px high, offset by header (~120px)
         const headerH = 120;
         const itemH = 30;
         const targetY = headerH + selectedItem * itemH;
@@ -66,10 +83,12 @@ Item {
             audioFlick.contentY = targetY + itemH - audioFlick.height;
     }
     function activateItem() {
-        if (selectedItem < outputNodes.length) {
-            Pipewire.preferredDefaultAudioSink = outputNodes[selectedItem];
+        if (selectedItem === 0) return; // volume bar — no activate action
+        const outIdx = selectedItem - 1;
+        if (outIdx < outputNodes.length) {
+            Pipewire.preferredDefaultAudioSink = outputNodes[outIdx];
         } else {
-            const idx = selectedItem - outputNodes.length;
+            const idx = outIdx - outputNodes.length;
             if (idx < inputNodes.length)
                 Pipewire.preferredDefaultAudioSource = inputNodes[idx];
         }
@@ -122,11 +141,19 @@ Item {
             elide: Text.ElideRight
         }
 
-        // Volume bar
-        RowLayout {
+        // Volume bar (item 0 — selectable, Left/Right adjusts)
+        Rectangle {
             Layout.fillWidth: true
-            Layout.leftMargin: 12
-            Layout.rightMargin: 12
+            Layout.leftMargin: 4
+            Layout.rightMargin: 4
+            implicitHeight: volRow.implicitHeight + 8
+            radius: 6
+            color: root.active && root.volumeSelected ? Qt.rgba(1,1,1,0.06) : "transparent"
+        RowLayout {
+            id: volRow
+            anchors.fill: parent
+            anchors.leftMargin: 8
+            anchors.rightMargin: 8
             spacing: 8
 
             Text {
@@ -156,6 +183,7 @@ Item {
                 horizontalAlignment: Text.AlignRight
             }
         }
+        }
 
         // Separator
         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border; Layout.topMargin: 4 }
@@ -179,7 +207,7 @@ Item {
                 Layout.fillWidth: true
                 implicitHeight: 30
                 radius: 6
-                color: root.active && root.selectedItem === index
+                color: root.active && root.selectedItem === (index + 1)
                     ? Qt.rgba(1,1,1,0.06) : "transparent"
                 Layout.leftMargin: 4
                 Layout.rightMargin: 4
@@ -232,7 +260,7 @@ Item {
                 Layout.fillWidth: true
                 implicitHeight: 30
                 radius: 6
-                color: root.active && root.selectedItem === (root.outputNodes.length + index)
+                color: root.active && root.selectedItem === (1 + root.outputNodes.length + index)
                     ? Qt.rgba(1,1,1,0.06) : "transparent"
                 Layout.leftMargin: 4
                 Layout.rightMargin: 4

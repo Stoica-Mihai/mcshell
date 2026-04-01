@@ -29,7 +29,7 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 | `Bar/` | `StatusBar` (top bar window) composing: `Workspaces`, `ActiveWindow`, `Clock` (with calendar popup), `Media` (MPRIS), `Network`, `Volume`, `SysTray`, and a system capsule with quick-settings dropdown. |
 | `Notifications/` | DBus notification daemon via `NotificationServer`. `NotificationPopup` manages a `ListModel` of active popups; `NotificationCard` renders each one with urgency-colored accent bar and action buttons. |
 | `OSD/` | `OsdOverlay` — volume/brightness on-screen display. |
-| `Launcher/` | `AppLauncher` — fullscreen overlay with fuzzy search and 5 tabs: Apps, Clipboard, Notifications, WiFi, Bluetooth. Uses `CarouselStrip` for shared card layout and `DisabledCard` for off-state cards. |
+| `Launcher/` | `AppLauncher` — generic fullscreen carousel container. Each tab is a `LauncherCategory` component (`CategoryApps`, `CategoryClipboard`, `CategoryNotifications`, `CategoryWifi`, `CategoryBluetooth`, `CategorySettings`). Shared components: `CarouselStrip` (card layout), `DisabledCard` (off/scanning states), `SettingsCard` (settings sub-routing). |
 | `QuickSettings/` | `QuickSettingsPanel` (dropdown `PopupWindow`) with `VolumeSlider`, brightness slider, night light toggle, and power actions. |
 | `LockScreen/` | Wayland session lock (`ext_session_lock_v1`) with PAM authentication. |
 | `Wallpaper/` | Background renderer per screen with crossfade transitions, carousel picker, and persistent config. |
@@ -64,6 +64,12 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 - All subprocess calls must use `SafeProcess` or `SafePolledProcess` from `Core/` — never raw `Process` without error handling.
 - Animations use short durations (80-250ms) with `Easing.OutCubic` or `Easing.InOutQuad`.
 - Popup windows (`PopupWindow`) anchor to their trigger widget via `anchor.item` / `anchor.rect`.
-- **DRY — extract shared components first.** Any UI pattern or logic used more than once must be refactored into a reusable QML component BEFORE duplicating it. Write the shared component first, then use it. Never copy-paste then refactor later. Example: `CarouselStrip.qml` is the single carousel card implementation used by all 5 launcher tabs.
+- **DRY — no exceptions.**
+  - **Extract shared components BEFORE using them.** If a pattern will be used more than once, write the shared component first, then use it everywhere. Never copy-paste and "refactor later."
+  - **New features must use existing patterns.** Before writing any new code, check how existing similar features work. If the launcher has 5 tabs that all use a Repeater + CarouselStrip inside slidingRow, the 6th tab must use the same pattern — not a separate Row with custom positioning.
+  - **Make the system generic, not special-cased.** If adding a new feature requires `if (feature === X)` branches in shared code, the architecture is wrong. Instead, define an interface that all features implement, and have the shared code dispatch generically. Example: `LauncherCategory.qml` defines the interface; each tab implements it; `AppLauncher.qml` uses `activeCategory.model` instead of `if (activeTab === 0) filteredApps else if...`.
+  - **Hardcoded indices are a code smell.** `categories[1].clipboardLoaded` breaks when tabs are reordered. Use properties on the active category instead.
+  - **Key examples:** `CarouselStrip.qml` is the single card implementation for all launcher tabs. `LauncherCategory.qml` is the base interface for all tab categories. `DisabledCard.qml` is shared across WiFi-off, BT-off, and scanning states. `SafeProcess.qml` wraps all subprocess calls.
 - **Disabled/muted state convention:** When a feature is disabled (volume muted, DND active), its icon must be red (`Theme.red`) with a slashed variant. Red takes priority over hover color — never let hover override the disabled state.
 - **Keyboard-first design.** mcshell targets niri's keyboard-driven paradigm. Interactive features should be controllable via keybinds, not require mouse clicks. Buttons are a last resort — prefer keybind hints in the UI.
+- **Verify before handing off.** Before presenting changes for testing, always run `qs -c mcshell` (or reload the shell) and verify that the code at minimum loads without errors. Check QML console output for warnings. If the shell doesn't load, fix it — don't hand broken code to the user. When refactoring, verify that existing functionality still works: tabs switch, cards render, keyboard shortcuts respond.

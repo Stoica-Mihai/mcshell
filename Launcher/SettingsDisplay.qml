@@ -39,6 +39,7 @@ Item {
         id: setBri
         command: ["brightnessctl", "set", "50%"]
         failMessage: "brightnessctl set failed"
+        onFinished: getBri.running = true
     }
 
     // ── Night light ──
@@ -69,6 +70,7 @@ Item {
 
     // ── Keyboard nav ──
     property int selectedItem: 0  // 0 = brightness, 1 = night light
+    function resetSelection() { selectedItem = 0; }
     function navigateUp() { if (selectedItem > 0) selectedItem--; }
     function navigateDown() { if (selectedItem < 1) selectedItem++; }
     function activateItem() {
@@ -79,16 +81,18 @@ Item {
             const pct = Math.max(0, brightnessPct - 5);
             setBri.command = ["brightnessctl", "set", pct + "%"];
             setBri.running = true;
-            getBri.running = true;
+            return true;
         }
+        return false;
     }
     function adjustRight() {
         if (selectedItem === 0) {
             const pct = Math.min(100, brightnessPct + 5);
             setBri.command = ["brightnessctl", "set", pct + "%"];
             setBri.running = true;
-            getBri.running = true;
+            return true;
         }
+        return false;
     }
 
     function toggleNightLight() {

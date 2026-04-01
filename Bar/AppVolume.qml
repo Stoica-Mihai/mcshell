@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Services.Pipewire
 import qs.Config
+import qs.Widgets
 
 // Per-application volume controls (UI only).
 // Data comes from AppStreamProvider.

@@ -8,7 +8,6 @@ import qs.Config
 import qs.Bar
 import qs.Notifications
 import qs.Launcher
-import qs.QuickSettings
 import qs.KeybindHints
 import qs.LockScreen
 import qs.Wallpaper
@@ -90,7 +89,7 @@ ShellRoot {
         function toggleCalendar(): void { shell._togglePanel = "calendar"; shell._toggleCounter++; }
         function toggleVolume(): void { shell._togglePanel = "volume"; shell._toggleCounter++; }
         function toggleNotifications(): void { shell._togglePanel = "notifications"; shell._toggleCounter++; }
-        function toggleSettings(): void { shell._togglePanel = "settings"; shell._toggleCounter++; }
+        function toggleSettings(): void { appLauncher.openTab(5); }
         function screenshotFull(): void { shell.screenshotFull(); }
         function screenshotArea(): void { shell.screenshotArea(); }
         function screenshotWindow(): void { shell.screenshotWindow(); }

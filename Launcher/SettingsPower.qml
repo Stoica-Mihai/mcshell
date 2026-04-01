@@ -38,6 +38,7 @@ Item {
 
     // ── Keyboard nav ──
     property int selectedItem: 0
+    function resetSelection() { selectedItem = 0; confirmItem = -1; }
     property int confirmItem: -1  // which item is awaiting confirmation
 
     Timer {

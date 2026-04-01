@@ -20,10 +20,15 @@ Item {
         if (loader.item && loader.item.activateItem) loader.item.activateItem();
     }
     function adjustLeft() {
-        if (loader.item && loader.item.adjustLeft) loader.item.adjustLeft();
+        if (loader.item && loader.item.adjustLeft) return loader.item.adjustLeft();
+        return false;
     }
     function adjustRight() {
-        if (loader.item && loader.item.adjustRight) loader.item.adjustRight();
+        if (loader.item && loader.item.adjustRight) return loader.item.adjustRight();
+        return false;
+    }
+    function resetSelection() {
+        if (loader.item && loader.item.resetSelection) loader.item.resetSelection();
     }
 
     // ── Collapsed icon ──
