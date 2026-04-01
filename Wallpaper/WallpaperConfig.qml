@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.Core
 
 // Persistent wallpaper configuration.
 // Reads/writes ~/.config/mcshell/wallpaper.json via FileView + JsonAdapter.
@@ -21,15 +22,14 @@ Singleton {
     }
 
     // Check if ~/Pictures/Wallpapers/ exists, fallback to ~/Pictures/
-    Process {
+    SafeProcess {
         id: defaultFolderProc
         command: ["bash", "-c", "if [ -d \"$HOME/Pictures/Wallpapers\" ]; then echo \"$HOME/Pictures/Wallpapers\"; else echo \"$HOME/Pictures\"; fi"]
-        stdout: SplitParser {
-            onRead: data => {
-                root._defaultFolder = data.trim();
-                if (root.folder === "") {
-                    root.folder = root._defaultFolder;
-                }
+        failMessage: "failed to detect wallpaper folder"
+        onRead: data => {
+            root._defaultFolder = data.trim();
+            if (root.folder === "") {
+                root.folder = root._defaultFolder;
             }
         }
     }
@@ -65,10 +65,11 @@ Singleton {
     property string _pendingSave: ""
 
     // Ensure config directory exists before writing
-    Process {
+    SafeProcess {
         id: ensureDirProc
         command: ["mkdir", "-p", Quickshell.env("HOME") + "/.config/mcshell"]
-        onExited: {
+        failMessage: "failed to create config directory"
+        onFinished: {
             if (root._pendingSave !== "") {
                 configFile.setText(root._pendingSave);
                 root._pendingSave = "";

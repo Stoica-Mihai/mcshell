@@ -5,6 +5,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import qs.Config
+import qs.Core
 import qs.Widgets
 
 PanelWindow {
@@ -137,14 +138,17 @@ PanelWindow {
 
     property var clipHistLines: []
 
-    Process {
+    SafeProcess {
         id: clipHistProc
         command: ["cliphist", "list"]
-        stdout: SplitParser {
-            onRead: data => { launcher.clipHistLines = launcher.clipHistLines.concat([data]); }
-        }
-        onExited: {
+        failMessage: "cliphist not found — clipboard history unavailable"
+        onRead: data => { launcher.clipHistLines = launcher.clipHistLines.concat([data]); }
+        onFinished: {
             launcher.allClipEntries = parseClipEntries(launcher.clipHistLines);
+            launcher.clipboardLoaded = true;
+            launcher.applyFilter();
+        }
+        onFailed: {
             launcher.clipboardLoaded = true;
             launcher.applyFilter();
         }
@@ -168,9 +172,10 @@ PanelWindow {
 
 
     property string clipSelectRaw: ""
-    Process {
+    SafeProcess {
         id: clipCopyProc
         command: ["bash", "-c", "printf '%s' \"$1\" | cliphist decode | wl-copy", "bash", launcher.clipSelectRaw]
+        failMessage: "clipboard paste failed"
     }
 
     function copyClipEntry(entry) {

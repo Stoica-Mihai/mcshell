@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell.Io
 import qs.Config
+import qs.Core
 
 Item {
     id: root
@@ -25,32 +26,31 @@ Item {
         setBrt.running = true;
     }
 
-    Process {
+    SafeProcess {
         id: getMax
         command: ["brightnessctl", "max"]
-        stdout: SplitParser {
-            onRead: data => {
-                const val = parseInt(data.trim(), 10);
-                if (!isNaN(val) && val > 0) root.maxBrightness = val;
-            }
+        failMessage: "brightnessctl not found — brightness control unavailable"
+        onRead: data => {
+            const val = parseInt(data.trim(), 10);
+            if (!isNaN(val) && val > 0) root.maxBrightness = val;
         }
     }
 
-    Process {
+    SafeProcess {
         id: getCurrent
         command: ["brightnessctl", "get"]
-        stdout: SplitParser {
-            onRead: data => {
-                if (slider.dragging) return;
-                const val = parseInt(data.trim(), 10);
-                if (!isNaN(val)) root.currentBrightness = val;
-            }
+        failMessage: "brightnessctl get failed"
+        onRead: data => {
+            if (slider.dragging) return;
+            const val = parseInt(data.trim(), 10);
+            if (!isNaN(val)) root.currentBrightness = val;
         }
     }
 
-    Process {
+    SafeProcess {
         id: setBrt
-        property var command: ["brightnessctl", "set", "100%"]
+        command: ["brightnessctl", "set", "100%"]
+        failMessage: "brightnessctl set failed"
     }
 
     ControlSlider {

@@ -5,6 +5,7 @@ import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Services.Pipewire
 import qs.Config
+import qs.Core
 
 Variants {
     id: osd
@@ -85,34 +86,32 @@ Variants {
             mask: Region {}
 
             // ── Brightness polling (no native API) ──────────────
-            Process {
+            SafeProcess {
                 id: getBri
                 command: ["brightnessctl", "get"]
-                stdout: SplitParser {
-                    onRead: data => {
-                        const val = parseInt(data.trim(), 10);
-                        if (isNaN(val)) return;
+                failMessage: "brightnessctl not found — OSD brightness unavailable"
+                onRead: data => {
+                    const val = parseInt(data.trim(), 10);
+                    if (isNaN(val)) return;
 
-                        if (overlay.startupDone) {
-                            if (val !== overlay.brightness) {
-                                overlay.activeType = "brightness";
-                                overlay.showOsd();
-                            }
+                    if (overlay.startupDone) {
+                        if (val !== overlay.brightness) {
+                            overlay.activeType = "brightness";
+                            overlay.showOsd();
                         }
-
-                        overlay.brightness = val;
                     }
+
+                    overlay.brightness = val;
                 }
             }
 
-            Process {
+            SafeProcess {
                 id: getBriMax
                 command: ["brightnessctl", "max"]
-                stdout: SplitParser {
-                    onRead: data => {
-                        const val = parseInt(data.trim(), 10);
-                        if (!isNaN(val) && val > 0) overlay.brightnessMax = val;
-                    }
+                failMessage: "brightnessctl max failed"
+                onRead: data => {
+                    const val = parseInt(data.trim(), 10);
+                    if (!isNaN(val) && val > 0) overlay.brightnessMax = val;
                 }
             }
 

@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import Quickshell.Niri
+import qs.Core
 import Quickshell.Networking
 import Quickshell.Bluetooth
 import qs.Config
@@ -52,45 +53,46 @@ Item {
 
 
     // ── Power actions ──────────────────────────────────
-    Process {
+    SafeProcess {
         id: lockProc
         command: ["qs", "-c", "mcshell", "ipc", "call", "mcshell", "lock"]
+        failMessage: "lock failed"
     }
 
     function logoutSession() { Niri.dispatch(["quit", "--skip-confirmation"]); }
 
-    Process {
+    SafeProcess {
         id: rebootSystem
         command: ["systemctl", "reboot"]
+        failMessage: "reboot failed"
     }
 
-    Process {
+    SafeProcess {
         id: shutdownSystem
         command: ["systemctl", "poweroff"]
+        failMessage: "shutdown failed"
     }
 
     // ── Night light (wlsunset) — no native API ─────────
-    Process {
+    SafeProcess {
         id: nightLightCheck
         command: ["pgrep", "-x", "wlsunset"]
-        stdout: SplitParser {
-            onRead: data => {
-                root.nightLightActive = data.trim().length > 0;
-            }
+        onRead: data => {
+            root.nightLightActive = data.trim().length > 0;
         }
-        onExited: (exitCode, exitStatus) => {
-            if (exitCode !== 0) root.nightLightActive = false;
-        }
+        onFailed: root.nightLightActive = false
     }
 
-    Process {
+    SafeProcess {
         id: nightLightOn
         command: ["wlsunset", "-t", "4000", "-T", "6500"]
+        failMessage: "wlsunset not found — night light unavailable"
     }
 
-    Process {
+    SafeProcess {
         id: nightLightOff
         command: ["pkill", "-x", "wlsunset"]
+        failMessage: "failed to stop wlsunset"
     }
 
     ColumnLayout {

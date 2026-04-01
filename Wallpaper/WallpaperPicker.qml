@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import qs.Config
+import qs.Core
 import qs.Widgets
 
 PanelWindow {
@@ -108,12 +109,11 @@ PanelWindow {
         scanProc.running = true;
     }
 
-    Process {
+    SafeProcess {
         id: scanProc
-        stdout: SplitParser {
-            onRead: data => { picker._scanLines = picker._scanLines.concat([data.trim()]); }
-        }
-        onExited: {
+        failMessage: "wallpaper scan failed — check folder path"
+        onRead: data => { picker._scanLines = picker._scanLines.concat([data.trim()]); }
+        onFinished: {
             const sorted = picker._scanLines.slice().sort();
             picker.wallpaperPaths = sorted;
             picker._scanLines = [];
