@@ -109,6 +109,21 @@ PanelWindow {
     readonly property bool btEnabled: btAdapter?.enabled ?? false
     onBtEnabledChanged: if (!btEnabled) filteredBtDevices = []
 
+    function btDeviceIcon(iconType) {
+        switch (iconType) {
+        case "audio-headset":   return "\u{f01d2}"; // nf-md-headset
+        case "audio-headphones": return "\u{f02cb}"; // nf-md-headphones
+        case "audio-card":      return "\u{f04c3}"; // nf-md-speaker
+        case "input-gaming":    return "\u{f0eb5}"; // nf-md-controller
+        case "input-keyboard":  return "\uf11c";     // nf-fa-keyboard
+        case "input-mouse":     return "\u{f037d}"; // nf-md-mouse
+        case "input-tablet":    return "\u{f04f7}"; // nf-md-tablet
+        case "phone":           return "\u{f03f2}"; // nf-md-phone
+        case "computer":        return "\u{f0379}"; // nf-md-monitor
+        default:                return Theme.iconBluetooth;
+        }
+    }
+
     function refreshBt() {
         if (!btAdapter || !btAdapter.devices) { filteredBtDevices = []; return; }
         const devs = [];
@@ -126,6 +141,48 @@ PanelWindow {
             return (a.name || "").localeCompare(b.name || "");
         });
         filteredBtDevices = devs;
+    }
+
+    property string btStatus: ""         // "" | "pairing" | "connecting" | "disconnecting" | "paired" | "connected" | "failed"
+    property string btStatusDevice: ""   // MAC address
+
+    SafeProcess {
+        id: btPairProc
+        failMessage: "Bluetooth pairing failed"
+        onRead: data => {
+            const line = data.trim();
+            if (line === "PAIRED" || line === "CONNECTED") {
+                launcher.btStatus = line === "CONNECTED" ? "connected" : "paired";
+                btStatusClear.start();
+            } else if (line === "FAILED") {
+                launcher.btStatus = "failed";
+                btStatusClear.start();
+            }
+        }
+        onFailed: {
+            launcher.btStatus = "failed";
+            btStatusClear.start();
+        }
+    }
+
+    Timer {
+        id: btStatusClear
+        interval: 3000
+        onTriggered: { launcher.btStatus = ""; launcher.btStatusDevice = ""; }
+    }
+
+    // Watch for connect/disconnect completion
+    onFilteredBtDevicesChanged: {
+        if (btStatusDevice === "" || btStatus === "") return;
+        for (let i = 0; i < filteredBtDevices.length; i++) {
+            const d = filteredBtDevices[i];
+            if (d.address !== btStatusDevice) continue;
+            if (btStatus === "connecting" && d.connected) {
+                btStatus = "connected"; btStatusClear.start();
+            } else if (btStatus === "disconnecting" && !d.connected) {
+                btStatus = ""; btStatusDevice = "";
+            }
+        }
     }
 
     // Re-filter when devices change — poll while on BT tab since
@@ -258,12 +315,20 @@ PanelWindow {
             }
         } else if (activeTab === 4) {
             const dev = filteredBtDevices[selectedIndex];
-            if (dev.connected)
+            btStatusDevice = dev.address;
+            if (dev.connected) {
+                btStatus = "disconnecting";
                 dev.disconnect();
-            else if (dev.paired)
+                btStatusClear.start();
+            } else if (dev.paired) {
+                btStatus = "connecting";
                 dev.connect();
-            else
-                dev.pair();
+                btStatusClear.start();
+            } else {
+                btStatus = "pairing";
+                btPairProc.command = [Quickshell.env("HOME") + "/.config/quickshell/mcshell/Core/bt-pair.sh", dev.address];
+                btPairProc.running = true;
+            }
         }
     }
 
@@ -1051,11 +1116,11 @@ PanelWindow {
                         onActivated: launcher.activate()
                         onSelected: launcher.selectedIndex = index
 
-                        // Collapsed: BT icon
+                        // Collapsed: device type icon
                         Text {
                             anchors.centerIn: parent
                             visible: !parent.isCurrent
-                            text: Theme.iconBluetooth
+                            text: launcher.btDeviceIcon(modelData.icon)
                             font.family: Theme.iconFont
                             font.pixelSize: 24
                             color: modelData.connected ? Theme.accent : Theme.fgDim
@@ -1070,7 +1135,7 @@ PanelWindow {
 
                             Text {
                                 Layout.alignment: Qt.AlignHCenter
-                                text: Theme.iconBluetooth
+                                text: launcher.btDeviceIcon(modelData.icon)
                                 font.family: Theme.iconFont
                                 font.pixelSize: 48
                                 color: modelData.connected ? Theme.accent : Theme.fg
@@ -1088,7 +1153,7 @@ PanelWindow {
                                 Layout.maximumWidth: parent.width
                             }
 
-                            // Info: status + battery
+                            // Info: type + status + battery
                             Text {
                                 Layout.alignment: Qt.AlignHCenter
                                 Layout.maximumWidth: parent.width
@@ -1098,25 +1163,63 @@ PanelWindow {
                                 color: Theme.fgDim
                                 text: {
                                     const parts = [];
+                                    // Device type from icon property
+                                    const typeMap = {
+                                        "audio-headset": "Headset",
+                                        "audio-headphones": "Headphones",
+                                        "audio-card": "Speaker",
+                                        "input-gaming": "Controller",
+                                        "input-keyboard": "Keyboard",
+                                        "input-mouse": "Mouse",
+                                        "input-tablet": "Tablet",
+                                        "phone": "Phone",
+                                        "computer": "Computer",
+                                    };
+                                    const devType = typeMap[modelData.icon] || "";
+                                    if (devType) parts.push(devType);
                                     if (modelData.connected) parts.push("Connected");
                                     else if (modelData.paired) parts.push("Paired");
                                     else parts.push("Available");
                                     if (modelData.batteryAvailable)
-                                        parts.push(Math.round(modelData.battery * 100) + "% battery");
+                                        parts.push(Math.round(modelData.battery * 100) + "%");
                                     return parts.join("  •  ");
                                 }
                             }
 
-                            // Action hint
+                            // MAC address
                             Text {
                                 Layout.alignment: Qt.AlignHCenter
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 10
+                                font.pixelSize: 9
                                 color: Theme.fgDim
-                                opacity: 0.6
-                                text: modelData.connected ? "Enter to disconnect"
-                                    : modelData.paired ? "Enter to connect"
-                                    : "Enter to pair"
+                                opacity: 0.4
+                                text: modelData.address || ""
+                            }
+
+                            // Action hint / status
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                                property bool isTarget: launcher.btStatusDevice === modelData.address
+                                color: isTarget && launcher.btStatus === "failed" ? Theme.red
+                                     : isTarget && (launcher.btStatus === "connected" || launcher.btStatus === "paired") ? Theme.green
+                                     : isTarget && launcher.btStatus !== "" ? Theme.accent
+                                     : Theme.fgDim
+                                opacity: isTarget && launcher.btStatus !== "" ? 1.0 : 0.6
+                                text: {
+                                    if (isTarget) {
+                                        if (launcher.btStatus === "pairing") return "Pairing...";
+                                        if (launcher.btStatus === "connecting") return "Connecting...";
+                                        if (launcher.btStatus === "disconnecting") return "Disconnecting...";
+                                        if (launcher.btStatus === "connected") return "Connected";
+                                        if (launcher.btStatus === "paired") return "Paired";
+                                        if (launcher.btStatus === "failed") return "Failed";
+                                    }
+                                    return modelData.connected ? "Enter to disconnect"
+                                        : modelData.paired ? "Enter to connect"
+                                        : "Enter to pair";
+                                }
                             }
                         }
                     }
