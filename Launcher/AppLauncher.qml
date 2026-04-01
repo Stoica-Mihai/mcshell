@@ -4,6 +4,8 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Bluetooth
+import Quickshell.Networking
 import qs.Config
 import qs.Core
 import qs.Widgets
@@ -31,6 +33,11 @@ PanelWindow {
         searchField.text = "";
         filteredApps = [];
         filteredClipEntries = [];
+        filteredWifiNetworks = [];
+        wifiPasswordSsid = "";
+        filteredBtDevices = [];
+        if (wifiDevice) wifiDevice.scannerEnabled = false;
+        if (btAdapter) btAdapter.discovering = false;
     }
 
     function toggle() {
@@ -53,21 +60,126 @@ PanelWindow {
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
     // ── Tab state ───────────────────────────────────────
-    property int activeTab: 0  // 0 = Apps, 1 = Clipboard, 2 = Notifications
+    property int activeTab: 0  // 0 = Apps, 1 = Clipboard, 2 = Notifications, 3 = WiFi, 4 = Bluetooth
+    property int tabCount: 5
     property bool clipboardLoaded: false
     property var notifHistoryModel: null  // set from shell.qml
     property var filteredNotifs: []
+
+    // ── WiFi state ─────────────────────────────────────
+    property var filteredWifiNetworks: []
+    property string wifiPasswordSsid: ""  // which network is showing password input
+    property string wifiStatus: ""       // "" | "connecting" | "connected" | "failed"
+    property string wifiStatusSsid: ""   // which network the status applies to
+
+    readonly property var wifiDevice: {
+        const devs = Networking.devices?.values ?? [];
+        for (let i = 0; i < devs.length; i++) {
+            if (devs[i].type === DeviceType.Wifi) return devs[i];
+        }
+        return null;
+    }
+
+    function refreshWifi() {
+        if (!wifiDevice || !wifiDevice.networks) { filteredWifiNetworks = []; return; }
+        const nets = [];
+        const values = wifiDevice.networks.values;
+        const q = searchField.text.toLowerCase();
+        for (let i = 0; i < values.length; i++) {
+            const n = values[i];
+            if (q === "" || (n.name || "").toLowerCase().indexOf(q) >= 0)
+                nets.push(n);
+        }
+        nets.sort((a, b) => {
+            if (a.connected !== b.connected) return a.connected ? -1 : 1;
+            return b.signalStrength - a.signalStrength;
+        });
+        filteredWifiNetworks = nets;
+    }
+
+    // Re-filter when networks change (scan results arriving)
+    Connections {
+        target: launcher.wifiDevice?.networks ?? null
+        function onValuesChanged() { if (launcher.activeTab === 3) launcher.refreshWifi(); }
+    }
+
+    // ── Bluetooth state ────────────────────────────────
+    property var filteredBtDevices: []
+    readonly property BluetoothAdapter btAdapter: Bluetooth.defaultAdapter
+    readonly property bool btEnabled: btAdapter?.enabled ?? false
+    onBtEnabledChanged: if (!btEnabled) filteredBtDevices = []
+
+    function refreshBt() {
+        if (!btAdapter || !btAdapter.devices) { filteredBtDevices = []; return; }
+        const devs = [];
+        const values = btAdapter.devices.values;
+        const q = searchField.text.toLowerCase();
+        for (let i = 0; i < values.length; i++) {
+            const d = values[i];
+            const name = d.name || d.deviceName || "";
+            if (q === "" || name.toLowerCase().indexOf(q) >= 0)
+                devs.push(d);
+        }
+        devs.sort((a, b) => {
+            if (a.connected !== b.connected) return a.connected ? -1 : 1;
+            if (a.paired !== b.paired) return a.paired ? -1 : 1;
+            return (a.name || "").localeCompare(b.name || "");
+        });
+        filteredBtDevices = devs;
+    }
+
+    // Re-filter when devices change — poll while on BT tab since
+    // Connections target with optional chaining doesn't rebind
+    Timer {
+        interval: 2000
+        running: launcher.activeTab === 4 && launcher.btEnabled
+        repeat: true
+        onTriggered: launcher.refreshBt()
+    }
+
+    SafeProcess {
+        id: wifiConnectProc
+        failMessage: "WiFi connect failed"
+        onFinished: {
+            launcher.wifiStatus = launcher.wifiStatus === "disconnecting" ? "disconnected" : "connected";
+            wifiStatusClear.start();
+        }
+        onFailed: {
+            launcher.wifiStatus = "failed";
+            // Forget bad saved profile and show password prompt
+            if (launcher.wifiStatusSsid !== "") {
+                wifiForgetProc.command = ["nmcli", "connection", "delete", "id", launcher.wifiStatusSsid];
+                wifiForgetProc.running = true;
+                launcher.wifiPasswordSsid = launcher.wifiStatusSsid;
+            }
+            wifiStatusClear.start();
+        }
+    }
+
+    SafeProcess {
+        id: wifiForgetProc
+        failMessage: "WiFi forget failed"
+    }
+
+    Timer {
+        id: wifiStatusClear
+        interval: 3000
+        onTriggered: { launcher.wifiStatus = ""; launcher.wifiStatusSsid = ""; }
+    }
 
     function switchTab(tab) {
         if (activeTab === tab) return;
         activeTab = tab;
         searchField.text = "";
         selectedIndex = 0;
+        wifiPasswordSsid = "";
         if (tab === 1 && !clipboardLoaded)
             loadClipboard();
         else
             applyFilter();
         if (tab === 2) notificationsViewed();
+        if (tab === 3 && wifiDevice) wifiDevice.scannerEnabled = true;
+        if (tab === 4 && btAdapter) btAdapter.discovering = true;
         searchField.forceActiveFocus();
     }
 
@@ -94,7 +206,11 @@ PanelWindow {
     readonly property real carouselHeight: 350
     readonly property real stripSpacing: 6
 
-    readonly property var currentList: activeTab === 0 ? filteredApps : (activeTab === 1 ? filteredClipEntries : filteredNotifs)
+    readonly property var currentList: activeTab === 0 ? filteredApps
+        : activeTab === 1 ? filteredClipEntries
+        : activeTab === 2 ? filteredNotifs
+        : activeTab === 3 ? filteredWifiNetworks
+        : filteredBtDevices
 
     function navigate(delta) {
         if (currentList.length === 0) return;
@@ -125,6 +241,30 @@ PanelWindow {
         else if (activeTab === 1)
             copyClipEntry(filteredClipEntries[selectedIndex]);
         // Notifications: Enter does nothing (view only)
+        else if (activeTab === 3) {
+            const net = filteredWifiNetworks[selectedIndex];
+            if (wifiPasswordSsid === net.name) return; // already showing password
+            wifiStatusSsid = net.name;
+            if (net.connected) {
+                wifiStatus = "disconnecting";
+                wifiConnectProc.command = ["nmcli", "connection", "down", "id", net.name];
+                wifiConnectProc.running = true;
+            } else if (net.known || net.security === WifiSecurityType.Open) {
+                wifiStatus = "connecting";
+                wifiConnectProc.command = ["nmcli", "device", "wifi", "connect", net.name];
+                wifiConnectProc.running = true;
+            } else {
+                wifiPasswordSsid = net.name;
+            }
+        } else if (activeTab === 4) {
+            const dev = filteredBtDevices[selectedIndex];
+            if (dev.connected)
+                dev.disconnect();
+            else if (dev.paired)
+                dev.connect();
+            else
+                dev.pair();
+        }
     }
 
     // ── Clipboard helpers ───────────────────────────────
@@ -188,7 +328,9 @@ PanelWindow {
     function applyFilter() {
         if (activeTab === 0) applyAppFilter();
         else if (activeTab === 1) applyClipFilter();
-        else applyNotifFilter();
+        else if (activeTab === 2) applyNotifFilter();
+        else if (activeTab === 3) refreshWifi();
+        else if (activeTab === 4) refreshBt();
     }
 
     function applyNotifFilter() {
@@ -299,7 +441,9 @@ PanelWindow {
                     model: [
                         { label: "Apps", icon: Theme.iconApps, tab: 0 },
                         { label: "Clip", icon: Theme.iconClipboard, tab: 1 },
-                        { label: "Notifs", icon: Theme.iconBell, tab: 2 }
+                        { label: "Notifs", icon: Theme.iconBell, tab: 2 },
+                        { label: "WiFi", icon: Networking.wifiEnabled ? Theme.iconWifi : Theme.iconWifiOff, tab: 3 },
+                        { label: "BT", icon: Theme.iconBluetooth, tab: 4 }
                     ]
 
                     delegate: Rectangle {
@@ -368,15 +512,31 @@ PanelWindow {
                         case Qt.Key_Return:
                         case Qt.Key_Enter: launcher.activate(); event.accepted = true; break;
                         case Qt.Key_Tab:
-                            launcher.switchTab((launcher.activeTab + 1) % 3);
+                            launcher.switchTab((launcher.activeTab + 1) % launcher.tabCount);
                             event.accepted = true;
+                            break;
+                        case Qt.Key_W:
+                            if (launcher.activeTab === 3 && searchField.text === "") {
+                                Networking.wifiEnabled = !Networking.wifiEnabled;
+                                event.accepted = true;
+                            }
+                            break;
+                        case Qt.Key_B:
+                            if (launcher.activeTab === 4 && searchField.text === "" && launcher.btAdapter) {
+                                launcher.btAdapter.enabled = !launcher.btAdapter.enabled;
+                                event.accepted = true;
+                            }
                             break;
                         }
                     }
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: launcher.activeTab === 0 ? "Search apps..." : launcher.activeTab === 1 ? "Search clipboard..." : "Search notifications..."
+                        text: launcher.activeTab === 0 ? "Search apps..."
+                            : launcher.activeTab === 1 ? "Search clipboard..."
+                            : launcher.activeTab === 2 ? "Search notifications..."
+                            : launcher.activeTab === 3 ? "Search networks..."
+                            : "Search devices..."
                         color: Theme.fgDim
                         font: parent.font
                         visible: !parent.text
@@ -396,12 +556,48 @@ PanelWindow {
             // Empty state
             Text {
                 anchors.centerIn: parent
-                visible: launcher.currentList.length === 0
+                visible: launcher.currentList.length === 0 && !(launcher.activeTab === 3 && !Networking.wifiEnabled)
                 text: searchField.text !== "" ? "No results" :
-                      (launcher.activeTab === 1 && !launcher.clipboardLoaded ? "Loading..." : "")
+                      (launcher.activeTab === 1 && !launcher.clipboardLoaded ? "Loading..." :
+                      (launcher.activeTab === 3 ? "Scanning..." : ""))
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize
                 color: Theme.fgDim
+            }
+
+            // WiFi off — single card
+            Rectangle {
+                visible: launcher.activeTab === 3 && !Networking.wifiEnabled
+                anchors.centerIn: parent
+                width: launcher.expandedWidth
+                height: launcher.carouselHeight
+                radius: 14
+                color: Theme.bg
+                border.width: 1
+                border.color: Theme.border
+
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: 12
+                    width: parent.width - 40
+
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: Theme.iconWifiOff
+                        font.family: Theme.iconFont
+                        font.pixelSize: 48
+                        color: Theme.red
+                        opacity: 0.6
+                    }
+
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: "Press W to enable"
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeSmall
+                        color: Theme.fgDim
+                    }
+                }
             }
 
             // Sliding row
@@ -759,6 +955,342 @@ PanelWindow {
                         }
                     }
                 }
+
+                // WiFi carousel
+                Repeater {
+                    model: launcher.activeTab === 3 ? launcher.filteredWifiNetworks : []
+
+                    delegate: Item {
+                        id: wifiStrip
+                        required property var modelData
+                        required property int index
+
+                        readonly property bool isCurrent: index === launcher.selectedIndex
+                        readonly property bool isVisible: Math.abs(index - launcher.selectedIndex) <= launcher.sideCount
+                        readonly property bool showingPassword: launcher.wifiPasswordSsid === modelData.name
+
+                        width: isVisible ? (isCurrent ? launcher.expandedWidth : launcher.stripWidth) : 0
+                        height: launcher.carouselHeight
+                        clip: true
+                        opacity: isVisible ? 1.0 : 0.0
+
+                        Behavior on width { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
+                        Behavior on opacity { NumberAnimation { duration: 200 } }
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: wifiStrip.isCurrent ? 14 : 8
+                            color: Theme.bg
+                            clip: true
+                            border.width: wifiStrip.isCurrent ? 1 : 0
+                            border.color: wifiStrip.modelData.connected ? Theme.accent : Theme.border
+
+                            Behavior on radius { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
+
+                            // Collapsed: signal icon
+                            Text {
+                                anchors.centerIn: parent
+                                visible: !wifiStrip.isCurrent
+                                text: Theme.iconWifi
+                                font.family: Theme.iconFont
+                                font.pixelSize: 24
+                                color: wifiStrip.modelData.connected ? Theme.accent : Theme.fgDim
+                                opacity: 0.3 + wifiStrip.modelData.signalStrength * 0.7
+                            }
+
+                            // Expanded: network details
+                            ColumnLayout {
+                                anchors.centerIn: parent
+                                visible: wifiStrip.isCurrent
+                                spacing: 10
+                                width: parent.width - 40
+
+                                // WiFi icon — size reflects signal
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: Theme.iconWifi
+                                    font.family: Theme.iconFont
+                                    font.pixelSize: 48
+                                    color: wifiStrip.modelData.connected ? Theme.accent : Theme.fg
+                                    opacity: 0.4 + wifiStrip.modelData.signalStrength * 0.6
+                                }
+
+                                // SSID
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: wifiStrip.modelData.name || "Hidden Network"
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 18
+                                    font.bold: true
+                                    color: wifiStrip.modelData.connected ? Theme.accent : Theme.fg
+                                    elide: Text.ElideRight
+                                    Layout.maximumWidth: parent.width
+                                }
+
+                                // Info row: signal + security + status
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    Layout.maximumWidth: parent.width
+                                    horizontalAlignment: Text.AlignHCenter
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSizeSmall
+                                    color: Theme.fgDim
+                                    text: {
+                                        const signal = Math.round(wifiStrip.modelData.signalStrength * 100) + "%";
+                                        const sec = wifiStrip.modelData.security === WifiSecurityType.Open ? "Open" : "Secured";
+                                        const status = wifiStrip.modelData.connected ? "Connected" : "";
+                                        return [signal, sec, status].filter(s => s).join("  •  ");
+                                    }
+                                }
+
+                                // Status / action hint
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    visible: !wifiStrip.showingPassword
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 11
+                                    property bool isTarget: launcher.wifiStatusSsid === wifiStrip.modelData.name
+                                    color: isTarget && launcher.wifiStatus === "failed" ? Theme.red
+                                         : isTarget && launcher.wifiStatus === "connected" ? Theme.green
+                                         : isTarget && launcher.wifiStatus === "disconnected" ? Theme.fgDim
+                                         : isTarget && (launcher.wifiStatus === "connecting" || launcher.wifiStatus === "disconnecting") ? Theme.accent
+                                         : Theme.fgDim
+                                    opacity: isTarget && launcher.wifiStatus !== "" ? 1.0 : 0.6
+                                    text: {
+                                        if (isTarget) {
+                                            if (launcher.wifiStatus === "connecting") return "Connecting...";
+                                            if (launcher.wifiStatus === "disconnecting") return "Disconnecting...";
+                                            if (launcher.wifiStatus === "connected") return "Connected";
+                                            if (launcher.wifiStatus === "disconnected") return "Disconnected";
+                                            if (launcher.wifiStatus === "failed") return "Failed — wrong password?";
+                                        }
+                                        return wifiStrip.modelData.connected ? "Enter to disconnect" : "Enter to connect";
+                                    }
+                                }
+
+                                // Password input (inside the card)
+                                Rectangle {
+                                    visible: wifiStrip.showingPassword
+                                    Layout.alignment: Qt.AlignHCenter
+                                    Layout.preferredWidth: parent.width * 0.8
+                                    implicitHeight: 36
+                                    radius: 8
+                                    color: Qt.rgba(1, 1, 1, 0.04)
+                                    border.width: 1
+                                    border.color: wifiPwInput.activeFocus ? Theme.accent : Theme.border
+
+                                    RowLayout {
+                                        anchors.fill: parent
+                                        anchors.leftMargin: 10
+                                        anchors.rightMargin: 10
+                                        spacing: 8
+
+                                        Text {
+                                            text: Theme.iconLock
+                                            font.family: Theme.iconFont
+                                            font.pixelSize: 12
+                                            color: Theme.fgDim
+                                            Layout.alignment: Qt.AlignVCenter
+                                        }
+
+                                        TextInput {
+                                            id: wifiPwInput
+                                            Layout.fillWidth: true
+                                            Layout.alignment: Qt.AlignVCenter
+                                            color: Theme.fg
+                                            font.family: Theme.fontFamily
+                                            font.pixelSize: Theme.fontSize
+                                            echoMode: TextInput.Password
+                                            passwordCharacter: "●"
+                                            clip: true
+
+                                            onVisibleChanged: if (visible) forceActiveFocus()
+
+                                            Keys.onReturnPressed: {
+                                                if (text.length > 0) {
+                                                    const ssid = wifiStrip.modelData.name;
+                                                    const pw = text;
+                                                    launcher.wifiStatusSsid = ssid;
+                                                    launcher.wifiStatus = "connecting";
+                                                    launcher.wifiPasswordSsid = "";
+                                                    // Connect and store password in system config (no agent needed)
+                                                    wifiConnectProc.command = ["sh", "-c",
+                                                        'nmcli device wifi connect "$1" password "$2" && nmcli connection modify "$1" 802-11-wireless-security.psk-flags 0',
+                                                        "sh", ssid, pw];
+                                                    wifiConnectProc.running = true;
+                                                    text = "";
+                                                    searchField.forceActiveFocus();
+                                                }
+                                            }
+                                            Keys.onEscapePressed: {
+                                                launcher.wifiPasswordSsid = "";
+                                                searchField.forceActiveFocus();
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (wifiStrip.isCurrent)
+                                    launcher.activate();
+                                else
+                                    launcher.selectedIndex = wifiStrip.index;
+                            }
+                        }
+                    }
+                }
+                // Bluetooth carousel
+                Repeater {
+                    model: launcher.activeTab === 4 && launcher.btEnabled ? launcher.filteredBtDevices : []
+
+                    delegate: Item {
+                        id: btStrip
+                        required property var modelData
+                        required property int index
+
+                        readonly property bool isCurrent: index === launcher.selectedIndex
+                        readonly property bool isVisible: Math.abs(index - launcher.selectedIndex) <= launcher.sideCount
+
+                        width: isVisible ? (isCurrent ? launcher.expandedWidth : launcher.stripWidth) : 0
+                        height: launcher.carouselHeight
+                        clip: true
+                        opacity: isVisible ? 1.0 : 0.0
+
+                        Behavior on width { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
+                        Behavior on opacity { NumberAnimation { duration: 200 } }
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: btStrip.isCurrent ? 14 : 8
+                            color: Theme.bg
+                            clip: true
+                            border.width: btStrip.isCurrent ? 1 : 0
+                            border.color: btStrip.modelData.connected ? Theme.accent : Theme.border
+
+                            Behavior on radius { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
+
+                            // Collapsed: BT icon
+                            Text {
+                                anchors.centerIn: parent
+                                visible: !btStrip.isCurrent
+                                text: Theme.iconBluetooth
+                                font.family: Theme.iconFont
+                                font.pixelSize: 24
+                                color: btStrip.modelData.connected ? Theme.accent : Theme.fgDim
+                            }
+
+                            // Expanded: device details
+                            ColumnLayout {
+                                anchors.centerIn: parent
+                                visible: btStrip.isCurrent
+                                spacing: 10
+                                width: parent.width - 40
+
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: Theme.iconBluetooth
+                                    font.family: Theme.iconFont
+                                    font.pixelSize: 48
+                                    color: btStrip.modelData.connected ? Theme.accent : Theme.fg
+                                }
+
+                                // Device name
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    text: btStrip.modelData.name || btStrip.modelData.deviceName || "Unknown"
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 18
+                                    font.bold: true
+                                    color: btStrip.modelData.connected ? Theme.accent : Theme.fg
+                                    elide: Text.ElideRight
+                                    Layout.maximumWidth: parent.width
+                                }
+
+                                // Info: status + battery
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    Layout.maximumWidth: parent.width
+                                    horizontalAlignment: Text.AlignHCenter
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSizeSmall
+                                    color: Theme.fgDim
+                                    text: {
+                                        const parts = [];
+                                        if (btStrip.modelData.connected) parts.push("Connected");
+                                        else if (btStrip.modelData.paired) parts.push("Paired");
+                                        else parts.push("Available");
+                                        if (btStrip.modelData.batteryAvailable)
+                                            parts.push(Math.round(btStrip.modelData.battery * 100) + "% battery");
+                                        return parts.join("  •  ");
+                                    }
+                                }
+
+                                // Action hint
+                                Text {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 10
+                                    color: Theme.fgDim
+                                    opacity: 0.6
+                                    text: btStrip.modelData.connected ? "Enter to disconnect"
+                                        : btStrip.modelData.paired ? "Enter to connect"
+                                        : "Enter to pair"
+                                }
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (btStrip.isCurrent)
+                                    launcher.activate();
+                                else
+                                    launcher.selectedIndex = btStrip.index;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Bluetooth off — single card
+            Rectangle {
+                visible: launcher.activeTab === 4 && !launcher.btEnabled
+                anchors.centerIn: parent
+                width: launcher.expandedWidth
+                height: launcher.carouselHeight
+                radius: 14
+                color: Theme.bg
+                border.width: 1
+                border.color: Theme.border
+
+                ColumnLayout {
+                    anchors.centerIn: parent
+                    spacing: 12
+                    width: parent.width - 40
+
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: Theme.iconBluetooth
+                        font.family: Theme.iconFont
+                        font.pixelSize: 48
+                        color: Theme.red
+                        opacity: 0.4
+                    }
+
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: "Press B to enable"
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeSmall
+                        color: Theme.fgDim
+                    }
+                }
             }
 
             // Navigation arrows
@@ -790,11 +1322,23 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: carouselArea.bottom
         anchors.topMargin: 16
-        visible: launcher.currentList.length > 0
-        text: (launcher.selectedIndex + 1) + " / " + launcher.currentList.length
-              + "  |  ← → Navigate"
-              + (launcher.activeTab === 0 ? "  |  Enter launch" : launcher.activeTab === 1 ? "  |  Enter copy" : "")
-              + "  |  Tab switch  |  ESC close"
+        visible: launcher.currentList.length > 0 || launcher.activeTab === 3 || launcher.activeTab === 4
+        text: {
+            // WiFi/BT off states
+            if (launcher.activeTab === 3 && !Networking.wifiEnabled)
+                return "W toggle WiFi  |  Tab switch  |  ESC close";
+            if (launcher.activeTab === 4 && !launcher.btEnabled)
+                return "B toggle Bluetooth  |  Tab switch  |  ESC close";
+
+            var t = (launcher.selectedIndex + 1) + " / " + launcher.currentList.length
+                  + "  |  ← → Navigate";
+            if (launcher.activeTab === 0) t += "  |  Enter launch";
+            else if (launcher.activeTab === 1) t += "  |  Enter copy";
+            else if (launcher.activeTab === 3) t += "  |  Enter connect  |  W toggle WiFi";
+            else if (launcher.activeTab === 4) t += "  |  Enter connect  |  B toggle Bluetooth";
+            t += "  |  Tab switch  |  ESC close";
+            return t;
+        }
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeSmall
         color: Theme.fgDim

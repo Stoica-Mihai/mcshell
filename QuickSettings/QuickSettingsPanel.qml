@@ -276,28 +276,6 @@ Item {
                 color: Theme.border
             }
 
-            // ── Wifi toggle ─────────────────────────────
-            ToggleRow {
-                Layout.fillWidth: true
-                icon: root.wifiEnabled ? Theme.iconWifi : Theme.iconNetOff
-                label: "Wi-Fi"
-                sublabel: root.wifiEnabled ? (root.wifiSsid !== "" ? root.wifiSsid : "On") : "Off"
-                checked: root.wifiEnabled
-                onToggled: Networking.wifiEnabled = !Networking.wifiEnabled
-            }
-
-            // ── Bluetooth toggle ────────────────────────
-            ToggleRow {
-                Layout.fillWidth: true
-                icon: Theme.iconBluetooth
-                label: "Bluetooth"
-                sublabel: root.bluetoothEnabled ? "On" : "Off"
-                checked: root.bluetoothEnabled
-                onToggled: {
-                    if (root.btAdapter)
-                        root.btAdapter.enabled = !root.btAdapter.enabled;
-                }
-            }
 
 
 
