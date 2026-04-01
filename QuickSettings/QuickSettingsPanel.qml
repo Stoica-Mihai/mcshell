@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
+import Quickshell.Niri
 import Quickshell.Networking
 import Quickshell.Bluetooth
 import qs.Config
@@ -56,10 +57,7 @@ Item {
         command: ["qs", "-c", "mcshell", "ipc", "call", "mcshell", "lock"]
     }
 
-    Process {
-        id: logoutSession
-        command: ["niri", "msg", "action", "quit"]
-    }
+    function logoutSession() { Niri.dispatch(["quit", "--skip-confirmation"]); }
 
     Process {
         id: rebootSystem
@@ -141,7 +139,7 @@ Item {
                         Layout.alignment: Qt.AlignHCenter
                         icon: Theme.iconLogout
                         size: 18
-                        onClicked: logoutSession.running = true
+                        onClicked: root.logoutSession()
                     }
                     Text {
                         Layout.alignment: Qt.AlignHCenter

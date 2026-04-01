@@ -1,48 +1,35 @@
 import QtQuick
 import QtQuick.Layouts
-import Quickshell.Io
+import Quickshell.Niri
 import qs.Config
-import qs.Widgets
 
 Item {
     id: root
 
     property string screenName: ""
-    property var workspaces: []
 
     implicitWidth: row.implicitWidth
     implicitHeight: row.implicitHeight
 
-    PolledProcess {
-        command: ["niri", "msg", "-j", "workspaces"]
-        interval: 250
-        onRead: data => {
-            try {
-                root.workspaces = JSON.parse(data)
-                    .filter(ws => ws.output === root.screenName)
-                    .sort((a, b) => a.idx - b.idx);
-            } catch (e) {}
+    // Reactive workspace list — filtered by screen, sorted by index
+    readonly property var workspaces: {
+        const all = Niri.workspaces.values;
+        const filtered = [];
+        for (let i = 0; i < all.length; i++) {
+            if (all[i].output === root.screenName)
+                filtered.push(all[i]);
         }
+        filtered.sort((a, b) => a.idx - b.idx);
+        return filtered;
     }
 
     MouseArea {
         anchors.fill: row
         onWheel: wheel => {
-            if (wheel.angleDelta.y > 0)
-                wsPrev.running = true;
-            else
-                wsNext.running = true;
+            Niri.dispatch(wheel.angleDelta.y > 0
+                ? ["focus-workspace-up"]
+                : ["focus-workspace-down"]);
         }
-    }
-
-    Process {
-        id: wsPrev
-        command: ["niri", "msg", "action", "focus-workspace-up"]
-    }
-
-    Process {
-        id: wsNext
-        command: ["niri", "msg", "action", "focus-workspace-down"]
     }
 
     RowLayout {
@@ -57,18 +44,17 @@ Item {
                 id: pill
                 required property var modelData
 
-                property bool focused: modelData.is_focused
-                property bool occupied: modelData.active_window_id !== null
-                                     && modelData.active_window_id !== undefined
+                property bool focused: modelData.focused
+                property bool occupied: modelData.occupied
 
                 implicitWidth: focused ? 22 : 8
                 implicitHeight: 8
                 radius: 4
 
-                color: modelData.is_urgent ? Theme.red
-                     : focused             ? Theme.accent
-                     : occupied            ? Theme.fgDim
-                     :                       Qt.rgba(1, 1, 1, 0.12)
+                color: modelData.urgent ? Theme.red
+                     : focused          ? Theme.accent
+                     : occupied         ? Theme.fgDim
+                     :                    Qt.rgba(1, 1, 1, 0.12)
 
                 Behavior on implicitWidth {
                     NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
@@ -80,12 +66,7 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: focusWs.running = true
-                }
-
-                Process {
-                    id: focusWs
-                    command: ["niri", "msg", "action", "focus-workspace", "" + pill.modelData.id]
+                    onClicked: Niri.dispatch(["focus-workspace", pill.modelData.idx.toString()])
                 }
             }
         }

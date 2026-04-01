@@ -1,8 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
-import Quickshell.Io
+import Quickshell.Networking
 import qs.Config
-import qs.Widgets
 
 Item {
     id: root
@@ -10,46 +9,35 @@ Item {
     implicitWidth: row.implicitWidth
     implicitHeight: row.implicitHeight
 
-    property string status: "disconnected"  // connected, disconnected, connecting
-    property string type: "ethernet"        // ethernet, wifi
-    property string name: ""
-    property int wifiSignal: 0
-
-    // ── Poll network state ──────────────────────────────
-    PolledProcess {
-        command: ["sh", "-c", "nmcli -t -f TYPE,STATE,CONNECTION device 2>/dev/null | grep -m1 '^\\(ethernet\\|wifi\\):connected' || echo 'none:disconnected:'"]
-        interval: 5000
-        onRead: data => {
-            const parts = data.trim().split(":");
-            if (parts.length < 3) return;
-
-            const devType = parts[0];
-            const state = parts[1];
-
-            if (devType === "none" || !state.startsWith("connected")) {
-                root.status = "disconnected";
-                root.name = "";
-            } else {
-                root.type = devType;
-                root.status = "connected";
-                root.name = parts.slice(2).join(":");
-            }
+    // ── Reactive network state (no polling) ─────────────
+    readonly property var connectedDevice: {
+        const devs = Networking.devices?.values ?? [];
+        for (let i = 0; i < devs.length; i++) {
+            if (devs[i].connected) return devs[i];
         }
+        return null;
     }
 
-    // Wifi signal strength (only when on wifi)
-    PolledProcess {
-        command: ["nmcli", "-t", "-f", "IN-USE,SIGNAL", "device", "wifi", "list"]
-        interval: 5000
-        active: root.type === "wifi"
-        onRead: data => {
-            for (const line of data.trim().split("\n")) {
-                if (line.startsWith("*:")) {
-                    root.wifiSignal = parseInt(line.split(":")[1]) || 0;
-                    break;
-                }
-            }
+    readonly property bool isConnected: connectedDevice !== null
+    readonly property bool isWifi: connectedDevice?.type === DeviceType.Wifi
+    readonly property bool isEthernet: connectedDevice?.type === DeviceType.Ethernet
+
+    readonly property string name: {
+        if (!isWifi || !connectedDevice) return "";
+        const nets = connectedDevice.networks?.values ?? [];
+        for (let i = 0; i < nets.length; i++) {
+            if (nets[i].connected) return nets[i].name;
         }
+        return "";
+    }
+
+    readonly property int wifiSignal: {
+        if (!isWifi || !connectedDevice) return 0;
+        const nets = connectedDevice.networks?.values ?? [];
+        for (let i = 0; i < nets.length; i++) {
+            if (nets[i].connected) return Math.round(nets[i].signalStrength * 100);
+        }
+        return 0;
     }
 
     // ── UI ──────────────────────────────────────────────
@@ -61,16 +49,16 @@ Item {
         Text {
             font.family: Theme.iconFont
             font.pixelSize: Theme.iconSize
-            color: root.status === "connected" ? Theme.fg : Theme.red
+            color: root.isConnected ? Theme.fg : Theme.red
             text: {
-                if (root.status !== "connected") return Theme.iconNetOff;
-                if (root.type === "wifi") return Theme.iconWifi;
+                if (!root.isConnected) return Theme.iconNetOff;
+                if (root.isWifi) return Theme.iconWifi;
                 return Theme.iconEthernet;
             }
         }
 
         Text {
-            visible: root.type === "wifi" && root.status === "connected"
+            visible: root.isWifi && root.isConnected
             color: Theme.fgDim
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeSmall
