@@ -14,6 +14,10 @@ Item {
     required property string iconUrl
     required property int urgency
     required property int timeout
+    required property bool hasActions
+
+    // Function to look up the notification object (set by parent)
+    property var getNotifRef: function() { return null; }
 
     signal dismissed(string notifId)
 
@@ -222,6 +226,67 @@ Item {
                 elide: Text.ElideRight
                 Layout.fillWidth: true
                 opacity: 0.85
+            }
+
+            // Action buttons
+            Flow {
+                id: actionRow
+                visible: card.hasActions
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+                spacing: 6
+
+                property var actionList: {
+                    if (!card.hasActions) return [];
+                    const ref = card.getNotifRef();
+                    if (!ref || !ref.actions) return [];
+                    const list = [];
+                    for (let i = 0; i < ref.actions.length; i++)
+                        list.push({ identifier: ref.actions[i].identifier, text: ref.actions[i].text });
+                    return list;
+                }
+
+                Repeater {
+                    model: actionRow.actionList
+
+                    Rectangle {
+                        required property var modelData
+
+                        width: actionLabel.implicitWidth + 16
+                        height: 22
+                        radius: 11
+                        color: actionMouse.containsMouse ? Qt.rgba(1,1,1,0.12) : Qt.rgba(1,1,1,0.06)
+
+                        Behavior on color { ColorAnimation { duration: 100 } }
+
+                        Text {
+                            id: actionLabel
+                            anchors.centerIn: parent
+                            text: modelData.text
+                            color: Theme.accent
+                            font.family: Theme.fontFamily
+                            font.pixelSize: 10
+                        }
+
+                        MouseArea {
+                            id: actionMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                const ref = card.getNotifRef();
+                                if (ref && ref.actions) {
+                                    for (let i = 0; i < ref.actions.length; i++) {
+                                        if (ref.actions[i].identifier === modelData.identifier) {
+                                            ref.actions[i].invoke();
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             // Large image preview (e.g. screenshot)

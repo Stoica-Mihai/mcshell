@@ -54,6 +54,11 @@ Item {
         return !!pausedNotifs[nid];
     }
 
+    // ── Notification object references (for action invocation) ──
+    property var _notifRefs: ({})
+
+    function getNotifRef(nid) { return _notifRefs[nid] ?? null; }
+
     // ── Notification history (persistent across dismissals) ──
     property alias historyModel: _historyModel
     ListModel {
@@ -79,7 +84,7 @@ Item {
         id: server
         keepOnReload: false
         imageSupported: true
-        actionsSupported: false
+        actionsSupported: true
         bodyHyperlinksSupported: false
 
         onNotification: notification => {
@@ -101,6 +106,9 @@ Item {
             // Track the notification so QuickShell doesn't garbage-collect it
             notification.tracked = true;
 
+            // Store notification reference in a lookup map (ListModel can't hold QObjects)
+            root._notifRefs[nid] = notification;
+
             const entry = {
                 notifId: nid,
                 appName: notification.appName || "",
@@ -109,7 +117,8 @@ Item {
                 iconUrl: icon,
                 urgency: notification.urgency < 0 || notification.urgency > 2
                          ? 1 : notification.urgency,
-                timeout: timeout
+                timeout: timeout,
+                hasActions: notification.actions && notification.actions.length > 0
             };
 
             // Show popup only if DND is off
@@ -148,6 +157,7 @@ Item {
                     unreadCount++;
                 }
                 notifModel.remove(i);
+                delete root._notifRefs[nid];
                 return;
             }
         }
@@ -207,9 +217,10 @@ Item {
                     delegate: NotificationCard {
                         id: notifCard
                         // required properties auto-bind from ListModel roles:
-                        // notifId, appName, summary, body, iconUrl, urgency, timeout
+                        // notifId, appName, summary, body, iconUrl, urgency, timeout, hasActions
 
                         Layout.fillWidth: true
+                        getNotifRef: function() { return root.getNotifRef(notifCard.notifId); }
 
                         // Hover sets shared pause state — all screens react
                         HoverHandler {
