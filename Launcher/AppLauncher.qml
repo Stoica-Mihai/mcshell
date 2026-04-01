@@ -566,38 +566,13 @@ PanelWindow {
             }
 
             // WiFi off — single card
-            Rectangle {
+            DisabledCard {
                 visible: launcher.activeTab === 3 && !Networking.wifiEnabled
                 anchors.centerIn: parent
                 width: launcher.expandedWidth
                 height: launcher.carouselHeight
-                radius: 14
-                color: Theme.bg
-                border.width: 1
-                border.color: Theme.border
-
-                ColumnLayout {
-                    anchors.centerIn: parent
-                    spacing: 12
-                    width: parent.width - 40
-
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: Theme.iconWifiOff
-                        font.family: Theme.iconFont
-                        font.pixelSize: 48
-                        color: Theme.red
-                        opacity: 0.6
-                    }
-
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: "Press W to enable"
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        color: Theme.fgDim
-                    }
-                }
+                icon: Theme.iconWifiOff
+                hint: "Press W to enable"
             }
 
             // Sliding row
@@ -616,96 +591,62 @@ PanelWindow {
                 Repeater {
                     model: launcher.activeTab === 0 ? launcher.filteredApps : []
 
-                    delegate: Item {
-                        id: appStrip
-                        required property var modelData
-                        required property int index
+                    delegate: CarouselStrip {
+                        selectedIndex: launcher.selectedIndex
+                        sideCount: launcher.sideCount
+                        expandedWidth: launcher.expandedWidth
+                        stripWidth: launcher.stripWidth
+                        carouselHeight: launcher.carouselHeight
+                        onActivated: launcher.launchApp(modelData)
+                        onSelected: launcher.selectedIndex = index
 
-                        readonly property bool isCurrent: index === launcher.selectedIndex
-                        readonly property bool isVisible: Math.abs(index - launcher.selectedIndex) <= launcher.sideCount
+                        // Collapsed
+                        Image {
+                            anchors.centerIn: parent
+                            visible: !parent.isCurrent
+                            width: 40; height: 40
+                            sourceSize.width: 40; sourceSize.height: 40
+                            source: "image://icon/" + (modelData.icon || "application-x-executable")
+                            asynchronous: true
+                        }
 
-                        width: isVisible ? (isCurrent ? launcher.expandedWidth : launcher.stripWidth) : 0
-                        height: launcher.carouselHeight
-                        clip: true
-                        opacity: isVisible ? 1.0 : 0.0
+                        // Expanded
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            visible: parent.isCurrent
+                            spacing: 12
+                            width: parent.width - 40
 
-                        Behavior on width { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
-                        Behavior on opacity { NumberAnimation { duration: 200 } }
-
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: appStrip.isCurrent ? 14 : 8
-                            color: Theme.bg
-                            clip: true
-                            border.width: appStrip.isCurrent ? 1 : 0
-                            border.color: Theme.border
-
-                            Behavior on radius { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
-
-                            // Collapsed: just the app icon centered
                             Image {
-                                anchors.centerIn: parent
-                                visible: !appStrip.isCurrent
-                                width: 40
-                                height: 40
-                                sourceSize.width: 40
-                                sourceSize.height: 40
+                                Layout.alignment: Qt.AlignHCenter
+                                width: 80; height: 80
+                                sourceSize.width: 80; sourceSize.height: 80
                                 source: "image://icon/" + (modelData.icon || "application-x-executable")
                                 asynchronous: true
                             }
 
-                            // Expanded: icon + name + description
-                            ColumnLayout {
-                                anchors.centerIn: parent
-                                visible: appStrip.isCurrent
-                                spacing: 12
-                                width: parent.width - 40
-
-                                Image {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    width: 80
-                                    height: 80
-                                    sourceSize.width: 80
-                                    sourceSize.height: 80
-                                    source: "image://icon/" + (modelData.icon || "application-x-executable")
-                                    asynchronous: true
-                                }
-
-                                Text {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: modelData.name || ""
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 18
-                                    font.bold: true
-                                    color: Theme.fg
-                                    elide: Text.ElideRight
-                                    Layout.maximumWidth: parent.width
-                                }
-
-                                Text {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: modelData.comment || modelData.genericName || ""
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSizeSmall
-                                    color: Theme.fgDim
-                                    elide: Text.ElideRight
-                                    visible: text !== ""
-                                    Layout.maximumWidth: parent.width
-                                    horizontalAlignment: Text.AlignHCenter
-                                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                                    maximumLineCount: 2
-                                }
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: modelData.name || ""
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 18; font.bold: true
+                                color: Theme.fg
+                                elide: Text.ElideRight
+                                Layout.maximumWidth: parent.width
                             }
-                        }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (appStrip.isCurrent)
-                                    launcher.launchApp(appStrip.modelData);
-                                else
-                                    launcher.selectedIndex = appStrip.index;
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: modelData.comment || modelData.genericName || ""
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: Theme.fgDim
+                                elide: Text.ElideRight
+                                visible: text !== ""
+                                Layout.maximumWidth: parent.width
+                                horizontalAlignment: Text.AlignHCenter
+                                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                                maximumLineCount: 2
                             }
                         }
                     }
@@ -715,98 +656,69 @@ PanelWindow {
                 Repeater {
                     model: launcher.activeTab === 1 ? launcher.filteredClipEntries : []
 
-                    delegate: Item {
-                        id: clipStrip
-                        required property var modelData
-                        required property int index
+                    delegate: CarouselStrip {
+                        selectedIndex: launcher.selectedIndex
+                        sideCount: launcher.sideCount
+                        expandedWidth: launcher.expandedWidth
+                        stripWidth: launcher.stripWidth
+                        carouselHeight: launcher.carouselHeight
+                        onActivated: launcher.copyClipEntry(modelData)
+                        onSelected: launcher.selectedIndex = index
 
-                        readonly property bool isCurrent: index === launcher.selectedIndex
-                        readonly property bool isVisible: Math.abs(index - launcher.selectedIndex) <= launcher.sideCount
-
-                        width: isVisible ? (isCurrent ? launcher.expandedWidth : launcher.stripWidth) : 0
-                        height: launcher.carouselHeight
-                        clip: true
-                        opacity: isVisible ? 1.0 : 0.0
-
-                        Behavior on width { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
-                        Behavior on opacity { NumberAnimation { duration: 200 } }
-
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: clipStrip.isCurrent ? 14 : 8
-                            color: Theme.bg
-                            clip: true
-                            border.width: clipStrip.isCurrent ? 1 : 0
-                            border.color: Theme.border
-
-                            Behavior on radius { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
-
-                            // Collapsed icon
-                            Text {
-                                anchors.centerIn: parent
-                                visible: !clipStrip.isCurrent
-                                text: modelData.isImage ? Theme.iconImage : Theme.iconClipboard
-                                font.family: Theme.iconFont
-                                font.pixelSize: 24
-                                color: Theme.fgDim
-                            }
-
-                            // Expanded content
-                            ColumnLayout {
-                                anchors.centerIn: parent
-                                width: parent.width - 40
-                                visible: clipStrip.isCurrent
-                                spacing: 10
-
-                                Text {
-                                    text: modelData.isImage ? Theme.iconImage : Theme.iconClipboard
-                                    font.family: Theme.iconFont
-                                    font.pixelSize: 32
-                                    color: Theme.accent
-                                    Layout.alignment: Qt.AlignHCenter
-                                }
-
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: modelData.isImage ? "Image" : (modelData.content || "")
-                                    textFormat: Text.PlainText
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: modelData.isImage ? 18 : Theme.fontSizeSmall
-                                    font.bold: modelData.isImage
-                                    color: Theme.fg
-                                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                                    elide: Text.ElideRight
-                                    maximumLineCount: modelData.isImage ? 1 : 12
-                                    horizontalAlignment: Text.AlignHCenter
-                                }
-
-                                // Show image metadata for image entries
-                                Text {
-                                    visible: modelData.isImage
-                                    Layout.fillWidth: true
-                                    text: {
-                                        // Extract size and dimensions from "[[ binary data 154 KiB png 1223x521 ]]"
-                                        const m = (modelData.content || "").match(/(\d+\s*\w+)\s+(png|jpe?g|webp|bmp)\s+(\d+x\d+)/i);
-                                        if (m) return m[3] + "  •  " + m[2].toUpperCase() + "  •  " + m[1];
-                                        return modelData.content || "";
-                                    }
-                                    textFormat: Text.PlainText
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSizeSmall
-                                    color: Theme.fgDim
-                                    horizontalAlignment: Text.AlignHCenter
-                                }
-                            }
+                        // Collapsed icon
+                        Text {
+                            anchors.centerIn: parent
+                            visible: !parent.isCurrent
+                            text: modelData.isImage ? Theme.iconImage : Theme.iconClipboard
+                            font.family: Theme.iconFont
+                            font.pixelSize: 24
+                            color: Theme.fgDim
                         }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (clipStrip.isCurrent)
-                                    launcher.copyClipEntry(clipStrip.modelData);
-                                else
-                                    launcher.selectedIndex = clipStrip.index;
+                        // Expanded content
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            width: parent.width - 40
+                            visible: parent.isCurrent
+                            spacing: 10
+
+                            Text {
+                                text: modelData.isImage ? Theme.iconImage : Theme.iconClipboard
+                                font.family: Theme.iconFont
+                                font.pixelSize: 32
+                                color: Theme.accent
+                                Layout.alignment: Qt.AlignHCenter
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                text: modelData.isImage ? "Image" : (modelData.content || "")
+                                textFormat: Text.PlainText
+                                font.family: Theme.fontFamily
+                                font.pixelSize: modelData.isImage ? 18 : Theme.fontSizeSmall
+                                font.bold: modelData.isImage
+                                color: Theme.fg
+                                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                                elide: Text.ElideRight
+                                maximumLineCount: modelData.isImage ? 1 : 12
+                                horizontalAlignment: Text.AlignHCenter
+                            }
+
+                            // Show image metadata for image entries
+                            Text {
+                                visible: modelData.isImage
+                                Layout.fillWidth: true
+                                text: {
+                                    // Extract size and dimensions from "[[ binary data 154 KiB png 1223x521 ]]"
+                                    const m = (modelData.content || "").match(/(\d+\s*\w+)\s+(png|jpe?g|webp|bmp)\s+(\d+x\d+)/i);
+                                    if (m) return m[3] + "  •  " + m[2].toUpperCase() + "  •  " + m[1];
+                                    return modelData.content || "";
+                                }
+                                textFormat: Text.PlainText
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: Theme.fgDim
+                                horizontalAlignment: Text.AlignHCenter
                             }
                         }
                     }
@@ -815,142 +727,114 @@ PanelWindow {
                 Repeater {
                     model: launcher.activeTab === 2 ? launcher.filteredNotifs : []
 
-                    delegate: Item {
-                        id: notifStrip
-                        required property var modelData
-                        required property int index
+                    delegate: CarouselStrip {
+                        selectedIndex: launcher.selectedIndex
+                        sideCount: launcher.sideCount
+                        expandedWidth: launcher.expandedWidth
+                        stripWidth: launcher.stripWidth
+                        carouselHeight: launcher.carouselHeight
+                        onSelected: launcher.selectedIndex = index
 
-                        readonly property bool isCurrent: index === launcher.selectedIndex
-                        readonly property bool isVisible: Math.abs(index - launcher.selectedIndex) <= launcher.sideCount
+                        // Collapsed: bell icon
+                        Text {
+                            anchors.centerIn: parent
+                            visible: !parent.isCurrent
+                            text: Theme.iconBell
+                            font.family: Theme.iconFont
+                            font.pixelSize: 24
+                            color: Theme.fgDim
+                        }
 
-                        width: isVisible ? (isCurrent ? launcher.expandedWidth : launcher.stripWidth) : 0
-                        height: launcher.carouselHeight
-                        clip: true
-                        opacity: isVisible ? 1.0 : 0.0
+                        // Expanded: notification details centered
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            width: parent.width - 40
+                            visible: parent.isCurrent
+                            spacing: 8
 
-                        Behavior on width { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
-                        Behavior on opacity { NumberAnimation { duration: 200 } }
+                            // Image preview if available
+                            Rectangle {
+                                id: notifPreviewContainer
+                                visible: notifPreviewImg.status === Image.Ready
+                                Layout.alignment: Qt.AlignHCenter
+                                Layout.preferredWidth: Math.min(parent.width, 300)
+                                Layout.preferredHeight: visible ? Layout.preferredWidth * 9 / 16 : 0
+                                radius: 8
+                                color: Theme.bgSolid
+                                clip: true
 
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: notifStrip.isCurrent ? 14 : 8
-                            color: Theme.bg
-                            clip: true
-                            border.width: notifStrip.isCurrent ? 1 : 0
-                            border.color: Theme.border
-
-                            Behavior on radius { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
-
-                            // Collapsed: bell icon
-                            Text {
-                                anchors.centerIn: parent
-                                visible: !notifStrip.isCurrent
-                                text: Theme.iconBell
-                                font.family: Theme.iconFont
-                                font.pixelSize: 24
-                                color: Theme.fgDim
+                                Image {
+                                    id: notifPreviewImg
+                                    anchors.fill: parent
+                                    source: {
+                                        const url = modelData.iconUrl || "";
+                                        // Only load direct file paths — avoid image://icon/ provider
+                                        // which can crash with large screenshots
+                                        if (url.startsWith("file://"))
+                                            return url;
+                                        if (url.startsWith("/"))
+                                            return "file://" + url;
+                                        return "";
+                                    }
+                                    fillMode: Image.PreserveAspectCrop
+                                    asynchronous: true
+                                }
                             }
 
-                            // Expanded: notification details centered
-                            ColumnLayout {
-                                anchors.centerIn: parent
-                                width: parent.width - 40
-                                visible: notifStrip.isCurrent
+                            // App name + timestamp
+                            RowLayout {
+                                Layout.alignment: Qt.AlignHCenter
                                 spacing: 8
 
-                                // Image preview if available
-                                Rectangle {
-                                    id: notifPreviewContainer
-                                    visible: notifPreviewImg.status === Image.Ready
-                                    Layout.alignment: Qt.AlignHCenter
-                                    Layout.preferredWidth: Math.min(parent.width, 300)
-                                    Layout.preferredHeight: visible ? Layout.preferredWidth * 9 / 16 : 0
-                                    radius: 8
-                                    color: Theme.bgSolid
-                                    clip: true
-
-                                    Image {
-                                        id: notifPreviewImg
-                                        anchors.fill: parent
-                                        source: {
-                                            const url = modelData.iconUrl || "";
-                                            // Only load direct file paths — avoid image://icon/ provider
-                                            // which can crash with large screenshots
-                                            if (url.startsWith("file://"))
-                                                return url;
-                                            if (url.startsWith("/"))
-                                                return "file://" + url;
-                                            return "";
-                                        }
-                                        fillMode: Image.PreserveAspectCrop
-                                        asynchronous: true
-                                    }
-                                }
-
-                                // App name + timestamp
-                                RowLayout {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    spacing: 8
-
-                                    Text {
-                                        text: modelData.appName || "Notification"
-                                        textFormat: Text.PlainText
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSizeSmall
-                                        font.bold: true
-                                        color: Theme.fgDim
-                                    }
-
-                                    Text {
-                                        text: modelData.timestamp || ""
-                                        textFormat: Text.PlainText
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: 9
-                                        color: Theme.fgDim
-                                        visible: text !== ""
-                                    }
-                                }
-
-                                // Summary
                                 Text {
-                                    Layout.fillWidth: true
-                                    text: modelData.summary || ""
-                                    textFormat: Text.PlainText
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 18
-                                    font.bold: true
-                                    color: Theme.fg
-                                    horizontalAlignment: Text.AlignHCenter
-                                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                                    maximumLineCount: 2
-                                    elide: Text.ElideRight
-                                    visible: text !== ""
-                                }
-
-                                // Body
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: modelData.body || ""
+                                    text: modelData.appName || "Notification"
                                     textFormat: Text.PlainText
                                     font.family: Theme.fontFamily
                                     font.pixelSize: Theme.fontSizeSmall
-                                    color: Theme.fg
-                                    opacity: 0.85
-                                    horizontalAlignment: Text.AlignHCenter
-                                    wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                                    maximumLineCount: 6
-                                    elide: Text.ElideRight
+                                    font.bold: true
+                                    color: Theme.fgDim
+                                }
+
+                                Text {
+                                    text: modelData.timestamp || ""
+                                    textFormat: Text.PlainText
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: 9
+                                    color: Theme.fgDim
                                     visible: text !== ""
                                 }
                             }
-                        }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (!notifStrip.isCurrent)
-                                    launcher.selectedIndex = notifStrip.index;
+                            // Summary
+                            Text {
+                                Layout.fillWidth: true
+                                text: modelData.summary || ""
+                                textFormat: Text.PlainText
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 18
+                                font.bold: true
+                                color: Theme.fg
+                                horizontalAlignment: Text.AlignHCenter
+                                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                                maximumLineCount: 2
+                                elide: Text.ElideRight
+                                visible: text !== ""
+                            }
+
+                            // Body
+                            Text {
+                                Layout.fillWidth: true
+                                text: modelData.body || ""
+                                textFormat: Text.PlainText
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: Theme.fg
+                                opacity: 0.85
+                                horizontalAlignment: Text.AlignHCenter
+                                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                                maximumLineCount: 6
+                                elide: Text.ElideRight
+                                visible: text !== ""
                             }
                         }
                     }
@@ -960,186 +844,160 @@ PanelWindow {
                 Repeater {
                     model: launcher.activeTab === 3 ? launcher.filteredWifiNetworks : []
 
-                    delegate: Item {
+                    delegate: CarouselStrip {
                         id: wifiStrip
-                        required property var modelData
-                        required property int index
+                        selectedIndex: launcher.selectedIndex
+                        sideCount: launcher.sideCount
+                        expandedWidth: launcher.expandedWidth
+                        stripWidth: launcher.stripWidth
+                        carouselHeight: launcher.carouselHeight
+                        borderColor: modelData.connected ? Theme.accent : Theme.border
+                        onActivated: launcher.activate()
+                        onSelected: launcher.selectedIndex = index
 
-                        readonly property bool isCurrent: index === launcher.selectedIndex
-                        readonly property bool isVisible: Math.abs(index - launcher.selectedIndex) <= launcher.sideCount
                         readonly property bool showingPassword: launcher.wifiPasswordSsid === modelData.name
 
-                        width: isVisible ? (isCurrent ? launcher.expandedWidth : launcher.stripWidth) : 0
-                        height: launcher.carouselHeight
-                        clip: true
-                        opacity: isVisible ? 1.0 : 0.0
+                        // Collapsed: signal icon
+                        Text {
+                            anchors.centerIn: parent
+                            visible: !wifiStrip.isCurrent
+                            text: Theme.iconWifi
+                            font.family: Theme.iconFont
+                            font.pixelSize: 24
+                            color: modelData.connected ? Theme.accent : Theme.fgDim
+                            opacity: 0.3 + modelData.signalStrength * 0.7
+                        }
 
-                        Behavior on width { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
-                        Behavior on opacity { NumberAnimation { duration: 200 } }
+                        // Expanded: network details
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            visible: wifiStrip.isCurrent
+                            spacing: 10
+                            width: parent.width - 40
 
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: wifiStrip.isCurrent ? 14 : 8
-                            color: Theme.bg
-                            clip: true
-                            border.width: wifiStrip.isCurrent ? 1 : 0
-                            border.color: wifiStrip.modelData.connected ? Theme.accent : Theme.border
-
-                            Behavior on radius { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
-
-                            // Collapsed: signal icon
+                            // WiFi icon — size reflects signal
                             Text {
-                                anchors.centerIn: parent
-                                visible: !wifiStrip.isCurrent
+                                Layout.alignment: Qt.AlignHCenter
                                 text: Theme.iconWifi
                                 font.family: Theme.iconFont
-                                font.pixelSize: 24
-                                color: wifiStrip.modelData.connected ? Theme.accent : Theme.fgDim
-                                opacity: 0.3 + wifiStrip.modelData.signalStrength * 0.7
+                                font.pixelSize: 48
+                                color: modelData.connected ? Theme.accent : Theme.fg
+                                opacity: 0.4 + modelData.signalStrength * 0.6
                             }
 
-                            // Expanded: network details
-                            ColumnLayout {
-                                anchors.centerIn: parent
-                                visible: wifiStrip.isCurrent
-                                spacing: 10
-                                width: parent.width - 40
+                            // SSID
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: modelData.name || "Hidden Network"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 18
+                                font.bold: true
+                                color: modelData.connected ? Theme.accent : Theme.fg
+                                elide: Text.ElideRight
+                                Layout.maximumWidth: parent.width
+                            }
 
-                                // WiFi icon — size reflects signal
-                                Text {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: Theme.iconWifi
-                                    font.family: Theme.iconFont
-                                    font.pixelSize: 48
-                                    color: wifiStrip.modelData.connected ? Theme.accent : Theme.fg
-                                    opacity: 0.4 + wifiStrip.modelData.signalStrength * 0.6
+                            // Info row: signal + security + status
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                Layout.maximumWidth: parent.width
+                                horizontalAlignment: Text.AlignHCenter
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: Theme.fgDim
+                                text: {
+                                    const signal = Math.round(modelData.signalStrength * 100) + "%";
+                                    const sec = modelData.security === WifiSecurityType.Open ? "Open" : "Secured";
+                                    const status = modelData.connected ? "Connected" : "";
+                                    return [signal, sec, status].filter(s => s).join("  •  ");
                                 }
+                            }
 
-                                // SSID
-                                Text {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: wifiStrip.modelData.name || "Hidden Network"
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 18
-                                    font.bold: true
-                                    color: wifiStrip.modelData.connected ? Theme.accent : Theme.fg
-                                    elide: Text.ElideRight
-                                    Layout.maximumWidth: parent.width
-                                }
-
-                                // Info row: signal + security + status
-                                Text {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    Layout.maximumWidth: parent.width
-                                    horizontalAlignment: Text.AlignHCenter
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSizeSmall
-                                    color: Theme.fgDim
-                                    text: {
-                                        const signal = Math.round(wifiStrip.modelData.signalStrength * 100) + "%";
-                                        const sec = wifiStrip.modelData.security === WifiSecurityType.Open ? "Open" : "Secured";
-                                        const status = wifiStrip.modelData.connected ? "Connected" : "";
-                                        return [signal, sec, status].filter(s => s).join("  •  ");
+                            // Status / action hint
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                visible: !wifiStrip.showingPassword
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 11
+                                property bool isTarget: launcher.wifiStatusSsid === modelData.name
+                                color: isTarget && launcher.wifiStatus === "failed" ? Theme.red
+                                     : isTarget && launcher.wifiStatus === "connected" ? Theme.green
+                                     : isTarget && launcher.wifiStatus === "disconnected" ? Theme.fgDim
+                                     : isTarget && (launcher.wifiStatus === "connecting" || launcher.wifiStatus === "disconnecting") ? Theme.accent
+                                     : Theme.fgDim
+                                opacity: isTarget && launcher.wifiStatus !== "" ? 1.0 : 0.6
+                                text: {
+                                    if (isTarget) {
+                                        if (launcher.wifiStatus === "connecting") return "Connecting...";
+                                        if (launcher.wifiStatus === "disconnecting") return "Disconnecting...";
+                                        if (launcher.wifiStatus === "connected") return "Connected";
+                                        if (launcher.wifiStatus === "disconnected") return "Disconnected";
+                                        if (launcher.wifiStatus === "failed") return "Failed — wrong password?";
                                     }
+                                    return modelData.connected ? "Enter to disconnect" : "Enter to connect";
                                 }
+                            }
 
-                                // Status / action hint
-                                Text {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    visible: !wifiStrip.showingPassword
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 11
-                                    property bool isTarget: launcher.wifiStatusSsid === wifiStrip.modelData.name
-                                    color: isTarget && launcher.wifiStatus === "failed" ? Theme.red
-                                         : isTarget && launcher.wifiStatus === "connected" ? Theme.green
-                                         : isTarget && launcher.wifiStatus === "disconnected" ? Theme.fgDim
-                                         : isTarget && (launcher.wifiStatus === "connecting" || launcher.wifiStatus === "disconnecting") ? Theme.accent
-                                         : Theme.fgDim
-                                    opacity: isTarget && launcher.wifiStatus !== "" ? 1.0 : 0.6
-                                    text: {
-                                        if (isTarget) {
-                                            if (launcher.wifiStatus === "connecting") return "Connecting...";
-                                            if (launcher.wifiStatus === "disconnecting") return "Disconnecting...";
-                                            if (launcher.wifiStatus === "connected") return "Connected";
-                                            if (launcher.wifiStatus === "disconnected") return "Disconnected";
-                                            if (launcher.wifiStatus === "failed") return "Failed — wrong password?";
-                                        }
-                                        return wifiStrip.modelData.connected ? "Enter to disconnect" : "Enter to connect";
+                            // Password input (inside the card)
+                            Rectangle {
+                                visible: wifiStrip.showingPassword
+                                Layout.alignment: Qt.AlignHCenter
+                                Layout.preferredWidth: parent.width * 0.8
+                                implicitHeight: 36
+                                radius: 8
+                                color: Qt.rgba(1, 1, 1, 0.04)
+                                border.width: 1
+                                border.color: wifiPwInput.activeFocus ? Theme.accent : Theme.border
+
+                                RowLayout {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 10
+                                    anchors.rightMargin: 10
+                                    spacing: 8
+
+                                    Text {
+                                        text: Theme.iconLock
+                                        font.family: Theme.iconFont
+                                        font.pixelSize: 12
+                                        color: Theme.fgDim
+                                        Layout.alignment: Qt.AlignVCenter
                                     }
-                                }
 
-                                // Password input (inside the card)
-                                Rectangle {
-                                    visible: wifiStrip.showingPassword
-                                    Layout.alignment: Qt.AlignHCenter
-                                    Layout.preferredWidth: parent.width * 0.8
-                                    implicitHeight: 36
-                                    radius: 8
-                                    color: Qt.rgba(1, 1, 1, 0.04)
-                                    border.width: 1
-                                    border.color: wifiPwInput.activeFocus ? Theme.accent : Theme.border
+                                    TextInput {
+                                        id: wifiPwInput
+                                        Layout.fillWidth: true
+                                        Layout.alignment: Qt.AlignVCenter
+                                        color: Theme.fg
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSize
+                                        echoMode: TextInput.Password
+                                        passwordCharacter: "●"
+                                        clip: true
 
-                                    RowLayout {
-                                        anchors.fill: parent
-                                        anchors.leftMargin: 10
-                                        anchors.rightMargin: 10
-                                        spacing: 8
+                                        onVisibleChanged: if (visible) forceActiveFocus()
 
-                                        Text {
-                                            text: Theme.iconLock
-                                            font.family: Theme.iconFont
-                                            font.pixelSize: 12
-                                            color: Theme.fgDim
-                                            Layout.alignment: Qt.AlignVCenter
-                                        }
-
-                                        TextInput {
-                                            id: wifiPwInput
-                                            Layout.fillWidth: true
-                                            Layout.alignment: Qt.AlignVCenter
-                                            color: Theme.fg
-                                            font.family: Theme.fontFamily
-                                            font.pixelSize: Theme.fontSize
-                                            echoMode: TextInput.Password
-                                            passwordCharacter: "●"
-                                            clip: true
-
-                                            onVisibleChanged: if (visible) forceActiveFocus()
-
-                                            Keys.onReturnPressed: {
-                                                if (text.length > 0) {
-                                                    const ssid = wifiStrip.modelData.name;
-                                                    const pw = text;
-                                                    launcher.wifiStatusSsid = ssid;
-                                                    launcher.wifiStatus = "connecting";
-                                                    launcher.wifiPasswordSsid = "";
-                                                    // Connect and store password in system config (no agent needed)
-                                                    wifiConnectProc.command = ["sh", "-c",
-                                                        'nmcli device wifi connect "$1" password "$2" && nmcli connection modify "$1" 802-11-wireless-security.psk-flags 0',
-                                                        "sh", ssid, pw];
-                                                    wifiConnectProc.running = true;
-                                                    text = "";
-                                                    searchField.forceActiveFocus();
-                                                }
-                                            }
-                                            Keys.onEscapePressed: {
+                                        Keys.onReturnPressed: {
+                                            if (text.length > 0) {
+                                                const ssid = modelData.name;
+                                                const pw = text;
+                                                launcher.wifiStatusSsid = ssid;
+                                                launcher.wifiStatus = "connecting";
                                                 launcher.wifiPasswordSsid = "";
+                                                // Connect and store password in system config (no agent needed)
+                                                wifiConnectProc.command = ["sh", "-c",
+                                                    'nmcli device wifi connect "$1" password "$2" && nmcli connection modify "$1" 802-11-wireless-security.psk-flags 0',
+                                                    "sh", ssid, pw];
+                                                wifiConnectProc.running = true;
+                                                text = "";
                                                 searchField.forceActiveFocus();
                                             }
                                         }
+                                        Keys.onEscapePressed: {
+                                            launcher.wifiPasswordSsid = "";
+                                            searchField.forceActiveFocus();
+                                        }
                                     }
                                 }
-                            }
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (wifiStrip.isCurrent)
-                                    launcher.activate();
-                                else
-                                    launcher.selectedIndex = wifiStrip.index;
                             }
                         }
                     }
@@ -1148,110 +1006,82 @@ PanelWindow {
                 Repeater {
                     model: launcher.activeTab === 4 && launcher.btEnabled ? launcher.filteredBtDevices : []
 
-                    delegate: Item {
-                        id: btStrip
-                        required property var modelData
-                        required property int index
+                    delegate: CarouselStrip {
+                        selectedIndex: launcher.selectedIndex
+                        sideCount: launcher.sideCount
+                        expandedWidth: launcher.expandedWidth
+                        stripWidth: launcher.stripWidth
+                        carouselHeight: launcher.carouselHeight
+                        borderColor: modelData.connected ? Theme.accent : Theme.border
+                        onActivated: launcher.activate()
+                        onSelected: launcher.selectedIndex = index
 
-                        readonly property bool isCurrent: index === launcher.selectedIndex
-                        readonly property bool isVisible: Math.abs(index - launcher.selectedIndex) <= launcher.sideCount
-
-                        width: isVisible ? (isCurrent ? launcher.expandedWidth : launcher.stripWidth) : 0
-                        height: launcher.carouselHeight
-                        clip: true
-                        opacity: isVisible ? 1.0 : 0.0
-
-                        Behavior on width { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
-                        Behavior on opacity { NumberAnimation { duration: 200 } }
-
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: btStrip.isCurrent ? 14 : 8
-                            color: Theme.bg
-                            clip: true
-                            border.width: btStrip.isCurrent ? 1 : 0
-                            border.color: btStrip.modelData.connected ? Theme.accent : Theme.border
-
-                            Behavior on radius { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
-
-                            // Collapsed: BT icon
-                            Text {
-                                anchors.centerIn: parent
-                                visible: !btStrip.isCurrent
-                                text: Theme.iconBluetooth
-                                font.family: Theme.iconFont
-                                font.pixelSize: 24
-                                color: btStrip.modelData.connected ? Theme.accent : Theme.fgDim
-                            }
-
-                            // Expanded: device details
-                            ColumnLayout {
-                                anchors.centerIn: parent
-                                visible: btStrip.isCurrent
-                                spacing: 10
-                                width: parent.width - 40
-
-                                Text {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: Theme.iconBluetooth
-                                    font.family: Theme.iconFont
-                                    font.pixelSize: 48
-                                    color: btStrip.modelData.connected ? Theme.accent : Theme.fg
-                                }
-
-                                // Device name
-                                Text {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: btStrip.modelData.name || btStrip.modelData.deviceName || "Unknown"
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 18
-                                    font.bold: true
-                                    color: btStrip.modelData.connected ? Theme.accent : Theme.fg
-                                    elide: Text.ElideRight
-                                    Layout.maximumWidth: parent.width
-                                }
-
-                                // Info: status + battery
-                                Text {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    Layout.maximumWidth: parent.width
-                                    horizontalAlignment: Text.AlignHCenter
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSizeSmall
-                                    color: Theme.fgDim
-                                    text: {
-                                        const parts = [];
-                                        if (btStrip.modelData.connected) parts.push("Connected");
-                                        else if (btStrip.modelData.paired) parts.push("Paired");
-                                        else parts.push("Available");
-                                        if (btStrip.modelData.batteryAvailable)
-                                            parts.push(Math.round(btStrip.modelData.battery * 100) + "% battery");
-                                        return parts.join("  •  ");
-                                    }
-                                }
-
-                                // Action hint
-                                Text {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: 10
-                                    color: Theme.fgDim
-                                    opacity: 0.6
-                                    text: btStrip.modelData.connected ? "Enter to disconnect"
-                                        : btStrip.modelData.paired ? "Enter to connect"
-                                        : "Enter to pair"
-                                }
-                            }
+                        // Collapsed: BT icon
+                        Text {
+                            anchors.centerIn: parent
+                            visible: !parent.isCurrent
+                            text: Theme.iconBluetooth
+                            font.family: Theme.iconFont
+                            font.pixelSize: 24
+                            color: modelData.connected ? Theme.accent : Theme.fgDim
                         }
 
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (btStrip.isCurrent)
-                                    launcher.activate();
-                                else
-                                    launcher.selectedIndex = btStrip.index;
+                        // Expanded: device details
+                        ColumnLayout {
+                            anchors.centerIn: parent
+                            visible: parent.isCurrent
+                            spacing: 10
+                            width: parent.width - 40
+
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: Theme.iconBluetooth
+                                font.family: Theme.iconFont
+                                font.pixelSize: 48
+                                color: modelData.connected ? Theme.accent : Theme.fg
+                            }
+
+                            // Device name
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                text: modelData.name || modelData.deviceName || "Unknown"
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 18
+                                font.bold: true
+                                color: modelData.connected ? Theme.accent : Theme.fg
+                                elide: Text.ElideRight
+                                Layout.maximumWidth: parent.width
+                            }
+
+                            // Info: status + battery
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                Layout.maximumWidth: parent.width
+                                horizontalAlignment: Text.AlignHCenter
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: Theme.fgDim
+                                text: {
+                                    const parts = [];
+                                    if (modelData.connected) parts.push("Connected");
+                                    else if (modelData.paired) parts.push("Paired");
+                                    else parts.push("Available");
+                                    if (modelData.batteryAvailable)
+                                        parts.push(Math.round(modelData.battery * 100) + "% battery");
+                                    return parts.join("  •  ");
+                                }
+                            }
+
+                            // Action hint
+                            Text {
+                                Layout.alignment: Qt.AlignHCenter
+                                font.family: Theme.fontFamily
+                                font.pixelSize: 10
+                                color: Theme.fgDim
+                                opacity: 0.6
+                                text: modelData.connected ? "Enter to disconnect"
+                                    : modelData.paired ? "Enter to connect"
+                                    : "Enter to pair"
                             }
                         }
                     }
@@ -1259,38 +1089,13 @@ PanelWindow {
             }
 
             // Bluetooth off — single card
-            Rectangle {
+            DisabledCard {
                 visible: launcher.activeTab === 4 && !launcher.btEnabled
                 anchors.centerIn: parent
                 width: launcher.expandedWidth
                 height: launcher.carouselHeight
-                radius: 14
-                color: Theme.bg
-                border.width: 1
-                border.color: Theme.border
-
-                ColumnLayout {
-                    anchors.centerIn: parent
-                    spacing: 12
-                    width: parent.width - 40
-
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: Theme.iconBluetooth
-                        font.family: Theme.iconFont
-                        font.pixelSize: 48
-                        color: Theme.red
-                        opacity: 0.4
-                    }
-
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: "Press B to enable"
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        color: Theme.fgDim
-                    }
-                }
+                icon: Theme.iconBluetooth
+                hint: "Press B to enable"
             }
 
             // Navigation arrows
