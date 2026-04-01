@@ -516,13 +516,13 @@ PanelWindow {
                             event.accepted = true;
                             break;
                         case Qt.Key_W:
-                            if (launcher.activeTab === 3 && searchField.text === "") {
+                            if (launcher.activeTab === 3 && (event.modifiers & Qt.ControlModifier)) {
                                 Networking.wifiEnabled = !Networking.wifiEnabled;
                                 event.accepted = true;
                             }
                             break;
                         case Qt.Key_B:
-                            if (launcher.activeTab === 4 && searchField.text === "" && launcher.btAdapter) {
+                            if (launcher.activeTab === 4 && (event.modifiers & Qt.ControlModifier) && launcher.btAdapter) {
                                 launcher.btAdapter.enabled = !launcher.btAdapter.enabled;
                                 event.accepted = true;
                             }
@@ -553,16 +553,51 @@ PanelWindow {
             height: launcher.carouselHeight
             clip: true
 
-            // Empty state
+            // Empty state — text for search/generic
             Text {
                 anchors.centerIn: parent
-                visible: launcher.currentList.length === 0 && !(launcher.activeTab === 3 && !Networking.wifiEnabled)
-                text: searchField.text !== "" ? "No results" :
-                      (launcher.activeTab === 1 && !launcher.clipboardLoaded ? "Loading..." :
-                      (launcher.activeTab === 3 ? "Scanning..." : ""))
+                visible: launcher.currentList.length === 0
+                      && searchField.text !== ""
+                text: "No results"
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize
                 color: Theme.fgDim
+            }
+
+            // Loading state — clipboard
+            Text {
+                anchors.centerIn: parent
+                visible: launcher.activeTab === 1 && !launcher.clipboardLoaded && searchField.text === ""
+                text: "Loading..."
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize
+                color: Theme.fgDim
+            }
+
+            // Scanning state — WiFi
+            DisabledCard {
+                visible: launcher.activeTab === 3 && Networking.wifiEnabled
+                      && launcher.filteredWifiNetworks.length === 0 && searchField.text === ""
+                anchors.centerIn: parent
+                width: launcher.expandedWidth
+                height: launcher.carouselHeight
+                icon: Theme.iconWifi
+                iconColor: Theme.accent
+                iconOpacity: 0.3
+                hint: "Scanning for networks..."
+            }
+
+            // Scanning state — Bluetooth
+            DisabledCard {
+                visible: launcher.activeTab === 4 && launcher.btEnabled
+                      && launcher.filteredBtDevices.length === 0 && searchField.text === ""
+                anchors.centerIn: parent
+                width: launcher.expandedWidth
+                height: launcher.carouselHeight
+                icon: Theme.iconBluetooth
+                iconColor: Theme.accent
+                iconOpacity: 0.3
+                hint: "Scanning for devices..."
             }
 
             // WiFi off — single card
@@ -572,7 +607,7 @@ PanelWindow {
                 width: launcher.expandedWidth
                 height: launcher.carouselHeight
                 icon: Theme.iconWifiOff
-                hint: "Press W to enable"
+                hint: "Ctrl+W to enable"
             }
 
             // Sliding row
@@ -1095,7 +1130,7 @@ PanelWindow {
                 width: launcher.expandedWidth
                 height: launcher.carouselHeight
                 icon: Theme.iconBluetooth
-                hint: "Press B to enable"
+                hint: "Ctrl+B to enable"
             }
 
             // Navigation arrows
@@ -1131,16 +1166,16 @@ PanelWindow {
         text: {
             // WiFi/BT off states
             if (launcher.activeTab === 3 && !Networking.wifiEnabled)
-                return "W toggle WiFi  |  Tab switch  |  ESC close";
+                return "Ctrl+W toggle WiFi  |  Tab switch  |  ESC close";
             if (launcher.activeTab === 4 && !launcher.btEnabled)
-                return "B toggle Bluetooth  |  Tab switch  |  ESC close";
+                return "Ctrl+B toggle Bluetooth  |  Tab switch  |  ESC close";
 
             var t = (launcher.selectedIndex + 1) + " / " + launcher.currentList.length
                   + "  |  ← → Navigate";
             if (launcher.activeTab === 0) t += "  |  Enter launch";
             else if (launcher.activeTab === 1) t += "  |  Enter copy";
-            else if (launcher.activeTab === 3) t += "  |  Enter connect  |  W toggle WiFi";
-            else if (launcher.activeTab === 4) t += "  |  Enter connect  |  B toggle Bluetooth";
+            else if (launcher.activeTab === 3) t += "  |  Enter connect  |  Ctrl+W toggle WiFi";
+            else if (launcher.activeTab === 4) t += "  |  Enter connect  |  Ctrl+B toggle Bluetooth";
             t += "  |  Tab switch  |  ESC close";
             return t;
         }

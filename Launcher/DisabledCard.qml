@@ -2,12 +2,14 @@ import QtQuick
 import QtQuick.Layouts
 import qs.Config
 
-// Single centered card shown when a feature is disabled (WiFi off, BT off).
+// Single centered card for status states (disabled, scanning, etc.).
 Rectangle {
     id: root
 
     property string icon: ""
     property string hint: ""
+    property color iconColor: Theme.red
+    property real iconOpacity: 0.4
 
     width: 500
     height: 350
@@ -26,8 +28,8 @@ Rectangle {
             text: root.icon
             font.family: Theme.iconFont
             font.pixelSize: 48
-            color: Theme.red
-            opacity: 0.4
+            color: root.iconColor
+            opacity: root.iconOpacity
         }
 
         Text {
