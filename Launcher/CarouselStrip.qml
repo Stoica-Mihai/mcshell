@@ -49,6 +49,7 @@ Item {
         Item {
             id: cardContent
             anchors.fill: parent
+            property bool isCurrent: strip.isCurrent
         }
     }
 
