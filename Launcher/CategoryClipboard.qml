@@ -15,51 +15,38 @@ LauncherCategory {
     tabIcon: Theme.iconClipboard
     searchPlaceholder: "Search clipboard..."
     legendHint: "Enter copy"
-    scanningState: !clipboardLoaded
+    scanningState: !clipboardLoaded || allClipEntries.length === 0
     scanningIcon: Theme.iconClipboard
-    scanningHint: "Loading..."
+    scanningHint: clipboardLoaded ? "No clipboard history" : "Loading..."
 
     // ── Data ──
-    model: filteredClipEntries
+    model: launcher.searchText !== "" ? filteredClipEntries : lazyClip.count
 
     property bool clipboardLoaded: false
     property var allClipEntries: []
     property var filteredClipEntries: []
     property var _rawLines: []
-    property int _loadedEnd: 0
-    readonly property int _pageSize: 20
+
+    LazyModel {
+        id: lazyClip
+        sourceModel: root.allClipEntries
+        currentIndex: root.launcher.selectedIndex
+    }
 
     // ── Lifecycle ──
     function onTabEnter() {
         if (!clipboardLoaded) loadClipboard();
-        _loadedEnd = 0;
-        _ensureLoaded(0);
+        else lazyClip.reset();
     }
 
     function onTabLeave() {
-        _loadedEnd = 0;
-    }
-
-    // ── Lazy loading — grow model as user navigates ──
-    function _ensureLoaded(idx) {
-        if (allClipEntries.length === 0) return;
-        const needed = idx + _pageSize;
-        if (needed <= _loadedEnd) return;
-        _loadedEnd = Math.min(needed, allClipEntries.length);
-        if (launcher.searchText === "")
-            filteredClipEntries = allClipEntries.slice(0, _loadedEnd);
-    }
-
-    Connections {
-        target: root.launcher
-        function onSelectedIndexChanged() {
-            if (root.launcher.activeCategory === root && root.launcher.searchText === "")
-                root._ensureLoaded(root.launcher.selectedIndex);
-        }
+        lazyClip.reset();
     }
 
     // ── Loading ──
     function loadClipboard() {
+        clipboardLoaded = false;
+        allClipEntries = [];
         _rawLines = [];
         clipHistProc.running = true;
     }
@@ -73,12 +60,9 @@ LauncherCategory {
             root.allClipEntries = root.parseClipEntries(root._rawLines);
             root._rawLines = [];
             root.clipboardLoaded = true;
-            root._loadedEnd = 0;
-            root._ensureLoaded(0);
         }
         onFailed: {
             root.clipboardLoaded = true;
-            root.filteredClipEntries = [];
         }
     }
 
@@ -115,11 +99,7 @@ LauncherCategory {
     // ── Search ──
     function onSearch(text) {
         const query = (text || "").toLowerCase().trim();
-        if (query === "") {
-            _loadedEnd = 0;
-            _ensureLoaded(launcher.selectedIndex);
-            return;
-        }
+        if (query === "") { filteredClipEntries = []; return; }
         // Search filters the full list — results are typically small
         const results = [];
         for (let i = 0; i < allClipEntries.length; i++) {
@@ -131,13 +111,16 @@ LauncherCategory {
 
     // ── Activate ──
     function onActivate(index) {
-        if (index < 0 || index >= filteredClipEntries.length) return;
-        copyClipEntry(filteredClipEntries[index]);
+        const entry = launcher.searchText !== ""
+            ? filteredClipEntries[index]
+            : allClipEntries[index];
+        if (entry) copyClipEntry(entry);
     }
 
     // ── Card delegate ──
     cardDelegate: Component {
         CarouselStrip {
+            id: clipStrip
             selectedIndex: root.launcher.selectedIndex
             sideCount: root.launcher.sideCount
             expandedWidth: root.launcher.expandedWidth
@@ -147,11 +130,14 @@ LauncherCategory {
             onActivated: root.onActivate(index)
             onSelected: root.launcher.selectedIndex = index
 
+            // Resolve entry — numeric model uses index lookup, array model uses modelData
+            readonly property var entry: typeof modelData === "object" ? modelData : root.allClipEntries[index]
+
             // Collapsed icon
             Text {
                 anchors.centerIn: parent
                 visible: !parent.isCurrent
-                text: modelData.isImage ? Theme.iconImage : Theme.iconClipboard
+                text: clipStrip.entry?.isImage ? Theme.iconImage : Theme.iconClipboard
                 font.family: Theme.iconFont
                 font.pixelSize: 24
                 color: Theme.fgDim
@@ -165,7 +151,7 @@ LauncherCategory {
                 spacing: 10
 
                 Text {
-                    text: modelData.isImage ? Theme.iconImage : Theme.iconClipboard
+                    text: clipStrip.entry?.isImage ? Theme.iconImage : Theme.iconClipboard
                     font.family: Theme.iconFont
                     font.pixelSize: 32
                     color: Theme.accent
@@ -174,27 +160,26 @@ LauncherCategory {
 
                 Text {
                     Layout.fillWidth: true
-                    text: modelData.isImage ? "Image" : (modelData.content || "")
+                    text: clipStrip.entry?.isImage ? "Image" : (clipStrip.entry?.content || "")
                     textFormat: Text.PlainText
                     font.family: Theme.fontFamily
-                    font.pixelSize: modelData.isImage ? 18 : Theme.fontSizeSmall
-                    font.bold: modelData.isImage ?? false
+                    font.pixelSize: clipStrip.entry?.isImage ? 18 : Theme.fontSizeSmall
+                    font.bold: clipStrip.entry?.isImage ?? false
                     color: Theme.fg
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     elide: Text.ElideRight
-                    maximumLineCount: modelData.isImage ? 1 : 12
+                    maximumLineCount: clipStrip.entry?.isImage ? 1 : 12
                     horizontalAlignment: Text.AlignHCenter
                 }
 
                 // Show image metadata for image entries
                 Text {
-                    visible: modelData.isImage ?? false
+                    visible: clipStrip.entry?.isImage ?? false
                     Layout.fillWidth: true
                     text: {
-                        // Extract size and dimensions from "[[ binary data 154 KiB png 1223x521 ]]"
-                        const m = (modelData.content || "").match(/(\d+\s*\w+)\s+(png|jpe?g|webp|bmp)\s+(\d+x\d+)/i);
+                        const m = (clipStrip.entry?.content || "").match(/(\d+\s*\w+)\s+(png|jpe?g|webp|bmp)\s+(\d+x\d+)/i);
                         if (m) return m[3] + "  •  " + m[2].toUpperCase() + "  •  " + m[1];
-                        return modelData.content || "";
+                        return clipStrip.entry?.content || "";
                     }
                     textFormat: Text.PlainText
                     font.family: Theme.fontFamily

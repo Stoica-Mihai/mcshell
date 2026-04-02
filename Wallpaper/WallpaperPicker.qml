@@ -45,6 +45,12 @@ PanelWindow {
     property int currentIndex: 0
     property string activeWallpaper: WallpaperConfig.wallpaper
 
+    LazyModel {
+        id: lazyWall
+        sourceModel: picker.wallpaperPaths
+        currentIndex: picker.currentIndex
+    }
+
     readonly property real stripWidth: 80
     readonly property real expandedWidth: 650
     readonly property real carouselHeight: 500
@@ -67,15 +73,10 @@ PanelWindow {
     // We want the center of the currentIndex item at that point
     function calcRowX() {
         if (wallpaperPaths.length === 0) return 0;
-        // Only count visible items to the left of current
-        const firstVisible = Math.max(0, currentIndex - sideCount);
-        const visibleLeftCount = currentIndex - firstVisible;
+        const visibleLeftCount = Math.min(currentIndex, sideCount);
         const leftWidth = visibleLeftCount * (stripWidth + stripSpacing);
         const centerOffset = expandedWidth / 2;
-        // Account for collapsed items before the visible window
-        const collapsedCount = firstVisible;
-        const collapsedWidth = collapsedCount * stripSpacing; // width 0 but spacing remains
-        return carouselArea.width / 2 - collapsedWidth - leftWidth - centerOffset;
+        return carouselArea.width / 2 - leftWidth - centerOffset;
     }
 
     Component.onCompleted: {
@@ -112,11 +113,12 @@ PanelWindow {
     SafeProcess {
         id: scanProc
         failMessage: "wallpaper scan failed — check folder path"
-        onRead: data => { picker._scanLines = picker._scanLines.concat([data.trim()]); }
+        onRead: data => { picker._scanLines.push(data.trim()); }
         onFinished: {
             const sorted = picker._scanLines.slice().sort();
             picker.wallpaperPaths = sorted;
             picker._scanLines = [];
+            picker.currentIndex = 0;
             for (let i = 0; i < sorted.length; i++) {
                 if (sorted[i] === picker.activeWallpaper) {
                     picker.currentIndex = i;
@@ -257,18 +259,18 @@ PanelWindow {
                 }
 
                 Repeater {
-                    model: picker.wallpaperPaths
+                    model: lazyWall.count
 
                     delegate: Item {
                         id: strip
-                        required property string modelData
                         required property int index
 
+                        readonly property string wallPath: picker.wallpaperPaths[index] ?? ""
                         readonly property bool isCurrent: index === picker.currentIndex
-                        readonly property bool isActive: modelData === picker.activeWallpaper
+                        readonly property bool isActive: wallPath === picker.activeWallpaper
                         readonly property bool isVisible: Math.abs(index - picker.currentIndex) <= picker.sideCount
                         readonly property string fileName: {
-                            const parts = modelData.split("/");
+                            const parts = wallPath.split("/");
                             return parts[parts.length - 1];
                         }
 
@@ -301,7 +303,7 @@ PanelWindow {
                             Image {
                                 anchors.fill: parent
                                 // Only load if within range — lazy loading
-                                source: strip.isVisible ? "file://" + strip.modelData : ""
+                                source: strip.isVisible ? "file://" + strip.wallPath : ""
                                 fillMode: Image.PreserveAspectCrop
                                 asynchronous: true
                                 smooth: true
@@ -361,8 +363,8 @@ PanelWindow {
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
                                 if (strip.isCurrent) {
-                                    picker.activeWallpaper = strip.modelData;
-                                    picker.wallpaperSelected(strip.modelData);
+                                    picker.activeWallpaper = strip.wallPath;
+                                    picker.wallpaperSelected(strip.wallPath);
                                 } else {
                                     picker.currentIndex = strip.index;
                                 }

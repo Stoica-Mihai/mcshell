@@ -85,6 +85,7 @@ PanelWindow {
     readonly property int tabCount: categories.length
     readonly property var activeCategory: categories[activeTab]
     readonly property var currentList: activeCategory.model
+    readonly property int currentCount: typeof currentList === "number" ? currentList : (currentList.length ?? 0)
     readonly property string searchText: searchField.text
 
     property int selectedIndex: 0
@@ -98,19 +99,16 @@ PanelWindow {
     readonly property real stripSpacing: 6
 
     function navigate(delta) {
-        if (currentList.length === 0) return;
-        selectedIndex = Math.max(0, Math.min(currentList.length - 1, selectedIndex + delta));
+        if (currentCount === 0) return;
+        selectedIndex = Math.max(0, Math.min(currentCount - 1, selectedIndex + delta));
     }
 
     function calcRowX() {
-        if (currentList.length === 0) return carouselArea.width / 2;
-        const firstVisible = Math.max(0, selectedIndex - sideCount);
-        const visibleLeftCount = selectedIndex - firstVisible;
+        if (currentCount === 0) return carouselArea.width / 2;
+        const visibleLeftCount = Math.min(selectedIndex, sideCount);
         const leftWidth = visibleLeftCount * (stripWidth + stripSpacing);
         const centerOffset = expandedWidth / 2;
-        const collapsedCount = firstVisible;
-        const collapsedWidth = collapsedCount * stripSpacing;
-        return carouselArea.width / 2 - collapsedWidth - leftWidth - centerOffset;
+        return carouselArea.width / 2 - leftWidth - centerOffset;
     }
 
     // ── Tab switching ───────────────────────────────────
@@ -136,7 +134,7 @@ PanelWindow {
 
     // ── Activate selected item ──────────────────────────
     function activate() {
-        if (selectedIndex < 0 || selectedIndex >= currentList.length) return;
+        if (selectedIndex < 0 || selectedIndex >= currentCount) return;
         activeCategory.onActivate(selectedIndex);
     }
 
@@ -321,7 +319,7 @@ PanelWindow {
             // Empty state — text for search/generic
             Text {
                 anchors.centerIn: parent
-                visible: launcher.currentList.length === 0
+                visible: launcher.currentCount === 0
                       && searchField.text !== ""
                       && !launcher.activeCategory.disabledState
                 text: "No results"
@@ -344,7 +342,7 @@ PanelWindow {
             DisabledCard {
                 visible: launcher.activeCategory.scanningState
                       && !launcher.activeCategory.disabledState
-                      && launcher.activeCategory.model.length === 0
+                      && launcher.currentCount === 0
                       && searchField.text === ""
                 anchors.centerIn: parent
                 width: launcher.expandedWidth
@@ -361,7 +359,7 @@ PanelWindow {
                 x: launcher.calcRowX()
                 height: launcher.carouselHeight
                 spacing: launcher.stripSpacing
-                visible: launcher.currentList.length > 0
+                visible: launcher.currentCount > 0
 
                 Behavior on x {
                     NumberAnimation { duration: 350; easing.type: Easing.OutCubic }
@@ -381,7 +379,7 @@ PanelWindow {
                 icon: Theme.iconArrowLeft
                 size: 24
                 normalColor: Theme.fgDim
-                visible: launcher.selectedIndex > 0 && launcher.currentList.length > 0
+                visible: launcher.selectedIndex > 0 && launcher.currentCount > 0
                 onClicked: launcher.navigate(-1)
             }
 
@@ -392,7 +390,7 @@ PanelWindow {
                 icon: Theme.iconArrowRight
                 size: 24
                 normalColor: Theme.fgDim
-                visible: launcher.selectedIndex < launcher.currentList.length - 1 && launcher.currentList.length > 0
+                visible: launcher.selectedIndex < launcher.currentCount - 1 && launcher.currentCount > 0
                 onClicked: launcher.navigate(1)
             }
         }
@@ -421,9 +419,9 @@ PanelWindow {
                 return launcher.activeCategory.legendHint;
 
             // Level 2: standard item navigation
-            if (launcher.currentList.length === 0)
+            if (launcher.currentCount === 0)
                 return "ESC back";
-            var t = (launcher.selectedIndex + 1) + " / " + launcher.currentList.length
+            var t = (launcher.selectedIndex + 1) + " / " + launcher.currentCount
                   + "  |  \u2190 \u2192 Navigate";
             if (launcher.activeCategory.legendHint)
                 t += "  |  " + launcher.activeCategory.legendHint;

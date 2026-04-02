@@ -14,6 +14,9 @@ LauncherCategory {
     tabIcon: Theme.iconApps
     searchPlaceholder: "Search apps..."
     legendHint: "Enter launch"
+    scanningState: allApps.length === 0
+    scanningIcon: Theme.iconApps
+    scanningHint: "No applications found"
 
     // ── Data ──
     model: filteredApps
@@ -31,6 +34,7 @@ LauncherCategory {
         return apps;
     }
     property var filteredApps: []
+    onAllAppsChanged: applyAppFilter(launcher.searchText)
 
     // ── Search ──
     function onSearch(text) { applyAppFilter(text); }
