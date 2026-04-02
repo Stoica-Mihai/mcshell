@@ -187,110 +187,33 @@ Scope {
                             anchors.centerIn: parent
                             spacing: 10
 
-                            // Volume icon
-                            Item {
-                                implicitWidth: volRow.implicitWidth
-                                implicitHeight: volRow.implicitHeight
-
-                                Row {
-                                    id: volRow
-                                    anchors.centerIn: parent
-                                    spacing: 5
-
-                                    Text {
-                                        id: volIcon
-                                        font.family: Theme.iconFont
-                                        font.pixelSize: Theme.iconSize
-                                        color: volMouse.containsMouse ? Theme.accent
-                                             : volume.muted ? Theme.red
-                                             : Theme.fg
-                                        text: Theme.volumeIcon(volume.rawVolume, volume.muted)
-                                        Behavior on color { ColorAnimation { duration: Theme.animFast } }
-                                    }
-
-                                    Text {
-                                        color: volume.muted ? Theme.red : volMouse.containsMouse ? Theme.accent : Theme.fg
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSizeSmall
-                                        text: volume.volume + "%"
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        Behavior on color { ColorAnimation { duration: Theme.animFast } }
-                                    }
+                            // Volume
+                            CapsuleItem {
+                                icon: Theme.volumeIcon(volume.rawVolume, volume.muted)
+                                label: volume.volume + "%"
+                                alert: volume.muted
+                                active: capsule.activePanel === "volume"
+                                onClicked: event => {
+                                    if (event.button === Qt.MiddleButton)
+                                        volume.toggleMute();
+                                    else
+                                        capsule.togglePanel("volume");
                                 }
-
-                                // Underline
-                                Rectangle {
-                                    visible: capsule.activePanel === "volume"
-                                    anchors.bottom: parent.bottom
-                                    anchors.bottomMargin: -4
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: parent.width + 4
-                                    height: 2
-                                    radius: 1
-                                    color: Theme.accent
-                                }
-
-                                MouseArea {
-                                    id: volMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-                                    onClicked: event => {
-                                        if (event.button === Qt.MiddleButton)
-                                            volume.toggleMute();
-                                        else
-                                            capsule.togglePanel("volume");
-                                    }
-                                    onWheel: wheel => {
-                                        const step = 0.02;
-                                        if (wheel.angleDelta.y > 0)
-                                            volume.setVolume(volume.rawVolume + step);
-                                        else
-                                            volume.setVolume(volume.rawVolume - step);
-                                    }
+                                onWheel: event => {
+                                    const step = 0.02;
+                                    if (event.angleDelta.y > 0)
+                                        volume.setVolume(volume.rawVolume + step);
+                                    else
+                                        volume.setVolume(volume.rawVolume - step);
                                 }
                             }
 
-                            // Battery indicator
-                            Item {
+                            // Battery
+                            CapsuleItem {
                                 visible: battery.present
-                                implicitWidth: batRow.implicitWidth
-                                implicitHeight: batRow.implicitHeight
-
-                                Row {
-                                    id: batRow
-                                    anchors.centerIn: parent
-                                    spacing: 5
-
-                                    Text {
-                                        font.family: Theme.iconFont
-                                        font.pixelSize: Theme.iconSize
-                                        color: batMouse.containsMouse ? Theme.accent
-                                             : battery.low ? Theme.red
-                                             : Theme.fg
-                                        text: Theme.batteryIcon(battery.percentage, battery.charging)
-                                        Behavior on color { ColorAnimation { duration: Theme.animFast } }
-                                    }
-
-                                    Text {
-                                        color: battery.low ? Theme.red
-                                             : batMouse.containsMouse ? Theme.accent
-                                             : Theme.fg
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSizeSmall
-                                        text: battery.percentage + "%"
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        Behavior on color { ColorAnimation { duration: Theme.animFast } }
-                                    }
-                                }
-
-                                MouseArea {
-                                    id: batMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                }
+                                icon: Theme.batteryIcon(battery.percentage, battery.charging)
+                                label: battery.percentage + "%"
+                                alert: battery.low
                             }
 
                             // Notification bell
