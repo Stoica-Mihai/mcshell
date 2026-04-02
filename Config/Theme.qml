@@ -94,6 +94,21 @@ Singleton {
     readonly property string iconDndOff: "\uf0f3"
     readonly property string iconNightLight: "\ue228"
 
+    // Battery
+    readonly property string iconBattery: "\u{f008e}"
+    readonly property string iconBattery10: "\u{f007a}"
+    readonly property string iconBattery20: "\u{f007b}"
+    readonly property string iconBattery30: "\u{f007c}"
+    readonly property string iconBattery40: "\u{f007d}"
+    readonly property string iconBattery50: "\u{f007e}"
+    readonly property string iconBattery60: "\u{f007f}"
+    readonly property string iconBattery70: "\u{f0080}"
+    readonly property string iconBattery80: "\u{f0081}"
+    readonly property string iconBattery90: "\u{f0082}"
+    readonly property string iconBatteryFull: "\u{f0079}"
+    readonly property string iconBatteryCharging: "\u{f0084}"
+    readonly property string iconBatteryAlert: "\u{f0083}"
+
     // Wallpaper
     readonly property string iconWallpaper: "\u{f00ab}"
     readonly property string iconFolder: "\uf07b"
@@ -104,5 +119,21 @@ Singleton {
         if (volume < 0.3) return iconVolLow;
         if (volume < 0.7) return iconVolMid;
         return iconVolHigh;
+    }
+
+    // Battery helper — returns the right icon for a charge level
+    function batteryIcon(pct, charging) {
+        if (charging) return iconBatteryCharging;
+        if (pct >= 95) return iconBatteryFull;
+        if (pct >= 85) return iconBattery90;
+        if (pct >= 75) return iconBattery80;
+        if (pct >= 65) return iconBattery70;
+        if (pct >= 55) return iconBattery60;
+        if (pct >= 45) return iconBattery50;
+        if (pct >= 35) return iconBattery40;
+        if (pct >= 25) return iconBattery30;
+        if (pct >= 15) return iconBattery20;
+        if (pct >= 5) return iconBattery10;
+        return iconBatteryAlert;
     }
 }

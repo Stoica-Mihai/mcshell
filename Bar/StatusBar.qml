@@ -252,6 +252,47 @@ Scope {
                                 }
                             }
 
+                            // Battery indicator
+                            Item {
+                                visible: battery.present
+                                implicitWidth: batRow.implicitWidth
+                                implicitHeight: batRow.implicitHeight
+
+                                Row {
+                                    id: batRow
+                                    anchors.centerIn: parent
+                                    spacing: 5
+
+                                    Text {
+                                        font.family: Theme.iconFont
+                                        font.pixelSize: Theme.iconSize
+                                        color: batMouse.containsMouse ? Theme.accent
+                                             : battery.low ? Theme.red
+                                             : Theme.fg
+                                        text: Theme.batteryIcon(battery.percentage, battery.charging)
+                                        Behavior on color { ColorAnimation { duration: 100 } }
+                                    }
+
+                                    Text {
+                                        color: battery.low ? Theme.red
+                                             : batMouse.containsMouse ? Theme.accent
+                                             : Theme.fg
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSizeSmall
+                                        text: battery.percentage + "%"
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        Behavior on color { ColorAnimation { duration: 100 } }
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: batMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                }
+                            }
+
                             // Notification bell
                             Item {
                                 id: bellIcon
@@ -391,6 +432,12 @@ Scope {
     // Volume state — kept at root level for accessibility
     Volume {
         id: volume
+        visible: false
+    }
+
+    // Battery state
+    Battery {
+        id: battery
         visible: false
     }
 }
