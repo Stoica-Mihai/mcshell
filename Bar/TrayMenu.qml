@@ -77,8 +77,6 @@ AnimatedPopup {
 
                     MenuItem {
                         id: entry
-                        required property var modelData
-                        modelData: modelData
                         Layout.fillWidth: true
                         Layout.preferredHeight: implicitHeight
 
@@ -141,8 +139,6 @@ AnimatedPopup {
                         model: subOpener.children ? [...subOpener.children.values] : []
 
                         MenuItem {
-                            required property var modelData
-                            modelData: modelData
                             Layout.fillWidth: true
                             Layout.preferredHeight: implicitHeight
 
