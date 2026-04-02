@@ -157,7 +157,7 @@ PanelWindow {
     // ── UI ───────────────────────────────────────────────
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.6)
+        color: Theme.backdrop
         MouseArea { anchors.fill: parent; onClicked: picker.close() }
     }
 
@@ -178,7 +178,7 @@ PanelWindow {
             color: Theme.bg
             border.width: 1
             border.color: picker.folderFocused ? Theme.accent : Theme.border
-            Behavior on border.color { ColorAnimation { duration: 150 } }
+            Behavior on border.color { ColorAnimation { duration: Theme.animNormal } }
 
             RowLayout {
                 anchors.fill: parent
@@ -192,7 +192,7 @@ PanelWindow {
                     font.pixelSize: 14
                     color: picker.folderFocused ? Theme.accent : Theme.fgDim
                     Layout.alignment: Qt.AlignVCenter
-                    Behavior on color { ColorAnimation { duration: 150 } }
+                    Behavior on color { ColorAnimation { duration: Theme.animNormal } }
                 }
 
                 TextInput {
@@ -255,7 +255,7 @@ PanelWindow {
                 visible: picker.wallpaperPaths.length > 0
 
                 Behavior on x {
-                    NumberAnimation { duration: 350; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic }
                 }
 
                 Repeater {
@@ -280,11 +280,11 @@ PanelWindow {
                         opacity: isVisible ? 1.0 : 0.0
 
                         Behavior on opacity {
-                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Theme.animSmooth; easing.type: Easing.OutCubic }
                         }
 
                         Behavior on width {
-                            NumberAnimation { duration: 350; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic }
                         }
 
                         // Only load image if within visible range
@@ -297,7 +297,7 @@ PanelWindow {
                             border.color: Theme.accent
 
                             Behavior on radius {
-                                NumberAnimation { duration: 350; easing.type: Easing.OutCubic }
+                                NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic }
                             }
 
                             Image {
@@ -317,7 +317,7 @@ PanelWindow {
                                 anchors.bottom: parent.bottom
                                 height: 60
                                 opacity: strip.isCurrent ? 1.0 : 0.0
-                                Behavior on opacity { NumberAnimation { duration: 250 } }
+                                Behavior on opacity { NumberAnimation { duration: Theme.animSmooth } }
 
                                 gradient: Gradient {
                                     GradientStop { position: 0.0; color: "transparent" }

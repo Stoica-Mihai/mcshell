@@ -24,7 +24,7 @@ Item {
         color: mouse.containsMouse && root.hasHover ? root.hoverColor : root.normalColor
         text: root.icon
 
-        Behavior on color { ColorAnimation { duration: 100 } }
+        Behavior on color { ColorAnimation { duration: Theme.animFast } }
     }
 
     MouseArea {

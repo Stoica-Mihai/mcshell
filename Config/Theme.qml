@@ -27,6 +27,15 @@ Singleton {
 
     // Surface
     readonly property color border: Qt.rgba(1, 1, 1, 0.06)
+    readonly property color overlay: Qt.rgba(1, 1, 1, 0.06)
+    readonly property color overlayHover: Qt.rgba(1, 1, 1, 0.12)
+    readonly property color backdrop: Qt.rgba(0, 0, 0, 0.55)
+
+    // ── Animation ──────────────────────────────────────
+    readonly property int animFast: 100       // hover color feedback
+    readonly property int animNormal: 150     // state changes (tabs, borders)
+    readonly property int animSmooth: 200     // opacity, general movement
+    readonly property int animCarousel: 350   // carousel width, position
 
     // ── Layout ──────────────────────────────────────────
     readonly property int barHeight: 34

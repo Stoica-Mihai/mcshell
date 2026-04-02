@@ -138,7 +138,7 @@ Item {
             Layout.rightMargin: 4
             implicitHeight: 40
             radius: 6
-            color: root.active && root.selectedItem === 0 ? Qt.rgba(1,1,1,0.06) : "transparent"
+            color: root.active && root.selectedItem === 0 ? Theme.overlay : "transparent"
 
             RowLayout {
                 anchors.fill: parent
@@ -163,7 +163,7 @@ Item {
                     Layout.fillWidth: true
                     height: 4
                     radius: 2
-                    color: Qt.rgba(1,1,1,0.06)
+                    color: Theme.overlay
                     Rectangle {
                         width: parent.width * (root.brightnessPct / 100)
                         height: parent.height
@@ -191,7 +191,7 @@ Item {
             Layout.rightMargin: 4
             implicitHeight: 40
             radius: 6
-            color: root.active && root.selectedItem === 1 ? Qt.rgba(1,1,1,0.06) : "transparent"
+            color: root.active && root.selectedItem === 1 ? Theme.overlay : "transparent"
 
             RowLayout {
                 anchors.fill: parent

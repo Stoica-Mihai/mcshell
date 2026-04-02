@@ -31,7 +31,7 @@ Item {
     Component.onCompleted: slideX = 0;
 
     Behavior on slideX {
-        NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Theme.animSmooth; easing.type: Easing.OutCubic }
     }
 
     readonly property bool countdownPaused: countdownItem.paused
@@ -56,7 +56,7 @@ Item {
         target: card
         property: "slideX"
         to: card.implicitWidth + 20
-        duration: 250
+        duration: Theme.animSmooth
         easing.type: Easing.InCubic
         onFinished: card.dismissed(card.notifId)
     }
@@ -255,9 +255,9 @@ Item {
                         width: actionLabel.implicitWidth + 16
                         height: 22
                         radius: 11
-                        color: actionMouse.containsMouse ? Qt.rgba(1,1,1,0.12) : Qt.rgba(1,1,1,0.06)
+                        color: actionMouse.containsMouse ? Theme.overlayHover : Theme.overlay
 
-                        Behavior on color { ColorAnimation { duration: 100 } }
+                        Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
                         Text {
                             id: actionLabel

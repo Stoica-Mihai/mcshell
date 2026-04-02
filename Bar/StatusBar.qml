@@ -179,7 +179,7 @@ Scope {
                             border.width: capsule.activePanel !== "" ? 1 : 0
                             border.color: Theme.border
 
-                            Behavior on color { ColorAnimation { duration: 100 } }
+                            Behavior on color { ColorAnimation { duration: Theme.animFast } }
                         }
 
                         RowLayout {
@@ -205,7 +205,7 @@ Scope {
                                              : volume.muted ? Theme.red
                                              : Theme.fg
                                         text: Theme.volumeIcon(volume.rawVolume, volume.muted)
-                                        Behavior on color { ColorAnimation { duration: 100 } }
+                                        Behavior on color { ColorAnimation { duration: Theme.animFast } }
                                     }
 
                                     Text {
@@ -214,7 +214,7 @@ Scope {
                                         font.pixelSize: Theme.fontSizeSmall
                                         text: volume.volume + "%"
                                         anchors.verticalCenter: parent.verticalCenter
-                                        Behavior on color { ColorAnimation { duration: 100 } }
+                                        Behavior on color { ColorAnimation { duration: Theme.animFast } }
                                     }
                                 }
 
@@ -270,7 +270,7 @@ Scope {
                                              : battery.low ? Theme.red
                                              : Theme.fg
                                         text: Theme.batteryIcon(battery.percentage, battery.charging)
-                                        Behavior on color { ColorAnimation { duration: 100 } }
+                                        Behavior on color { ColorAnimation { duration: Theme.animFast } }
                                     }
 
                                     Text {
@@ -281,7 +281,7 @@ Scope {
                                         font.pixelSize: Theme.fontSizeSmall
                                         text: battery.percentage + "%"
                                         anchors.verticalCenter: parent.verticalCenter
-                                        Behavior on color { ColorAnimation { duration: 100 } }
+                                        Behavior on color { ColorAnimation { duration: Theme.animFast } }
                                     }
                                 }
 
@@ -308,7 +308,7 @@ Scope {
                                          : root.unreadNotifications > 0 ? Theme.accent
                                          : Theme.fg
                                     text: root.doNotDisturb ? Theme.iconDndOn : Theme.iconBell
-                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                    Behavior on color { ColorAnimation { duration: Theme.animFast } }
                                 }
 
                                 // Underline

@@ -27,7 +27,7 @@ Item {
         width: parent.width
         height: root.trackHeight
         radius: height / 2
-        color: Qt.rgba(1, 1, 1, 0.12)
+        color: Theme.overlayHover
 
         // Fill
         Rectangle {

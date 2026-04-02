@@ -45,7 +45,7 @@ PopupWindow {
         target: root
         property: "openFraction"
         from: 0; to: 1
-        duration: 250
+        duration: Theme.animSmooth
         easing.type: Easing.OutCubic
     }
 
@@ -54,7 +54,7 @@ PopupWindow {
         target: root
         property: "openFraction"
         from: root.openFraction; to: 0
-        duration: 200
+        duration: Theme.animSmooth
         easing.type: Easing.InCubic
         onFinished: root.visible = false
     }

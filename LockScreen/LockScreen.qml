@@ -253,7 +253,7 @@ Item {
                         opacity: visible ? 1.0 : 0.0
 
                         Behavior on opacity {
-                            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
+                            NumberAnimation { duration: Theme.animSmooth; easing.type: Easing.OutCubic }
                         }
                     }
 
@@ -291,7 +291,7 @@ Item {
                             border.color: root.statusIsError ? Theme.red : (root.currentPassword.length > 0 ? Theme.accent : Theme.border)
 
                             Behavior on border.color {
-                                ColorAnimation { duration: 150 }
+                                ColorAnimation { duration: Theme.animNormal }
                             }
                         }
 
@@ -356,7 +356,7 @@ Item {
                         visible: lockSession.secure && !root.gracePeriodActive
 
                         Behavior on color {
-                            ColorAnimation { duration: 150 }
+                            ColorAnimation { duration: Theme.animNormal }
                         }
                     }
                 }

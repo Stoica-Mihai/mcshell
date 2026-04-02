@@ -143,7 +143,7 @@ PanelWindow {
     // Backdrop
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.55)
+        color: Theme.backdrop
         MouseArea { anchors.fill: parent; onClicked: launcher.close() }
     }
 
@@ -180,7 +180,7 @@ PanelWindow {
                             ? (launcher.editMode ? Theme.bgHover : Theme.accent)
                             : "transparent"
 
-                        Behavior on color { ColorAnimation { duration: 150 } }
+                        Behavior on color { ColorAnimation { duration: Theme.animNormal } }
 
                         RowLayout {
                             id: tabContent
@@ -194,7 +194,7 @@ PanelWindow {
                                 color: launcher.activeTab === index
                                     ? (launcher.editMode ? Theme.accent : Theme.bgSolid)
                                     : Theme.fgDim
-                                Behavior on color { ColorAnimation { duration: 150 } }
+                                Behavior on color { ColorAnimation { duration: Theme.animNormal } }
                             }
 
                             Text {
@@ -204,7 +204,7 @@ PanelWindow {
                                 color: launcher.activeTab === index
                                     ? (launcher.editMode ? Theme.accent : Theme.bgSolid)
                                     : Theme.fgDim
-                                Behavior on color { ColorAnimation { duration: 150 } }
+                                Behavior on color { ColorAnimation { duration: Theme.animNormal } }
                             }
                         }
 
@@ -362,7 +362,7 @@ PanelWindow {
                 visible: launcher.currentCount > 0
 
                 Behavior on x {
-                    NumberAnimation { duration: 350; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic }
                 }
 
                 Repeater {

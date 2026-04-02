@@ -148,7 +148,7 @@ Item {
             Layout.rightMargin: 4
             implicitHeight: volRow.implicitHeight + 8
             radius: 6
-            color: root.active && root.volumeSelected ? Qt.rgba(1,1,1,0.06) : "transparent"
+            color: root.active && root.volumeSelected ? Theme.overlay : "transparent"
         RowLayout {
             id: volRow
             anchors.fill: parent
@@ -166,7 +166,7 @@ Item {
                 Layout.fillWidth: true
                 height: 4
                 radius: 2
-                color: Qt.rgba(1,1,1,0.06)
+                color: Theme.overlay
                 Rectangle {
                     width: parent.width * (root.volume / 100)
                     height: parent.height
@@ -208,7 +208,7 @@ Item {
                 implicitHeight: 30
                 radius: 6
                 color: root.active && root.selectedItem === (index + 1)
-                    ? Qt.rgba(1,1,1,0.06) : "transparent"
+                    ? Theme.overlay : "transparent"
                 Layout.leftMargin: 4
                 Layout.rightMargin: 4
 
@@ -261,7 +261,7 @@ Item {
                 implicitHeight: 30
                 radius: 6
                 color: root.active && root.selectedItem === (1 + root.outputNodes.length + index)
-                    ? Qt.rgba(1,1,1,0.06) : "transparent"
+                    ? Theme.overlay : "transparent"
                 Layout.leftMargin: 4
                 Layout.rightMargin: 4
 

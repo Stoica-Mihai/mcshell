@@ -215,14 +215,14 @@ Variants {
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: 200
+                        duration: Theme.animSmooth
                         easing.type: Easing.OutCubic
                     }
                 }
 
                 Behavior on scale {
                     NumberAnimation {
-                        duration: 200
+                        duration: Theme.animSmooth
                         easing.type: Easing.OutCubic
                     }
                 }
@@ -252,7 +252,7 @@ Variants {
                         Layout.alignment: Qt.AlignVCenter
 
                         Behavior on color {
-                            ColorAnimation { duration: 200 }
+                            ColorAnimation { duration: Theme.animSmooth }
                         }
                     }
 
@@ -274,13 +274,13 @@ Variants {
 
                             Behavior on width {
                                 NumberAnimation {
-                                    duration: 150
+                                    duration: Theme.animNormal
                                     easing.type: Easing.OutCubic
                                 }
                             }
 
                             Behavior on color {
-                                ColorAnimation { duration: 200 }
+                                ColorAnimation { duration: Theme.animSmooth }
                             }
                         }
                     }

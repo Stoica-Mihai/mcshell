@@ -54,13 +54,13 @@ Item {
                 color: modelData.urgent ? Theme.red
                      : focused          ? Theme.accent
                      : occupied         ? Theme.fgDim
-                     :                    Qt.rgba(1, 1, 1, 0.12)
+                     :                    Theme.overlayHover
 
                 Behavior on implicitWidth {
-                    NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: Theme.animNormal; easing.type: Easing.OutCubic }
                 }
                 Behavior on color {
-                    ColorAnimation { duration: 150 }
+                    ColorAnimation { duration: Theme.animNormal }
                 }
 
                 MouseArea {

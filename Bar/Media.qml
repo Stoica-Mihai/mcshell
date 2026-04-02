@@ -111,7 +111,7 @@ Item {
             elide: Text.ElideRight
             text: root.artist ? root.artist + " - " + root.title : root.title
 
-            Behavior on color { ColorAnimation { duration: 100 } }
+            Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
             MouseArea {
                 id: trackMouse

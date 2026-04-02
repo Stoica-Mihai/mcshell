@@ -76,7 +76,7 @@ Item {
                 opacity: trayMouse.containsMouse ? 1.0 : 0.8
 
                 Behavior on opacity {
-                    NumberAnimation { duration: 100 }
+                    NumberAnimation { duration: Theme.animFast }
                 }
 
                 IconImage {

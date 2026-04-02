@@ -102,7 +102,7 @@ Item {
                 implicitHeight: 38
                 radius: 6
                 color: root.active && root.selectedItem === index
-                    ? (modelData.danger ? Qt.rgba(0.97, 0.47, 0.56, 0.08) : Qt.rgba(1,1,1,0.06))
+                    ? (modelData.danger ? Qt.rgba(0.97, 0.47, 0.56, 0.08) : Theme.overlay)
                     : "transparent"
 
                 RowLayout {

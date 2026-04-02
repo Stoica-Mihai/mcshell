@@ -25,8 +25,8 @@ Item {
     clip: true
     opacity: isVisible ? 1.0 : 0.0
 
-    Behavior on width { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
-    Behavior on opacity { NumberAnimation { duration: 200 } }
+    Behavior on width { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
+    Behavior on opacity { NumberAnimation { duration: Theme.animSmooth } }
 
     // Card content goes here
     default property alias contentData: cardContent.data
@@ -44,7 +44,7 @@ Item {
         border.width: strip.showBorder ? 1 : 0
         border.color: strip.borderColor
 
-        Behavior on radius { NumberAnimation { duration: 350; easing.type: Easing.OutCubic } }
+        Behavior on radius { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
 
         // Fallback click for expanded card (below content so Flickable takes priority)
         MouseArea {

@@ -23,7 +23,7 @@ Item {
         font.pixelSize: Theme.fontSizeSmall
         elide: Text.ElideRight
 
-        Behavior on color { ColorAnimation { duration: 100 } }
+        Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
         MouseArea {
             id: titleMouse

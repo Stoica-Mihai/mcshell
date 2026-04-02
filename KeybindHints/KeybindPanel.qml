@@ -303,7 +303,7 @@ PanelWindow {
     // Semi-transparent dimmer -- click to close
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.45)
+        color: Theme.backdrop
 
         MouseArea {
             anchors.fill: parent
@@ -523,7 +523,7 @@ PanelWindow {
                             color: rowHover.hovered ? Theme.bgHover : "transparent"
 
                             Behavior on color {
-                                ColorAnimation { duration: 80 }
+                                ColorAnimation { duration: Theme.animFast }
                             }
 
                             HoverHandler {
