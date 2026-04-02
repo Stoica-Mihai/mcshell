@@ -193,7 +193,7 @@ Item {
                 required property var modelData
                 required property int index
                 selected: root.active && root.selectedItem === (index + 1)
-                implicitHeight: 30
+                Layout.preferredHeight: 30
 
                 Text {
                     text: modelData === root.defaultSink ? Theme.iconCheck : ""
@@ -234,7 +234,7 @@ Item {
                 required property var modelData
                 required property int index
                 selected: root.active && root.selectedItem === (1 + root.outputNodes.length + index)
-                implicitHeight: 30
+                Layout.preferredHeight: 30
 
                 Text {
                     text: modelData === root.defaultSource ? Theme.iconCheck : ""

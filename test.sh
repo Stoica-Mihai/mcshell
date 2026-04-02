@@ -7,6 +7,7 @@ IPC="qs -c mcshell ipc call mcshell"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DELAY=0.5
 FAIL_FILE=$(mktemp)
+SHELL_LOG=$(mktemp)
 echo 0 > "$FAIL_FILE"
 
 fail() { echo "FAIL: $1"; echo 1 > "$FAIL_FILE"; }
@@ -30,7 +31,7 @@ if [ ! -e "$LINK" ]; then
     ln -s "$SCRIPT_DIR" "$LINK"
 fi
 
-qs -c mcshell &
+qs -c mcshell >"$SHELL_LOG" 2>&1 &
 SHELL_PID=$!
 sleep 4
 
@@ -52,13 +53,13 @@ ipc_test launcherClipboard;    ipc_test toggleLauncher
 ipc_test launcherNotifications; ipc_test toggleLauncher
 ipc_test launcherWifi;         ipc_test toggleLauncher
 ipc_test launcherBluetooth;    ipc_test toggleLauncher
+ipc_test launcherWallpaper;    ipc_test toggleLauncher
 ipc_test launcherSettings;     ipc_test toggleLauncher
 ipc_test toggleCalendar;       ipc_test toggleCalendar
 ipc_test toggleVolume;         ipc_test toggleVolume
 ipc_test toggleNotifications;  ipc_test toggleNotifications
 ipc_test toggleSettings;       ipc_test toggleLauncher
 ipc_test toggleKeybinds;       ipc_test toggleKeybinds
-ipc_test toggleWallpaper;      ipc_test toggleWallpaper
 ipc_test toggleDnd;            ipc_test toggleDnd
 
 # ── 3. One-shot commands (skip destructive) ─────────
@@ -70,33 +71,31 @@ kill -TERM -"$SHELL_PID" 2>/dev/null || kill -TERM "$SHELL_PID" 2>/dev/null || t
 sleep 1
 kill -9 -"$SHELL_PID" 2>/dev/null || kill -9 "$SHELL_PID" 2>/dev/null || true
 wait "$SHELL_PID" 2>/dev/null || true
-LOG=$(ls -t /run/user/"$(id -u)"/quickshell/by-id/*/log.qslog 2>/dev/null | head -1)
 
-if [ -z "$LOG" ]; then
-    fail "No log file found"
-else
-    ERRORS=$(grep -c "ERROR" "$LOG" 2>/dev/null) || ERRORS=0
-    WARNS=$(grep -c "WARN.*scene:" "$LOG" 2>/dev/null) || WARNS=0
+ERRORS=$(grep -c "ERROR" "$SHELL_LOG" 2>/dev/null) || ERRORS=0
+# Count warnings, excluding the harmless portal registration warning
+WARNS=$(grep "WARN" "$SHELL_LOG" 2>/dev/null | grep -cv "qt.qpa.services.*portal" 2>/dev/null) || WARNS=0
 
+echo ""
+echo "── Log Results ──"
+echo "Errors:   $ERRORS"
+echo "Warnings: $WARNS"
+
+if [ "$WARNS" -gt 0 ]; then
     echo ""
-    echo "── Log Results ──"
-    echo "Errors:   $ERRORS"
-    echo "Warnings: $WARNS"
-
-    if [ "$WARNS" -gt 0 ]; then
-        echo ""
-        echo "Scene warnings:"
-        grep "WARN.*scene:" "$LOG" | sort -u
-        echo 1 > "$FAIL_FILE"
-    fi
-
-    if [ "$ERRORS" -gt 0 ]; then
-        echo ""
-        echo "Errors:"
-        grep "ERROR" "$LOG"
-        echo 1 > "$FAIL_FILE"
-    fi
+    echo "Warnings:"
+    grep "WARN" "$SHELL_LOG" | grep -v "qt.qpa.services.*portal" | sort -u
+    echo 1 > "$FAIL_FILE"
 fi
+
+if [ "$ERRORS" -gt 0 ]; then
+    echo ""
+    echo "Errors:"
+    grep "ERROR" "$SHELL_LOG" | sort -u
+    echo 1 > "$FAIL_FILE"
+fi
+
+rm -f "$SHELL_LOG"
 
 # ── 5. Verdict ──────────────────────────────────────
 echo ""

@@ -71,12 +71,18 @@ PanelWindow {
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
     // ── Categories ──────────────────────────────────────
+    signal wallpaperSelected(string path)
+
     property list<LauncherCategory> categories: [
         CategoryApps { launcher: launcher },
         CategoryClipboard { launcher: launcher },
         CategoryNotifications { launcher: launcher; notifHistoryModel: launcher.notifHistoryModel },
         CategoryWifi { launcher: launcher },
         CategoryBluetooth { launcher: launcher },
+        CategoryWallpaper {
+            launcher: launcher
+            onWallpaperSelected: path => launcher.wallpaperSelected(path)
+        },
         CategorySettings { launcher: launcher }
     ]
 
@@ -239,6 +245,7 @@ PanelWindow {
                     selectByMouse: true
 
                     onTextChanged: {
+                        launcher.selectedIndex = 0;
                         launcher.activeCategory.onSearch(text);
                         if (text !== "" && !launcher.editMode)
                             launcher.editMode = true;

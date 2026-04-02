@@ -15,7 +15,7 @@ Rectangle {
     Layout.fillWidth: true
     Layout.leftMargin: 4
     Layout.rightMargin: 4
-    implicitHeight: 38
+    Layout.preferredHeight: 38
     radius: 6
     color: selected ? selectedColor : "transparent"
 

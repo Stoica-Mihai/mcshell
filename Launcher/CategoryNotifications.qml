@@ -65,7 +65,7 @@ LauncherCategory {
             expandedWidth: root.launcher.expandedWidth
             stripWidth: root.launcher.stripWidth
             carouselHeight: root.launcher.carouselHeight
-            borderColor: isCurrent && root.launcher.editMode ? Theme.accent : Theme.border
+            focused: root.launcher.editMode
             onSelected: root.launcher.selectedIndex = index
 
             // Collapsed: bell icon

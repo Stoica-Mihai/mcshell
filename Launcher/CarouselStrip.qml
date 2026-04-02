@@ -32,7 +32,8 @@ Item {
     default property alias contentData: cardContent.data
 
     // Card background
-    property color borderColor: Theme.border
+    property bool focused: false
+    property color borderColor: focused && isCurrent ? Theme.accent : Theme.border
     property bool showBorder: isCurrent
 
     Rectangle {
@@ -41,8 +42,6 @@ Item {
         radius: strip.isCurrent ? 14 : 8
         color: Theme.bg
         clip: true
-        border.width: strip.showBorder ? 1 : 0
-        border.color: strip.borderColor
 
         Behavior on radius { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
 
@@ -59,6 +58,15 @@ Item {
             anchors.fill: parent
             property bool isCurrent: strip.isCurrent
             property real cardPadding: 14
+        }
+
+        // Border overlay — on top of content so full-bleed images don't cover it
+        Rectangle {
+            anchors.fill: parent
+            radius: card.radius
+            color: "transparent"
+            border.width: strip.showBorder ? (strip.focused ? 2 : 1) : 0
+            border.color: strip.borderColor
         }
     }
 

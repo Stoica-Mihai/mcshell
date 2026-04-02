@@ -41,14 +41,11 @@ ShellRoot {
         id: appLauncher
         notifHistoryModel: notifPopup.historyModel
         onNotificationsViewed: notifPopup.markAllRead()
+        onWallpaperSelected: path => wallpaper.setWallpaper(path)
     }
     KeybindPanel { id: keybindPanel }
     LockScreen { id: lockScreen }
     WallpaperRenderer { id: wallpaper }
-    WallpaperPicker {
-        id: wallpaperPicker
-        onWallpaperSelected: path => wallpaper.setWallpaper(path)
-    }
 
     // ── Screenshot functions ────────────────────────────
     function screenshotFull() {
@@ -79,9 +76,10 @@ ShellRoot {
         function launcherNotifications(): void { appLauncher.openTab(2); }
         function launcherWifi(): void { appLauncher.openTab(3); }
         function launcherBluetooth(): void { appLauncher.openTab(4); }
-        function launcherSettings(): void { appLauncher.openTab(5); }
+        function launcherWallpaper(): void { appLauncher.openTab(5); }
+        function launcherSettings(): void { appLauncher.openTab(6); }
         function toggleKeybinds(): void { keybindPanel.toggle(); }
-        function toggleWallpaper(): void { wallpaperPicker.toggle(); }
+        function toggleWallpaper(): void { appLauncher.openTab(5); }
         function lock(): void { lockScreen.lock(); }
         function toggleDnd(): void { notifPopup.doNotDisturb = !notifPopup.doNotDisturb; }
         function setWallpaper(path: string): void { wallpaper.setWallpaper(path); }
@@ -89,7 +87,7 @@ ShellRoot {
         function toggleCalendar(): void { shell._togglePanel = "calendar"; shell._toggleCounter++; }
         function toggleVolume(): void { shell._togglePanel = "volume"; shell._toggleCounter++; }
         function toggleNotifications(): void { shell._togglePanel = "notifications"; shell._toggleCounter++; }
-        function toggleSettings(): void { appLauncher.openTab(5); }
+        function toggleSettings(): void { appLauncher.openTab(6); }
         function screenshotFull(): void { shell.screenshotFull(); }
         function screenshotArea(): void { shell.screenshotArea(); }
         function screenshotWindow(): void { shell.screenshotWindow(); }

@@ -134,7 +134,7 @@ Item {
         // Brightness
         SettingsRow {
             selected: root.active && root.selectedItem === 0
-            implicitHeight: 40
+            Layout.preferredHeight: 40
 
             Text {
                 text: Theme.iconBrightness
@@ -176,7 +176,7 @@ Item {
         // Night light
         SettingsRow {
             selected: root.active && root.selectedItem === 1
-            implicitHeight: 40
+            Layout.preferredHeight: 40
 
             Text {
                 text: Theme.iconNightLight
