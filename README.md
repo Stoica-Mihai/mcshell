@@ -9,20 +9,23 @@ A custom Wayland desktop shell built with [QuickShell](https://quickshell.outfox
 - **Active Window** — reactive title display via Niri IPC
 - **Clock** — date + time, click for calendar with month/year picker
 - **Media** — MPRIS controls (prev/play/next), click track title for expanded player with album art, seek bar, live stream detection
-- **System Capsule** — grouped volume, notifications, and settings icons sharing a single dropdown panel with accent underline on the active icon
+- **System Capsule** — grouped volume, battery, notifications, and settings icons sharing a single dropdown panel with accent underline on the active icon
   - **Volume** — PipeWire native, scroll to adjust, middle-click mute, per-app sliders
+  - **Battery** — UPower native, icon + percentage, red below 20%, hidden on desktops
   - **Notifications** — unread badge, history list, middle-click for Do Not Disturb, action buttons
   - **Quick Settings** — power menu (lock/logout/reboot/shutdown), brightness slider, night light toggle
 - **Network** — reactive status via native Networking API
 - **System Tray** — colorized icons, right-click context menus, hover tooltips
 
 ### App Launcher
-Horizontal filmstrip carousel with smooth sliding animation. Five tabs:
+Horizontal filmstrip carousel with smooth sliding animation. Two-level keyboard navigation: Left/Right to switch categories (Level 1), Enter to dive in, Left/Right to navigate cards (Level 2), Escape to go back. Seven tabs:
 - **Apps** — fuzzy search, large icon + name + description in expanded view
-- **Clipboard** — cliphist integration, image entry detection with metadata display
+- **Clipboard** — cliphist integration, lazy-loaded, image entry detection with metadata display
 - **Notifications** — browse past notifications with search
-- **WiFi** — scan and connect to networks, inline password input, signal strength and security display. Press W to toggle WiFi on/off
-- **Bluetooth** — discover, pair, and connect devices with battery display. Press B to toggle Bluetooth on/off
+- **WiFi** — scan and connect to networks, inline password input, signal strength and security display. Ctrl+W to toggle WiFi
+- **Bluetooth** — discover, pair, and connect devices with battery display. Ctrl+B to toggle Bluetooth
+- **Wallpaper** — browse and apply wallpapers from configured folder, lazy-loaded thumbnails, active wallpaper highlighted
+- **Settings** — audio (device selection, volume), display (brightness, night light), power (lock/logout/reboot/shutdown)
 
 ### Notifications
 - Popup cards with circular donut countdown timer
@@ -41,7 +44,7 @@ Horizontal filmstrip carousel with smooth sliding animation. Five tabs:
 
 ### Wallpaper
 - Native background rendering per screen via layer shell
-- Carousel picker with horizontal filmstrip (same animation as app launcher)
+- Wallpaper picker integrated in the app launcher (Wall tab)
 - Smooth crossfade transitions when changing wallpapers
 - Config persistence to `~/.config/mcshell/wallpaper.json`
 
@@ -83,6 +86,8 @@ qs -c mcshell ipc call mcshell <command>
 | `launcherNotifications` | Open launcher on the Notifications tab |
 | `launcherWifi` | Open launcher on the WiFi tab |
 | `launcherBluetooth` | Open launcher on the Bluetooth tab |
+| `launcherWallpaper` | Open launcher on the Wallpaper tab |
+| `launcherSettings` | Open launcher on the Settings tab |
 
 ### Bar Panels
 
@@ -93,7 +98,7 @@ qs -c mcshell ipc call mcshell <command>
 | `toggleNotifications` | Open/close the notification history |
 | `toggleSettings` | Open/close the quick settings panel |
 | `toggleKeybinds` | Open/close the keybind hints overlay |
-| `toggleWallpaper` | Open/close the wallpaper picker |
+| `toggleWallpaper` | Open launcher on the Wallpaper tab |
 
 ### Session
 
@@ -141,20 +146,31 @@ binds {
 | Clock | Toggle calendar | — | — | — |
 | Media | Toggle expanded player | — | — | — |
 | Volume (capsule) | Toggle volume panel | Toggle mute | — | Adjust volume |
+| Battery (capsule) | — | — | — | — |
 | Bell (capsule) | Toggle notification history | Toggle DND | — | — |
 | Settings (capsule) | Toggle quick settings | — | — | — |
 | Tray Icon | Activate | Secondary activate | Context menu | — |
 
 ## Launcher Keyboard Shortcuts
 
+**Level 1 (Category browse):**
+
+| Key | Action |
+|---|---|
+| ← → | Switch between categories |
+| Enter / ↓ | Enter category (Level 2) |
+| Escape | Close launcher |
+| Type | Search + auto-enter Level 2 |
+
+**Level 2 (Inside category):**
+
 | Key | Action |
 |---|---|
 | ← → | Navigate between cards |
-| Enter | Activate selected card (launch app, copy clip, connect network, pair device) |
-| Tab | Switch to next tab |
-| W | Toggle WiFi on/off (WiFi tab, empty search) |
-| B | Toggle Bluetooth on/off (BT tab, empty search) |
-| Escape | Close launcher |
+| Enter | Activate selected card (launch app, copy clip, connect network, apply wallpaper) |
+| Escape | Back to Level 1 |
+| Ctrl+W | Toggle WiFi (WiFi tab) |
+| Ctrl+B | Toggle Bluetooth (BT tab) |
 
 ## Dependencies
 
@@ -179,17 +195,17 @@ Pure QML — no C++, no build system. QuickShell interprets QML directly. Each s
 | Module | Purpose |
 |---|---|
 | `Config/` | Theme singleton — colors, layout, typography, icons |
-| `Core/` | Shared non-visual components — SafeProcess, SafePolledProcess |
-| `Bar/` | Status bar — workspaces (Niri IPC), active window, clock, media, network, volume, system tray |
-| `Launcher/` | App launcher carousel — apps, clipboard, notifications, WiFi, Bluetooth tabs |
+| `Core/` | Shared non-visual components — SafeProcess, SafePolledProcess, LazyModel |
+| `Bar/` | Status bar — workspaces (Niri IPC), active window, clock + calendar, media, network, volume, battery, system tray |
+| `Launcher/` | App launcher carousel — apps, clipboard, notifications, WiFi, Bluetooth, wallpaper, settings tabs |
 | `Notifications/` | Notification daemon + popup cards with action buttons |
 | `NotificationHistory/` | Notification history dropdown |
 | `QuickSettings/` | Quick settings panel — brightness, night light, power actions |
 | `LockScreen/` | Wayland session lock with PAM auth |
-| `Wallpaper/` | Background renderer + carousel picker |
-| `KeybindHints/` | Keybind hints overlay |
+| `Wallpaper/` | Background renderer + config persistence |
+| `KeybindHints/` | Keybind parser + hints overlay |
 | `OSD/` | Volume/brightness on-screen display |
-| `Widgets/` | Shared UI components — AnimatedPopup, IconButton, PolledProcess |
+| `Widgets/` | Shared UI components — AnimatedPopup, IconButton, SliderTrack, ControlSlider |
 
 ## License
 
