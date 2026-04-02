@@ -25,16 +25,42 @@ LauncherCategory {
     property bool clipboardLoaded: false
     property var allClipEntries: []
     property var filteredClipEntries: []
-    property var clipHistLines: []
+    property var _rawLines: []
+    property int _loadedEnd: 0
+    readonly property int _pageSize: 20
 
     // ── Lifecycle ──
     function onTabEnter() {
         if (!clipboardLoaded) loadClipboard();
+        _loadedEnd = 0;
+        _ensureLoaded(0);
+    }
+
+    function onTabLeave() {
+        _loadedEnd = 0;
+    }
+
+    // ── Lazy loading — grow model as user navigates ──
+    function _ensureLoaded(idx) {
+        if (allClipEntries.length === 0) return;
+        const needed = idx + _pageSize;
+        if (needed <= _loadedEnd) return;
+        _loadedEnd = Math.min(needed, allClipEntries.length);
+        if (launcher.searchText === "")
+            filteredClipEntries = allClipEntries.slice(0, _loadedEnd);
+    }
+
+    Connections {
+        target: root.launcher
+        function onSelectedIndexChanged() {
+            if (root.launcher.activeCategory === root && root.launcher.searchText === "")
+                root._ensureLoaded(root.launcher.selectedIndex);
+        }
     }
 
     // ── Loading ──
     function loadClipboard() {
-        clipHistLines = [];
+        _rawLines = [];
         clipHistProc.running = true;
     }
 
@@ -42,15 +68,17 @@ LauncherCategory {
         id: clipHistProc
         command: ["cliphist", "list"]
         failMessage: "cliphist not found — clipboard history unavailable"
-        onRead: data => { root.clipHistLines = root.clipHistLines.concat([data]); }
+        onRead: data => { root._rawLines.push(data); }
         onFinished: {
-            root.allClipEntries = root.parseClipEntries(root.clipHistLines);
+            root.allClipEntries = root.parseClipEntries(root._rawLines);
+            root._rawLines = [];
             root.clipboardLoaded = true;
-            root.onSearch(root.launcher.searchText);
+            root._loadedEnd = 0;
+            root._ensureLoaded(0);
         }
         onFailed: {
             root.clipboardLoaded = true;
-            root.onSearch(root.launcher.searchText);
+            root.filteredClipEntries = [];
         }
     }
 
@@ -87,7 +115,12 @@ LauncherCategory {
     // ── Search ──
     function onSearch(text) {
         const query = (text || "").toLowerCase().trim();
-        if (query === "") { filteredClipEntries = allClipEntries; return; }
+        if (query === "") {
+            _loadedEnd = 0;
+            _ensureLoaded(launcher.selectedIndex);
+            return;
+        }
+        // Search filters the full list — results are typically small
         const results = [];
         for (let i = 0; i < allClipEntries.length; i++) {
             if (allClipEntries[i].content.toLowerCase().indexOf(query) >= 0)
