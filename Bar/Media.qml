@@ -186,11 +186,10 @@ Item {
                     // layer.enabled makes clip respect border radius
                     layer.enabled: true
 
-                    Image {
+                    OptImage {
                         id: albumArt
                         anchors.fill: parent
                         source: root.player && root.player.trackArtUrl ? root.player.trackArtUrl : ""
-                        fillMode: Image.PreserveAspectCrop
                         visible: status === Image.Ready
                     }
 

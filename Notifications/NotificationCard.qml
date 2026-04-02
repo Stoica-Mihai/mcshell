@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.Config
+import qs.Widgets
 
 // Single notification card with fade-in/out animation and close button.
 Item {
@@ -172,7 +173,7 @@ Item {
                     Layout.alignment: Qt.AlignVCenter
                 }
 
-                Image {
+                OptImage {
                     id: iconImage
                     source: card.iconUrl
                     visible: status === Image.Ready
@@ -300,7 +301,7 @@ Item {
                 color: Theme.bgSolid
                 clip: true
 
-                Image {
+                OptImage {
                     id: previewImage
                     anchors.fill: parent
                     source: {
@@ -312,8 +313,6 @@ Item {
                             return url;
                         return "";
                     }
-                    fillMode: Image.PreserveAspectCrop
-                    asynchronous: true
                 }
             }
         }

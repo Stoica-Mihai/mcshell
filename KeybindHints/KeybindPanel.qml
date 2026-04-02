@@ -4,6 +4,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import qs.Config
+import qs.Widgets
 
 PanelWindow {
     id: panel
@@ -130,7 +131,7 @@ PanelWindow {
                     anchors.rightMargin: 12
                     spacing: 8
 
-                    Image {
+                    OptImage {
                         Layout.preferredWidth: 16
                         Layout.preferredHeight: 16
                         Layout.alignment: Qt.AlignVCenter

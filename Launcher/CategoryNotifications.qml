@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.Config
+import qs.Widgets
 
 LauncherCategory {
     id: root
@@ -91,7 +92,7 @@ LauncherCategory {
                     color: Theme.bgSolid
                     clip: true
 
-                    Image {
+                    OptImage {
                         id: notifPreviewImg
                         anchors.fill: parent
                         source: {
@@ -104,8 +105,6 @@ LauncherCategory {
                                 return "file://" + url;
                             return "";
                         }
-                        fillMode: Image.PreserveAspectCrop
-                        asynchronous: true
                     }
                 }
 

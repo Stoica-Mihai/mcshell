@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import qs.Config
 import qs.Core
+import qs.Widgets
 import qs.Wallpaper
 
 LauncherCategory {
@@ -122,12 +123,10 @@ LauncherCategory {
             }
 
             // Collapsed: thumbnail (small sourceSize for fast loading)
-            Image {
+            OptImage {
                 anchors.fill: parent
                 visible: !wallStrip.isCurrent
                 source: wallStrip.isVisible && wallStrip.wallPath ? "file://" + wallStrip.wallPath : ""
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
                 sourceSize.height: root.launcher.carouselHeight
             }
 
@@ -136,11 +135,9 @@ LauncherCategory {
                 anchors.fill: parent
                 visible: wallStrip.isCurrent
 
-                Image {
+                OptImage {
                     anchors.fill: parent
                     source: wallStrip.wallPath ? "file://" + wallStrip.wallPath : ""
-                    fillMode: Image.PreserveAspectCrop
-                    asynchronous: true
                     smooth: true
                     sourceSize.height: root.launcher.carouselHeight
                 }

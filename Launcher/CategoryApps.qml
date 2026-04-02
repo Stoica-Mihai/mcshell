@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import qs.Config
+import qs.Widgets
 
 LauncherCategory {
     id: root
@@ -94,13 +95,12 @@ LauncherCategory {
             onSelected: root.launcher.selectedIndex = index
 
             // Collapsed
-            Image {
+            OptImage {
                 anchors.centerIn: parent
                 visible: !parent.isCurrent
                 width: 40; height: 40
                 sourceSize.width: 40; sourceSize.height: 40
                 source: "image://icon/" + (modelData.icon || "application-x-executable")
-                asynchronous: true
             }
 
             // Expanded
@@ -110,12 +110,11 @@ LauncherCategory {
                 spacing: 12
                 width: parent.width - 40
 
-                Image {
+                OptImage {
                     Layout.alignment: Qt.AlignHCenter
                     width: 80; height: 80
                     sourceSize.width: 80; sourceSize.height: 80
                     source: "image://icon/" + (modelData.icon || "application-x-executable")
-                    asynchronous: true
                 }
 
                 Text {
