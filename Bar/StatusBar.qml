@@ -96,6 +96,13 @@ Scope {
             border.width: 1
             border.color: Theme.border
 
+            // Clock — absolutely centered on bar, independent of left/right content
+            Clock {
+                id: clock
+                anchors.centerIn: parent
+                z: 1
+            }
+
             RowLayout {
                 anchors.fill: parent
                 anchors.leftMargin: 12
@@ -119,14 +126,6 @@ Scope {
                     Layout.alignment: Qt.AlignVCenter
                     Layout.leftMargin: 10
                     Layout.maximumWidth: 300
-                }
-
-                Item { Layout.fillWidth: true }
-
-                // Center: clock
-                Clock {
-                    id: clock
-                    Layout.alignment: Qt.AlignVCenter
                 }
 
                 Item { Layout.fillWidth: true }
