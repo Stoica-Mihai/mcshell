@@ -9,10 +9,13 @@ mcshell is a Wayland desktop shell (status bar, notifications, app launcher, qui
 ## Running
 
 ```sh
-./start.sh
-# or directly:
-qs --path shell.qml
+make start       # start shell in background
+make stop        # stop running shell
+make restart     # stop + start
+make test        # smoke test: start shell, run all IPC commands, check for errors/warnings
 ```
+
+Or directly: `./start.sh` / `qs --path shell.qml`
 
 The shell requires a running Wayland session with wlr-layer-shell support (niri, Hyprland, Sway, etc.). There is no build step — Quickshell interprets QML directly.
 

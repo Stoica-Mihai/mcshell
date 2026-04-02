@@ -60,7 +60,10 @@ Horizontal filmstrip carousel with smooth sliding animation. Two-level keyboard 
 ## Running
 
 ```sh
-./start.sh
+make start       # start shell in background
+make stop        # stop running shell
+make restart     # stop + start
+make test        # smoke test: start, run all IPC commands, check for errors/warnings
 ```
 
 Or manually:
