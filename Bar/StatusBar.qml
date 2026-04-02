@@ -36,13 +36,35 @@ Scope {
         media.dismissPopup();
     }
 
-    // Fullscreen transparent click-catcher to dismiss popups
+    // ── Exclusive zone — reserves bar space, no content ────
     PanelWindow {
-        id: clickCatcher
+        id: exclusionZone
+        screen: root.screen
+        color: "transparent"
+        visible: true
+
+        anchors {
+            top: true
+            left: true
+            right: true
+        }
+
+        implicitHeight: Theme.barHeight + Theme.barMargin * 2
+        exclusiveZone: Theme.barHeight + Theme.barMargin * 2
+
+        WlrLayershell.namespace: "mcshell-zone"
+        WlrLayershell.layer: WlrLayer.Top
+    }
+
+    // ── Main surface — fullscreen, contains bar + dismiss area ──
+    // Single surface so clicks on bar elements take priority over
+    // the dismiss area. No separate clickCatcher needed.
+    PanelWindow {
+        id: mainSurface
 
         screen: root.screen
-        visible: root.hasPopup
         color: "transparent"
+        visible: true
 
         anchors {
             top: true
@@ -51,42 +73,24 @@ Scope {
             right: true
         }
 
-        WlrLayershell.namespace: "mcshell-dismiss"
+        WlrLayershell.namespace: "mcshell"
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
+        // ── Dismiss area — behind everything, catches outside clicks ──
         MouseArea {
             anchors.fill: parent
+            visible: root.hasPopup
             onClicked: root.dismissPopups()
         }
-    }
 
-    PanelWindow {
-        id: bar
-
-        screen: root.screen
-
-        anchors {
-            top: true
-            left: true
-            right: true
-        }
-
-        margins {
-            top: Theme.barMargin
-            left: Theme.barMargin + 1
-            right: Theme.barMargin + 1
-        }
-
-        implicitHeight: Theme.barHeight
-        color: "transparent"
-        exclusiveZone: Theme.barHeight + Theme.barMargin * 2
-
-        WlrLayershell.namespace: "mcshell"
-        WlrLayershell.layer: WlrLayer.Top
-
+        // ── Bar content — positioned at top ──────────────────
         Rectangle {
-            anchors.fill: parent
+            id: barRect
+            x: Theme.barMargin + 1
+            y: Theme.barMargin
+            width: parent.width - (Theme.barMargin + 1) * 2
+            height: Theme.barHeight
             radius: Theme.barRadius
             color: Theme.bg
             border.width: 1
@@ -166,7 +170,6 @@ Scope {
 
                         function closePanel() {
                             sharedDropdown.close();
-                            // activePanel is cleared in onVisibleChanged after animation finishes
                         }
 
                         // Capsule background
