@@ -23,7 +23,10 @@ LauncherCategory {
     scanningHint: loaded ? "No wallpapers found in " + WallpaperConfig.folder : "Loading..."
 
     // ── Data ──
-    model: launcher.searchText !== "" ? filteredPaths : lazyWall.count
+    model: ScriptModel {
+        id: wallModel
+        values: root.launcher.searchText !== "" ? root.filteredPaths : root.allPaths
+    }
 
     property bool loaded: false
     property var allPaths: []
@@ -32,24 +35,13 @@ LauncherCategory {
     property string activeWallpaper: WallpaperConfig.wallpaper
     property int activeIndex: 0
 
-    LazyModel {
-        id: lazyWall
-        sourceModel: root.allPaths
-        currentIndex: root.launcher.selectedIndex
-    }
-
     // ── Lifecycle ──
     function onTabEnter() {
         if (!loaded) scanFolder();
-        else {
-            launcher.selectedIndex = activeIndex;
-            lazyWall.reset();
-        }
+        else launcher.selectedIndex = activeIndex;
     }
 
-    function onTabLeave() {
-        lazyWall.reset();
-    }
+    function onTabLeave() {}
 
     // ── Folder scanning ──
     function scanFolder() {
@@ -93,7 +85,7 @@ LauncherCategory {
     // ── Search ──
     function onSearch(text) {
         const query = (text || "").toLowerCase().trim();
-        if (query === "") { filteredPaths = []; return; }
+        if (query === "") { filteredPaths = allPaths; return; }
         const results = [];
         for (let i = 0; i < allPaths.length; i++) {
             if (allPaths[i].toLowerCase().indexOf(query) >= 0)
@@ -104,9 +96,8 @@ LauncherCategory {
 
     // ── Activate ──
     function onActivate(index) {
-        const path = launcher.searchText !== ""
-            ? filteredPaths[index]
-            : allPaths[index];
+        const paths = launcher.searchText !== "" ? filteredPaths : allPaths;
+        const path = paths[index];
         if (!path) return;
         activeWallpaper = path;
         activeIndex = allPaths.indexOf(path);
@@ -128,10 +119,7 @@ LauncherCategory {
             onActivated: root.onActivate(index)
             onSelected: root.launcher.selectedIndex = index
 
-            readonly property string wallPath: {
-                const src = typeof modelData === "string" ? modelData : root.allPaths[index];
-                return src !== undefined ? src : "";
-            }
+            readonly property string wallPath: typeof modelData === "string" ? modelData : ""
             readonly property bool isActive: wallPath === root.activeWallpaper
             readonly property string fileName: {
                 const parts = wallPath.split("/");

@@ -91,7 +91,7 @@ PanelWindow {
     readonly property int tabCount: categories.length
     readonly property var activeCategory: categories[activeTab]
     readonly property var currentList: activeCategory.model
-    readonly property int currentCount: typeof currentList === "number" ? currentList : (currentList.length ?? 0)
+    readonly property int currentCount: carouselRepeater.count
     readonly property string searchText: searchField.text
 
     property int selectedIndex: 0
@@ -373,6 +373,7 @@ PanelWindow {
                 }
 
                 Repeater {
+                    id: carouselRepeater
                     model: launcher.activeCategory.model
                     delegate: launcher.activeCategory.cardDelegate
                 }

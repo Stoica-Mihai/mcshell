@@ -20,28 +20,23 @@ LauncherCategory {
     scanningHint: clipboardLoaded ? "No clipboard history" : "Loading..."
 
     // ── Data ──
-    model: launcher.searchText !== "" ? filteredClipEntries : lazyClip.count
+    model: ScriptModel {
+        id: clipModel
+        values: root.launcher.searchText !== "" ? root.filteredClipEntries : root.allClipEntries
+        objectProp: "id"
+    }
 
     property bool clipboardLoaded: false
     property var allClipEntries: []
     property var filteredClipEntries: []
     property var _rawLines: []
 
-    LazyModel {
-        id: lazyClip
-        sourceModel: root.allClipEntries
-        currentIndex: root.launcher.selectedIndex
-    }
-
     // ── Lifecycle ──
     function onTabEnter() {
         if (!clipboardLoaded) loadClipboard();
-        else lazyClip.reset();
     }
 
-    function onTabLeave() {
-        lazyClip.reset();
-    }
+    function onTabLeave() {}
 
     // ── Loading ──
     function loadClipboard() {
@@ -99,8 +94,7 @@ LauncherCategory {
     // ── Search ──
     function onSearch(text) {
         const query = (text || "").toLowerCase().trim();
-        if (query === "") { filteredClipEntries = []; return; }
-        // Search filters the full list — results are typically small
+        if (query === "") { filteredClipEntries = allClipEntries; return; }
         const results = [];
         for (let i = 0; i < allClipEntries.length; i++) {
             if (allClipEntries[i].content.toLowerCase().indexOf(query) >= 0)
@@ -111,10 +105,8 @@ LauncherCategory {
 
     // ── Activate ──
     function onActivate(index) {
-        const entry = launcher.searchText !== ""
-            ? filteredClipEntries[index]
-            : allClipEntries[index];
-        if (entry) copyClipEntry(entry);
+        const entries = launcher.searchText !== "" ? filteredClipEntries : allClipEntries;
+        if (index >= 0 && index < entries.length) copyClipEntry(entries[index]);
     }
 
     // ── Card delegate ──
@@ -130,14 +122,11 @@ LauncherCategory {
             onActivated: root.onActivate(index)
             onSelected: root.launcher.selectedIndex = index
 
-            // Resolve entry — numeric model uses index lookup, array model uses modelData
-            readonly property var entry: typeof modelData === "object" ? modelData : root.allClipEntries[index]
-
             // Collapsed icon
             Text {
                 anchors.centerIn: parent
                 visible: !parent.isCurrent
-                text: clipStrip.entry?.isImage ? Theme.iconImage : Theme.iconClipboard
+                text: modelData.isImage ? Theme.iconImage : Theme.iconClipboard
                 font.family: Theme.iconFont
                 font.pixelSize: 24
                 color: Theme.fgDim
@@ -151,7 +140,7 @@ LauncherCategory {
                 spacing: 10
 
                 Text {
-                    text: clipStrip.entry?.isImage ? Theme.iconImage : Theme.iconClipboard
+                    text: modelData.isImage ? Theme.iconImage : Theme.iconClipboard
                     font.family: Theme.iconFont
                     font.pixelSize: 32
                     color: Theme.accent
@@ -160,26 +149,26 @@ LauncherCategory {
 
                 Text {
                     Layout.fillWidth: true
-                    text: clipStrip.entry?.isImage ? "Image" : (clipStrip.entry?.content || "")
+                    text: modelData.isImage ? "Image" : (modelData.content || "")
                     textFormat: Text.PlainText
                     font.family: Theme.fontFamily
-                    font.pixelSize: clipStrip.entry?.isImage ? 18 : Theme.fontSizeSmall
-                    font.bold: clipStrip.entry?.isImage ?? false
+                    font.pixelSize: modelData.isImage ? 18 : Theme.fontSizeSmall
+                    font.bold: modelData.isImage ?? false
                     color: Theme.fg
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     elide: Text.ElideRight
-                    maximumLineCount: clipStrip.entry?.isImage ? 1 : 12
+                    maximumLineCount: modelData.isImage ? 1 : 12
                     horizontalAlignment: Text.AlignHCenter
                 }
 
                 // Show image metadata for image entries
                 Text {
-                    visible: clipStrip.entry?.isImage ?? false
+                    visible: modelData.isImage ?? false
                     Layout.fillWidth: true
                     text: {
-                        const m = (clipStrip.entry?.content || "").match(/(\d+\s*\w+)\s+(png|jpe?g|webp|bmp)\s+(\d+x\d+)/i);
+                        const m = (modelData.content || "").match(/(\d+\s*\w+)\s+(png|jpe?g|webp|bmp)\s+(\d+x\d+)/i);
                         if (m) return m[3] + "  •  " + m[2].toUpperCase() + "  •  " + m[1];
-                        return clipStrip.entry?.content || "";
+                        return modelData.content || "";
                     }
                     textFormat: Text.PlainText
                     font.family: Theme.fontFamily
