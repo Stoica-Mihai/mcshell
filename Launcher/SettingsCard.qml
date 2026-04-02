@@ -1,12 +1,12 @@
 import QtQuick
 import qs.Config
 
-// Unified settings card that delegates to the right content based on category.
+// Unified settings card that loads content from a source URL.
 // Exposes a common navigation interface for the key handler.
 Item {
     id: root
 
-    required property string category  // "audio" | "display" | "power"
+    property string source: ""
     property bool active: false
 
     // ── Common navigation interface ──
@@ -31,33 +31,11 @@ Item {
         if (loader.item && loader.item.resetSelection) loader.item.resetSelection();
     }
 
-    // ── Collapsed icon ──
-    readonly property string collapsedIcon: category === "audio" ? "\uf028"
-        : category === "display" ? Theme.iconBrightness
-        : Theme.iconShutdown
-
     // ── Load the right content ──
     Loader {
         id: loader
         anchors.fill: parent
-        sourceComponent: root.category === "audio" ? audioComp
-                       : root.category === "display" ? displayComp
-                       : powerComp
+        source: root.source
         onLoaded: if (item) item.active = Qt.binding(() => root.active)
-    }
-
-    Component {
-        id: audioComp
-        SettingsAudio {}
-    }
-
-    Component {
-        id: displayComp
-        SettingsDisplay {}
-    }
-
-    Component {
-        id: powerComp
-        SettingsPower {}
     }
 }

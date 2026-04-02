@@ -18,7 +18,11 @@ LauncherCategory {
         : "Enter edit"
 
     // ── Data ──
-    readonly property var settingsCategories: [{id:"audio"},{id:"display"},{id:"power"}]
+    readonly property var settingsCategories: [
+        { id: "audio",   icon: Theme.iconVolHigh,    source: "SettingsAudio.qml" },
+        { id: "display", icon: Theme.iconBrightness, source: "SettingsDisplay.qml" },
+        { id: "power",   icon: Theme.iconShutdown,   source: "SettingsPower.qml" }
+    ]
     model: settingsCategories
 
     property var activeSettingsCard: null
@@ -93,7 +97,7 @@ LauncherCategory {
             Text {
                 anchors.centerIn: parent
                 visible: !parent.isCurrent
-                text: settingsCard.collapsedIcon
+                text: modelData.icon ?? Theme.iconMissing
                 font.family: Theme.iconFont
                 font.pixelSize: 24
                 color: Theme.fgDim
@@ -104,7 +108,7 @@ LauncherCategory {
                 id: settingsCard
                 anchors.fill: parent
                 visible: parent.isCurrent
-                category: modelData.id ?? ""
+                source: modelData.source ?? ""
                 active: parent.isCurrent && root.editMode
 
                 onActiveChanged: {

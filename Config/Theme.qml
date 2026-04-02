@@ -118,6 +118,9 @@ Singleton {
     readonly property string iconBatteryCharging: "\u{f0084}"
     readonly property string iconBatteryAlert: "\u{f0083}"
 
+    // Fallback
+    readonly property string iconMissing: "\uf059"  // question-circle
+
     // Wallpaper
     readonly property string iconWallpaper: "\u{f00ab}"
     readonly property string iconFolder: "\uf07b"
