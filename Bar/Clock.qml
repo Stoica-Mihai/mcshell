@@ -9,7 +9,7 @@ Item {
     implicitWidth: label.implicitWidth
     implicitHeight: label.implicitHeight
 
-    property date currentDate: new Date()
+    property alias currentDate: clock.date
     property bool popupVisible: calendarPopup.isOpen
 
     function dismissPopup() {
@@ -26,12 +26,9 @@ Item {
         }
     }
 
-    Timer {
-        interval: 1000
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: root.currentDate = new Date()
+    SystemClock {
+        id: clock
+        precision: SystemClock.Seconds
     }
 
     Text {
@@ -41,9 +38,7 @@ Item {
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSize
         font.weight: Font.Medium
-        text: root.currentDate.toLocaleDateString(Qt.locale(), "ddd d MMM") +
-              "  " +
-              root.currentDate.toLocaleTimeString(Qt.locale(), "HH:mm")
+        text: Qt.formatDateTime(clock.date, "ddd d MMM  HH:mm:ss")
     }
 
     MouseArea {
