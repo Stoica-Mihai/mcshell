@@ -18,6 +18,7 @@ PanelWindow {
         isOpen = true;
         visible = true;
         activeTab = 0;
+        editMode = false;
         searchField.text = "";
         selectedIndex = 0;
         activeCategory.onSearch("");
@@ -28,6 +29,7 @@ PanelWindow {
     function close() {
         isOpen = false;
         visible = false;
+        editMode = false;
         searchField.text = "";
         for (let i = 0; i < categories.length; i++)
             categories[i].onTabLeave();
@@ -42,6 +44,7 @@ PanelWindow {
             isOpen = true;
             visible = true;
             activeTab = tab;
+            editMode = true;
             searchField.text = "";
             selectedIndex = 0;
             activeCategory.onSearch("");
@@ -49,6 +52,7 @@ PanelWindow {
             searchField.forceActiveFocus();
         } else {
             switchTab(tab);
+            editMode = true;
         }
     }
 
@@ -84,6 +88,7 @@ PanelWindow {
     readonly property string searchText: searchField.text
 
     property int selectedIndex: 0
+    property bool editMode: false
 
     // ── Carousel config ─────────────────────────────────
     readonly property int sideCount: 5
@@ -112,14 +117,15 @@ PanelWindow {
     function switchTab(tab) {
         if (tab < 0 || tab >= categories.length) return;
         if (activeTab === tab && isOpen) {
-            // Already on this tab — just refresh
             searchField.text = "";
             selectedIndex = 0;
+            editMode = false;
             activeCategory.onSearch("");
             searchField.forceActiveFocus();
             return;
         }
         activeCategory.onTabLeave();
+        editMode = false;
         activeTab = tab;
         searchField.text = "";
         selectedIndex = 0;
@@ -172,7 +178,11 @@ PanelWindow {
                         Layout.preferredWidth: tabContent.implicitWidth + 16
                         Layout.preferredHeight: 28
                         radius: 6
-                        color: launcher.activeTab === index ? Theme.accent : "transparent"
+                        color: launcher.activeTab === index
+                            ? (launcher.editMode ? Theme.bgHover : Theme.accent)
+                            : "transparent"
+
+                        Behavior on color { ColorAnimation { duration: 150 } }
 
                         RowLayout {
                             id: tabContent
@@ -183,14 +193,20 @@ PanelWindow {
                                 text: modelData.tabIcon
                                 font.family: Theme.iconFont
                                 font.pixelSize: 11
-                                color: launcher.activeTab === index ? Theme.bgSolid : Theme.fgDim
+                                color: launcher.activeTab === index
+                                    ? (launcher.editMode ? Theme.accent : Theme.bgSolid)
+                                    : Theme.fgDim
+                                Behavior on color { ColorAnimation { duration: 150 } }
                             }
 
                             Text {
                                 text: modelData.tabLabel
                                 font.family: Theme.fontFamily
                                 font.pixelSize: 11
-                                color: launcher.activeTab === index ? Theme.bgSolid : Theme.fgDim
+                                color: launcher.activeTab === index
+                                    ? (launcher.editMode ? Theme.accent : Theme.bgSolid)
+                                    : Theme.fgDim
+                                Behavior on color { ColorAnimation { duration: 150 } }
                             }
                         }
 
@@ -224,28 +240,62 @@ PanelWindow {
                     clip: true
                     selectByMouse: true
 
-                    onTextChanged: launcher.activeCategory.onSearch(text)
+                    onTextChanged: {
+                        launcher.activeCategory.onSearch(text);
+                        if (text !== "" && !launcher.editMode)
+                            launcher.editMode = true;
+                    }
 
                     Keys.onPressed: event => {
-                        // Category-first key dispatch
+                        // Category-specific keys always get first chance
                         if (launcher.activeCategory.onKeyPressed(event)) {
                             event.accepted = true;
                             return;
                         }
 
-                        switch (event.key) {
-                        case Qt.Key_Escape: launcher.close(); event.accepted = true; break;
-                        case Qt.Key_Left: launcher.navigate(-1); event.accepted = true; break;
-                        case Qt.Key_Right: launcher.navigate(1); event.accepted = true; break;
-                        case Qt.Key_Return:
-                        case Qt.Key_Enter:
-                            launcher.activate();
-                            event.accepted = true;
-                            break;
-                        case Qt.Key_Tab:
-                            launcher.switchTab((launcher.activeTab + 1) % launcher.tabCount);
-                            event.accepted = true;
-                            break;
+                        if (!launcher.editMode) {
+                            // Level 1: category browse — arrows switch categories
+                            switch (event.key) {
+                            case Qt.Key_Escape:
+                                launcher.close();
+                                event.accepted = true;
+                                break;
+                            case Qt.Key_Left:
+                                launcher.switchTab((launcher.activeTab - 1 + launcher.tabCount) % launcher.tabCount);
+                                event.accepted = true;
+                                break;
+                            case Qt.Key_Right:
+                                launcher.switchTab((launcher.activeTab + 1) % launcher.tabCount);
+                                event.accepted = true;
+                                break;
+                            case Qt.Key_Return:
+                            case Qt.Key_Enter:
+                            case Qt.Key_Down:
+                                launcher.editMode = true;
+                                event.accepted = true;
+                                break;
+                            }
+                        } else {
+                            // Level 2: inside category — arrows navigate items
+                            switch (event.key) {
+                            case Qt.Key_Escape:
+                                launcher.editMode = false;
+                                event.accepted = true;
+                                break;
+                            case Qt.Key_Left:
+                                launcher.navigate(-1);
+                                event.accepted = true;
+                                break;
+                            case Qt.Key_Right:
+                                launcher.navigate(1);
+                                event.accepted = true;
+                                break;
+                            case Qt.Key_Return:
+                            case Qt.Key_Enter:
+                                launcher.activate();
+                                event.accepted = true;
+                                break;
+                            }
                         }
                     }
 
@@ -352,21 +402,32 @@ PanelWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: carouselArea.bottom
         anchors.topMargin: 16
-        visible: launcher.currentList.length > 0
-              || launcher.activeCategory.disabledState
-              || launcher.activeCategory.scanningState
+        visible: true
         text: {
-            // Disabled state — show toggle hint with shared suffix
+            // Disabled state
             if (launcher.activeCategory.disabledState) {
-                const hint = launcher.activeCategory.disabledLegendHint || launcher.activeCategory.legendHint;
-                return hint + "  |  Tab switch  |  ESC close";
+                const hint = launcher.activeCategory.disabledLegendHint || "";
+                if (!launcher.editMode)
+                    return (hint ? hint + "  |  " : "") + "\u2190 \u2192 Category  |  ESC close";
+                return (hint ? hint + "  |  " : "") + "ESC back";
             }
 
-            var t = ((launcher.selectedIndex + 1) + " / " + launcher.currentList.length)
+            // Level 1: category browse
+            if (!launcher.editMode)
+                return "\u2190 \u2192 Category  |  Enter open  |  ESC close";
+
+            // Level 2+: category overrides full legend
+            if (launcher.activeCategory.legendOverride)
+                return launcher.activeCategory.legendHint;
+
+            // Level 2: standard item navigation
+            if (launcher.currentList.length === 0)
+                return "ESC back";
+            var t = (launcher.selectedIndex + 1) + " / " + launcher.currentList.length
                   + "  |  \u2190 \u2192 Navigate";
             if (launcher.activeCategory.legendHint)
                 t += "  |  " + launcher.activeCategory.legendHint;
-            t += "  |  Tab switch  |  ESC close";
+            t += "  |  ESC back";
             return t;
         }
         font.family: Theme.fontFamily

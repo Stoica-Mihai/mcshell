@@ -12,9 +12,10 @@ LauncherCategory {
     tabLabel: "Settings"
     tabIcon: Theme.iconSettings
     searchPlaceholder: "Settings"
+    legendOverride: editMode
     legendHint: editMode
-        ? "\u2191 \u2193 Items  |  \u2190 \u2192 Adjust  |  Enter select  |  ESC browse"
-        : "\u2190 \u2192 Category  |  \u2191 \u2193 Edit  |  ESC close"
+        ? "\u2191 \u2193 Items  |  \u2190 \u2192 Adjust  |  Enter select  |  ESC back"
+        : "Enter edit"
 
     // ── Data ──
     readonly property var settingsCategories: [{id:"audio"},{id:"display"},{id:"power"}]
@@ -30,7 +31,7 @@ LauncherCategory {
     // ── Key handler ──
     function onKeyPressed(event) {
         if (editMode) {
-            // Edit mode: Up/Down navigate items, Left/Right adjust, Enter activates, Escape exits
+            // Sub-edit: Up/Down navigate items, Left/Right adjust, Enter activates, Escape exits
             if (!activeSettingsCard) return false;
             switch (event.key) {
             case Qt.Key_Up:
@@ -45,30 +46,29 @@ LauncherCategory {
                 return true;
             case Qt.Key_Left:
                 if (activeSettingsCard.adjustLeft) activeSettingsCard.adjustLeft();
-                return true;  // always consume in edit mode
+                return true;
             case Qt.Key_Right:
                 if (activeSettingsCard.adjustRight) activeSettingsCard.adjustRight();
-                return true;  // always consume in edit mode
+                return true;
             case Qt.Key_Escape:
                 editMode = false;
                 if (activeSettingsCard.resetSelection) activeSettingsCard.resetSelection();
                 return true;
             }
             return false;
-        } else {
-            // Browse mode: Up/Down enters edit mode, Left/Right handled by AppLauncher
+        }
+        // Level 2: Enter/Up/Down enters sub-edit (only when launcher is in edit mode)
+        if (root.launcher.editMode) {
             switch (event.key) {
             case Qt.Key_Up:
             case Qt.Key_Down:
-                editMode = true;
-                return true;
             case Qt.Key_Return:
             case Qt.Key_Enter:
                 editMode = true;
                 return true;
             }
-            return false;
         }
+        return false;
     }
 
     // ── Activate ──
@@ -85,6 +85,7 @@ LauncherCategory {
             expandedWidth: root.launcher.expandedWidth
             stripWidth: root.launcher.stripWidth
             carouselHeight: root.launcher.carouselHeight
+            borderColor: isCurrent && root.launcher.editMode ? Theme.accent : Theme.border
             onActivated: { if (settingsCard.active) root.editMode = true; }
             onSelected: root.launcher.selectedIndex = index
 

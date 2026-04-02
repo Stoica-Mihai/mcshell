@@ -26,6 +26,7 @@ Item {
     // ── Footer legend suffix ──
     property string legendHint: ""
     property string disabledLegendHint: ""  // shown when disabledState is true
+    property bool legendOverride: false     // when true, legendHint replaces the full footer at Level 2
 
     // ── Card delegate (Component producing a CarouselStrip) ──
     property Component cardDelegate: null
