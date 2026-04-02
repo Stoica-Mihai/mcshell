@@ -10,12 +10,13 @@ Item {
     required property var modelData
     required property int index
 
-    // Launcher references — set these from the parent
-    property int selectedIndex: 0
-    property int sideCount: 5
-    property real expandedWidth: 500
-    property real stripWidth: 80
-    property real carouselHeight: 350
+    // Launcher reference — auto-binds carousel properties
+    property var launcher: null
+    property int selectedIndex: launcher ? launcher.selectedIndex : 0
+    property int sideCount: launcher ? launcher.sideCount : 5
+    property real expandedWidth: launcher ? launcher.expandedWidth : 500
+    property real stripWidth: launcher ? launcher.stripWidth : 80
+    property real carouselHeight: launcher ? launcher.carouselHeight : 350
 
     readonly property bool isCurrent: index === selectedIndex
     readonly property bool isVisible: Math.abs(index - selectedIndex) <= sideCount
@@ -32,7 +33,7 @@ Item {
     default property alias contentData: cardContent.data
 
     // Card background
-    property bool focused: false
+    property bool focused: launcher ? launcher.editMode : false
     property color borderColor: focused && isCurrent ? Theme.accent : Theme.border
     property bool showBorder: isCurrent
 

@@ -170,12 +170,7 @@ LauncherCategory {
     // ── Card delegate ──
     cardDelegate: Component {
         CarouselStrip {
-            selectedIndex: root.launcher.selectedIndex
-            sideCount: root.launcher.sideCount
-            expandedWidth: root.launcher.expandedWidth
-            stripWidth: root.launcher.stripWidth
-            carouselHeight: root.launcher.carouselHeight
-            focused: root.launcher.editMode
+            launcher: root.launcher
             onActivated: root.onActivate(index)
             onSelected: root.launcher.selectedIndex = index
 
