@@ -142,19 +142,8 @@ Item {
         }
 
         // Volume bar (item 0 — selectable, Left/Right adjusts)
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.leftMargin: 4
-            Layout.rightMargin: 4
-            implicitHeight: volRow.implicitHeight + 8
-            radius: 6
-            color: root.active && root.volumeSelected ? Theme.overlay : "transparent"
-        RowLayout {
-            id: volRow
-            anchors.fill: parent
-            anchors.leftMargin: 8
-            anchors.rightMargin: 8
-            spacing: 8
+        SettingsRow {
+            selected: root.active && root.volumeSelected
 
             Text {
                 text: Theme.volumeIcon(root.volume / 100, root.defaultSink?.audio?.muted ?? false)
@@ -183,7 +172,6 @@ Item {
                 horizontalAlignment: Text.AlignRight
             }
         }
-        }
 
         // Separator
         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border; Layout.topMargin: 4 }
@@ -201,39 +189,27 @@ Item {
 
         Repeater {
             model: root.outputNodes
-            delegate: Rectangle {
+            delegate: SettingsRow {
                 required property var modelData
                 required property int index
-                Layout.fillWidth: true
+                selected: root.active && root.selectedItem === (index + 1)
                 implicitHeight: 30
-                radius: 6
-                color: root.active && root.selectedItem === (index + 1)
-                    ? Theme.overlay : "transparent"
-                Layout.leftMargin: 4
-                Layout.rightMargin: 4
 
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 12
-                    anchors.rightMargin: 12
-                    spacing: 8
-
-                    Text {
-                        text: modelData === root.defaultSink ? Theme.iconCheck : ""
-                        font.family: Theme.iconFont
-                        font.pixelSize: 10
-                        color: Theme.green
-                        Layout.preferredWidth: 14
-                    }
-                    Text {
-                        text: modelData.description || modelData.name || "Unknown"
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        color: modelData === root.defaultSink ? Theme.accent : Theme.fg
-                        elide: Text.ElideRight
-                        Layout.fillWidth: true
-                        maximumLineCount: 1
-                    }
+                Text {
+                    text: modelData === root.defaultSink ? Theme.iconCheck : ""
+                    font.family: Theme.iconFont
+                    font.pixelSize: 10
+                    color: Theme.green
+                    Layout.preferredWidth: 14
+                }
+                Text {
+                    text: modelData.description || modelData.name || "Unknown"
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                    color: modelData === root.defaultSink ? Theme.accent : Theme.fg
+                    elide: Text.ElideRight
+                    Layout.fillWidth: true
+                    maximumLineCount: 1
                 }
             }
         }
@@ -254,39 +230,27 @@ Item {
 
         Repeater {
             model: root.inputNodes
-            delegate: Rectangle {
+            delegate: SettingsRow {
                 required property var modelData
                 required property int index
-                Layout.fillWidth: true
+                selected: root.active && root.selectedItem === (1 + root.outputNodes.length + index)
                 implicitHeight: 30
-                radius: 6
-                color: root.active && root.selectedItem === (1 + root.outputNodes.length + index)
-                    ? Theme.overlay : "transparent"
-                Layout.leftMargin: 4
-                Layout.rightMargin: 4
 
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 12
-                    anchors.rightMargin: 12
-                    spacing: 8
-
-                    Text {
-                        text: modelData === root.defaultSource ? Theme.iconCheck : ""
-                        font.family: Theme.iconFont
-                        font.pixelSize: 10
-                        color: Theme.green
-                        Layout.preferredWidth: 14
-                    }
-                    Text {
-                        text: modelData.description || modelData.name || "Unknown"
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        color: modelData === root.defaultSource ? Theme.accent : Theme.fg
-                        elide: Text.ElideRight
-                        Layout.fillWidth: true
-                        maximumLineCount: 1
-                    }
+                Text {
+                    text: modelData === root.defaultSource ? Theme.iconCheck : ""
+                    font.family: Theme.iconFont
+                    font.pixelSize: 10
+                    color: Theme.green
+                    Layout.preferredWidth: 14
+                }
+                Text {
+                    text: modelData.description || modelData.name || "Unknown"
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                    color: modelData === root.defaultSource ? Theme.accent : Theme.fg
+                    elide: Text.ElideRight
+                    Layout.fillWidth: true
+                    maximumLineCount: 1
                 }
             }
         }

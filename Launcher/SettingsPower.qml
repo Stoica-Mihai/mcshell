@@ -92,24 +92,11 @@ Item {
         Repeater {
             model: root.actions
 
-            Rectangle {
+            SettingsRow {
                 required property var modelData
                 required property int index
-
-                Layout.fillWidth: true
-                Layout.leftMargin: 4
-                Layout.rightMargin: 4
-                implicitHeight: 38
-                radius: 6
-                color: root.active && root.selectedItem === index
-                    ? (modelData.danger ? Qt.rgba(0.97, 0.47, 0.56, 0.08) : Theme.overlay)
-                    : "transparent"
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 16
-                    anchors.rightMargin: 16
-                    spacing: 12
+                selected: root.active && root.selectedItem === index
+                selectedColor: modelData.danger ? Qt.rgba(0.97, 0.47, 0.56, 0.08) : Theme.overlay
 
                     Text {
                         text: modelData.icon
@@ -133,7 +120,6 @@ Item {
                         color: Theme.fgDim
                         opacity: 0.4
                     }
-                }
             }
         }
 

@@ -132,92 +132,70 @@ Item {
         Item { Layout.preferredHeight: 8 }
 
         // Brightness
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.leftMargin: 4
-            Layout.rightMargin: 4
+        SettingsRow {
+            selected: root.active && root.selectedItem === 0
             implicitHeight: 40
-            radius: 6
-            color: root.active && root.selectedItem === 0 ? Theme.overlay : "transparent"
 
-            RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: 12
-                anchors.rightMargin: 12
-                spacing: 8
-
-                Text {
-                    text: Theme.iconBrightness
-                    font.family: Theme.iconFont
-                    font.pixelSize: 14
+            Text {
+                text: Theme.iconBrightness
+                font.family: Theme.iconFont
+                font.pixelSize: 14
+                color: Theme.yellow
+            }
+            Text {
+                text: "Brightness"
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeSmall
+                color: Theme.fg
+                Layout.preferredWidth: 70
+            }
+            Rectangle {
+                Layout.fillWidth: true
+                height: 4
+                radius: 2
+                color: Theme.overlay
+                Rectangle {
+                    width: parent.width * (root.brightnessPct / 100)
+                    height: parent.height
+                    radius: parent.radius
                     color: Theme.yellow
                 }
-                Text {
-                    text: "Brightness"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    color: Theme.fg
-                    Layout.preferredWidth: 70
-                }
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 4
-                    radius: 2
-                    color: Theme.overlay
-                    Rectangle {
-                        width: parent.width * (root.brightnessPct / 100)
-                        height: parent.height
-                        radius: parent.radius
-                        color: Theme.yellow
-                    }
-                }
-                Text {
-                    text: root.brightnessPct + "%"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 10
-                    color: Theme.fgDim
-                    Layout.preferredWidth: 30
-                    horizontalAlignment: Text.AlignRight
-                }
+            }
+            Text {
+                text: root.brightnessPct + "%"
+                font.family: Theme.fontFamily
+                font.pixelSize: 10
+                color: Theme.fgDim
+                Layout.preferredWidth: 30
+                horizontalAlignment: Text.AlignRight
             }
         }
 
         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
 
         // Night light
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.leftMargin: 4
-            Layout.rightMargin: 4
+        SettingsRow {
+            selected: root.active && root.selectedItem === 1
             implicitHeight: 40
-            radius: 6
-            color: root.active && root.selectedItem === 1 ? Theme.overlay : "transparent"
 
-            RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: 12
-                anchors.rightMargin: 12
-                spacing: 8
-
-                Text {
-                    text: Theme.iconNightLight
-                    font.family: Theme.iconFont
-                    font.pixelSize: 14
-                    color: root.nightLightActive ? Theme.yellow : Theme.fgDim
-                }
-                Text {
-                    text: "Night Light"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    color: Theme.fg
-                    Layout.fillWidth: true
-                }
-                Text {
-                    text: root.nightLightActive ? "On" : "Off"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 10
-                    color: root.nightLightActive ? Theme.yellow : Theme.fgDim
-                }
+            Text {
+                text: Theme.iconNightLight
+                font.family: Theme.iconFont
+                font.pixelSize: 14
+                color: root.nightLightActive ? Theme.yellow : Theme.fgDim
+            }
+            Text {
+                text: "Night Light"
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeSmall
+                color: Theme.fg
+                Layout.fillWidth: true
+            }
+            Text {
+                text: root.nightLightActive ? "On" : "Off"
+                font.family: Theme.fontFamily
+                font.pixelSize: 10
+                color: root.nightLightActive ? Theme.yellow : Theme.fgDim
             }
         }
 
