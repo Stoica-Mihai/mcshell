@@ -203,28 +203,20 @@ LauncherCategory {
                 }
 
                 // Status / action hint
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
+                StatusHintText {
                     visible: !wifiStrip.showingPassword
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 11
-                    property bool isTarget: wifiTracker.targetId === modelData.name
-                    color: isTarget && wifiTracker.status === "failed" ? Theme.red
-                         : isTarget && wifiTracker.status === "connected" ? Theme.green
-                         : isTarget && wifiTracker.status === "disconnected" ? Theme.fgDim
-                         : isTarget && (wifiTracker.status === "connecting" || wifiTracker.status === "disconnecting") ? Theme.accent
-                         : Theme.fgDim
-                    opacity: isTarget && wifiTracker.status !== "" ? 1.0 : 0.6
-                    text: {
-                        if (isTarget) {
-                            if (wifiTracker.status === "connecting") return "Connecting...";
-                            if (wifiTracker.status === "disconnecting") return "Disconnecting...";
-                            if (wifiTracker.status === "connected") return "Connected";
-                            if (wifiTracker.status === "disconnected") return "Disconnected";
-                            if (wifiTracker.status === "failed") return "Failed — wrong password?";
-                        }
-                        return modelData.connected ? "Enter to disconnect" : "Enter to connect";
-                    }
+                    tracker: wifiTracker
+                    targetId: modelData.name
+                    successStatuses: ["connected"]
+                    neutralStatuses: ["disconnected"]
+                    statusLabels: ({
+                        "connecting": "Connecting...",
+                        "disconnecting": "Disconnecting...",
+                        "connected": "Connected",
+                        "disconnected": "Disconnected",
+                        "failed": "Failed — wrong password?"
+                    })
+                    defaultText: modelData.connected ? "Enter to disconnect" : "Enter to connect"
                 }
 
                 // Password input (inside the card)

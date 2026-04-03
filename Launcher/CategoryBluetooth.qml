@@ -240,29 +240,21 @@ LauncherCategory {
                 }
 
                 // Action hint / status
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    font.family: Theme.fontFamily
-                    font.pixelSize: 11
-                    property bool isTarget: btTracker.targetId === modelData.address
-                    color: isTarget && btTracker.status === "failed" ? Theme.red
-                         : isTarget && (btTracker.status === "connected" || btTracker.status === "paired") ? Theme.green
-                         : isTarget && btTracker.status !== "" ? Theme.accent
-                         : Theme.fgDim
-                    opacity: isTarget && btTracker.status !== "" ? 1.0 : 0.6
-                    text: {
-                        if (isTarget) {
-                            if (btTracker.status === "pairing") return "Pairing...";
-                            if (btTracker.status === "connecting") return "Connecting...";
-                            if (btTracker.status === "disconnecting") return "Disconnecting...";
-                            if (btTracker.status === "connected") return "Connected";
-                            if (btTracker.status === "paired") return "Paired";
-                            if (btTracker.status === "failed") return "Failed";
-                        }
-                        return modelData.connected ? "Enter to disconnect"
-                            : modelData.paired ? "Enter to connect"
-                            : "Enter to pair";
-                    }
+                StatusHintText {
+                    tracker: btTracker
+                    targetId: modelData.address
+                    successStatuses: ["connected", "paired"]
+                    statusLabels: ({
+                        "pairing": "Pairing...",
+                        "connecting": "Connecting...",
+                        "disconnecting": "Disconnecting...",
+                        "connected": "Connected",
+                        "paired": "Paired",
+                        "failed": "Failed"
+                    })
+                    defaultText: modelData.connected ? "Enter to disconnect"
+                        : modelData.paired ? "Enter to connect"
+                        : "Enter to pair"
                 }
             }
         }
