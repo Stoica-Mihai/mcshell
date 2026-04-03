@@ -38,8 +38,6 @@ ShellRoot {
     NotificationPopup { id: notifPopup }
     AppLauncher {
         id: appLauncher
-        notifHistoryModel: notifPopup.historyModel
-        onNotificationsViewed: notifPopup.markAllRead()
         onWallpaperSelected: path => wallpaper.setWallpaper(path)
     }
     KeybindPanel { id: keybindPanel }

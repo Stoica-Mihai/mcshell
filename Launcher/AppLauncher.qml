@@ -11,9 +11,6 @@ PanelWindow {
 
     // ── Public API ──────────────────────────────────────
     property bool isOpen: false
-    signal notificationsViewed()
-    property var notifHistoryModel: null  // set from shell.qml
-
     function open() {
         isOpen = true;
         visible = true;
@@ -81,7 +78,6 @@ PanelWindow {
     property list<LauncherCategory> categories: [
         CategoryApps { launcher: launcher },
         CategoryClipboard { launcher: launcher },
-        CategoryNotifications { launcher: launcher; notifHistoryModel: launcher.notifHistoryModel },
         CategoryWifi { launcher: launcher },
         CategoryBluetooth { launcher: launcher },
         CategoryWallpaper {
