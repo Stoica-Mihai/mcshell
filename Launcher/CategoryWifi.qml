@@ -59,14 +59,8 @@ LauncherCategory {
 
     function refreshWifi(searchText) {
         if (!wifiDevice || !wifiDevice.networks) { filteredWifiNetworks = []; return; }
-        const nets = [];
-        const values = wifiDevice.networks.values;
-        const q = (searchText !== undefined ? searchText : "").toLowerCase();
-        for (let i = 0; i < values.length; i++) {
-            const n = values[i];
-            if (q === "" || (n.name || "").toLowerCase().indexOf(q) >= 0)
-                nets.push(n);
-        }
+        const nets = filterByQuery(searchText, wifiDevice.networks.values,
+            (n, q) => (n.name || "").toLowerCase().indexOf(q) >= 0);
         nets.sort((a, b) => {
             if (a.connected !== b.connected) return a.connected ? -1 : 1;
             return b.signalStrength - a.signalStrength;

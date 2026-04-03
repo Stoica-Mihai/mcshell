@@ -38,6 +38,17 @@ Item {
     // ── Search callback ──
     function onSearch(text) {}
 
+    // Shared substring filter — normalizes query, returns new array of matching items.
+    function filterByQuery(text, items, matchFn) {
+        const query = (text || "").toLowerCase().trim();
+        const results = [];
+        for (let i = 0; i < items.length; i++) {
+            if (query === "" || matchFn(items[i], query))
+                results.push(items[i]);
+        }
+        return results;
+    }
+
     // ── Activate selected item ──
     function onActivate(index) {}
 

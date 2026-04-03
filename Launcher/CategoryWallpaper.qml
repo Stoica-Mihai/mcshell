@@ -84,14 +84,8 @@ LauncherCategory {
 
     // ── Search ──
     function onSearch(text) {
-        const query = (text || "").toLowerCase().trim();
-        if (query === "") { filteredPaths = allPaths; return; }
-        const results = [];
-        for (let i = 0; i < allPaths.length; i++) {
-            if (allPaths[i].toLowerCase().indexOf(query) >= 0)
-                results.push(allPaths[i]);
-        }
-        filteredPaths = results;
+        filteredPaths = filterByQuery(text, allPaths,
+            (item, q) => item.toLowerCase().indexOf(q) >= 0);
     }
 
     // ── Activate ──

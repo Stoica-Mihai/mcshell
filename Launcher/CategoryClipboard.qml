@@ -93,14 +93,8 @@ LauncherCategory {
 
     // ── Search ──
     function onSearch(text) {
-        const query = (text || "").toLowerCase().trim();
-        if (query === "") { filteredClipEntries = allClipEntries; return; }
-        const results = [];
-        for (let i = 0; i < allClipEntries.length; i++) {
-            if (allClipEntries[i].content.toLowerCase().indexOf(query) >= 0)
-                results.push(allClipEntries[i]);
-        }
-        filteredClipEntries = results;
+        filteredClipEntries = filterByQuery(text, allClipEntries,
+            (item, q) => item.content.toLowerCase().indexOf(q) >= 0);
     }
 
     // ── Activate ──

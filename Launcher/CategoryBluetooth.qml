@@ -56,15 +56,8 @@ LauncherCategory {
 
     function refreshBt(searchText) {
         if (!btAdapter || !btAdapter.devices) { filteredBtDevices = []; return; }
-        const devs = [];
-        const values = btAdapter.devices.values;
-        const q = (searchText !== undefined ? searchText : "").toLowerCase();
-        for (let i = 0; i < values.length; i++) {
-            const d = values[i];
-            const name = d.name || d.deviceName || "";
-            if (q === "" || name.toLowerCase().indexOf(q) >= 0)
-                devs.push(d);
-        }
+        const devs = filterByQuery(searchText, btAdapter.devices.values,
+            (d, q) => (d.name || d.deviceName || "").toLowerCase().indexOf(q) >= 0);
         devs.sort((a, b) => {
             if (a.connected !== b.connected) return a.connected ? -1 : 1;
             if (a.paired !== b.paired) return a.paired ? -1 : 1;

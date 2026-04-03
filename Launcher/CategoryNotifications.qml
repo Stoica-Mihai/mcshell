@@ -32,27 +32,21 @@ LauncherCategory {
     // ── Search ──
     function onSearch(text) {
         if (!notifHistoryModel) { filteredNotifs = []; return; }
-        const query = (text || "").toLowerCase().trim();
-        const results = [];
+        // Copy from ListModel — references become invalid after model changes
+        const all = [];
         for (let i = 0; i < notifHistoryModel.count; i++) {
             const item = notifHistoryModel.get(i);
-            // Copy to plain JS object — ListModel references become invalid after model changes
-            const copy = {
-                notifId: item.notifId || "",
-                appName: item.appName || "",
-                summary: item.summary || "",
-                body: item.body || "",
-                iconUrl: item.iconUrl || "",
-                urgency: item.urgency || 0,
+            all.push({
+                notifId: item.notifId || "", appName: item.appName || "",
+                summary: item.summary || "", body: item.body || "",
+                iconUrl: item.iconUrl || "", urgency: item.urgency || 0,
                 timestamp: item.timestamp || ""
-            };
-            if (query === "" || copy.summary.toLowerCase().indexOf(query) >= 0
-                || copy.body.toLowerCase().indexOf(query) >= 0
-                || copy.appName.toLowerCase().indexOf(query) >= 0) {
-                results.push(copy);
-            }
+            });
         }
-        filteredNotifs = results;
+        filteredNotifs = filterByQuery(text, all,
+            (item, q) => item.summary.toLowerCase().indexOf(q) >= 0
+                       || item.body.toLowerCase().indexOf(q) >= 0
+                       || item.appName.toLowerCase().indexOf(q) >= 0);
     }
 
     // ── Activate — notifications are view-only ──
