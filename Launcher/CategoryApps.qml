@@ -14,7 +14,7 @@ LauncherCategory {
     tabLabel: "Apps"
     tabIcon: Theme.iconApps
     searchPlaceholder: "Search apps..."
-    legendHint: "Enter launch"
+    legendHint: Theme.hintEnter + " launch"
     scanningState: allApps.length === 0
     scanningIcon: Theme.iconApps
     scanningHint: "No applications found"

@@ -14,7 +14,7 @@ LauncherCategory {
     tabLabel: "WiFi"
     tabIcon: Networking.wifiEnabled ? Theme.iconWifi : Theme.iconWifiOff
     searchPlaceholder: "Search networks..."
-    legendHint: "Enter connect  |  Ctrl+W toggle WiFi"
+    legendHint: Theme.legend(Theme.hintEnter + " connect", "Ctrl+W toggle WiFi")
     disabledLegendHint: "Ctrl+W toggle WiFi"
 
     // ── Disabled state ──
@@ -212,7 +212,7 @@ LauncherCategory {
                         const signal = Math.round(modelData.signalStrength * 100) + "%";
                         const sec = modelData.security === WifiSecurityType.Open ? "Open" : "Secured";
                         const status = modelData.connected ? "Connected" : "";
-                        return [signal, sec, status].filter(s => s).join("  •  ");
+                        return [signal, sec, status].filter(s => s).join(Theme.separator);
                     }
                 }
 

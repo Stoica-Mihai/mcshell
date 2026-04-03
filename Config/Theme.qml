@@ -176,9 +176,18 @@ Singleton {
     // ── Typography ──────────────────────────────────────
     readonly property string fontFamily: "JetBrains Mono"
     readonly property string iconFont: "Symbols Nerd Font"
-    readonly property int fontSize: 13
+    readonly property int fontSizeMini: 9
+    readonly property int fontSizeTiny: 10
     readonly property int fontSizeSmall: 11
+    readonly property int fontSize: 13
+    readonly property int fontSizeMedium: 14
+    readonly property int fontSizeLarge: 16
+    readonly property int fontSizeXLarge: 18
     readonly property int iconSize: 16
+    readonly property int iconSizeSmall: 24
+    readonly property int iconSizeMedium: 28
+    readonly property int iconSizeLarge: 32
+    readonly property int iconSizeXLarge: 48
 
     // ── Icons (Nerd Font codepoints) ────────────────────
     // Volume
@@ -232,6 +241,9 @@ Singleton {
     readonly property string iconDndOn: "\uf1f6"
     readonly property string iconDndOff: "\uf0f3"
     readonly property string iconNightLight: "\ue228"
+    readonly property string iconThermometer: "\uf2c9"
+    readonly property string iconSunrise: "\uf185"
+    readonly property string iconSunset: "\uf186"
 
     // Battery
     readonly property string iconBattery: "\u{f008e}"
@@ -269,6 +281,7 @@ Singleton {
     readonly property string hintBack: hintEsc + " back"
     readonly property string hintClose: hintEsc + " close"
 
+    readonly property string separator: " • "
     function legend(...parts) { return parts.join("  |  "); }
 
     // Volume helper — returns the right icon for a volume level

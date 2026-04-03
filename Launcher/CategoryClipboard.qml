@@ -14,7 +14,7 @@ LauncherCategory {
     tabLabel: "Clip"
     tabIcon: Theme.iconClipboard
     searchPlaceholder: "Search clipboard..."
-    legendHint: "Enter copy"
+    legendHint: Theme.hintEnter + " copy"
     scanningState: !clipboardLoaded || allClipEntries.length === 0
     scanningIcon: Theme.iconClipboard
     scanningHint: clipboardLoaded ? "No clipboard history" : "Loading..."
@@ -162,7 +162,7 @@ LauncherCategory {
                     Layout.fillWidth: true
                     text: {
                         const m = (modelData.content || "").match(/(\d+\s*\w+)\s+(png|jpe?g|webp|bmp)\s+(\d+x\d+)/i);
-                        if (m) return m[3] + "  •  " + m[2].toUpperCase() + "  •  " + m[1];
+                        if (m) return m[3] + Theme.separator + m[2].toUpperCase() + Theme.separator + m[1];
                         return modelData.content || "";
                     }
                     textFormat: Text.PlainText

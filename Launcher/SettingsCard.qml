@@ -87,7 +87,7 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: loader.item?.headerIcon ?? ""
                 font.family: Theme.iconFont
-                font.pixelSize: 28
+                font.pixelSize: Theme.iconSizeMedium
                 color: loader.item?.headerColor ?? Theme.accent
                 visible: text !== ""
             }
@@ -95,7 +95,7 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
                 text: loader.item?.headerTitle ?? ""
                 font.family: Theme.fontFamily
-                font.pixelSize: 14
+                font.pixelSize: Theme.fontSizeMedium
                 font.bold: true
                 color: Theme.fg
                 visible: text !== ""

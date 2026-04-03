@@ -16,8 +16,8 @@ ColumnLayout {
     readonly property string panelLegend: Theme.legend(Theme.hintUpDown, Theme.hintAdjust, Theme.hintEnter + " select", Theme.hintBack)
     readonly property string headerSubtitle: {
         const bri = Brightness.percent + "%";
-        if (UserSettings.nightLightMode === UserSettings.modeManual) return bri + " • Night light manual";
-        if (UserSettings.nightLightMode === UserSettings.modeAuto) return bri + " • Night light auto";
+        if (UserSettings.nightLightMode === UserSettings.modeManual) return bri + Theme.separator + "Night light manual";
+        if (UserSettings.nightLightMode === UserSettings.modeAuto) return bri + Theme.separator + "Night light auto";
         return bri;
     }
     readonly property color headerColor: Theme.yellow
@@ -105,7 +105,7 @@ ColumnLayout {
         Text {
             text: Theme.iconBrightness
             font.family: Theme.iconFont
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontSizeMedium
             color: Theme.yellow
         }
         Text {
@@ -130,7 +130,7 @@ ColumnLayout {
         Text {
             text: Brightness.percent + "%"
             font.family: Theme.fontFamily
-            font.pixelSize: 10
+            font.pixelSize: Theme.fontSizeTiny
             color: Theme.fgDim
             Layout.preferredWidth: 30
             horizontalAlignment: Text.AlignRight
@@ -147,7 +147,7 @@ ColumnLayout {
         Text {
             text: Theme.iconNightLight
             font.family: Theme.iconFont
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontSizeMedium
             color: root.nightOn ? Theme.yellow : Theme.fgDim
         }
         Text {
@@ -160,7 +160,7 @@ ColumnLayout {
         Text {
             text: root.modes[root.modeIndex].charAt(0).toUpperCase() + root.modes[root.modeIndex].slice(1)
             font.family: Theme.fontFamily
-            font.pixelSize: 10
+            font.pixelSize: Theme.fontSizeTiny
             color: root.nightOn ? Theme.yellow : Theme.fgDim
             Layout.rightMargin: 4
         }
@@ -181,9 +181,9 @@ ColumnLayout {
         Layout.preferredHeight: 40
 
         Text {
-            text: "\uf2c9"
+            text: Theme.iconThermometer
             font.family: Theme.iconFont
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontSizeMedium
             color: Theme.yellow
         }
         Text {
@@ -208,7 +208,7 @@ ColumnLayout {
         Text {
             text: UserSettings.activeTemp + "K"
             font.family: Theme.fontFamily
-            font.pixelSize: 10
+            font.pixelSize: Theme.fontSizeTiny
             color: Theme.fgDim
             Layout.preferredWidth: 36
             horizontalAlignment: Text.AlignRight
@@ -222,9 +222,9 @@ ColumnLayout {
         Layout.preferredHeight: 36
 
         Text {
-            text: "\uf185"
+            text: Theme.iconSunrise
             font.family: Theme.iconFont
-            font.pixelSize: 12
+            font.pixelSize: Theme.fontSizeSmall
             color: Theme.yellow
         }
         Text {
@@ -249,9 +249,9 @@ ColumnLayout {
         Layout.preferredHeight: 36
 
         Text {
-            text: "\uf186"
+            text: Theme.iconSunset
             font.family: Theme.iconFont
-            font.pixelSize: 12
+            font.pixelSize: Theme.fontSizeSmall
             color: Theme.accent
         }
         Text {

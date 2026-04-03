@@ -17,7 +17,7 @@ LauncherCategory {
     tabLabel: "Wall"
     tabIcon: Theme.iconImage
     searchPlaceholder: "Search wallpapers..."
-    legendHint: "Enter apply"
+    legendHint: Theme.hintEnter + " apply"
     scanningState: !loaded || allPaths.length === 0
     scanningIcon: Theme.iconImage
     scanningHint: loaded ? "No wallpapers found in " + UserSettings.wallpaperFolder : "Loading..."

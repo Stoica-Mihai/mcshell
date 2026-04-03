@@ -15,7 +15,7 @@ LauncherCategory {
     tabLabel: "BT"
     tabIcon: Theme.iconBluetooth
     searchPlaceholder: "Search devices..."
-    legendHint: "Enter connect  |  Ctrl+B toggle Bluetooth"
+    legendHint: Theme.legend(Theme.hintEnter + " connect", "Ctrl+B toggle Bluetooth")
     disabledLegendHint: "Ctrl+B toggle Bluetooth"
 
     // ── Disabled state ──
@@ -240,7 +240,7 @@ LauncherCategory {
                         else parts.push("Available");
                         if (modelData.batteryAvailable)
                             parts.push(Math.round(modelData.battery * 100) + "%");
-                        return parts.join("  •  ");
+                        return parts.join(Theme.separator);
                     }
                 }
 

@@ -13,7 +13,7 @@ ColumnLayout {
     readonly property string headerIcon: Theme.iconVolHigh
     readonly property string headerTitle: "Audio"
     readonly property string panelLegend: Theme.legend(Theme.hintUpDown, Theme.hintAdjust, Theme.hintEnter + " select", Theme.hintBack)
-    readonly property string headerSubtitle: (defaultSink?.description ?? "No output") + " • " + volume + "%"
+    readonly property string headerSubtitle: (defaultSink?.description ?? "No output") + Theme.separator + volume + "%"
     readonly property color headerColor: Theme.accent
 
     // ── Output sinks ──
@@ -93,7 +93,7 @@ ColumnLayout {
         Text {
             text: Theme.volumeIcon(root.volume / 100, root.defaultSink?.audio?.muted ?? false)
             font.family: Theme.iconFont
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontSizeMedium
             color: (root.defaultSink?.audio?.muted ?? false) ? Theme.red : Theme.accent
         }
         Rectangle {
@@ -111,7 +111,7 @@ ColumnLayout {
         Text {
             text: root.volume + "%"
             font.family: Theme.fontFamily
-            font.pixelSize: 10
+            font.pixelSize: Theme.fontSizeTiny
             color: Theme.fgDim
             Layout.preferredWidth: 30
             horizontalAlignment: Text.AlignRight
@@ -124,7 +124,7 @@ ColumnLayout {
     Text {
         text: "OUTPUT"
         font.family: Theme.fontFamily
-        font.pixelSize: 9
+        font.pixelSize: Theme.fontSizeMini
         color: Theme.fgDim
         Layout.leftMargin: 12
         Layout.topMargin: 2
@@ -143,7 +143,7 @@ ColumnLayout {
             Text {
                 text: modelData === root.defaultSink ? Theme.iconCheck : ""
                 font.family: Theme.iconFont
-                font.pixelSize: 10
+                font.pixelSize: Theme.fontSizeTiny
                 color: Theme.green
                 Layout.preferredWidth: 14
             }
@@ -165,7 +165,7 @@ ColumnLayout {
     Text {
         text: "INPUT"
         font.family: Theme.fontFamily
-        font.pixelSize: 9
+        font.pixelSize: Theme.fontSizeMini
         color: Theme.fgDim
         Layout.leftMargin: 12
         Layout.topMargin: 2
@@ -184,7 +184,7 @@ ColumnLayout {
             Text {
                 text: modelData === root.defaultSource ? Theme.iconCheck : ""
                 font.family: Theme.iconFont
-                font.pixelSize: 10
+                font.pixelSize: Theme.fontSizeTiny
                 color: Theme.green
                 Layout.preferredWidth: 14
             }

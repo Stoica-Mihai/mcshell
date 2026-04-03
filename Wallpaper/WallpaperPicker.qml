@@ -403,8 +403,7 @@ PanelWindow {
             Layout.alignment: Qt.AlignHCenter
             Layout.topMargin: 16
             visible: picker.wallpaperPaths.length > 0
-            text: (picker.currentIndex + 1) + " / " + picker.wallpaperPaths.length
-                  + "  |  ← → Navigate  |  Tab switch  |  Enter apply  |  ESC close"
+            text: Theme.legend((picker.currentIndex + 1) + " / " + picker.wallpaperPaths.length, Theme.hintNav, "Tab switch", Theme.hintEnter + " apply", Theme.hintClose)
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeSmall
             color: Theme.fgDim

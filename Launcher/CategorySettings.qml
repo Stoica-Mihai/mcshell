@@ -95,7 +95,7 @@ LauncherCategory {
                 visible: !parent.isCurrent
                 text: modelData.icon ?? Theme.iconMissing
                 font.family: Theme.iconFont
-                font.pixelSize: 24
+                font.pixelSize: Theme.iconSizeSmall
                 color: Theme.fgDim
             }
 

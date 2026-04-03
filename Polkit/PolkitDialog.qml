@@ -126,7 +126,7 @@ Item {
                         Layout.alignment: Qt.AlignHCenter
                         text: Theme.iconLock
                         font.family: Theme.iconFont
-                        font.pixelSize: 32
+                        font.pixelSize: Theme.iconSizeLarge
                         color: Theme.accent
                     }
 
@@ -135,7 +135,7 @@ Item {
                         Layout.alignment: Qt.AlignHCenter
                         text: "Authentication Required"
                         font.family: Theme.fontFamily
-                        font.pixelSize: 16
+                        font.pixelSize: Theme.fontSizeLarge
                         font.bold: true
                         color: Theme.fg
                     }
@@ -224,7 +224,7 @@ Item {
                         Layout.alignment: Qt.AlignHCenter
                         text: "Authenticating as " + (agent.flow?.selectedIdentity?.displayName ?? "")
                         font.family: Theme.fontFamily
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.fontSizeTiny
                         color: Theme.fgDim
                         opacity: 0.6
                         visible: agent.flow?.selectedIdentity !== undefined
