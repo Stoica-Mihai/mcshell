@@ -92,6 +92,11 @@ PanelWindow {
     readonly property var activeCategory: categories[activeTab]
     readonly property var currentList: activeCategory.model
     readonly property int currentCount: carouselRepeater.count
+
+    // Carousel model/delegate — reset together on tab switch to prevent
+    // cross-contamination (new delegate rendering against old model data)
+    property var _carouselModel: activeCategory.model
+    property Component _carouselDelegate: activeCategory.cardDelegate
     readonly property string searchText: searchField.text
 
     property int selectedIndex: 0
@@ -130,7 +135,12 @@ PanelWindow {
         }
         activeCategory.onTabLeave();
         editMode = false;
+        // Clear carousel before switching — prevents delegate/model cross-contamination
+        _carouselModel = [];
+        _carouselDelegate = null;
         activeTab = tab;
+        _carouselDelegate = activeCategory.cardDelegate;
+        _carouselModel = Qt.binding(() => activeCategory.model);
         searchField.text = "";
         selectedIndex = 0;
         activeCategory.onSearch("");
@@ -374,8 +384,8 @@ PanelWindow {
 
                 Repeater {
                     id: carouselRepeater
-                    model: launcher.activeCategory.model
-                    delegate: launcher.activeCategory.cardDelegate
+                    model: launcher._carouselModel
+                    delegate: launcher._carouselDelegate
                 }
             }
 
