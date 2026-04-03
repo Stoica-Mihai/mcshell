@@ -37,7 +37,7 @@ Item {
         implicitHeight: tipText.implicitHeight + 8
 
         anchor.item: anchorItem
-        anchor.rect.x: anchorItem ? -(implicitWidth / 2 - anchorItem.width / 2) : 0
+        anchor.rect.x: anchorItem ? Theme.centerAnchorX(implicitWidth, anchorItem.width) : 0
         anchor.rect.y: anchorItem ? anchorItem.height + 6 : 0
 
         Rectangle {

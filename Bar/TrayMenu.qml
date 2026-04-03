@@ -16,7 +16,7 @@ AnimatedPopup {
     fullHeight: Math.min(400, menuColumn.implicitHeight + 12)
 
     anchor.item: anchorItem
-    anchor.rect.x: anchorItem ? -(implicitWidth / 2 - anchorItem.width / 2) : 0
+    anchor.rect.x: anchorItem ? Theme.centerAnchorX(implicitWidth, anchorItem.width) : 0
 
     function showMenu(item, anch) {
         if (closing) return;

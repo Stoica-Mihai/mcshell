@@ -314,6 +314,11 @@ Singleton {
     readonly property string separator: " • "
     function legend(...parts) { return parts.join("  |  "); }
 
+    // Popup anchor helper — centers a popup horizontally over its anchor item
+    function centerAnchorX(popupWidth, anchorWidth) {
+        return -(popupWidth / 2 - anchorWidth / 2);
+    }
+
     // Urgency helper — maps notification urgency to color
     function urgencyColor(urgency) {
         if (urgency === 2) return red;

@@ -13,6 +13,33 @@ Item {
     implicitHeight: row.implicitHeight
     visible: hasMedia
 
+    component MediaControls: RowLayout {
+        property int skipSize: Theme.iconSize
+        property int playSize: Theme.iconSize
+        property color controlColor: Theme.fg
+
+        IconButton {
+            icon: Theme.iconPrev
+            size: parent.skipSize
+            normalColor: parent.controlColor
+            visible: root.player && root.player.canGoPrevious
+            onClicked: root.player.previous()
+        }
+        IconButton {
+            icon: root.isPlaying ? Theme.iconPause : Theme.iconPlay
+            size: parent.playSize
+            normalColor: parent.controlColor
+            onClicked: root.isPlaying ? root.player.pause() : root.player.play()
+        }
+        IconButton {
+            icon: Theme.iconNext
+            size: parent.skipSize
+            normalColor: parent.controlColor
+            visible: root.player && root.player.canGoNext
+            onClicked: root.player.next()
+        }
+    }
+
     // Expose popup state for StatusBar click-catcher integration
     property bool popupVisible: mediaPopup.isOpen
 
@@ -77,28 +104,9 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         spacing: Theme.spacingSmall
 
-        // Previous
-        IconButton {
-            icon: Theme.iconPrev
-            size: Theme.iconSize - 2
-            normalColor: Theme.fgDim
-            visible: root.player && root.player.canGoPrevious
-            onClicked: root.player.previous()
-        }
-
-        // Play/Pause
-        IconButton {
-            icon: root.isPlaying ? Theme.iconPause : Theme.iconPlay
-            onClicked: root.isPlaying ? root.player.pause() : root.player.play()
-        }
-
-        // Next
-        IconButton {
-            icon: Theme.iconNext
-            size: Theme.iconSize - 2
-            normalColor: Theme.fgDim
-            visible: root.player && root.player.canGoNext
-            onClicked: root.player.next()
+        MediaControls {
+            skipSize: Theme.iconSize - 2
+            controlColor: Theme.fgDim
         }
 
         // Track info: "Artist - Title" (truncated) — click to toggle popup
@@ -295,32 +303,10 @@ Item {
                 }
 
                 // ── Transport controls ───────────────────
-                RowLayout {
+                MediaControls {
                     Layout.alignment: Qt.AlignHCenter
                     spacing: 20
-
-                    IconButton {
-                        icon: Theme.iconPrev
-                        size: Theme.iconSize
-                        normalColor: Theme.fg
-                        visible: root.player && root.player.canGoPrevious
-                        onClicked: root.player.previous()
-                    }
-
-                    IconButton {
-                        icon: root.isPlaying ? Theme.iconPause : Theme.iconPlay
-                        size: Theme.iconSize + 4
-                        normalColor: Theme.fg
-                        onClicked: root.isPlaying ? root.player.pause() : root.player.play()
-                    }
-
-                    IconButton {
-                        icon: Theme.iconNext
-                        size: Theme.iconSize
-                        normalColor: Theme.fg
-                        visible: root.player && root.player.canGoNext
-                        onClicked: root.player.next()
-                    }
+                    playSize: Theme.iconSize + 4
                 }
             }
         }

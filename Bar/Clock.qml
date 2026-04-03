@@ -44,21 +44,13 @@ Item {
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            if (calendarPopup.isOpen)
-                calendarPopup.close();
-            else {
-                calendarPopup.viewDate = new Date();
-                calendarPopup.viewMode = "days";
-                calendarPopup.open();
-            }
-        }
+        onClicked: root.togglePopup()
     }
 
     CalendarPopup {
         id: calendarPopup
         currentDate: root.currentDate
         anchor.item: root
-        anchor.rect.x: -(implicitWidth / 2 - root.width / 2)
+        anchor.rect.x: Theme.centerAnchorX(implicitWidth, root.width)
     }
 }
