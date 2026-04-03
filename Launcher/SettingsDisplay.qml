@@ -5,10 +5,8 @@ import qs.Core
 import qs.Widgets
 
 // Display settings card content — brightness + night light.
-ColumnLayout {
+SettingsPanel {
     id: root
-
-    property bool active: false
 
     // ── Header ──
     readonly property string headerIcon: Theme.iconBrightness
@@ -22,25 +20,17 @@ ColumnLayout {
     }
     readonly property color headerColor: Theme.yellow
 
-    spacing: Theme.spacingTiny
-
     // ── Night light mode mapping ──
     readonly property var modes: [UserSettings.modeOff, UserSettings.modeManual, UserSettings.modeAuto]
     readonly property int modeIndex: modes.indexOf(UserSettings.nightLightMode)
     readonly property bool nightOn: UserSettings.nightLightMode !== UserSettings.modeOff
 
-    // ── Keyboard nav ──
     // 0 = brightness, 1 = night light toggle, 2 = temperature, 3 = sunrise, 4 = sunset
-    property int selectedItem: 0
-    readonly property int itemCount: {
+    itemCount: {
         if (!nightOn) return 2;
-        if (UserSettings.nightLightMode === UserSettings.modeAuto) return 5; // brightness + toggle + temp(disabled) + sunrise + sunset
-        return 3; // on: brightness + toggle + temp
+        if (UserSettings.nightLightMode === UserSettings.modeAuto) return 5;
+        return 3;
     }
-    function resetSelection() { selectedItem = 0; }
-    function navigateUp() { if (selectedItem > 0) selectedItem--; }
-    function navigateDown() { if (selectedItem < itemCount - 1) selectedItem++; }
-    function activateItem() {}
     function adjustLeft() {
         if (selectedItem === 0) {
             Brightness.set(Math.max(0, Brightness.percent - 5));

@@ -4,10 +4,8 @@ import Quickshell.Services.Pipewire
 import qs.Config
 
 // Audio settings card content — output/input device selection + volume.
-ColumnLayout {
+SettingsPanel {
     id: root
-
-    property bool active: false
 
     // ── Header ──
     readonly property string headerIcon: Theme.iconVolHigh
@@ -47,17 +45,9 @@ ColumnLayout {
 
     PwObjectTracker { objects: root.defaultSink ? [root.defaultSink] : [] }
 
-    spacing: Theme.spacingTiny
-
-    // ── Selected item for keyboard nav ──
     // Item 0 = volume bar, 1..N = outputs, N+1..M = inputs
-    property int selectedItem: 0
-    readonly property int totalItems: 1 + outputNodes.length + inputNodes.length
+    itemCount: 1 + outputNodes.length + inputNodes.length
     readonly property bool volumeSelected: selectedItem === 0
-
-    function resetSelection() { selectedItem = 0; }
-    function navigateUp() { if (selectedItem > 0) selectedItem--; }
-    function navigateDown() { if (selectedItem < totalItems - 1) selectedItem++; }
     function adjustLeft() {
         if (volumeSelected && defaultSink && defaultSink.audio) {
             defaultSink.audio.volume = Math.max(0, defaultSink.audio.volume - Theme.volumeStep);

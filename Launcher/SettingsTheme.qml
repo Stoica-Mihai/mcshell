@@ -3,10 +3,8 @@ import QtQuick.Layouts
 import qs.Config
 
 // Theme settings card content — palette picker.
-ColumnLayout {
+SettingsPanel {
     id: root
-
-    property bool active: false
 
     // ── Header ──
     readonly property string headerIcon: Theme.iconPalette
@@ -18,13 +16,8 @@ ColumnLayout {
     readonly property var themeNames: Theme.paletteNames
     readonly property string currentTheme: UserSettings.themeName || "Tokyo Night"
 
-    spacing: Theme.spacingTiny
+    itemCount: themeNames.length
 
-    // ── Keyboard nav ──
-    property int selectedItem: 0
-    function resetSelection() { selectedItem = 0; }
-    function navigateUp() { if (selectedItem > 0) selectedItem--; }
-    function navigateDown() { if (selectedItem < themeNames.length - 1) selectedItem++; }
     function activateItem() {
         const name = themeNames[selectedItem];
         UserSettings.themeName = name;

@@ -7,10 +7,8 @@ import qs.Config
 import qs.Core
 
 // Power settings card content — lock, logout, reboot, shutdown.
-ColumnLayout {
+SettingsPanel {
     id: root
-
-    property bool active: false
 
     // ── Header ──
     readonly property string headerIcon: Theme.iconShutdown
@@ -18,8 +16,6 @@ ColumnLayout {
     readonly property string panelLegend: Theme.legend(Theme.hintUpDown, Theme.hintEnter + " activate", Theme.hintBack)
     readonly property string headerSubtitle: ""
     readonly property color headerColor: Theme.fg
-
-    spacing: Theme.spacingTiny
 
     // ── Actions ──
     SafeProcess {
@@ -45,8 +41,7 @@ ColumnLayout {
         { name: "Shutdown", icon: Theme.iconShutdown, danger: true },
     ]
 
-    // ── Keyboard nav ──
-    property int selectedItem: 0
+    itemCount: 4
     function resetSelection() { selectedItem = 0; confirmItem = -1; }
     property int confirmItem: -1  // which item is awaiting confirmation
 
@@ -55,9 +50,6 @@ ColumnLayout {
         interval: 3000
         onTriggered: root.confirmItem = -1
     }
-
-    function navigateUp() { if (selectedItem > 0) selectedItem--; }
-    function navigateDown() { if (selectedItem < 3) selectedItem++; }
 
     function activateItem() {
         const action = actions[selectedItem];
