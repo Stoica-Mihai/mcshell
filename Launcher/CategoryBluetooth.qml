@@ -165,8 +165,6 @@ LauncherCategory {
     cardDelegate: Component {
         CarouselStrip {
             launcher: root.launcher
-            onActivated: root.onActivate(index)
-            onSelected: root.launcher.selectedIndex = index
 
             // Collapsed: device type icon
             Text {

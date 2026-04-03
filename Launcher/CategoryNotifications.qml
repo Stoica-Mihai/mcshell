@@ -62,7 +62,6 @@ LauncherCategory {
     cardDelegate: Component {
         CarouselStrip {
             launcher: root.launcher
-            onSelected: root.launcher.selectedIndex = index
 
             // Collapsed: bell icon
             Text {

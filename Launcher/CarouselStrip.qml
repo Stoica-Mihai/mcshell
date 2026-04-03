@@ -51,7 +51,7 @@ Item {
             anchors.fill: parent
             visible: strip.isCurrent
             cursorShape: Qt.PointingHandCursor
-            onClicked: strip.activated()
+            onClicked: strip.onStripActivated()
         }
 
         Item {
@@ -71,9 +71,9 @@ Item {
         }
     }
 
-    // Click to select or activate
-    signal activated()
-    signal selected()
+    // Click to select or activate — override these for custom behavior
+    function onStripSelected() { if (launcher) launcher.selectedIndex = index; }
+    function onStripActivated() { if (launcher) launcher.activate(); }
 
     MouseArea {
         anchors.fill: parent
@@ -81,6 +81,6 @@ Item {
         // Only intercept clicks on collapsed cards. When expanded,
         // let content (Flickable, buttons, etc.) handle events.
         enabled: !strip.isCurrent
-        onClicked: strip.selected()
+        onClicked: strip.onStripSelected()
     }
 }

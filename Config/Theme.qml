@@ -121,8 +121,8 @@ Singleton {
     // Apply persisted theme once settings load
     Connections {
         target: UserSettings
-        function onLoadedChanged() {
-            if (UserSettings.loaded && UserSettings.themeName)
+        function onSettingsLoaded() {
+            if (UserSettings.themeName)
                 root.applyPalette(UserSettings.themeName);
         }
     }

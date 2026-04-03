@@ -149,8 +149,6 @@ LauncherCategory {
         CarouselStrip {
             id: wifiStrip
             launcher: root.launcher
-            onActivated: root.onActivate(index)
-            onSelected: root.launcher.selectedIndex = index
 
             readonly property bool showingPassword: root.wifiPasswordSsid === modelData.name
 

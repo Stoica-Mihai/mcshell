@@ -47,6 +47,7 @@ Singleton {
     }
 
     readonly property bool loaded: configFile.loaded
+    signal settingsLoaded()
 
     FileView {
         id: configFile
@@ -71,6 +72,7 @@ Singleton {
         onLoaded: {
             root._restoreNightLight();
             root._detectDefaultFolder();
+            root.settingsLoaded();
         }
 
         onLoadFailed: error => {

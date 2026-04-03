@@ -111,8 +111,6 @@ LauncherCategory {
             id: wallStrip
             launcher: root.launcher
             showBorder: isCurrent || isActive
-            onActivated: root.onActivate(index)
-            onSelected: root.launcher.selectedIndex = index
 
             readonly property string wallPath: typeof modelData === "string" ? modelData : ""
             readonly property bool isActive: wallPath === root.activeWallpaper

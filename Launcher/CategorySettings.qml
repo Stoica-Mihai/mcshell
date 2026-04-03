@@ -86,8 +86,7 @@ LauncherCategory {
     cardDelegate: Component {
         CarouselStrip {
             launcher: root.launcher
-            onActivated: { if (settingsCard.active) root.editMode = true; }
-            onSelected: root.launcher.selectedIndex = index
+            function onStripActivated() { if (settingsCard.active) root.editMode = true; }
 
             // Collapsed icon
             Text {
