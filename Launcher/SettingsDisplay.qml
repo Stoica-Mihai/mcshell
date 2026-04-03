@@ -14,9 +14,11 @@ SettingsPanel {
     readonly property string panelLegend: Theme.legend(Theme.hintUpDown, Theme.hintAdjust, Theme.hintEnter + " select", Theme.hintBack)
     readonly property string headerSubtitle: {
         const bri = Brightness.percent + "%";
-        if (UserSettings.nightLightMode === UserSettings.modeManual) return bri + Theme.separator + "Night light manual";
-        if (UserSettings.nightLightMode === UserSettings.modeAuto) return bri + Theme.separator + "Night light auto";
-        return bri;
+        const parts = [];
+        if (UserSettings.nightLightMode === UserSettings.modeManual) parts.push("Night light manual");
+        else if (UserSettings.nightLightMode === UserSettings.modeAuto) parts.push("Night light auto");
+        if (UserSettings.idleTimeout > 0) parts.push("Lock " + UserSettings.idleTimeout + "m");
+        return parts.length > 0 ? bri + Theme.separator + parts.join(Theme.separator) : bri;
     }
     readonly property color headerColor: Theme.yellow
 
@@ -25,12 +27,13 @@ SettingsPanel {
     readonly property int modeIndex: modes.indexOf(UserSettings.nightLightMode)
     readonly property bool nightOn: UserSettings.nightLightMode !== UserSettings.modeOff
 
-    // 0 = brightness, 1 = night light toggle, 2 = temperature, 3 = sunrise, 4 = sunset
-    itemCount: {
+    // 0 = brightness, 1 = night light toggle, 2 = temperature, 3 = sunrise, 4 = sunset, last = idle timeout
+    readonly property int _idleItem: {
         if (!nightOn) return 2;
         if (UserSettings.nightLightMode === UserSettings.modeAuto) return 5;
         return 3;
     }
+    itemCount: _idleItem + 1
     function adjustLeft() {
         if (selectedItem === 0) {
             Brightness.set(Math.max(0, Brightness.percent - 5));
@@ -49,6 +52,7 @@ SettingsPanel {
         }
         if (selectedItem === 3 && UserSettings.nightLightMode === UserSettings.modeAuto) { adjustTime("sunrise", -30); return true; }
         if (selectedItem === 4 && UserSettings.nightLightMode === UserSettings.modeAuto) { adjustTime("sunset", -30); return true; }
+        if (selectedItem === _idleItem) { UserSettings.idleTimeout = Math.max(0, UserSettings.idleTimeout - 5); return true; }
         return false;
     }
     function adjustRight() {
@@ -69,6 +73,7 @@ SettingsPanel {
         }
         if (selectedItem === 3 && UserSettings.nightLightMode === UserSettings.modeAuto) { adjustTime("sunrise", 30); return true; }
         if (selectedItem === 4 && UserSettings.nightLightMode === UserSettings.modeAuto) { adjustTime("sunset", 30); return true; }
+        if (selectedItem === _idleItem) { UserSettings.idleTimeout = Math.min(60, UserSettings.idleTimeout + 5); return true; }
         return false;
     }
 
@@ -256,6 +261,34 @@ SettingsPanel {
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeSmall
             color: Theme.accent
+        }
+    }
+
+    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+
+    // Auto-lock timeout
+    SettingsRow {
+        selected: root.active && root.selectedItem === root._idleItem
+        Layout.preferredHeight: 40
+
+        Text {
+            text: Theme.iconLock
+            font.family: Theme.iconFont
+            font.pixelSize: Theme.fontSizeMedium
+            color: UserSettings.idleTimeout > 0 ? Theme.accent : Theme.fgDim
+        }
+        Text {
+            text: "Auto Lock"
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeSmall
+            color: Theme.fg
+            Layout.fillWidth: true
+        }
+        Text {
+            text: UserSettings.idleTimeout > 0 ? UserSettings.idleTimeout + " min" : "Off"
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeTiny
+            color: UserSettings.idleTimeout > 0 ? Theme.accent : Theme.fgDim
         }
     }
 }

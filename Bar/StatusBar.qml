@@ -20,6 +20,8 @@ Scope {
     signal notifCleared()
     signal notifPanelOpened()
 
+    property bool mediaPlaying: false
+
     property int panelToggleTrigger: 0
     property string panelToggleName: ""
     onPanelToggleTriggerChanged: {
@@ -49,6 +51,12 @@ Scope {
 
         implicitHeight: Theme.barHeight + Theme.barMargin * 2
         exclusiveZone: Theme.barHeight + Theme.barMargin * 2
+
+        // Prevent auto-lock during media playback
+        IdleInhibitor {
+            window: exclusionZone
+            enabled: root.mediaPlaying
+        }
 
         WlrLayershell.namespace: "mcshell-zone"
         WlrLayershell.layer: WlrLayer.Top

@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import Quickshell.Services.Mpris
 import qs.Config
 import qs.Bar
 import qs.Notifications
@@ -26,6 +27,7 @@ ShellRoot {
             screenName: modelData.name
             unreadNotifications: notifPopup.unreadCount
             notifHistoryModel: notifPopup.historyModel
+            mediaPlaying: shell._mediaPlaying
             onLauncherRequested: appLauncher.toggle()
             onNotifRemoved: nid => notifPopup.removeHistoryById(nid)
             onNotifCleared: notifPopup.clearHistory()
@@ -44,6 +46,23 @@ ShellRoot {
     LockScreen { id: lockScreen }
     PolkitDialog {}
     WallpaperRenderer { id: wallpaper }
+
+    // ── Idle management ──────────────────────────────────
+    // enabled deferred until settings load to avoid timeout=0 race
+    IdleMonitor {
+        enabled: UserSettings.loaded && UserSettings.idleTimeout > 0
+        timeout: Math.max(UserSettings.idleTimeout, 1) * 60
+        onIsIdleChanged: if (isIdle && !lockScreen.isLocked) lockScreen.lock()
+    }
+
+    // Media inhibitor: true when any MPRIS player is actively playing
+    readonly property bool _mediaPlaying: {
+        if (!Mpris.players || !Mpris.players.values) return false;
+        const all = Mpris.players.values;
+        for (let i = 0; i < all.length; i++)
+            if (all[i].playbackState === MprisPlaybackState.Playing) return true;
+        return false;
+    }
 
     // ── Screenshot functions ────────────────────────────
     function screenshotFull() {
@@ -71,13 +90,12 @@ ShellRoot {
         function toggleLauncher(): void { appLauncher.toggle(); }
         function launcherApps(): void { appLauncher.openTab(0); }
         function launcherClipboard(): void { appLauncher.openTab(1); }
-        function launcherNotifications(): void { appLauncher.openTab(2); }
-        function launcherWifi(): void { appLauncher.openTab(3); }
-        function launcherBluetooth(): void { appLauncher.openTab(4); }
-        function launcherWallpaper(): void { appLauncher.openTab(5); }
-        function launcherSettings(): void { appLauncher.openTab(6); }
+        function launcherWifi(): void { appLauncher.openTab(2); }
+        function launcherBluetooth(): void { appLauncher.openTab(3); }
+        function launcherWallpaper(): void { appLauncher.openTab(4); }
+        function launcherSettings(): void { appLauncher.openTab(5); }
         function toggleKeybinds(): void { keybindPanel.toggle(); }
-        function toggleWallpaper(): void { appLauncher.openTab(5); }
+        function toggleWallpaper(): void { appLauncher.openTab(4); }
         function lock(): void { lockScreen.lock(); }
         function toggleDnd(): void { UserSettings.doNotDisturb = !UserSettings.doNotDisturb; }
         function setWallpaper(path: string): void { wallpaper.setWallpaper(path); }
@@ -85,7 +103,7 @@ ShellRoot {
         function toggleCalendar(): void { shell._togglePanel = "calendar"; shell._toggleCounter++; }
         function toggleVolume(): void { shell._togglePanel = "volume"; shell._toggleCounter++; }
         function toggleNotifications(): void { shell._togglePanel = "notifications"; shell._toggleCounter++; }
-        function toggleSettings(): void { appLauncher.openTab(6); }
+        function toggleSettings(): void { appLauncher.openTab(5); }
         function screenshotFull(): void { shell.screenshotFull(); }
         function screenshotArea(): void { shell.screenshotArea(); }
         function screenshotWindow(): void { shell.screenshotWindow(); }
