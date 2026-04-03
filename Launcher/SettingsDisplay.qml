@@ -98,14 +98,7 @@ ColumnLayout {
 
     function setTemp(temp) {
         UserSettings.nightLightTemp = temp;
-        if (UserSettings.nightLightActive) tempDebounce.restart();
-    }
-
-    // Debounce temperature changes — only restart wlsunset after user stops adjusting
-    Timer {
-        id: tempDebounce
-        interval: 400
-        onTriggered: UserSettings.applyNightLight()
+        if (UserSettings.nightLightActive) UserSettings.applyNightLight();
     }
 
     // Brightness

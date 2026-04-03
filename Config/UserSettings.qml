@@ -85,36 +85,34 @@ Singleton {
         onFinished: configFile.writeAdapter()
     }
 
-    // ── Night light (centralized process management) ──
+    // ── Night light (via wl-gammarelay-rs dbus) ──
 
     Process {
-        id: nightRunner
-        running: false
+        id: gammaRelay
+        command: ["wl-gammarelay-rs", "run"]
+        running: true
     }
 
     function _restoreNightLight() {
-        if (nightLightActive) {
-            killStale.running = true;
-        }
-    }
-
-    // Kill stale wlsunset from previous session, then start ours
-    Process {
-        id: killStale
-        command: ["pkill", "-x", "wlsunset"]
-        onExited: {
-            if (root.nightLightActive) root.applyNightLight();
-        }
+        if (nightLightActive) applyNightLight();
     }
 
     function applyNightLight() {
-        nightRunner.command = ["wlsunset", "-t", String(root.nightLightTemp), "-T", "6500", "-S", "23:59", "-s", "00:00", "-d", "1"];
-        nightRunner.running = false;
-        nightRunner.running = true;
+        _setGammaTemp(root.nightLightTemp);
     }
 
     function stopNightLight() {
-        nightRunner.running = false;
+        _setGammaTemp(6500);
+    }
+
+    SafeProcess {
+        id: gammaSet
+        failMessage: ""
+    }
+
+    function _setGammaTemp(temp) {
+        gammaSet.command = ["busctl", "--user", "set-property", "rs.wl-gammarelay", "/", "rs.wl.gammarelay", "Temperature", "q", String(temp)];
+        gammaSet.running = true;
     }
 
     // ── Wallpaper folder default detection ──
