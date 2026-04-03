@@ -32,8 +32,8 @@ LauncherCategory {
 
     property var filteredWifiNetworks: []
     property string wifiPasswordSsid: ""  // which network is showing password input
-    property string wifiStatus: ""       // "" | "connecting" | "connected" | "failed" | "disconnecting" | "disconnected"
-    property string wifiStatusSsid: ""   // which network the status applies to
+
+    StatusTracker { id: wifiTracker }
 
     readonly property var wifiDevice: {
         const devs = Networking.devices?.values ?? [];
@@ -85,18 +85,17 @@ LauncherCategory {
         id: wifiConnectProc
         failMessage: "WiFi connect failed"
         onFinished: {
-            root.wifiStatus = root.wifiStatus === "disconnecting" ? "disconnected" : "connected";
-            wifiStatusClear.start();
+            wifiTracker.status = wifiTracker.status === "disconnecting" ? "disconnected" : "connected";
+            wifiTracker.autoClear();
         }
         onFailed: {
-            root.wifiStatus = "failed";
-            // Forget bad saved profile and show password prompt
-            if (root.wifiStatusSsid !== "") {
-                wifiForgetProc.command = ["nmcli", "connection", "delete", "id", root.wifiStatusSsid];
+            wifiTracker.status = "failed";
+            if (wifiTracker.targetId !== "") {
+                wifiForgetProc.command = ["nmcli", "connection", "delete", "id", wifiTracker.targetId];
                 wifiForgetProc.running = true;
-                root.wifiPasswordSsid = root.wifiStatusSsid;
+                root.wifiPasswordSsid = wifiTracker.targetId;
             }
-            wifiStatusClear.start();
+            wifiTracker.autoClear();
         }
     }
 
@@ -105,11 +104,6 @@ LauncherCategory {
         failMessage: "WiFi forget failed"
     }
 
-    Timer {
-        id: wifiStatusClear
-        interval: 3000
-        onTriggered: { root.wifiStatus = ""; root.wifiStatusSsid = ""; }
-    }
 
     // ── Key handler ──
     function onKeyPressed(event) {
@@ -125,13 +119,13 @@ LauncherCategory {
         if (index < 0 || index >= filteredWifiNetworks.length) return;
         const net = filteredWifiNetworks[index];
         if (wifiPasswordSsid === net.name) return; // already showing password
-        wifiStatusSsid = net.name;
+        wifiTracker.targetId = net.name;
         if (net.connected) {
-            wifiStatus = "disconnecting";
+            wifiTracker.status = "disconnecting";
             wifiConnectProc.command = ["nmcli", "connection", "down", "id", net.name];
             wifiConnectProc.running = true;
         } else if (net.known || net.security === WifiSecurityType.Open) {
-            wifiStatus = "connecting";
+            wifiTracker.status = "connecting";
             wifiConnectProc.command = ["nmcli", "device", "wifi", "connect", net.name];
             wifiConnectProc.running = true;
         } else {
@@ -141,8 +135,8 @@ LauncherCategory {
 
     // Helper for password submit from delegate
     function connectWithPassword(ssid, password) {
-        wifiStatusSsid = ssid;
-        wifiStatus = "connecting";
+        wifiTracker.targetId = ssid;
+        wifiTracker.status = "connecting";
         wifiPasswordSsid = "";
         wifiConnectProc.command = ["sh", "-c",
             'nmcli device wifi connect "$1" password "$2" && nmcli connection modify "$1" 802-11-wireless-security.psk-flags 0',
@@ -222,20 +216,20 @@ LauncherCategory {
                     visible: !wifiStrip.showingPassword
                     font.family: Theme.fontFamily
                     font.pixelSize: 11
-                    property bool isTarget: root.wifiStatusSsid === modelData.name
-                    color: isTarget && root.wifiStatus === "failed" ? Theme.red
-                         : isTarget && root.wifiStatus === "connected" ? Theme.green
-                         : isTarget && root.wifiStatus === "disconnected" ? Theme.fgDim
-                         : isTarget && (root.wifiStatus === "connecting" || root.wifiStatus === "disconnecting") ? Theme.accent
+                    property bool isTarget: wifiTracker.targetId === modelData.name
+                    color: isTarget && wifiTracker.status === "failed" ? Theme.red
+                         : isTarget && wifiTracker.status === "connected" ? Theme.green
+                         : isTarget && wifiTracker.status === "disconnected" ? Theme.fgDim
+                         : isTarget && (wifiTracker.status === "connecting" || wifiTracker.status === "disconnecting") ? Theme.accent
                          : Theme.fgDim
-                    opacity: isTarget && root.wifiStatus !== "" ? 1.0 : 0.6
+                    opacity: isTarget && wifiTracker.status !== "" ? 1.0 : 0.6
                     text: {
                         if (isTarget) {
-                            if (root.wifiStatus === "connecting") return "Connecting...";
-                            if (root.wifiStatus === "disconnecting") return "Disconnecting...";
-                            if (root.wifiStatus === "connected") return "Connected";
-                            if (root.wifiStatus === "disconnected") return "Disconnected";
-                            if (root.wifiStatus === "failed") return "Failed — wrong password?";
+                            if (wifiTracker.status === "connecting") return "Connecting...";
+                            if (wifiTracker.status === "disconnecting") return "Disconnecting...";
+                            if (wifiTracker.status === "connected") return "Connected";
+                            if (wifiTracker.status === "disconnected") return "Disconnected";
+                            if (wifiTracker.status === "failed") return "Failed — wrong password?";
                         }
                         return modelData.connected ? "Enter to disconnect" : "Enter to connect";
                     }

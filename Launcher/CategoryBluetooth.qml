@@ -37,8 +37,7 @@ LauncherCategory {
     readonly property bool btEnabled: btAdapter?.enabled ?? false
     onBtEnabledChanged: if (!btEnabled) filteredBtDevices = []
 
-    property string btStatus: ""         // "" | "pairing" | "connecting" | "disconnecting" | "paired" | "connected" | "failed"
-    property string btStatusDevice: ""   // MAC address
+    StatusTracker { id: btTracker }
 
     // ── Lifecycle ──
     function onTabEnter() {
@@ -89,35 +88,30 @@ LauncherCategory {
         onRead: data => {
             const line = data.trim();
             if (line === "PAIRED" || line === "CONNECTED") {
-                root.btStatus = line === "CONNECTED" ? "connected" : "paired";
-                btStatusClear.start();
+                btTracker.status = line === "CONNECTED" ? "connected" : "paired";
+                btTracker.autoClear();
             } else if (line === "FAILED") {
-                root.btStatus = "failed";
-                btStatusClear.start();
+                btTracker.status = "failed";
+                btTracker.autoClear();
             }
         }
         onFailed: {
-            root.btStatus = "failed";
-            btStatusClear.start();
+            btTracker.status = "failed";
+            btTracker.autoClear();
         }
     }
 
-    Timer {
-        id: btStatusClear
-        interval: 3000
-        onTriggered: { root.btStatus = ""; root.btStatusDevice = ""; }
-    }
 
     // Watch for connect/disconnect completion
     onFilteredBtDevicesChanged: {
-        if (btStatusDevice === "" || btStatus === "") return;
+        if (btTracker.targetId === "" || btTracker.status === "") return;
         for (let i = 0; i < filteredBtDevices.length; i++) {
             const d = filteredBtDevices[i];
-            if (d.address !== btStatusDevice) continue;
-            if (btStatus === "connecting" && d.connected) {
-                btStatus = "connected"; btStatusClear.start();
-            } else if (btStatus === "disconnecting" && !d.connected) {
-                btStatus = ""; btStatusDevice = "";
+            if (d.address !== btTracker.targetId) continue;
+            if (btTracker.status === "connecting" && d.connected) {
+                btTracker.status = "connected"; btTracker.autoClear();
+            } else if (btTracker.status === "disconnecting" && !d.connected) {
+                btTracker.clear();
             }
         }
     }
@@ -151,17 +145,17 @@ LauncherCategory {
     function onActivate(index) {
         if (index < 0 || index >= filteredBtDevices.length) return;
         const dev = filteredBtDevices[index];
-        btStatusDevice = dev.address;
+        btTracker.targetId = dev.address;
         if (dev.connected) {
-            btStatus = "disconnecting";
+            btTracker.status = "disconnecting";
             dev.disconnect();
-            btStatusClear.start();
+            btTracker.autoClear();
         } else if (dev.paired) {
-            btStatus = "connecting";
+            btTracker.status = "connecting";
             dev.connect();
-            btStatusClear.start();
+            btTracker.autoClear();
         } else {
-            btStatus = "pairing";
+            btTracker.status = "pairing";
             btPairProc.command = [Quickshell.env("HOME") + "/.config/quickshell/mcshell/Core/bt-pair.sh", dev.address];
             btPairProc.running = true;
         }
@@ -259,20 +253,20 @@ LauncherCategory {
                     Layout.alignment: Qt.AlignHCenter
                     font.family: Theme.fontFamily
                     font.pixelSize: 11
-                    property bool isTarget: root.btStatusDevice === modelData.address
-                    color: isTarget && root.btStatus === "failed" ? Theme.red
-                         : isTarget && (root.btStatus === "connected" || root.btStatus === "paired") ? Theme.green
-                         : isTarget && root.btStatus !== "" ? Theme.accent
+                    property bool isTarget: btTracker.targetId === modelData.address
+                    color: isTarget && btTracker.status === "failed" ? Theme.red
+                         : isTarget && (btTracker.status === "connected" || btTracker.status === "paired") ? Theme.green
+                         : isTarget && btTracker.status !== "" ? Theme.accent
                          : Theme.fgDim
-                    opacity: isTarget && root.btStatus !== "" ? 1.0 : 0.6
+                    opacity: isTarget && btTracker.status !== "" ? 1.0 : 0.6
                     text: {
                         if (isTarget) {
-                            if (root.btStatus === "pairing") return "Pairing...";
-                            if (root.btStatus === "connecting") return "Connecting...";
-                            if (root.btStatus === "disconnecting") return "Disconnecting...";
-                            if (root.btStatus === "connected") return "Connected";
-                            if (root.btStatus === "paired") return "Paired";
-                            if (root.btStatus === "failed") return "Failed";
+                            if (btTracker.status === "pairing") return "Pairing...";
+                            if (btTracker.status === "connecting") return "Connecting...";
+                            if (btTracker.status === "disconnecting") return "Disconnecting...";
+                            if (btTracker.status === "connected") return "Connected";
+                            if (btTracker.status === "paired") return "Paired";
+                            if (btTracker.status === "failed") return "Failed";
                         }
                         return modelData.connected ? "Enter to disconnect"
                             : modelData.paired ? "Enter to connect"

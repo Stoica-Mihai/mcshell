@@ -21,6 +21,9 @@ PanelWindow {
         editMode = false;
         searchField.text = "";
         selectedIndex = 0;
+        // Re-establish model/delegate (switchTab breaks declarative bindings)
+        _carouselDelegate = activeCategory.cardDelegate;
+        _carouselModel = Qt.binding(() => activeCategory.model);
         activeCategory.onSearch("");
         activeCategory.onTabEnter();
         searchField.forceActiveFocus();
@@ -47,6 +50,8 @@ PanelWindow {
             editMode = true;
             searchField.text = "";
             selectedIndex = 0;
+            _carouselDelegate = activeCategory.cardDelegate;
+            _carouselModel = Qt.binding(() => activeCategory.model);
             activeCategory.onSearch("");
             activeCategory.onTabEnter();
             searchField.forceActiveFocus();
