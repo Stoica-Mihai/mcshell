@@ -13,10 +13,11 @@ ColumnLayout {
     // ── Header ──
     readonly property string headerIcon: Theme.iconBrightness
     readonly property string headerTitle: "Display"
+    readonly property string panelLegend: Theme.legend(Theme.hintUpDown, Theme.hintAdjust, Theme.hintEnter + " select", Theme.hintBack)
     readonly property string headerSubtitle: {
         const bri = Brightness.percent + "%";
-        if (UserSettings.nightLightMode === "on") return bri + " • Night light on";
-        if (UserSettings.nightLightMode === "auto") return bri + " • Night light auto";
+        if (UserSettings.nightLightMode === UserSettings.modeManual) return bri + " • Night light manual";
+        if (UserSettings.nightLightMode === UserSettings.modeAuto) return bri + " • Night light auto";
         return bri;
     }
     readonly property color headerColor: Theme.yellow
@@ -24,16 +25,16 @@ ColumnLayout {
     spacing: 4
 
     // ── Night light mode mapping ──
-    readonly property var modes: ["off", "on", "auto"]
+    readonly property var modes: [UserSettings.modeOff, UserSettings.modeManual, UserSettings.modeAuto]
     readonly property int modeIndex: modes.indexOf(UserSettings.nightLightMode)
-    readonly property bool nightOn: UserSettings.nightLightMode !== "off"
+    readonly property bool nightOn: UserSettings.nightLightMode !== UserSettings.modeOff
 
     // ── Keyboard nav ──
     // 0 = brightness, 1 = night light toggle, 2 = temperature, 3 = sunrise, 4 = sunset
     property int selectedItem: 0
     readonly property int itemCount: {
         if (!nightOn) return 2;
-        if (UserSettings.nightLightMode === "auto") return 5; // brightness + toggle + temp(disabled) + sunrise + sunset
+        if (UserSettings.nightLightMode === UserSettings.modeAuto) return 5; // brightness + toggle + temp(disabled) + sunrise + sunset
         return 3; // on: brightness + toggle + temp
     }
     function resetSelection() { selectedItem = 0; }
@@ -51,12 +52,13 @@ ColumnLayout {
             UserSettings.applyNightLight();
             return true;
         }
-        if (selectedItem === 2 && UserSettings.nightLightMode === "on") {
+        if (selectedItem === 2 && UserSettings.nightLightMode === UserSettings.modeManual) {
             UserSettings.nightLightTemp = Math.max(2500, UserSettings.nightLightTemp - 100);
+            UserSettings.applyNightLight();
             return true;
         }
-        if (selectedItem === 3 && UserSettings.nightLightMode === "auto") { adjustTime("sunrise", -30); return true; }
-        if (selectedItem === 4 && UserSettings.nightLightMode === "auto") { adjustTime("sunset", -30); return true; }
+        if (selectedItem === 3 && UserSettings.nightLightMode === UserSettings.modeAuto) { adjustTime("sunrise", -30); return true; }
+        if (selectedItem === 4 && UserSettings.nightLightMode === UserSettings.modeAuto) { adjustTime("sunset", -30); return true; }
         return false;
     }
     function adjustRight() {
@@ -70,12 +72,13 @@ ColumnLayout {
             UserSettings.applyNightLight();
             return true;
         }
-        if (selectedItem === 2 && UserSettings.nightLightMode === "on") {
+        if (selectedItem === 2 && UserSettings.nightLightMode === UserSettings.modeManual) {
             UserSettings.nightLightTemp = Math.min(5500, UserSettings.nightLightTemp + 100);
+            UserSettings.applyNightLight();
             return true;
         }
-        if (selectedItem === 3 && UserSettings.nightLightMode === "auto") { adjustTime("sunrise", 30); return true; }
-        if (selectedItem === 4 && UserSettings.nightLightMode === "auto") { adjustTime("sunset", 30); return true; }
+        if (selectedItem === 3 && UserSettings.nightLightMode === UserSettings.modeAuto) { adjustTime("sunrise", 30); return true; }
+        if (selectedItem === 4 && UserSettings.nightLightMode === UserSettings.modeAuto) { adjustTime("sunset", 30); return true; }
         return false;
     }
 
@@ -170,10 +173,10 @@ ColumnLayout {
         }
     }
 
-    // Temperature (visible when on or auto, adjustable only in "on" mode)
+    // Temperature (visible when manual or auto, adjustable only in manual mode)
     SettingsRow {
         visible: root.nightOn
-        opacity: UserSettings.nightLightMode === "auto" ? 0.5 : 1.0
+        opacity: UserSettings.nightLightMode === UserSettings.modeAuto ? 0.5 : 1.0
         selected: root.active && root.selectedItem === 2
         Layout.preferredHeight: 40
 
@@ -214,7 +217,7 @@ ColumnLayout {
 
     // Sunrise (auto mode only)
     SettingsRow {
-        visible: UserSettings.nightLightMode === "auto"
+        visible: UserSettings.nightLightMode === UserSettings.modeAuto
         selected: root.active && root.selectedItem === 3
         Layout.preferredHeight: 36
 
@@ -241,7 +244,7 @@ ColumnLayout {
 
     // Sunset (auto mode only)
     SettingsRow {
-        visible: UserSettings.nightLightMode === "auto"
+        visible: UserSettings.nightLightMode === UserSettings.modeAuto
         selected: root.active && root.selectedItem === 4
         Layout.preferredHeight: 36
 

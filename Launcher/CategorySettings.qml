@@ -14,7 +14,7 @@ LauncherCategory {
     searchPlaceholder: "Settings"
     legendOverride: editMode
     legendHint: editMode
-        ? "\u2191 \u2193 Items  |  \u2190 \u2192 Adjust  |  Enter select  |  ESC back"
+        ? activeSettingsCard?.panelLegend ?? ""
         : "Enter edit"
 
     // ── Data ──

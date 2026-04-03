@@ -15,6 +15,7 @@ ColumnLayout {
     // ── Header ──
     readonly property string headerIcon: Theme.iconShutdown
     readonly property string headerTitle: "Power"
+    readonly property string panelLegend: Theme.legend(Theme.hintUpDown, Theme.hintEnter + " activate", Theme.hintBack)
     readonly property string headerSubtitle: ""
     readonly property color headerColor: Theme.fg
 

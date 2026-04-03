@@ -10,6 +10,7 @@ import qs.Notifications
 import qs.Launcher
 import qs.KeybindHints
 import qs.LockScreen
+import qs.Polkit
 import qs.Wallpaper
 
 ShellRoot {
@@ -43,6 +44,7 @@ ShellRoot {
     }
     KeybindPanel { id: keybindPanel }
     LockScreen { id: lockScreen }
+    PolkitDialog {}
     WallpaperRenderer { id: wallpaper }
 
     // ── Screenshot functions ────────────────────────────

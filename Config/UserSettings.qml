@@ -13,7 +13,12 @@ Singleton {
     id: root
 
     property alias doNotDisturb: adapter.doNotDisturb
-    property alias nightLightMode: adapter.nightLightMode  // "off", "on", "auto"
+    // Night light mode constants
+    readonly property string modeOff: "off"
+    readonly property string modeManual: "manual"
+    readonly property string modeAuto: "auto"
+
+    property alias nightLightMode: adapter.nightLightMode
     property alias nightLightTemp: adapter.nightLightTemp
     property alias nightLightSunrise: adapter.nightLightSunrise
     property alias nightLightSunset: adapter.nightLightSunset
@@ -21,7 +26,7 @@ Singleton {
     property alias themeName: adapter.themeName
 
     // Convenience — true when night light is actively applied
-    readonly property bool nightLightActive: nightLightMode === "on" || (nightLightMode === "auto" && _autoNightPhase)
+    readonly property bool nightLightActive: nightLightMode === modeManual || (nightLightMode === modeAuto && _autoNightPhase)
 
     // Full path derived from folder + filename
     readonly property string wallpaperPath: {
@@ -111,9 +116,9 @@ Singleton {
 
     // Called when mode, temp, or auto phase changes
     function _applyMode() {
-        if (nightLightMode === "on") {
+        if (nightLightMode === modeManual) {
             _setGammaTemp(root.nightLightTemp);
-        } else if (nightLightMode === "auto") {
+        } else if (nightLightMode === modeAuto) {
             _updateAutoPhase();
         } else {
             _setGammaTemp(6500);
@@ -187,7 +192,7 @@ Singleton {
     Timer {
         id: autoTimer
         onTriggered: {
-            if (root.nightLightMode === "auto") root._updateAutoPhase();
+            if (root.nightLightMode === root.modeAuto) root._updateAutoPhase();
         }
     }
 

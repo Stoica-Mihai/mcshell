@@ -258,6 +258,19 @@ Singleton {
     readonly property string iconWallpaper: "\u{f00ab}"
     readonly property string iconFolder: "\uf07b"
 
+    // ── Legend hint building blocks ─────────────────────
+    readonly property string hintUpDown: "\u2191 \u2193 Items"
+    readonly property string hintLeftRight: "\u2190 \u2192"
+    readonly property string hintNav: hintLeftRight + " Navigate"
+    readonly property string hintAdjust: hintLeftRight + " Adjust"
+    readonly property string hintCategory: hintLeftRight + " Category"
+    readonly property string hintEnter: "Enter"
+    readonly property string hintEsc: "ESC"
+    readonly property string hintBack: hintEsc + " back"
+    readonly property string hintClose: hintEsc + " close"
+
+    function legend(...parts) { return parts.join("  |  "); }
+
     // Volume helper — returns the right icon for a volume level
     function volumeIcon(volume, muted) {
         if (muted) return iconVolMuted;

@@ -9,6 +9,7 @@ Item {
 
     property string source: ""
     property bool active: false
+    readonly property string panelLegend: loader.item?.panelLegend ?? Theme.legend(Theme.hintUpDown, Theme.hintEnter + " select", Theme.hintBack)
 
     // ── Common navigation interface ──
     function navigateUp() {

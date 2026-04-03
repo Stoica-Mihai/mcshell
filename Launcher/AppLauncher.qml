@@ -424,13 +424,13 @@ PanelWindow {
             if (launcher.activeCategory.disabledState) {
                 const hint = launcher.activeCategory.disabledLegendHint || "";
                 if (!launcher.editMode)
-                    return (hint ? hint + "  |  " : "") + "\u2190 \u2192 Category  |  ESC close";
-                return (hint ? hint + "  |  " : "") + "ESC back";
+                    return Theme.legend(...[hint, Theme.hintCategory, Theme.hintClose].filter(Boolean));
+                return Theme.legend(...[hint, Theme.hintBack].filter(Boolean));
             }
 
             // Level 1: category browse
             if (!launcher.editMode)
-                return "\u2190 \u2192 Category  |  Enter open  |  ESC close";
+                return Theme.legend(Theme.hintCategory, Theme.hintEnter + " open", Theme.hintClose);
 
             // Level 2+: category overrides full legend
             if (launcher.activeCategory.legendOverride)
@@ -438,13 +438,12 @@ PanelWindow {
 
             // Level 2: standard item navigation
             if (launcher.currentCount === 0)
-                return "ESC back";
-            var t = (launcher.selectedIndex + 1) + " / " + launcher.currentCount
-                  + "  |  \u2190 \u2192 Navigate";
+                return Theme.hintBack;
+            var parts = [(launcher.selectedIndex + 1) + " / " + launcher.currentCount, Theme.hintNav];
             if (launcher.activeCategory.legendHint)
-                t += "  |  " + launcher.activeCategory.legendHint;
-            t += "  |  ESC back";
-            return t;
+                parts.push(launcher.activeCategory.legendHint);
+            parts.push(Theme.hintBack);
+            return Theme.legend(...parts);
         }
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeSmall

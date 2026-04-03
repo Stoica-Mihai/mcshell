@@ -11,6 +11,7 @@ ColumnLayout {
     // ── Header ──
     readonly property string headerIcon: Theme.iconPalette
     readonly property string headerTitle: "Theme"
+    readonly property string panelLegend: Theme.legend(Theme.hintUpDown, Theme.hintEnter + " apply", Theme.hintBack)
     readonly property string headerSubtitle: currentTheme
     readonly property color headerColor: Theme.accent
 
