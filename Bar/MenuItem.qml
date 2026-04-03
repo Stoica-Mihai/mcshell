@@ -44,7 +44,7 @@ Item {
                     return bt !== QsMenuButtonType.None;
                 }
                 font.family: Theme.iconFont
-                font.pixelSize: 10
+                font.pixelSize: Theme.fontSizeTiny
                 color: Theme.accent
                 text: {
                     const checked = root.modelData?.checkState === Qt.Checked
@@ -68,7 +68,7 @@ Item {
             Text {
                 visible: root.modelData?.hasChildren ?? false
                 font.family: Theme.iconFont
-                font.pixelSize: 10
+                font.pixelSize: Theme.fontSizeTiny
                 color: Theme.fgDim
                 text: Theme.iconChevronRight
             }

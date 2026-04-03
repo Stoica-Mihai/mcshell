@@ -111,9 +111,7 @@ Item {
             Canvas {
                 anchors.fill: parent
                 property real fraction: countdownItem.fraction
-                property color ringColor: card.urgency === 2 ? Theme.red
-                                        : card.urgency === 0 ? Theme.fgDim
-                                        :                      Theme.accent
+                property color ringColor: Theme.urgencyColor(card.urgency)
                 onFractionChanged: requestPaint()
                 onPaint: {
                     var ctx = getContext("2d");
@@ -226,7 +224,7 @@ Item {
                 maximumLineCount: 4
                 elide: Text.ElideRight
                 Layout.fillWidth: true
-                opacity: 0.85
+                opacity: Theme.opacityBody
             }
 
             // Action buttons
@@ -266,7 +264,7 @@ Item {
                             text: modelData.text
                             color: Theme.accent
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSizeTiny
                         }
 
                         MouseArea {

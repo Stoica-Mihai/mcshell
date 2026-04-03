@@ -125,7 +125,7 @@ LauncherCategory {
                         text: modelData.timestamp || ""
                         textFormat: Text.PlainText
                         font.family: Theme.fontFamily
-                        font.pixelSize: 9
+                        font.pixelSize: Theme.fontSizeMini
                         color: Theme.fgDim
                         visible: text !== ""
                     }
@@ -137,7 +137,7 @@ LauncherCategory {
                     text: modelData.summary || ""
                     textFormat: Text.PlainText
                     font.family: Theme.fontFamily
-                    font.pixelSize: 18
+                    font.pixelSize: Theme.fontSizeXLarge
                     font.bold: true
                     color: Theme.fg
                     horizontalAlignment: Text.AlignHCenter
@@ -155,7 +155,7 @@ LauncherCategory {
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeSmall
                     color: Theme.fg
-                    opacity: 0.85
+                    opacity: Theme.opacityBody
                     horizontalAlignment: Text.AlignHCenter
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     maximumLineCount: 6

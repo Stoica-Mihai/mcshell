@@ -108,7 +108,7 @@ Singleton {
     }
 
     property bool _autoNightPhase: false
-    property int activeTemp: 6500  // the currently applied temperature
+    property int activeTemp: _autoDayTemp  // the currently applied temperature
 
     function _restoreNightLight() {
         _applyMode();
@@ -123,7 +123,7 @@ Singleton {
         } else if (nightLightMode === modeAuto) {
             _updateAutoPhase();
         } else {
-            _setGammaTemp(6500);
+            _setGammaTemp(_autoDayTemp);
         }
     }
 

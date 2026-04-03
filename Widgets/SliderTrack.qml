@@ -36,7 +36,7 @@ Item {
             radius: parent.radius
             color: root.accentColor
 
-            Behavior on width { NumberAnimation { duration: 30 } }
+            Behavior on width { NumberAnimation { duration: Theme.animSlider } }
         }
     }
 
@@ -51,7 +51,7 @@ Item {
 
         Behavior on x {
             enabled: !sliderMouse.pressed
-            NumberAnimation { duration: 30 }
+            NumberAnimation { duration: Theme.animSlider }
         }
     }
 

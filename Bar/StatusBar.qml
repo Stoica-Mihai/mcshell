@@ -270,7 +270,7 @@ Scope {
                                         text: root.unreadNotifications > 99 ? "99+" : root.unreadNotifications
                                         color: Theme.bgSolid
                                         font.family: Theme.fontFamily
-                                        font.pixelSize: 9
+                                        font.pixelSize: Theme.fontSizeMini
                                         font.bold: true
                                     }
                                 }

@@ -196,7 +196,7 @@ LauncherCategory {
                     Layout.alignment: Qt.AlignHCenter
                     text: modelData.name || modelData.deviceName || "Unknown"
                     font.family: Theme.fontFamily
-                    font.pixelSize: 18
+                    font.pixelSize: Theme.fontSizeXLarge
                     font.bold: true
                     color: modelData.connected ? Theme.accent : Theme.fg
                     elide: Text.ElideRight
@@ -240,9 +240,9 @@ LauncherCategory {
                 Text {
                     Layout.alignment: Qt.AlignHCenter
                     font.family: Theme.fontFamily
-                    font.pixelSize: 9
+                    font.pixelSize: Theme.fontSizeMini
                     color: Theme.fgDim
-                    opacity: 0.4
+                    opacity: Theme.opacityDim
                     text: modelData.address || ""
                 }
 

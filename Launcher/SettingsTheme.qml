@@ -37,7 +37,7 @@ SettingsPanel {
             Text {
                 text: modelData === root.currentTheme ? Theme.iconCheck : ""
                 font.family: Theme.iconFont
-                font.pixelSize: 10
+                font.pixelSize: Theme.fontSizeTiny
                 color: Theme.green
                 Layout.preferredWidth: 14
             }

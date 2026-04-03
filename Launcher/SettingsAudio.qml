@@ -118,7 +118,7 @@ SettingsPanel {
         color: Theme.fgDim
         Layout.leftMargin: 12
         Layout.topMargin: 2
-        opacity: 0.6
+        opacity: Theme.opacitySubtle
     }
 
     Repeater {
@@ -159,7 +159,7 @@ SettingsPanel {
         color: Theme.fgDim
         Layout.leftMargin: 12
         Layout.topMargin: 2
-        opacity: 0.6
+        opacity: Theme.opacitySubtle
     }
 
     Repeater {

@@ -119,7 +119,7 @@ LauncherCategory {
                     Layout.alignment: Qt.AlignHCenter
                     text: modelData.name || ""
                     font.family: Theme.fontFamily
-                    font.pixelSize: 18; font.bold: true
+                    font.pixelSize: Theme.fontSizeXLarge; font.bold: true
                     color: Theme.fg
                     elide: Text.ElideRight
                     Layout.maximumWidth: parent.width

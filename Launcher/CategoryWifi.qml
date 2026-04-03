@@ -177,7 +177,7 @@ LauncherCategory {
                     font.family: Theme.iconFont
                     font.pixelSize: 48
                     color: modelData.connected ? Theme.accent : Theme.fg
-                    opacity: 0.4 + modelData.signalStrength * 0.6
+                    opacity: Theme.opacityDim + modelData.signalStrength * Theme.opacitySubtle
                 }
 
                 // SSID
@@ -185,7 +185,7 @@ LauncherCategory {
                     Layout.alignment: Qt.AlignHCenter
                     text: modelData.name || "Hidden Network"
                     font.family: Theme.fontFamily
-                    font.pixelSize: 18
+                    font.pixelSize: Theme.fontSizeXLarge
                     font.bold: true
                     color: modelData.connected ? Theme.accent : Theme.fg
                     elide: Text.ElideRight

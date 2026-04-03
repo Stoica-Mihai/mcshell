@@ -226,7 +226,7 @@ Item {
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeTiny
                         color: Theme.fgDim
-                        opacity: 0.6
+                        opacity: Theme.opacitySubtle
                         visible: agent.flow?.selectedIdentity !== undefined
                     }
 

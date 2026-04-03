@@ -94,9 +94,9 @@ SettingsPanel {
                         visible: modelData.danger && root.confirmItem !== index
                         text: "confirm"
                         font.family: Theme.fontFamily
-                        font.pixelSize: 9
+                        font.pixelSize: Theme.fontSizeMini
                         color: Theme.fgDim
-                        opacity: 0.4
+                        opacity: Theme.opacityDim
                     }
             }
         }

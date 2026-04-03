@@ -204,8 +204,8 @@ Item {
                         SequentialAnimation on opacity {
                             running: !lockSession.secure
                             loops: Animation.Infinite
-                            NumberAnimation { to: 0.4; duration: 800; easing.type: Easing.InOutQuad }
-                            NumberAnimation { to: 1.0; duration: 800; easing.type: Easing.InOutQuad }
+                            NumberAnimation { to: 0.4; duration: Theme.animLockFade; easing.type: Easing.InOutQuad }
+                            NumberAnimation { to: 1.0; duration: Theme.animLockFade; easing.type: Easing.InOutQuad }
                         }
                     }
 
@@ -275,12 +275,12 @@ Item {
                             id: shakeAnim
                             running: root.shakeNow
                             loops: 1
-                            NumberAnimation { target: shakeTranslate; property: "x"; to: -12; duration: 50; easing.type: Easing.OutCubic }
-                            NumberAnimation { target: shakeTranslate; property: "x"; to: 12; duration: 50; easing.type: Easing.OutCubic }
-                            NumberAnimation { target: shakeTranslate; property: "x"; to: -8; duration: 50; easing.type: Easing.OutCubic }
-                            NumberAnimation { target: shakeTranslate; property: "x"; to: 8; duration: 50; easing.type: Easing.OutCubic }
-                            NumberAnimation { target: shakeTranslate; property: "x"; to: -4; duration: 50; easing.type: Easing.OutCubic }
-                            NumberAnimation { target: shakeTranslate; property: "x"; to: 0; duration: 50; easing.type: Easing.OutCubic }
+                            NumberAnimation { target: shakeTranslate; property: "x"; to: -12; duration: Theme.animLockShake; easing.type: Easing.OutCubic }
+                            NumberAnimation { target: shakeTranslate; property: "x"; to: 12; duration: Theme.animLockShake; easing.type: Easing.OutCubic }
+                            NumberAnimation { target: shakeTranslate; property: "x"; to: -8; duration: Theme.animLockShake; easing.type: Easing.OutCubic }
+                            NumberAnimation { target: shakeTranslate; property: "x"; to: 8; duration: Theme.animLockShake; easing.type: Easing.OutCubic }
+                            NumberAnimation { target: shakeTranslate; property: "x"; to: -4; duration: Theme.animLockShake; easing.type: Easing.OutCubic }
+                            NumberAnimation { target: shakeTranslate; property: "x"; to: 0; duration: Theme.animLockShake; easing.type: Easing.OutCubic }
                         }
 
                         Rectangle {
@@ -336,8 +336,8 @@ Item {
                             SequentialAnimation on opacity {
                                 running: root.currentPassword.length === 0 && !root.authInProgress
                                 loops: Animation.Infinite
-                                NumberAnimation { to: 0.0; duration: 600; easing.type: Easing.InOutQuad }
-                                NumberAnimation { to: 1.0; duration: 600; easing.type: Easing.InOutQuad }
+                                NumberAnimation { to: 0.0; duration: Theme.animCursorBlink; easing.type: Easing.InOutQuad }
+                                NumberAnimation { to: 1.0; duration: Theme.animCursorBlink; easing.type: Easing.InOutQuad }
                             }
                         }
                     }

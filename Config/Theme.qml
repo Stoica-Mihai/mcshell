@@ -161,11 +161,21 @@ Singleton {
     Behavior on overlayHover { ColorAnimation { duration: root.animSmooth } }
     Behavior on backdrop { ColorAnimation { duration: root.animSmooth } }
 
+    // ── Opacity ─────────────────────────────────────────
+    readonly property real opacityDim: 0.4
+    readonly property real opacitySubtle: 0.6
+    readonly property real opacityBody: 0.85
+
     // ── Animation ──────────────────────────────────────
     readonly property int animFast: 100       // hover color feedback
     readonly property int animNormal: 150     // state changes (tabs, borders)
     readonly property int animSmooth: 200     // opacity, general movement
     readonly property int animCarousel: 350   // carousel width, position
+    readonly property int animSlider: 30      // slider knob tracking
+    readonly property int animCrossfade: 500  // wallpaper crossfade
+    readonly property int animCursorBlink: 600 // lock screen cursor
+    readonly property int animLockFade: 800   // lock screen pulse
+    readonly property int animLockShake: 50   // lock screen error shake
 
     // ── Layout ──────────────────────────────────────────
     readonly property int barHeight: 34
@@ -202,6 +212,7 @@ Singleton {
     readonly property int fontSizeMedium: 14
     readonly property int fontSizeLarge: 16
     readonly property int fontSizeXLarge: 18
+    readonly property int fontSizeHero: 40
     readonly property int iconSize: 16
     readonly property int iconSizeSmall: 24
     readonly property int iconSizeMedium: 28
@@ -302,6 +313,13 @@ Singleton {
 
     readonly property string separator: " • "
     function legend(...parts) { return parts.join("  |  "); }
+
+    // Urgency helper — maps notification urgency to color
+    function urgencyColor(urgency) {
+        if (urgency === 2) return red;
+        if (urgency === 0) return fgDim;
+        return accent;
+    }
 
     // Volume helper — returns the right icon for a volume level
     function volumeIcon(volume, muted) {

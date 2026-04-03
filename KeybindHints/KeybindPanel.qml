@@ -91,7 +91,7 @@ PanelWindow {
                 Text {
                     text: Theme.iconKeyboard
                     font.family: Theme.iconFont
-                    font.pixelSize: 18
+                    font.pixelSize: Theme.fontSizeXLarge
                     color: Theme.accent
                     Layout.alignment: Qt.AlignVCenter
                 }
@@ -201,7 +201,7 @@ PanelWindow {
                         implicitWidth: 6
                         radius: 3
                         color: Theme.fgDim
-                        opacity: 0.4
+                        opacity: Theme.opacityDim
                     }
                 }
 

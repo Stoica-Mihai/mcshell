@@ -76,7 +76,7 @@ Item {
                     Text {
                         text: Theme.iconTrash
                         font.family: Theme.iconFont
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.fontSizeTiny
                         color: clearMouse.containsMouse ? Theme.red : Theme.fgDim
                     }
 
@@ -167,7 +167,7 @@ Item {
                     implicitWidth: 4
                     radius: 2
                     color: Theme.fgDim
-                    opacity: 0.4
+                    opacity: Theme.opacityDim
                 }
             }
 
@@ -192,9 +192,7 @@ Item {
                     anchors.bottomMargin: 3
                     width: 2
                     radius: 1
-                    color: model.urgency === 2 ? Theme.red
-                         : model.urgency === 0 ? Theme.fgDim
-                         :                       Theme.accent
+                    color: Theme.urgencyColor(model.urgency)
                 }
 
                 ColumnLayout {
@@ -227,7 +225,7 @@ Item {
                             text: model.timestamp || ""
                             color: Theme.fgDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 9
+                            font.pixelSize: Theme.fontSizeMini
                         }
 
                         IconButton {
@@ -259,7 +257,7 @@ Item {
                         text: model.body
                         color: Theme.fg
                         font.family: Theme.fontFamily
-                        font.pixelSize: 10
+                        font.pixelSize: Theme.fontSizeTiny
                         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                         maximumLineCount: 2
                         elide: Text.ElideRight
@@ -285,7 +283,7 @@ Item {
                 return "\u25BC " + hidden + " more";
             }
             font.family: Theme.fontFamily
-            font.pixelSize: 9
+            font.pixelSize: Theme.fontSizeMini
             color: Theme.fgDim
             opacity: 0.7
             Layout.topMargin: 2

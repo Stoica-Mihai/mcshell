@@ -188,9 +188,9 @@ Item {
                         visible: !albumArt.visible
                         text: Theme.iconPlay
                         font.family: Theme.iconFont
-                        font.pixelSize: 40
+                        font.pixelSize: Theme.fontSizeHero
                         color: Theme.fgDim
-                        opacity: 0.4
+                        opacity: Theme.opacityDim
                     }
                 }
 
@@ -267,7 +267,7 @@ Item {
                             text: root.formatTime(mediaPopup.currentPos)
                             color: Theme.fgDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSizeTiny
                         }
 
                         Item { Layout.fillWidth: true }
@@ -277,7 +277,7 @@ Item {
                             text: "LIVE"
                             color: Theme.red
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSizeTiny
                             font.bold: true
                             Layout.alignment: Qt.AlignHCenter
                         }
@@ -289,7 +289,7 @@ Item {
                             text: root.formatTime(mediaPopup.trackLen)
                             color: Theme.fgDim
                             font.family: Theme.fontFamily
-                            font.pixelSize: 10
+                            font.pixelSize: Theme.fontSizeTiny
                         }
                     }
                 }

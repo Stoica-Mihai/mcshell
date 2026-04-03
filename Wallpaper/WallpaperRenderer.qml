@@ -63,7 +63,7 @@ Item {
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: 500
+                        duration: Theme.animCrossfade
                         easing.type: Easing.InOutQuad
                     }
                 }
@@ -81,7 +81,7 @@ Item {
 
                 Behavior on opacity {
                     NumberAnimation {
-                        duration: 500
+                        duration: Theme.animCrossfade
                         easing.type: Easing.InOutQuad
                     }
                 }
