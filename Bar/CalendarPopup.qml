@@ -54,21 +54,14 @@ AnimatedPopup {
             Item { Layout.fillWidth: true }
 
             // Clickable month
-            Text {
+            HoverText {
                 visible: root.viewMode === "days"
                 text: new Date(root.viewYear, root.viewMonth, 1)
                       .toLocaleDateString(Qt.locale(), "MMMM")
-                color: monthMouse.containsMouse ? Theme.accent : Theme.fg
-                font.family: Theme.fontFamily
+                normalColor: Theme.fg
                 font.pixelSize: Theme.fontSize
                 font.weight: Font.Medium
-                MouseArea {
-                    id: monthMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.viewMode = "months"
-                }
+                onClicked: root.viewMode = "months"
             }
 
             Text {
@@ -77,37 +70,23 @@ AnimatedPopup {
             }
 
             // Clickable year
-            Text {
+            HoverText {
                 visible: root.viewMode === "days"
                 text: root.viewYear
-                color: yearMouse.containsMouse ? Theme.accent : Theme.fg
-                font.family: Theme.fontFamily
+                normalColor: Theme.fg
                 font.pixelSize: Theme.fontSize
                 font.weight: Font.Medium
-                MouseArea {
-                    id: yearMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.viewMode = "years"
-                }
+                onClicked: root.viewMode = "years"
             }
 
             // Month picker header
-            Text {
+            HoverText {
                 visible: root.viewMode === "months"
                 text: root.viewYear
-                color: yearMouse2.containsMouse ? Theme.accent : Theme.fg
-                font.family: Theme.fontFamily
+                normalColor: Theme.fg
                 font.pixelSize: Theme.fontSize
                 font.weight: Font.Medium
-                MouseArea {
-                    id: yearMouse2
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.viewMode = "years"
-                }
+                onClicked: root.viewMode = "years"
             }
 
             // Year picker header

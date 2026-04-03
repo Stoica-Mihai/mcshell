@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell.Niri
 import qs.Config
+import qs.Widgets
 
 Item {
     id: root
@@ -13,27 +14,16 @@ Item {
     implicitHeight: label.implicitHeight
     visible: title !== ""
 
-    Text {
+    HoverText {
         id: label
         anchors.verticalCenter: parent.verticalCenter
         width: Math.min(implicitWidth, 300)
         text: root.title
-        color: titleMouse.containsMouse ? Theme.accent : Theme.fgDim
-        font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeSmall
         elide: Text.ElideRight
-
-        Behavior on color { ColorAnimation { duration: Theme.animFast } }
-
-        MouseArea {
-            id: titleMouse
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: {
-                if (root.windowId >= 0)
-                    Niri.dispatch(["focus-window", "--id", root.windowId.toString()]);
-            }
+        onClicked: {
+            if (root.windowId >= 0)
+                Niri.dispatch(["focus-window", "--id", root.windowId.toString()]);
         }
     }
 }

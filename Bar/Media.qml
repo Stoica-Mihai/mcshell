@@ -102,28 +102,17 @@ Item {
         }
 
         // Track info: "Artist - Title" (truncated) — click to toggle popup
-        Text {
+        HoverText {
             id: trackLabel
             Layout.maximumWidth: 200
-            color: trackMouse.containsMouse ? Theme.accent : Theme.fgDim
-            font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeSmall
             elide: Text.ElideRight
             text: root.artist ? root.artist + " - " + root.title : root.title
-
-            Behavior on color { ColorAnimation { duration: Theme.animFast } }
-
-            MouseArea {
-                id: trackMouse
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    if (mediaPopup.isOpen)
-                        mediaPopup.close();
-                    else
-                        mediaPopup.open();
-                }
+            onClicked: {
+                if (mediaPopup.isOpen)
+                    mediaPopup.close();
+                else
+                    mediaPopup.open();
             }
         }
     }
