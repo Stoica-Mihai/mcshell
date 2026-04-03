@@ -9,17 +9,17 @@ import qs.Config
 Item {
     id: root
 
-    property string currentWallpaper: WallpaperConfig.wallpaper
+    property string currentWallpaper: UserSettings.wallpaperPath
 
     function setWallpaper(path) {
         currentWallpaper = path;
-        WallpaperConfig.wallpaper = path;
+        UserSettings.setWallpaper(path);
     }
 
     // Load persisted wallpaper on startup
     Component.onCompleted: {
-        if (WallpaperConfig.wallpaper !== "") {
-            currentWallpaper = WallpaperConfig.wallpaper;
+        if (UserSettings.wallpaperPath !== "") {
+            currentWallpaper = UserSettings.wallpaperPath;
         }
     }
 

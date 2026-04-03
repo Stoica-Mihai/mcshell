@@ -26,7 +26,6 @@ Item {
 
     // ── Unread tracking ─────────────────────────────────
     property int unreadCount: 0
-    property bool doNotDisturb: false
 
     function markAllRead() {
         unreadCount = 0;
@@ -122,7 +121,7 @@ Item {
             };
 
             // Show popup only if DND is off
-            if (!root.doNotDisturb)
+            if (!UserSettings.doNotDisturb)
                 notifModel.insert(0, entry);
 
             // Always append to history

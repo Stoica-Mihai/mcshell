@@ -24,13 +24,11 @@ ShellRoot {
             screen: modelData
             screenName: modelData.name
             unreadNotifications: notifPopup.unreadCount
-            doNotDisturb: notifPopup.doNotDisturb
             notifHistoryModel: notifPopup.historyModel
             onLauncherRequested: appLauncher.toggle()
             onNotifRemoved: nid => notifPopup.removeHistoryById(nid)
             onNotifCleared: notifPopup.clearHistory()
             onNotifPanelOpened: notifPopup.markAllRead()
-            onDndToggled: notifPopup.doNotDisturb = !notifPopup.doNotDisturb
             panelToggleTrigger: shell._toggleCounter
             panelToggleName: shell._togglePanel
         }
@@ -81,7 +79,7 @@ ShellRoot {
         function toggleKeybinds(): void { keybindPanel.toggle(); }
         function toggleWallpaper(): void { appLauncher.openTab(5); }
         function lock(): void { lockScreen.lock(); }
-        function toggleDnd(): void { notifPopup.doNotDisturb = !notifPopup.doNotDisturb; }
+        function toggleDnd(): void { UserSettings.doNotDisturb = !UserSettings.doNotDisturb; }
         function setWallpaper(path: string): void { wallpaper.setWallpaper(path); }
 
         function toggleCalendar(): void { shell._togglePanel = "calendar"; shell._toggleCounter++; }

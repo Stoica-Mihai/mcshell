@@ -4,7 +4,6 @@ import Quickshell
 import qs.Config
 import qs.Core
 import qs.Widgets
-import qs.Wallpaper
 
 LauncherCategory {
     id: root
@@ -21,7 +20,7 @@ LauncherCategory {
     legendHint: "Enter apply"
     scanningState: !loaded || allPaths.length === 0
     scanningIcon: Theme.iconImage
-    scanningHint: loaded ? "No wallpapers found in " + WallpaperConfig.folder : "Loading..."
+    scanningHint: loaded ? "No wallpapers found in " + UserSettings.wallpaperFolder : "Loading..."
 
     // ── Data ──
     model: ScriptModel {
@@ -33,7 +32,7 @@ LauncherCategory {
     property var allPaths: []
     property var filteredPaths: []
     property var _scanLines: []
-    property string activeWallpaper: WallpaperConfig.wallpaper
+    property string activeWallpaper: UserSettings.wallpaperPath
     property int activeIndex: 0
 
     // ── Lifecycle ──
@@ -46,7 +45,7 @@ LauncherCategory {
 
     // ── Folder scanning ──
     function scanFolder() {
-        const folder = WallpaperConfig.folder;
+        const folder = UserSettings.wallpaperFolder;
         if (folder === "") return;
         loaded = false;
         allPaths = [];
@@ -54,7 +53,7 @@ LauncherCategory {
         scanProc.command = [
             "find", folder, "-maxdepth", "1", "-type", "f",
             "(", "-name", "*.png", "-o", "-name", "*.jpg",
-            "-o", "-name", "*.jpeg", "-o", "-name", "*.webp",
+            "-o", "-name", "*.jpeg",
             "-o", "-name", "*.bmp", ")"
         ];
         scanProc.running = true;
@@ -102,7 +101,7 @@ LauncherCategory {
         if (!path) return;
         activeWallpaper = path;
         activeIndex = allPaths.indexOf(path);
-        WallpaperConfig.wallpaper = path;
+        UserSettings.setWallpaper(path);
         wallpaperSelected(path);
     }
 

@@ -14,8 +14,6 @@ Scope {
     property bool hasPopup: capsule.activePanel !== "" || clock.popupVisible || sysTray.menuVisible || media.popupVisible
 
     property int unreadNotifications: 0
-    property bool doNotDisturb: false
-    signal dndToggled()
     property var notifHistoryModel: null
     signal launcherRequested()
     signal notifRemoved(string nid)
@@ -226,11 +224,11 @@ Scope {
                                     anchors.centerIn: parent
                                     font.family: Theme.iconFont
                                     font.pixelSize: Theme.iconSize
-                                    color: root.doNotDisturb ? Theme.red
+                                    color: UserSettings.doNotDisturb ? Theme.red
                                          : bellMouse2.containsMouse ? Theme.accent
                                          : root.unreadNotifications > 0 ? Theme.accent
                                          : Theme.fg
-                                    text: root.doNotDisturb ? Theme.iconDndOn : Theme.iconBell
+                                    text: UserSettings.doNotDisturb ? Theme.iconDndOn : Theme.iconBell
                                     Behavior on color { ColorAnimation { duration: Theme.animFast } }
                                 }
 
@@ -248,7 +246,7 @@ Scope {
 
                                 // Unread badge
                                 Rectangle {
-                                    visible: root.unreadNotifications > 0 && !root.doNotDisturb
+                                    visible: root.unreadNotifications > 0 && !UserSettings.doNotDisturb
                                     anchors.top: parent.top
                                     anchors.right: parent.right
                                     anchors.topMargin: -3
@@ -278,7 +276,7 @@ Scope {
                                     acceptedButtons: Qt.LeftButton | Qt.MiddleButton
                                     onClicked: event => {
                                         if (event.button === Qt.MiddleButton)
-                                            root.dndToggled();
+                                            UserSettings.doNotDisturb = !UserSettings.doNotDisturb;
                                         else
                                             capsule.togglePanel("notifications");
                                     }

@@ -27,7 +27,7 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 
 | Module | Purpose |
 |---|---|
-| `Config/` | `Theme` singleton — colors (Tokyo Night palette), layout constants, typography, icon codepoints. All visual tuning goes here. |
+| `Config/` | `Theme` singleton — colors (Tokyo Night palette), layout constants, typography, icon codepoints. `UserSettings` singleton — persistent user preferences (`~/.config/mcshell/settings.json`) via `FileView` + `JsonAdapter`. |
 | `Core/` | Non-visual shared components — `SafeProcess`, `SafePolledProcess` (process wrappers with error logging), `LazyModel` (windowed model for large arrays). |
 | `Bar/` | `StatusBar` (top bar window) composing: `Workspaces`, `ActiveWindow`, `Clock` + `CalendarPopup`, `Media` (MPRIS), `Network`, `Volume`, `Battery`, `SysTray`, and a system capsule (`CapsuleItem`) with quick-settings dropdown. |
 | `Notifications/` | DBus notification daemon via `NotificationServer`. `NotificationPopup` manages a `ListModel` of active popups; `NotificationCard` renders each one with urgency-colored accent bar and action buttons. |
@@ -35,7 +35,7 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 | `Launcher/` | `AppLauncher` — generic fullscreen carousel container. Each tab is a `LauncherCategory` component (`CategoryApps`, `CategoryClipboard`, `CategoryNotifications`, `CategoryWifi`, `CategoryBluetooth`, `CategoryWallpaper`, `CategorySettings`). Shared components: `CarouselStrip` (card layout with `focused` border), `DisabledCard` (off/scanning states), `SettingsCard` (data-driven settings sub-routing), `SettingsRow` (highlighted row for settings panels), `LazyModel` (windowed loading for large lists). |
 | `QuickSettings/` | `QuickSettingsPanel` (dropdown `PopupWindow`) with `VolumeSlider`, brightness slider, night light toggle, and power actions. |
 | `LockScreen/` | Wayland session lock (`ext_session_lock_v1`) with PAM authentication. |
-| `Wallpaper/` | Background renderer per screen with crossfade transitions and persistent config (`WallpaperConfig`). Wallpaper picker is in `Launcher/CategoryWallpaper`. |
+| `Wallpaper/` | Background renderer per screen with crossfade transitions. Wallpaper picker is in `Launcher/CategoryWallpaper`. |
 | `KeybindHints/` | `KeybindParser` (KDL config parser) + `KeybindPanel` (searchable overlay UI). |
 | `NotificationHistory/` | Notification history dropdown in the bar. |
 | `Widgets/` | Shared UI components — `AnimatedPopup`, `IconButton`, `PolledProcess`, `SliderTrack`, `ControlSlider`. |

@@ -43,7 +43,7 @@ PanelWindow {
     // ── State ────────────────────────────────────────────
     property var wallpaperPaths: []
     property int currentIndex: 0
-    property string activeWallpaper: WallpaperConfig.wallpaper
+    property string activeWallpaper: UserSettings.wallpaperPath
 
     LazyModel {
         id: lazyWall
@@ -80,15 +80,15 @@ PanelWindow {
     }
 
     Component.onCompleted: {
-        if (WallpaperConfig.folder !== "")
-            folderInput.text = WallpaperConfig.folder;
+        if (UserSettings.wallpaperFolder !== "")
+            folderInput.text = UserSettings.wallpaperFolder;
         else
             _waitForConfig();
     }
 
     function _waitForConfig() {
-        if (WallpaperConfig.folder !== "")
-            folderInput.text = WallpaperConfig.folder;
+        if (UserSettings.wallpaperFolder !== "")
+            folderInput.text = UserSettings.wallpaperFolder;
         else
             Qt.callLater(_waitForConfig);
     }
@@ -99,12 +99,12 @@ PanelWindow {
     function scanFolder() {
         const folder = folderInput.text.trim();
         if (folder === "") return;
-        WallpaperConfig.folder = folder;
+        UserSettings.wallpaperFolder = folder;
         _scanLines = [];
         scanProc.command = [
             "find", folder, "-maxdepth", "1", "-type", "f",
             "(", "-name", "*.png", "-o", "-name", "*.jpg",
-            "-o", "-name", "*.jpeg", "-o", "-name", "*.webp",
+            "-o", "-name", "*.jpeg",
             "-o", "-name", "*.bmp", ")"
         ];
         scanProc.running = true;

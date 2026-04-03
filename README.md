@@ -46,7 +46,7 @@ Horizontal filmstrip carousel with smooth sliding animation. Two-level keyboard 
 - Native background rendering per screen via layer shell
 - Wallpaper picker integrated in the app launcher (Wall tab)
 - Smooth crossfade transitions when changing wallpapers
-- Config persistence to `~/.config/mcshell/wallpaper.json`
+- All settings persist to `~/.config/mcshell/settings.json`
 
 ### Screenshots
 - Full screen, area selection (slurp), and window capture

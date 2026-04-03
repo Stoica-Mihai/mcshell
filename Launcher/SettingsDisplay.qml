@@ -11,8 +11,6 @@ Item {
     property bool active: false
     property int brightness: 0
     property int brightnessMax: 1
-    property bool nightLightActive: false
-
     readonly property int brightnessPct: brightnessMax > 0
         ? Math.round(brightness / brightnessMax * 100) : 0
 
@@ -46,8 +44,8 @@ Item {
     SafeProcess {
         id: nightCheck
         command: ["pgrep", "-x", "wlsunset"]
-        onRead: data => root.nightLightActive = data.trim().length > 0
-        onFailed: root.nightLightActive = false
+        onRead: data => UserSettings.nightLightActive = data.trim().length > 0
+        onFailed: UserSettings.nightLightActive = false
     }
     SafeProcess {
         id: nightOn
@@ -96,9 +94,9 @@ Item {
     }
 
     function toggleNightLight() {
-        if (nightLightActive) nightOff.running = true;
+        if (UserSettings.nightLightActive) nightOff.running = true;
         else nightOn.running = true;
-        nightLightActive = !nightLightActive;
+        UserSettings.nightLightActive = !UserSettings.nightLightActive;
     }
 
     ColumnLayout {
@@ -123,7 +121,7 @@ Item {
         }
         Text {
             Layout.alignment: Qt.AlignHCenter
-            text: root.brightnessPct + "%" + (root.nightLightActive ? " • Night light on" : "")
+            text: root.brightnessPct + "%" + (UserSettings.nightLightActive ? " • Night light on" : "")
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeSmall
             color: Theme.fgDim
@@ -182,7 +180,7 @@ Item {
                 text: Theme.iconNightLight
                 font.family: Theme.iconFont
                 font.pixelSize: 14
-                color: root.nightLightActive ? Theme.yellow : Theme.fgDim
+                color: UserSettings.nightLightActive ? Theme.yellow : Theme.fgDim
             }
             Text {
                 text: "Night Light"
@@ -192,10 +190,10 @@ Item {
                 Layout.fillWidth: true
             }
             Text {
-                text: root.nightLightActive ? "On" : "Off"
+                text: UserSettings.nightLightActive ? "On" : "Off"
                 font.family: Theme.fontFamily
                 font.pixelSize: 10
-                color: root.nightLightActive ? Theme.yellow : Theme.fgDim
+                color: UserSettings.nightLightActive ? Theme.yellow : Theme.fgDim
             }
         }
 
