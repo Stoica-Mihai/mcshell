@@ -75,6 +75,13 @@ Scope {
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
+        // Input mask: bar only when no popup, fullscreen when popup is open.
+        // Without this, the fullscreen transparent window blocks all input below.
+        Item { id: fullSurface; anchors.fill: parent }
+        mask: Region {
+            item: root.hasPopup ? fullSurface : barRect
+        }
+
         // ── Dismiss area — behind everything, catches outside clicks ──
         MouseArea {
             anchors.fill: parent
