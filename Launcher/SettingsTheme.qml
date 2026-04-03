@@ -18,7 +18,7 @@ ColumnLayout {
     readonly property var themeNames: Theme.paletteNames
     readonly property string currentTheme: UserSettings.themeName || "Tokyo Night"
 
-    spacing: 4
+    spacing: Theme.spacingTiny
 
     // ── Keyboard nav ──
     property int selectedItem: 0

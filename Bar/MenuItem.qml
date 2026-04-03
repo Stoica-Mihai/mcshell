@@ -28,14 +28,14 @@ Item {
     Rectangle {
         anchors.fill: parent
         visible: !(root.modelData?.isSeparator ?? false)
-        radius: 4
+        radius: Theme.radiusTiny
         color: itemMouse.containsMouse ? Theme.bgHover : "transparent"
 
         RowLayout {
             anchors.fill: parent
             anchors.leftMargin: 8
             anchors.rightMargin: 8
-            spacing: 6
+            spacing: Theme.spacingSmall
 
             // Check indicator
             Text {

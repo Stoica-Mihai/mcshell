@@ -75,7 +75,7 @@ Item {
     RowLayout {
         id: row
         anchors.verticalCenter: parent.verticalCenter
-        spacing: 6
+        spacing: Theme.spacingSmall
 
         // Previous
         IconButton {
@@ -139,7 +139,7 @@ Item {
         property real currentPos: root.player ? root.player.position : 0
         property real trackLen: root.player ? root.player.length : 0
 
-        fullHeight: popupContent.implicitHeight + 24
+        fullHeight: popupContent.implicitHeight + Theme.popupPadding * 2
         implicitWidth: popupWidth
 
         anchor.item: trackLabel
@@ -172,15 +172,15 @@ Item {
             anchors.left: parent.left
             anchors.right: parent.right
             anchors.top: parent.top
-                anchors.margins: 12
-                spacing: 10
+                anchors.margins: Theme.popupPadding
+                spacing: Theme.spacingMedium
 
                 // ── Album art ────────────────────────────
                 Rectangle {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.preferredWidth: mediaPopup.artSize
                     Layout.preferredHeight: mediaPopup.artSize
-                    radius: 8
+                    radius: Theme.radiusMedium
                     color: Theme.bgHover
                     clip: true
                     // layer.enabled makes clip respect border radius
@@ -248,7 +248,7 @@ Item {
                 // ── Seek bar ─────────────────────────────
                 ColumnLayout {
                     Layout.fillWidth: true
-                    spacing: 4
+                    spacing: Theme.spacingTiny
 
                     SliderTrack {
                         id: seekSlider
@@ -258,7 +258,7 @@ Item {
                         accentColor: Theme.accent
                         trackHeight: 4
                         knobSize: 12
-                        step: 0.02
+                        step: Theme.volumeStep
 
                         onMoved: function(newValue) {
                             if (root.player && root.player.canSeek && mediaPopup.trackLen > 0) {

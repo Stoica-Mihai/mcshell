@@ -79,7 +79,7 @@ LauncherCategory {
                 anchors.centerIn: parent
                 width: parent.width - 40
                 visible: parent.isCurrent
-                spacing: 8
+                spacing: Theme.spacingNormal
 
                 // Image preview if available
                 Rectangle {
@@ -88,7 +88,7 @@ LauncherCategory {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.preferredWidth: Math.min(parent.width, 300)
                     Layout.preferredHeight: visible ? Layout.preferredWidth * 9 / 16 : 0
-                    radius: 8
+                    radius: Theme.radiusMedium
                     color: Theme.bgSolid
                     clip: true
 
@@ -111,7 +111,7 @@ LauncherCategory {
                 // App name + timestamp
                 RowLayout {
                     Layout.alignment: Qt.AlignHCenter
-                    spacing: 8
+                    spacing: Theme.spacingNormal
 
                     Text {
                         text: modelData.appName || "Notification"

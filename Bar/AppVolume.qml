@@ -24,7 +24,7 @@ Item {
         id: col
         anchors.left: parent.left
         anchors.right: parent.right
-        spacing: 6
+        spacing: Theme.spacingSmall
 
         Text {
             text: "Apps"

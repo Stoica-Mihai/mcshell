@@ -80,7 +80,7 @@ Item {
         Column {
             id: wrapper
             width: parent.width
-            spacing: 4
+            spacing: Theme.spacingTiny
 
             // Shared header — reads properties from loaded panel
             Text {

@@ -31,7 +31,7 @@ AnimatedPopup {
         id: calContent
         anchors.fill: parent
         anchors.margins: 8
-        spacing: 6
+        spacing: Theme.spacingSmall
 
         // ── Header with nav ────────────────────────
         RowLayout {
@@ -203,7 +203,7 @@ AnimatedPopup {
 
                     width: 32
                     height: 24
-                    radius: 4
+                    radius: Theme.radiusTiny
                     color: {
                         const now = root.currentDate;
                         if (modelData.current
@@ -248,7 +248,7 @@ AnimatedPopup {
                     required property int index
                     width: 70
                     height: 32
-                    radius: 6
+                    radius: Theme.radiusSmall
                     color: {
                         if (index === root.currentDate.getMonth()
                             && root.viewYear === root.currentDate.getFullYear())
@@ -296,7 +296,7 @@ AnimatedPopup {
                     property int year: root.viewYear - root.viewYear % 12 + index
                     width: 70
                     height: 32
-                    radius: 6
+                    radius: Theme.radiusSmall
                     color: {
                         if (year === root.currentDate.getFullYear())
                             return Theme.accent;

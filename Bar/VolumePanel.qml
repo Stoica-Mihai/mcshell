@@ -10,15 +10,15 @@ AnimatedPopup {
     id: root
 
     implicitWidth: 280
-    fullHeight: content.implicitHeight + 24
+    fullHeight: content.implicitHeight + Theme.popupPadding * 2
 
     ColumnLayout {
         id: content
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.top: parent.top
-        anchors.margins: 12
-        spacing: 4
+        anchors.margins: Theme.popupPadding
+        spacing: Theme.spacingTiny
 
         // ── Main volume ─────────────────────────────
         VolumeSlider {

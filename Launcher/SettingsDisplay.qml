@@ -22,7 +22,7 @@ ColumnLayout {
     }
     readonly property color headerColor: Theme.yellow
 
-    spacing: 4
+    spacing: Theme.spacingTiny
 
     // ── Night light mode mapping ──
     readonly property var modes: [UserSettings.modeOff, UserSettings.modeManual, UserSettings.modeAuto]

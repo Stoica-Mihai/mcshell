@@ -13,14 +13,14 @@ Rectangle {
 
     width: 500
     height: 350
-    radius: 14
+    radius: Theme.radiusLarge
     color: Theme.bg
     border.width: 1
     border.color: Theme.border
 
     ColumnLayout {
         anchors.centerIn: parent
-        spacing: 12
+        spacing: Theme.spacingLarge
         width: parent.width - 40
 
         Text {

@@ -29,13 +29,13 @@ Item {
         id: col
         anchors.left: parent.left
         anchors.right: parent.right
-        spacing: 6
+        spacing: Theme.spacingSmall
 
         RowLayout {
             Layout.fillWidth: true
             Layout.leftMargin: 10
             Layout.rightMargin: 10
-            spacing: 10
+            spacing: Theme.spacingMedium
 
             Text {
                 font.family: Theme.iconFont

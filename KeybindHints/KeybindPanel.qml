@@ -81,12 +81,12 @@ PanelWindow {
             id: cardColumn
             anchors.fill: parent
             anchors.margins: 16
-            spacing: 12
+            spacing: Theme.spacingLarge
 
             // ── Header row ──────────────────────────────
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 10
+                spacing: Theme.spacingMedium
 
                 Text {
                     text: Theme.iconKeyboard
@@ -120,7 +120,7 @@ PanelWindow {
             Rectangle {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 40
-                radius: 8
+                radius: Theme.radiusMedium
                 color: Theme.bgSolid
                 border.width: 1
                 border.color: searchField.activeFocus ? Theme.accent : Theme.border
@@ -129,7 +129,7 @@ PanelWindow {
                     anchors.fill: parent
                     anchors.leftMargin: 12
                     anchors.rightMargin: 12
-                    spacing: 8
+                    spacing: Theme.spacingNormal
 
                     OptImage {
                         Layout.preferredWidth: 16
@@ -227,7 +227,7 @@ PanelWindow {
                                 anchors.leftMargin: 4
                                 anchors.rightMargin: 4
                                 anchors.bottomMargin: 4
-                                spacing: 8
+                                spacing: Theme.spacingNormal
 
                                 Text {
                                     text: delegateLoader.modelData.icon || ""
@@ -271,7 +271,7 @@ PanelWindow {
                         Rectangle {
                             width: delegateLoader.width
                             height: 34
-                            radius: 6
+                            radius: Theme.radiusSmall
                             color: rowHover.hovered ? Theme.bgHover : "transparent"
 
                             Behavior on color {
@@ -286,13 +286,13 @@ PanelWindow {
                                 anchors.fill: parent
                                 anchors.leftMargin: 8
                                 anchors.rightMargin: 8
-                                spacing: 12
+                                spacing: Theme.spacingLarge
 
                                 // Key caps
                                 Row {
                                     Layout.preferredWidth: Math.min(280, delegateLoader.width * 0.42)
                                     Layout.alignment: Qt.AlignVCenter
-                                    spacing: 4
+                                    spacing: Theme.spacingTiny
                                     layoutDirection: Qt.LeftToRight
 
                                     Repeater {
@@ -303,7 +303,7 @@ PanelWindow {
                                             required property int index
                                             width: capText.implicitWidth + 14
                                             height: 22
-                                            radius: 4
+                                            radius: Theme.radiusTiny
                                             color: Qt.rgba(
                                                 Theme.accent.r,
                                                 Theme.accent.g,

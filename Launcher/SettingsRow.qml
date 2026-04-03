@@ -16,7 +16,7 @@ Rectangle {
     Layout.leftMargin: 4
     Layout.rightMargin: 4
     Layout.preferredHeight: 38
-    radius: 6
+    radius: Theme.radiusSmall
     color: selected ? selectedColor : "transparent"
 
     RowLayout {
@@ -24,6 +24,6 @@ Rectangle {
         anchors.fill: parent
         anchors.leftMargin: 12
         anchors.rightMargin: 12
-        spacing: 8
+        spacing: Theme.spacingNormal
     }
 }

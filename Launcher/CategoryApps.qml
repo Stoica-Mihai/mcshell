@@ -107,7 +107,7 @@ LauncherCategory {
             ColumnLayout {
                 anchors.centerIn: parent
                 visible: parent.isCurrent
-                spacing: 12
+                spacing: Theme.spacingLarge
                 width: parent.width - 40
 
                 OptImage {

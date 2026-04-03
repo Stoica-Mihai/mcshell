@@ -119,7 +119,7 @@ Item {
                     id: content
                     anchors.fill: parent
                     anchors.margins: 24
-                    spacing: 12
+                    spacing: Theme.spacingLarge
 
                     // Lock icon
                     Text {
@@ -158,7 +158,7 @@ Item {
                     Rectangle {
                         Layout.fillWidth: true
                         height: 36
-                        radius: 8
+                        radius: Theme.radiusMedium
                         color: Theme.overlay
                         border.width: 1
                         border.color: passwordInput.activeFocus ? Theme.accent : Theme.border
@@ -233,13 +233,13 @@ Item {
                     // Action buttons
                     RowLayout {
                         Layout.alignment: Qt.AlignRight
-                        spacing: 8
+                        spacing: Theme.spacingNormal
 
                         // Cancel
                         Rectangle {
                             width: cancelText.implicitWidth + 24
                             height: 30
-                            radius: 6
+                            radius: Theme.radiusSmall
                             color: cancelMouse.containsMouse ? Theme.overlayHover : Theme.overlay
 
                             Text {
@@ -269,7 +269,7 @@ Item {
                         Rectangle {
                             width: authText.implicitWidth + 24
                             height: 30
-                            radius: 6
+                            radius: Theme.radiusSmall
                             color: authMouse.containsMouse ? Qt.darker(Theme.accent, 1.2) : Theme.accent
 
                             Text {

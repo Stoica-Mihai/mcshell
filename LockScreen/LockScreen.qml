@@ -179,7 +179,7 @@ Item {
                 // ── Center content ──────────────────────────
                 ColumnLayout {
                     anchors.centerIn: parent
-                    spacing: 8
+                    spacing: Theme.spacingNormal
 
                     // Lock icon
                     Text {
@@ -298,7 +298,7 @@ Item {
                         Row {
                             id: dotRow
                             anchors.centerIn: parent
-                            spacing: 8
+                            spacing: Theme.spacingNormal
 
                             Repeater {
                                 model: root.currentPassword.length

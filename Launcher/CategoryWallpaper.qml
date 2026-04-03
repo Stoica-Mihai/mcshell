@@ -173,7 +173,7 @@ LauncherCategory {
                     anchors.margins: 8
                     width: 28
                     height: 28
-                    radius: 14
+                    radius: Theme.radiusLarge
                     color: Theme.accent
                     visible: wallStrip.isActive
 

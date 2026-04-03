@@ -35,7 +35,7 @@ Item {
     RowLayout {
         id: row
         anchors.verticalCenter: parent.verticalCenter
-        spacing: 6
+        spacing: Theme.spacingSmall
 
         Repeater {
             model: root.workspaces
@@ -49,7 +49,7 @@ Item {
 
                 implicitWidth: focused ? 22 : 8
                 implicitHeight: 8
-                radius: 4
+                radius: Theme.radiusTiny
 
                 color: modelData.urgent ? Theme.red
                      : focused          ? Theme.accent

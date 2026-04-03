@@ -33,13 +33,13 @@ Item {
     ColumnLayout {
         id: content
         anchors.fill: parent
-        anchors.margins: 12
-        spacing: 8
+        anchors.margins: Theme.popupPadding
+        spacing: Theme.spacingNormal
 
         // ── Header ──────────────────────────────────
         RowLayout {
             Layout.fillWidth: true
-            spacing: 8
+            spacing: Theme.spacingNormal
 
             Text {
                 text: Theme.iconBell
@@ -65,13 +65,13 @@ Item {
                 Layout.alignment: Qt.AlignVCenter
                 width: clearRow.implicitWidth + 12
                 height: 22
-                radius: 4
+                radius: Theme.radiusTiny
                 color: clearMouse.containsMouse ? Qt.rgba(Theme.red.r, Theme.red.g, Theme.red.b, 0.15) : "transparent"
 
                 RowLayout {
                     id: clearRow
                     anchors.centerIn: parent
-                    spacing: 4
+                    spacing: Theme.spacingTiny
 
                     Text {
                         text: Theme.iconTrash
@@ -114,7 +114,7 @@ Item {
             ColumnLayout {
                 id: emptyCol
                 anchors.centerIn: parent
-                spacing: 8
+                spacing: Theme.spacingNormal
 
                 Text {
                     text: Theme.iconBellSlash
@@ -146,7 +146,7 @@ Item {
             clip: true
             model: panel.historyModel
             boundsBehavior: Flickable.StopAtBounds
-            spacing: 4
+            spacing: Theme.spacingTiny
 
             WheelHandler {
                 acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
@@ -176,7 +176,7 @@ Item {
 
                 width: historyList.width - 4
                 height: entryContent.implicitHeight + 14
-                radius: 6
+                radius: Theme.radiusSmall
                 color: entryHover.hovered ? Theme.bgHover : "transparent"
 
                 HoverHandler {
@@ -211,7 +211,7 @@ Item {
                     // Header
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 6
+                        spacing: Theme.spacingSmall
 
                         Text {
                             text: model.appName || "Notification"

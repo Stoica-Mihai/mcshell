@@ -173,6 +173,25 @@ Singleton {
     readonly property int barRadius: 10
     readonly property int itemSpacing: 14
 
+    // Spacing scale
+    readonly property int spacingTiny: 4
+    readonly property int spacingSmall: 6
+    readonly property int spacingNormal: 8
+    readonly property int spacingMedium: 10
+    readonly property int spacingLarge: 12
+
+    // Radius scale
+    readonly property int radiusTiny: 4
+    readonly property int radiusSmall: 6
+    readonly property int radiusMedium: 8
+    readonly property int radiusLarge: 14
+
+    // Popup/panel
+    readonly property int popupPadding: 12
+
+    // Audio
+    readonly property real volumeStep: 0.02
+
     // ── Typography ──────────────────────────────────────
     readonly property string fontFamily: "JetBrains Mono"
     readonly property string iconFont: "Symbols Nerd Font"

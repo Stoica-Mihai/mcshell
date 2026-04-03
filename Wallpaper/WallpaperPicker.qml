@@ -174,7 +174,7 @@ PanelWindow {
             Layout.preferredWidth: Math.min(600, parent.width - 80)
             Layout.preferredHeight: 40
             Layout.bottomMargin: 16
-            radius: 8
+            radius: Theme.radiusMedium
             color: Theme.bg
             border.width: 1
             border.color: picker.folderFocused ? Theme.accent : Theme.border
@@ -184,7 +184,7 @@ PanelWindow {
                 anchors.fill: parent
                 anchors.leftMargin: 12
                 anchors.rightMargin: 12
-                spacing: 8
+                spacing: Theme.spacingNormal
 
                 Text {
                     text: Theme.iconFolder
@@ -290,7 +290,7 @@ PanelWindow {
                         // Only load image if within visible range
                         Rectangle {
                             anchors.fill: parent
-                            radius: strip.isCurrent ? 12 : 8
+                            radius: strip.isCurrent ? 12 : Theme.radiusMedium
                             color: Theme.bgSolid
                             clip: true
                             border.width: strip.isActive ? 2 : 0
@@ -344,7 +344,7 @@ PanelWindow {
                                 anchors.margins: 8
                                 width: 28
                                 height: 28
-                                radius: 14
+                                radius: Theme.radiusLarge
                                 color: Theme.accent
                                 visible: strip.isActive
 

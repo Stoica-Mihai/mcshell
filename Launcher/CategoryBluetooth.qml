@@ -188,7 +188,7 @@ LauncherCategory {
             ColumnLayout {
                 anchors.centerIn: parent
                 visible: parent.isCurrent
-                spacing: 10
+                spacing: Theme.spacingMedium
                 width: parent.width - 40
 
                 Text {

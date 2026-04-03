@@ -47,7 +47,7 @@ ColumnLayout {
 
     PwObjectTracker { objects: root.defaultSink ? [root.defaultSink] : [] }
 
-    spacing: 4
+    spacing: Theme.spacingTiny
 
     // ── Selected item for keyboard nav ──
     // Item 0 = volume bar, 1..N = outputs, N+1..M = inputs
@@ -60,14 +60,14 @@ ColumnLayout {
     function navigateDown() { if (selectedItem < totalItems - 1) selectedItem++; }
     function adjustLeft() {
         if (volumeSelected && defaultSink && defaultSink.audio) {
-            defaultSink.audio.volume = Math.max(0, defaultSink.audio.volume - 0.02);
+            defaultSink.audio.volume = Math.max(0, defaultSink.audio.volume - Theme.volumeStep);
             return true;
         }
         return false;
     }
     function adjustRight() {
         if (volumeSelected && defaultSink && defaultSink.audio) {
-            defaultSink.audio.volume = Math.min(1, defaultSink.audio.volume + 0.02);
+            defaultSink.audio.volume = Math.min(1, defaultSink.audio.volume + Theme.volumeStep);
             return true;
         }
         return false;

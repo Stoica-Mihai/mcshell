@@ -67,7 +67,7 @@ Item {
         id: bg
         x: card.slideX
         width: parent.width
-        height: content.implicitHeight + 24
+        height: content.implicitHeight + Theme.popupPadding * 2
         radius: Theme.barRadius
         color: Theme.bg
         border.width: 1
@@ -152,15 +152,15 @@ Item {
                 top: parent.top
                 left: parent.left
                 right: countdownItem.left
-                margins: 12
+                margins: Theme.popupPadding
                 rightMargin: 8
             }
-            spacing: 4
+            spacing: Theme.spacingTiny
 
             // Header row: icon + app name + close button
             RowLayout {
                 Layout.fillWidth: true
-                spacing: 8
+                spacing: Theme.spacingNormal
 
                 // App icon (Nerd Font bell fallback)
                 Text {
@@ -235,7 +235,7 @@ Item {
                 visible: card.hasActions
                 Layout.fillWidth: true
                 Layout.topMargin: 4
-                spacing: 6
+                spacing: Theme.spacingSmall
 
                 property var actionList: {
                     if (!card.hasActions) return [];
@@ -297,7 +297,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredHeight: visible ? width * 9 / 21 : 0
                 Layout.topMargin: 4
-                radius: 6
+                radius: Theme.radiusSmall
                 color: Theme.bgSolid
                 clip: true
 

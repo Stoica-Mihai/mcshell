@@ -210,7 +210,7 @@ Variants {
                     anchors.fill: parent
                     anchors.leftMargin: 14
                     anchors.rightMargin: 14
-                    spacing: 12
+                    spacing: Theme.spacingLarge
 
                     // Icon (Nerd Font)
                     Text {

@@ -208,7 +208,7 @@ Item {
                 anchors.rightMargin: 8
                 anchors.topMargin: 4
                 width: root.popupWidth
-                spacing: 8
+                spacing: Theme.spacingNormal
 
                 Repeater {
                     model: notifModel

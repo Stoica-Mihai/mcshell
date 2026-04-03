@@ -12,7 +12,7 @@ Item {
     property color knobColor: Theme.fg
     property int trackHeight: 6
     property int knobSize: 14
-    property real step: 0.02             // scroll step
+    property real step: Theme.volumeStep  // scroll step
 
     signal moved(real newValue)
 

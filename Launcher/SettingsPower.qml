@@ -19,7 +19,7 @@ ColumnLayout {
     readonly property string headerSubtitle: ""
     readonly property color headerColor: Theme.fg
 
-    spacing: 4
+    spacing: Theme.spacingTiny
 
     // ── Actions ──
     SafeProcess {

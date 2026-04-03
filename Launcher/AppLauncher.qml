@@ -180,7 +180,7 @@ PanelWindow {
                 anchors.fill: parent
                 anchors.leftMargin: 14
                 anchors.rightMargin: 14
-                spacing: 10
+                spacing: Theme.spacingMedium
 
                 // Tab buttons — driven by categories
                 Repeater {
@@ -191,7 +191,7 @@ PanelWindow {
                         required property int index
                         Layout.preferredWidth: tabContent.implicitWidth + 16
                         Layout.preferredHeight: 28
-                        radius: 6
+                        radius: Theme.radiusSmall
                         color: launcher.activeTab === index
                             ? (launcher.editMode ? Theme.bgHover : Theme.accent)
                             : "transparent"
@@ -201,7 +201,7 @@ PanelWindow {
                         RowLayout {
                             id: tabContent
                             anchors.centerIn: parent
-                            spacing: 4
+                            spacing: Theme.spacingTiny
 
                             Text {
                                 text: modelData.tabIcon

@@ -119,7 +119,7 @@ AnimatedPopup {
 
         Rectangle {
             anchors.fill: parent
-            radius: 8
+            radius: Theme.radiusMedium
             color: Theme.bgSolid
             border.width: 1
             border.color: Theme.border

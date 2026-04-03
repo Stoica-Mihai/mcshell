@@ -175,7 +175,7 @@ LauncherCategory {
             ColumnLayout {
                 anchors.centerIn: parent
                 visible: wifiStrip.isCurrent
-                spacing: 10
+                spacing: Theme.spacingMedium
                 width: parent.width - 40
 
                 // WiFi icon — size reflects signal
@@ -247,7 +247,7 @@ LauncherCategory {
                     Layout.alignment: Qt.AlignHCenter
                     Layout.preferredWidth: parent.width * 0.8
                     implicitHeight: 36
-                    radius: 8
+                    radius: Theme.radiusMedium
                     color: Qt.rgba(1, 1, 1, 0.04)
                     border.width: 1
                     border.color: wifiPwInput.activeFocus ? Theme.accent : Theme.border
@@ -256,7 +256,7 @@ LauncherCategory {
                         anchors.fill: parent
                         anchors.leftMargin: 10
                         anchors.rightMargin: 10
-                        spacing: 8
+                        spacing: Theme.spacingNormal
 
                         Text {
                             text: Theme.iconLock

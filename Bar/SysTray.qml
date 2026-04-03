@@ -42,7 +42,7 @@ Item {
 
         Rectangle {
             anchors.fill: parent
-            radius: 4
+            radius: Theme.radiusTiny
             color: Theme.bgSolid
             border.width: 1
             border.color: Theme.border
@@ -60,7 +60,7 @@ Item {
 
     RowLayout {
         id: trayRow
-        spacing: 8
+        spacing: Theme.spacingNormal
 
         Repeater {
             model: SystemTray.items

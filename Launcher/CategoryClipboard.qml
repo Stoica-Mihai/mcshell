@@ -132,7 +132,7 @@ LauncherCategory {
                 anchors.centerIn: parent
                 width: parent.width - 40
                 visible: parent.isCurrent
-                spacing: 10
+                spacing: Theme.spacingMedium
 
                 Text {
                     text: modelData.isImage ? Theme.iconImage : Theme.iconClipboard

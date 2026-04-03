@@ -190,7 +190,7 @@ Scope {
                         RowLayout {
                             id: capsuleRow
                             anchors.centerIn: parent
-                            spacing: 10
+                            spacing: Theme.spacingMedium
 
                             // Volume
                             CapsuleItem {
@@ -205,7 +205,7 @@ Scope {
                                         capsule.togglePanel("volume");
                                 }
                                 onWheel: event => {
-                                    const step = 0.02;
+                                    const step = Theme.volumeStep;
                                     if (event.angleDelta.y > 0)
                                         volume.setVolume(volume.rawVolume + step);
                                     else
@@ -300,7 +300,7 @@ Scope {
 
                             fullHeight: {
                                 if (capsule.activePanel === "volume")
-                                    return volumeContent.implicitHeight + 24;
+                                    return volumeContent.implicitHeight + Theme.popupPadding * 2;
                                 if (capsule.activePanel === "notifications")
                                     return notifContent.fullHeight;
                                 return 100;
@@ -317,8 +317,8 @@ Scope {
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.top: parent.top
-                                anchors.margins: 12
-                                spacing: 4
+                                anchors.margins: Theme.popupPadding
+                                spacing: Theme.spacingTiny
 
                                 VolumeSlider {
                                     Layout.fillWidth: true
