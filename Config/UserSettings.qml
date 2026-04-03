@@ -13,10 +13,15 @@ Singleton {
     id: root
 
     property alias doNotDisturb: adapter.doNotDisturb
-    property alias nightLightActive: adapter.nightLightActive
+    property alias nightLightMode: adapter.nightLightMode  // "off", "on", "auto"
+    property alias nightLightTemp: adapter.nightLightTemp
+    property alias nightLightSunrise: adapter.nightLightSunrise
+    property alias nightLightSunset: adapter.nightLightSunset
     property alias wallpaperFolder: adapter.wallpaperFolder
     property alias themeName: adapter.themeName
-    property alias nightLightTemp: adapter.nightLightTemp
+
+    // Convenience — true when night light is actively applied
+    readonly property bool nightLightActive: nightLightMode === "on" || (nightLightMode === "auto" && _autoNightPhase)
 
     // Full path derived from folder + filename
     readonly property string wallpaperPath: {
@@ -47,11 +52,13 @@ Singleton {
         adapter: JsonAdapter {
             id: adapter
             property bool doNotDisturb: false
-            property bool nightLightActive: false
+            property string nightLightMode: "off"
+            property int nightLightTemp: 4000
+            property string nightLightSunrise: "06:30"
+            property string nightLightSunset: "18:30"
             property string wallpaper: ""
             property string wallpaperFolder: ""
             property string themeName: ""
-            property int nightLightTemp: 4000
         }
 
         onAdapterUpdated: root._save()
@@ -93,17 +100,75 @@ Singleton {
         running: true
     }
 
+    property bool _autoNightPhase: false
+
     function _restoreNightLight() {
-        if (nightLightActive) applyNightLight();
+        _applyMode();
     }
 
-    function applyNightLight() {
-        _setGammaTemp(root.nightLightTemp);
+    // Called when mode, temp, or auto phase changes
+    function _applyMode() {
+        if (nightLightMode === "on") {
+            _setGammaTemp(root.nightLightTemp);
+        } else if (nightLightMode === "auto") {
+            _updateAutoPhase();
+        } else {
+            _setGammaTemp(6500);
+        }
     }
 
-    function stopNightLight() {
-        _setGammaTemp(6500);
+    // ── Auto-schedule ──
+
+    function _timeToMinutes(timeStr) {
+        const parts = timeStr.split(":").map(Number);
+        return parts[0] * 60 + (parts[1] || 0);
     }
+
+    function _isNightNow() {
+        const now = new Date();
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+        const sunset = _timeToMinutes(root.nightLightSunset);
+        const sunrise = _timeToMinutes(root.nightLightSunrise);
+        // Normal: sunset=18:30, sunrise=06:30 → night is [18:30, 06:30)
+        if (sunset > sunrise)
+            return nowMin >= sunset || nowMin < sunrise;
+        // Inverted: sunset=03:00, sunrise=07:00 → night is [03:00, 07:00)
+        return nowMin >= sunset && nowMin < sunrise;
+    }
+
+    function _updateAutoPhase() {
+        const night = _isNightNow();
+        _autoNightPhase = night;
+        _setGammaTemp(night ? root.nightLightTemp : 6500);
+        // Schedule next check at the boundary
+        _scheduleNextCheck();
+    }
+
+    function _scheduleNextCheck() {
+        const now = new Date();
+        const nowMin = now.getHours() * 60 + now.getMinutes();
+        const sunset = _timeToMinutes(root.nightLightSunset);
+        const sunrise = _timeToMinutes(root.nightLightSunrise);
+        const target = _autoNightPhase ? sunrise : sunset;
+        let diffMin = target - nowMin;
+        if (diffMin <= 0) diffMin += 1440;
+        autoTimer.interval = Math.max(diffMin * 60 * 1000 - now.getSeconds() * 1000, 1000);
+        autoTimer.restart();
+    }
+
+    Timer {
+        id: autoTimer
+        onTriggered: {
+            if (root.nightLightMode === "auto") root._updateAutoPhase();
+        }
+    }
+
+    onNightLightModeChanged: _applyMode()
+    onNightLightTempChanged: { if (nightLightMode !== "off") _applyMode(); }
+    onNightLightSunriseChanged: { if (nightLightMode === "auto") _applyMode(); }
+    onNightLightSunsetChanged: { if (nightLightMode === "auto") _applyMode(); }
+
+    // ── Dbus interface ──
 
     SafeProcess {
         id: gammaSet
