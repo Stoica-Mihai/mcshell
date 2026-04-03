@@ -101,10 +101,13 @@ Singleton {
     }
 
     property bool _autoNightPhase: false
+    property int activeTemp: 6500  // the currently applied temperature
 
     function _restoreNightLight() {
         _applyMode();
     }
+
+    function applyNightLight() { _applyMode(); }
 
     // Called when mode, temp, or auto phase changes
     function _applyMode() {
@@ -124,36 +127,61 @@ Singleton {
         return parts[0] * 60 + (parts[1] || 0);
     }
 
-    function _isNightNow() {
-        const now = new Date();
-        const nowMin = now.getHours() * 60 + now.getMinutes();
-        const sunset = _timeToMinutes(root.nightLightSunset);
-        const sunrise = _timeToMinutes(root.nightLightSunrise);
-        // Normal: sunset=18:30, sunrise=06:30 → night is [18:30, 06:30)
-        if (sunset > sunrise)
-            return nowMin >= sunset || nowMin < sunrise;
-        // Inverted: sunset=03:00, sunrise=07:00 → night is [03:00, 07:00)
-        return nowMin >= sunset && nowMin < sunrise;
-    }
+    // Auto mode uses fixed endpoints — independent of manual temperature
+    readonly property int _autoDayTemp: 6500
+    readonly property int _autoNightTemp: 4000
+    readonly property int _transitionMin: 30
 
     function _updateAutoPhase() {
-        const night = _isNightNow();
-        _autoNightPhase = night;
-        _setGammaTemp(night ? root.nightLightTemp : 6500);
-        // Schedule next check at the boundary
-        _scheduleNextCheck();
-    }
-
-    function _scheduleNextCheck() {
         const now = new Date();
         const nowMin = now.getHours() * 60 + now.getMinutes();
         const sunset = _timeToMinutes(root.nightLightSunset);
         const sunrise = _timeToMinutes(root.nightLightSunrise);
-        const target = _autoNightPhase ? sunrise : sunset;
-        let diffMin = target - nowMin;
-        if (diffMin <= 0) diffMin += 1440;
-        autoTimer.interval = Math.max(diffMin * 60 * 1000 - now.getSeconds() * 1000, 1000);
+        const nightTemp = _autoNightTemp;
+        const dayTemp = _autoDayTemp;
+        const trans = _transitionMin;
+
+        // Calculate how "night" we are (0.0 = full day, 1.0 = full night)
+        const factor = _nightFactor(nowMin, sunset, sunrise, trans);
+        _autoNightPhase = factor > 0;
+
+        const temp = Math.round(dayTemp + (nightTemp - dayTemp) * factor);
+        _setGammaTemp(temp);
+
+        // Re-check every minute during transitions, less often otherwise
+        autoTimer.interval = (factor > 0 && factor < 1) ? 60000 : 300000;
         autoTimer.restart();
+    }
+
+    // Returns 0.0 (full day) to 1.0 (full night) with smooth ramp
+    function _nightFactor(nowMin, sunset, sunrise, trans) {
+        // Normalize to handle wrap-around (sunset > sunrise means night crosses midnight)
+        function dist(a, b) {
+            let d = a - b;
+            if (d > 720) d -= 1440;
+            if (d < -720) d += 1440;
+            return d;
+        }
+
+        const afterSunset = dist(nowMin, sunset);
+        const beforeSunrise = dist(sunrise, nowMin);
+
+        // Ramping into night (around sunset)
+        if (afterSunset >= 0 && afterSunset <= trans)
+            return afterSunset / trans;
+
+        // Ramping into day (around sunrise)
+        if (beforeSunrise >= 0 && beforeSunrise <= trans)
+            return beforeSunrise / trans;
+
+        // Full night: past sunset+trans and before sunrise-trans
+        const pastSunsetRamp = afterSunset > trans;
+        const beforeSunriseRamp = beforeSunrise > trans;
+        if (pastSunsetRamp && beforeSunriseRamp)
+            return 1.0;
+
+        // Full day
+        return 0.0;
     }
 
     Timer {
@@ -163,20 +191,16 @@ Singleton {
         }
     }
 
-    onNightLightModeChanged: _applyMode()
-    onNightLightTempChanged: { if (nightLightMode !== "off") _applyMode(); }
-    onNightLightSunriseChanged: { if (nightLightMode === "auto") _applyMode(); }
-    onNightLightSunsetChanged: { if (nightLightMode === "auto") _applyMode(); }
-
     // ── Dbus interface ──
 
-    SafeProcess {
+    Process {
         id: gammaSet
-        failMessage: ""
     }
 
     function _setGammaTemp(temp) {
+        activeTemp = temp;
         gammaSet.command = ["busctl", "--user", "set-property", "rs.wl-gammarelay", "/", "rs.wl.gammarelay", "Temperature", "q", String(temp)];
+        gammaSet.running = false;
         gammaSet.running = true;
     }
 

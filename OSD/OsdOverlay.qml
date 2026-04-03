@@ -7,6 +7,7 @@ import Quickshell.Services.Pipewire
 import qs.Config
 import qs.Core
 
+
 Variants {
     id: osd
 
@@ -23,8 +24,8 @@ Variants {
             readonly property PwNode sink: Pipewire.ready ? Pipewire.defaultAudioSink : null
             readonly property int volume: Math.round((sink?.audio?.volume ?? 0) * 100)
             readonly property bool muted: sink?.audio?.muted ?? false
-            property int brightness: -1
-            property int brightnessMax: 1
+            readonly property int brightness: Brightness.value
+            readonly property int brightnessMax: Brightness.max
 
             // Track previous values for change detection
             property int prevVolume: -1
@@ -85,45 +86,14 @@ Variants {
             // Click-through: OSD is display-only
             mask: Region {}
 
-            // ── Brightness polling (no native API) ──────────────
-            SafeProcess {
-                id: getBri
-                command: ["brightnessctl", "get"]
-                failMessage: "brightnessctl not found — OSD brightness unavailable"
-                onRead: data => {
-                    const val = parseInt(data.trim(), 10);
-                    if (isNaN(val)) return;
-
+            // ── Brightness change detection (via Brightness singleton) ──
+            Connections {
+                target: Brightness
+                function onChanged() {
                     if (overlay.startupDone) {
-                        if (val !== overlay.brightness) {
-                            overlay.activeType = "brightness";
-                            overlay.showOsd();
-                        }
+                        overlay.activeType = "brightness";
+                        overlay.showOsd();
                     }
-
-                    overlay.brightness = val;
-                }
-            }
-
-            SafeProcess {
-                id: getBriMax
-                command: ["brightnessctl", "max"]
-                failMessage: "brightnessctl max failed"
-                onRead: data => {
-                    const val = parseInt(data.trim(), 10);
-                    if (!isNaN(val) && val > 0) overlay.brightnessMax = val;
-                }
-            }
-
-            Timer {
-                id: briPoll
-                interval: 1000
-                running: true
-                repeat: true
-                triggeredOnStart: true
-                onTriggered: {
-                    getBri.running = true;
-                    getBriMax.running = true;
                 }
             }
 

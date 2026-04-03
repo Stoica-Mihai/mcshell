@@ -14,50 +14,14 @@ ColumnLayout {
     readonly property string headerIcon: Theme.iconBrightness
     readonly property string headerTitle: "Display"
     readonly property string headerSubtitle: {
-        const bri = brightnessPct + "%";
+        const bri = Brightness.percent + "%";
         if (UserSettings.nightLightMode === "on") return bri + " • Night light on";
         if (UserSettings.nightLightMode === "auto") return bri + " • Night light auto";
         return bri;
     }
     readonly property color headerColor: Theme.yellow
 
-    property int brightness: 0
-    property int brightnessMax: 1
-    readonly property int brightnessPct: brightnessMax > 0
-        ? Math.round(brightness / brightnessMax * 100) : 0
-
     spacing: 4
-
-    // ── Brightness ──
-    SafeProcess {
-        id: getBri
-        command: ["brightnessctl", "get"]
-        failMessage: "brightnessctl not found"
-        onRead: data => {
-            const val = parseInt(data.trim(), 10);
-            if (!isNaN(val)) root.brightness = val;
-        }
-    }
-    SafeProcess {
-        id: getBriMax
-        command: ["brightnessctl", "max"]
-        failMessage: "brightnessctl max failed"
-        onRead: data => {
-            const val = parseInt(data.trim(), 10);
-            if (!isNaN(val) && val > 0) root.brightnessMax = val;
-        }
-    }
-    SafeProcess {
-        id: setBri
-        command: ["brightnessctl", "set", "50%"]
-        failMessage: "brightnessctl set failed"
-        onFinished: getBri.running = true
-    }
-
-    Component.onCompleted: {
-        getBri.running = true;
-        getBriMax.running = true;
-    }
 
     // ── Night light mode mapping ──
     readonly property var modes: ["off", "on", "auto"]
@@ -78,14 +42,13 @@ ColumnLayout {
     function activateItem() {}
     function adjustLeft() {
         if (selectedItem === 0) {
-            const pct = Math.max(0, brightnessPct - 5);
-            setBri.command = ["brightnessctl", "set", pct + "%"];
-            setBri.running = true;
+            Brightness.set(Math.max(0, Brightness.percent - 5));
             return true;
         }
         if (selectedItem === 1) {
             const idx = Math.max(0, modeIndex - 1);
             UserSettings.nightLightMode = modes[idx];
+            UserSettings.applyNightLight();
             return true;
         }
         if (selectedItem === 2 && UserSettings.nightLightMode === "on") {
@@ -98,14 +61,13 @@ ColumnLayout {
     }
     function adjustRight() {
         if (selectedItem === 0) {
-            const pct = Math.min(100, brightnessPct + 5);
-            setBri.command = ["brightnessctl", "set", pct + "%"];
-            setBri.running = true;
+            Brightness.set(Math.min(100, Brightness.percent + 5));
             return true;
         }
         if (selectedItem === 1) {
             const idx = Math.min(2, modeIndex + 1);
             UserSettings.nightLightMode = modes[idx];
+            UserSettings.applyNightLight();
             return true;
         }
         if (selectedItem === 2 && UserSettings.nightLightMode === "on") {
@@ -127,6 +89,7 @@ ColumnLayout {
         const m = String(mins % 60).padStart(2, "0");
         if (which === "sunrise") UserSettings.nightLightSunrise = h + ":" + m;
         else UserSettings.nightLightSunset = h + ":" + m;
+        UserSettings.applyNightLight();
     }
 
     // ── UI ──
@@ -155,14 +118,14 @@ ColumnLayout {
             radius: 2
             color: Theme.overlay
             Rectangle {
-                width: parent.width * (root.brightnessPct / 100)
+                width: parent.width * (Brightness.percent / 100)
                 height: parent.height
                 radius: parent.radius
                 color: Theme.yellow
             }
         }
         Text {
-            text: root.brightnessPct + "%"
+            text: Brightness.percent + "%"
             font.family: Theme.fontFamily
             font.pixelSize: 10
             color: Theme.fgDim
@@ -200,6 +163,10 @@ ColumnLayout {
         }
         TriToggle {
             state: root.modeIndex
+            onChanged: newState => {
+                UserSettings.nightLightMode = root.modes[newState];
+                UserSettings.applyNightLight();
+            }
         }
     }
 
@@ -229,14 +196,14 @@ ColumnLayout {
             radius: 2
             color: Theme.overlay
             Rectangle {
-                width: parent.width * ((UserSettings.nightLightTemp - 2500) / 3000)
+                width: parent.width * ((UserSettings.activeTemp - 2500) / 3000)
                 height: parent.height
                 radius: parent.radius
                 color: Theme.yellow
             }
         }
         Text {
-            text: UserSettings.nightLightTemp + "K"
+            text: UserSettings.activeTemp + "K"
             font.family: Theme.fontFamily
             font.pixelSize: 10
             color: Theme.fgDim

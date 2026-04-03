@@ -3,12 +3,12 @@ import qs.Config
 
 // 3-state toggle: left (0), center (1), right (2).
 // Thumb snaps to positions with smooth animation.
-// Click on track regions or use left/right to change state.
+// Display-only — state is driven by parent binding.
+// Click emits changed() signal for parent to handle.
 Item {
     id: root
 
     property int state: 0  // 0 = left, 1 = center, 2 = right
-    property var labels: ["Off", "On", "Auto"]
     property var colors: [Theme.fgDim, Theme.accent, Theme.green]
 
     property int trackWidth: 48
@@ -37,7 +37,6 @@ Item {
 
         // Thumb
         Rectangle {
-            id: thumb
             width: root.thumbSize
             height: root.thumbSize
             radius: root.thumbSize / 2
@@ -49,26 +48,16 @@ Item {
             Behavior on color { ColorAnimation { duration: Theme.animNormal } }
         }
 
-        // Click zones — divide track into 3 regions
+        // Click zones — emit signal, don't set state (parent binding owns it)
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
             onClicked: mouse => {
                 const third = width / 3;
                 const newState = mouse.x < third ? 0 : mouse.x < third * 2 ? 1 : 2;
-                if (newState !== root.state) {
-                    root.state = newState;
+                if (newState !== root.state)
                     root.changed(newState);
-                }
             }
         }
-    }
-
-    // Keyboard: left/right to cycle
-    function cycleForward() {
-        if (state < 2) { state++; changed(state); }
-    }
-    function cycleBackward() {
-        if (state > 0) { state--; changed(state); }
     }
 }
