@@ -7,10 +7,18 @@ import qs.Config
 import qs.Core
 
 // Power settings card content — lock, logout, reboot, shutdown.
-Item {
+ColumnLayout {
     id: root
 
     property bool active: false
+
+    // ── Header ──
+    readonly property string headerIcon: Theme.iconShutdown
+    readonly property string headerTitle: "Power"
+    readonly property string headerSubtitle: ""
+    readonly property color headerColor: Theme.fg
+
+    spacing: 4
 
     // ── Actions ──
     SafeProcess {
@@ -66,30 +74,7 @@ Item {
         }
     }
 
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.margins: 14
-        spacing: 4
-
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: Theme.iconShutdown
-            font.family: Theme.iconFont
-            font.pixelSize: 36
-            color: Theme.fg
-        }
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: "Power"
-            font.family: Theme.fontFamily
-            font.pixelSize: 16
-            font.bold: true
-            color: Theme.fg
-        }
-
-        Item { Layout.preferredHeight: 12 }
-
-        Repeater {
+    Repeater {
             model: root.actions
 
             SettingsRow {
@@ -123,16 +108,4 @@ Item {
             }
         }
 
-        Item { Layout.fillHeight: true }
-
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: "↑ ↓ select  |  Enter activate"
-            font.family: Theme.fontFamily
-            font.pixelSize: 10
-            color: Theme.fgDim
-            opacity: 0.5
-            Layout.bottomMargin: 8
-        }
-    }
 }

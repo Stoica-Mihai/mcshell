@@ -15,6 +15,8 @@ Singleton {
     property alias doNotDisturb: adapter.doNotDisturb
     property alias nightLightActive: adapter.nightLightActive
     property alias wallpaperFolder: adapter.wallpaperFolder
+    property alias themeName: adapter.themeName
+    property alias nightLightTemp: adapter.nightLightTemp
 
     // Full path derived from folder + filename
     readonly property string wallpaperPath: {
@@ -48,6 +50,8 @@ Singleton {
             property bool nightLightActive: false
             property string wallpaper: ""
             property string wallpaperFolder: ""
+            property string themeName: ""
+            property int nightLightTemp: 4000
         }
 
         onAdapterUpdated: root._save()
@@ -81,24 +85,36 @@ Singleton {
         onFinished: configFile.writeAdapter()
     }
 
-    // ── Night light restore ──
+    // ── Night light (centralized process management) ──
 
-    function _restoreNightLight() {
-        if (nightLightActive) nightCheck.running = true;
+    Process {
+        id: nightRunner
+        running: false
     }
 
-    SafeProcess {
-        id: nightCheck
-        command: ["pgrep", "-x", "wlsunset"]
-        onFailed: {
-            if (root.nightLightActive) nightStart.running = true;
+    function _restoreNightLight() {
+        if (nightLightActive) {
+            killStale.running = true;
         }
     }
 
-    SafeProcess {
-        id: nightStart
-        command: ["wlsunset", "-t", "4000", "-T", "6500"]
-        failMessage: "wlsunset not found"
+    // Kill stale wlsunset from previous session, then start ours
+    Process {
+        id: killStale
+        command: ["pkill", "-x", "wlsunset"]
+        onExited: {
+            if (root.nightLightActive) root.applyNightLight();
+        }
+    }
+
+    function applyNightLight() {
+        nightRunner.command = ["wlsunset", "-t", String(root.nightLightTemp), "-T", "6500", "-S", "23:59", "-s", "00:00", "-d", "1"];
+        nightRunner.running = false;
+        nightRunner.running = true;
+    }
+
+    function stopNightLight() {
+        nightRunner.running = false;
     }
 
     // ── Wallpaper folder default detection ──

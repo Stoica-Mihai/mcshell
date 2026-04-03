@@ -4,32 +4,162 @@ import QtQuick
 import Quickshell
 
 Singleton {
-    // ── Colors ──────────────────────────────────────────
-    // Swap this block to change the entire shell's palette.
+    id: root
 
-    // Background
-    readonly property color bg: Qt.rgba(0.10, 0.10, 0.16, 0.85)
-    readonly property color bgSolid: "#1a1b26"
-    readonly property color bgHover: Qt.rgba(1, 1, 1, 0.08)
+    // ── Palettes ───────────────────────────────────────
+    readonly property var palettes: ({
+        "Tokyo Night": {
+            bg:      Qt.rgba(0.10, 0.10, 0.16, 0.85),
+            bgSolid: "#1a1b26",
+            fg:      "#c0caf5",
+            fgDim:   "#565f89",
+            accent:  "#7aa2f7",
+            red:     "#f7768e",
+            green:   "#9ece6a",
+            yellow:  "#e0af68",
+            cyan:    "#7dcfff"
+        },
+        "Catppuccin Mocha": {
+            bg:      Qt.rgba(0.12, 0.12, 0.18, 0.85),
+            bgSolid: "#1e1e2e",
+            fg:      "#cdd6f4",
+            fgDim:   "#6c7086",
+            accent:  "#89b4fa",
+            red:     "#f38ba8",
+            green:   "#a6e3a1",
+            yellow:  "#f9e2af",
+            cyan:    "#89dceb"
+        },
+        "Gruvbox Dark": {
+            bg:      Qt.rgba(0.16, 0.15, 0.13, 0.85),
+            bgSolid: "#282828",
+            fg:      "#ebdbb2",
+            fgDim:   "#928374",
+            accent:  "#83a598",
+            red:     "#fb4934",
+            green:   "#b8bb26",
+            yellow:  "#fabd2f",
+            cyan:    "#8ec07c"
+        },
+        "Nord": {
+            bg:      Qt.rgba(0.18, 0.20, 0.25, 0.85),
+            bgSolid: "#2e3440",
+            fg:      "#eceff4",
+            fgDim:   "#4c566a",
+            accent:  "#88c0d0",
+            red:     "#bf616a",
+            green:   "#a3be8c",
+            yellow:  "#ebcb8b",
+            cyan:    "#8fbcbb"
+        },
+        "Dracula": {
+            bg:      Qt.rgba(0.16, 0.16, 0.21, 0.85),
+            bgSolid: "#282a36",
+            fg:      "#f8f8f2",
+            fgDim:   "#6272a4",
+            accent:  "#bd93f9",
+            red:     "#ff5555",
+            green:   "#50fa7b",
+            yellow:  "#f1fa8c",
+            cyan:    "#8be9fd"
+        },
+        "Rosé Pine": {
+            bg:      Qt.rgba(0.14, 0.13, 0.18, 0.85),
+            bgSolid: "#191724",
+            fg:      "#e0def4",
+            fgDim:   "#6e6a86",
+            accent:  "#c4a7e7",
+            red:     "#eb6f92",
+            green:   "#9ccfd8",
+            yellow:  "#f6c177",
+            cyan:    "#31748f"
+        },
+        "Everforest Dark": {
+            bg:      Qt.rgba(0.17, 0.20, 0.17, 0.85),
+            bgSolid: "#2d353b",
+            fg:      "#d3c6aa",
+            fgDim:   "#859289",
+            accent:  "#a7c080",
+            red:     "#e67e80",
+            green:   "#a7c080",
+            yellow:  "#dbbc7f",
+            cyan:    "#83c092"
+        },
+        "Catppuccin Latte": {
+            light:   true,
+            bg:      Qt.rgba(0.94, 0.93, 0.96, 0.92),
+            bgSolid: "#eff1f5",
+            fg:      "#4c4f69",
+            fgDim:   "#9ca0b0",
+            accent:  "#1e66f5",
+            red:     "#d20f39",
+            green:   "#40a02b",
+            yellow:  "#df8e1d",
+            cyan:    "#04a5e5"
+        }
+    })
 
-    // Foreground
-    readonly property color fg: "#c0caf5"
-    readonly property color fgDim: "#565f89"
+    readonly property var paletteNames: Object.keys(palettes)
 
-    // Accent
-    readonly property color accent: "#7aa2f7"
+    function applyPalette(name) {
+        const p = palettes[name];
+        if (!p) return;
+        bg = p.bg; bgSolid = p.bgSolid;
+        fg = p.fg; fgDim = p.fgDim;
+        accent = p.accent;
+        red = p.red; green = p.green;
+        yellow = p.yellow; cyan = p.cyan;
+        // Surface colors flip for light themes
+        const light = !!p.light;
+        bgHover      = light ? Qt.rgba(0, 0, 0, 0.06) : Qt.rgba(1, 1, 1, 0.08);
+        border       = light ? Qt.rgba(0, 0, 0, 0.08) : Qt.rgba(1, 1, 1, 0.06);
+        overlay      = light ? Qt.rgba(0, 0, 0, 0.04) : Qt.rgba(1, 1, 1, 0.06);
+        overlayHover = light ? Qt.rgba(0, 0, 0, 0.08) : Qt.rgba(1, 1, 1, 0.12);
+        backdrop     = light ? Qt.rgba(0, 0, 0, 0.30) : Qt.rgba(0, 0, 0, 0.55);
+    }
 
-    // Semantic
-    readonly property color red: "#f7768e"
-    readonly property color green: "#9ece6a"
-    readonly property color yellow: "#e0af68"
-    readonly property color cyan: "#7dcfff"
+    // Apply persisted theme once settings load
+    Connections {
+        target: UserSettings
+        function onLoadedChanged() {
+            if (UserSettings.loaded && UserSettings.themeName)
+                root.applyPalette(UserSettings.themeName);
+        }
+    }
 
-    // Surface
-    readonly property color border: Qt.rgba(1, 1, 1, 0.06)
-    readonly property color overlay: Qt.rgba(1, 1, 1, 0.06)
-    readonly property color overlayHover: Qt.rgba(1, 1, 1, 0.12)
-    readonly property color backdrop: Qt.rgba(0, 0, 0, 0.55)
+    // ── Colors (writable, default to Tokyo Night) ──────
+    property color bg: Qt.rgba(0.10, 0.10, 0.16, 0.85)
+    property color bgSolid: "#1a1b26"
+    property color fg: "#c0caf5"
+    property color fgDim: "#565f89"
+    property color accent: "#7aa2f7"
+    property color red: "#f7768e"
+    property color green: "#9ece6a"
+    property color yellow: "#e0af68"
+    property color cyan: "#7dcfff"
+
+    Behavior on bg { ColorAnimation { duration: root.animSmooth } }
+    Behavior on bgSolid { ColorAnimation { duration: root.animSmooth } }
+    Behavior on fg { ColorAnimation { duration: root.animSmooth } }
+    Behavior on fgDim { ColorAnimation { duration: root.animSmooth } }
+    Behavior on accent { ColorAnimation { duration: root.animSmooth } }
+    Behavior on red { ColorAnimation { duration: root.animSmooth } }
+    Behavior on green { ColorAnimation { duration: root.animSmooth } }
+    Behavior on yellow { ColorAnimation { duration: root.animSmooth } }
+    Behavior on cyan { ColorAnimation { duration: root.animSmooth } }
+
+    // Surface (adapts for light/dark themes)
+    property color bgHover: Qt.rgba(1, 1, 1, 0.08)
+    property color border: Qt.rgba(1, 1, 1, 0.06)
+    property color overlay: Qt.rgba(1, 1, 1, 0.06)
+    property color overlayHover: Qt.rgba(1, 1, 1, 0.12)
+    property color backdrop: Qt.rgba(0, 0, 0, 0.55)
+
+    Behavior on bgHover { ColorAnimation { duration: root.animSmooth } }
+    Behavior on border { ColorAnimation { duration: root.animSmooth } }
+    Behavior on overlay { ColorAnimation { duration: root.animSmooth } }
+    Behavior on overlayHover { ColorAnimation { duration: root.animSmooth } }
+    Behavior on backdrop { ColorAnimation { duration: root.animSmooth } }
 
     // ── Animation ──────────────────────────────────────
     readonly property int animFast: 100       // hover color feedback
@@ -117,6 +247,9 @@ Singleton {
     readonly property string iconBatteryFull: "\u{f0079}"
     readonly property string iconBatteryCharging: "\u{f0084}"
     readonly property string iconBatteryAlert: "\u{f0083}"
+
+    // Theme
+    readonly property string iconPalette: "\u{f03d8}"
 
     // Fallback
     readonly property string iconMissing: "\uf059"  // question-circle

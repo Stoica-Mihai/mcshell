@@ -31,7 +31,8 @@ Item {
         onExited: (exitCode, exitStatus) => {
             root.running = false;
             if (exitCode !== 0) {
-                console.warn("[mcshell]", root.failMessage + ":", "exit code", exitCode);
+                if (root.failMessage !== "")
+                    console.warn("[mcshell]", root.failMessage + ":", "exit code", exitCode);
                 root.failed(exitCode);
             } else {
                 root.finished();

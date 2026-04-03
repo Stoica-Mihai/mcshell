@@ -21,6 +21,7 @@ LauncherCategory {
     readonly property var settingsCategories: [
         { id: "audio",   icon: Theme.iconVolHigh,    source: "SettingsAudio.qml" },
         { id: "display", icon: Theme.iconBrightness, source: "SettingsDisplay.qml" },
+        { id: "theme",   icon: Theme.iconPalette,    source: "SettingsTheme.qml" },
         { id: "power",   icon: Theme.iconShutdown,   source: "SettingsPower.qml" }
     ]
     model: settingsCategories

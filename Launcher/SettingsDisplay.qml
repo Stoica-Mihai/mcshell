@@ -1,18 +1,26 @@
 import QtQuick
 import QtQuick.Layouts
-import Quickshell.Io
 import qs.Config
 import qs.Core
 
 // Display settings card content — brightness + night light.
-Item {
+ColumnLayout {
     id: root
 
     property bool active: false
+
+    // ── Header ──
+    readonly property string headerIcon: Theme.iconBrightness
+    readonly property string headerTitle: "Display"
+    readonly property string headerSubtitle: brightnessPct + "%" + (UserSettings.nightLightActive ? " • Night light on" : "")
+    readonly property color headerColor: Theme.yellow
+
     property int brightness: 0
     property int brightnessMax: 1
     readonly property int brightnessPct: brightnessMax > 0
         ? Math.round(brightness / brightnessMax * 100) : 0
+
+    spacing: 4
 
     // ── Brightness ──
     SafeProcess {
@@ -40,37 +48,18 @@ Item {
         onFinished: getBri.running = true
     }
 
-    // ── Night light ──
-    SafeProcess {
-        id: nightCheck
-        command: ["pgrep", "-x", "wlsunset"]
-        onRead: data => UserSettings.nightLightActive = data.trim().length > 0
-        onFailed: UserSettings.nightLightActive = false
-    }
-    SafeProcess {
-        id: nightOn
-        command: ["wlsunset", "-t", "4000", "-T", "6500"]
-        failMessage: "wlsunset not found"
-    }
-    SafeProcess {
-        id: nightOff
-        command: ["pkill", "-x", "wlsunset"]
-        failMessage: "failed to stop wlsunset"
-    }
-
-    onActiveChanged: {
-        if (active) {
-            getBri.running = true;
-            getBriMax.running = true;
-            nightCheck.running = true;
-        }
+    Component.onCompleted: {
+        getBri.running = true;
+        getBriMax.running = true;
     }
 
     // ── Keyboard nav ──
-    property int selectedItem: 0  // 0 = brightness, 1 = night light
+    // 0 = brightness, 1 = night light, 2 = temperature (only when night light on)
+    property int selectedItem: 0
+    readonly property int itemCount: UserSettings.nightLightActive ? 3 : 2
     function resetSelection() { selectedItem = 0; }
     function navigateUp() { if (selectedItem > 0) selectedItem--; }
-    function navigateDown() { if (selectedItem < 1) selectedItem++; }
+    function navigateDown() { if (selectedItem < itemCount - 1) selectedItem++; }
     function activateItem() {
         if (selectedItem === 1) toggleNightLight();
     }
@@ -79,6 +68,10 @@ Item {
             const pct = Math.max(0, brightnessPct - 5);
             setBri.command = ["brightnessctl", "set", pct + "%"];
             setBri.running = true;
+            return true;
+        }
+        if (selectedItem === 2) {
+            setTemp(Math.max(2500, UserSettings.nightLightTemp - 100));
             return true;
         }
         return false;
@@ -90,46 +83,32 @@ Item {
             setBri.running = true;
             return true;
         }
+        if (selectedItem === 2) {
+            setTemp(Math.min(5500, UserSettings.nightLightTemp + 100));
+            return true;
+        }
         return false;
     }
 
     function toggleNightLight() {
-        if (UserSettings.nightLightActive) nightOff.running = true;
-        else nightOn.running = true;
+        if (UserSettings.nightLightActive) UserSettings.stopNightLight();
+        else UserSettings.applyNightLight();
         UserSettings.nightLightActive = !UserSettings.nightLightActive;
     }
 
-    ColumnLayout {
-        anchors.fill: parent
-        anchors.margins: 14
-        spacing: 4
+    function setTemp(temp) {
+        UserSettings.nightLightTemp = temp;
+        if (UserSettings.nightLightActive) tempDebounce.restart();
+    }
 
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: Theme.iconBrightness
-            font.family: Theme.iconFont
-            font.pixelSize: 36
-            color: Theme.yellow
-        }
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: "Display"
-            font.family: Theme.fontFamily
-            font.pixelSize: 16
-            font.bold: true
-            color: Theme.fg
-        }
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: root.brightnessPct + "%" + (UserSettings.nightLightActive ? " • Night light on" : "")
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.fgDim
-        }
+    // Debounce temperature changes — only restart wlsunset after user stops adjusting
+    Timer {
+        id: tempDebounce
+        interval: 400
+        onTriggered: UserSettings.applyNightLight()
+    }
 
-        Item { Layout.preferredHeight: 8 }
-
-        // Brightness
+    // Brightness
         SettingsRow {
             selected: root.active && root.selectedItem === 0
             Layout.preferredHeight: 40
@@ -197,16 +176,45 @@ Item {
             }
         }
 
-        Item { Layout.fillHeight: true }
+        // Temperature (visible only when night light is on)
+        SettingsRow {
+            visible: UserSettings.nightLightActive
+            selected: root.active && root.selectedItem === 2
+            Layout.preferredHeight: 40
 
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: root.selectedItem === 0 ? "← → adjust brightness" : "Enter to toggle"
-            font.family: Theme.fontFamily
-            font.pixelSize: 10
-            color: Theme.fgDim
-            opacity: 0.5
-            Layout.bottomMargin: 8
+            Text {
+                text: "\uf2c9"
+                font.family: Theme.iconFont
+                font.pixelSize: 14
+                color: Theme.yellow
+            }
+            Text {
+                text: "Temperature"
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeSmall
+                color: Theme.fg
+                Layout.preferredWidth: 70
+            }
+            Rectangle {
+                Layout.fillWidth: true
+                height: 4
+                radius: 2
+                color: Theme.overlay
+                Rectangle {
+                    width: parent.width * ((UserSettings.nightLightTemp - 2500) / 3000)
+                    height: parent.height
+                    radius: parent.radius
+                    color: Theme.yellow
+                }
+            }
+            Text {
+                text: UserSettings.nightLightTemp + "K"
+                font.family: Theme.fontFamily
+                font.pixelSize: 10
+                color: Theme.fgDim
+                Layout.preferredWidth: 36
+                horizontalAlignment: Text.AlignRight
+            }
         }
-    }
+
 }
