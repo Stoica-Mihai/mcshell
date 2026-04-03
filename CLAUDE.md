@@ -41,7 +41,7 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 | `Widgets/` | Shared UI components — `AnimatedPopup`, `IconButton`, `PolledProcess`, `SliderTrack`, `ControlSlider`. |
 
 **Key patterns:**
-- **Native APIs first:** Workspaces and active window use `Quickshell.Niri` (reactive, event-driven via niri IPC socket). Network status uses `Quickshell.Networking`. Audio uses `Quickshell.Services.Pipewire`. Media uses `Quickshell.Services.Mpris`. System tray uses `Quickshell.Services.SystemTray`. Bluetooth uses `Quickshell.Bluetooth`. Battery uses `Quickshell.Services.UPower`. CLI tools (`brightnessctl`, `wlsunset`, `nmcli`, `grim`, `slurp`) are only used where no native API exists.
+- **Native APIs first:** Workspaces and active window use `Quickshell.Niri` (reactive, event-driven via niri IPC socket). Network status uses `Quickshell.Networking`. Audio uses `Quickshell.Services.Pipewire`. Media uses `Quickshell.Services.Mpris`. System tray uses `Quickshell.Services.SystemTray`. Bluetooth uses `Quickshell.Bluetooth`. Battery uses `Quickshell.Services.UPower`. CLI tools (`brightnessctl`, `wl-gammarelay-rs`, `nmcli`, `grim`, `slurp`) are only used where no native API exists.
 - **Error handling:** All subprocess calls use `SafeProcess` / `SafePolledProcess` from `Core/`, which log failures to console with descriptive messages and emit `failed()` / `finished()` signals.
 - **Layer shell windows:** All panels use `WlrLayershell` with explicit namespace prefixes (`mcshell`, `mcshell-notifications`, `mcshell-osd`, `mcshell-launcher`, `mcshell-dismiss`).
 - **Popup dismissal:** The `StatusBar` creates a fullscreen transparent `PanelWindow` (`clickCatcher`) that appears when any popup is open, catching clicks to dismiss them.
@@ -55,7 +55,7 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 - **PipeWire + WirePlumber** — audio (native API)
 - **NetworkManager** — network status (native API) + `nmcli` for WiFi connect with password
 - **brightnessctl** — screen brightness
-- **wlsunset** — night light
+- **wl-gammarelay-rs** — night light (flicker-free color temperature via dbus)
 - **grim** + **slurp** + **wl-copy** — screenshots
 - **cliphist** — clipboard history
 - **Fonts:** JetBrains Mono, Symbols Nerd Font

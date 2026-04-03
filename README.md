@@ -25,7 +25,7 @@ Horizontal filmstrip carousel with smooth sliding animation. Two-level keyboard 
 - **WiFi** — scan and connect to networks, inline password input, signal strength and security display. Ctrl+W to toggle WiFi
 - **Bluetooth** — discover, pair, and connect devices with battery display. Ctrl+B to toggle Bluetooth
 - **Wallpaper** — browse and apply wallpapers from configured folder, lazy-loaded thumbnails, active wallpaper highlighted
-- **Settings** — audio (device selection, volume), display (brightness, night light), power (lock/logout/reboot/shutdown)
+- **Settings** — audio (device selection, volume), display (brightness, night light + temperature), theme (8 palettes), power (lock/logout/reboot/shutdown)
 
 ### Notifications
 - Popup cards with circular donut countdown timer
@@ -177,19 +177,27 @@ binds {
 
 ## Dependencies
 
-- [QuickShell](https://quickshell.outfoxxed.me/) (`qs` binary) with Niri module
-- [niri](https://github.com/YaLTeR/niri) compositor
-- PipeWire + WirePlumber
-- NetworkManager + `nmcli` (for WiFi password connections)
-- `brightnessctl` — screen brightness
-- `wlsunset` — night light
-- `grim` + `slurp` + `wl-copy` — screenshots
-- `cliphist` — clipboard history
-- JetBrains Mono + Symbols Nerd Font
+### Required
+| Package | Purpose |
+|---|---|
+| [Quickshell](https://quickshell.outfoxxed.me/) | Shell runtime (`qs` binary) with Niri module |
+| [niri](https://github.com/YaLTeR/niri) | Wayland compositor |
+| PipeWire + WirePlumber | Audio (native API) |
+| NetworkManager | Network status (native API) + `nmcli` for WiFi password connections |
+| JetBrains Mono | UI font |
+| Symbols Nerd Font | Icon font |
 
-## Theme
+### Optional (features degrade gracefully)
+| Package | Purpose |
+|---|---|
+| `brightnessctl` | Screen brightness control |
+| `wl-gammarelay-rs` | Night light — flicker-free color temperature via dbus |
+| `grim` + `slurp` + `wl-copy` | Screenshots (full, area, window) |
+| `cliphist` | Clipboard history tab in launcher |
 
-Tokyo Night color palette, centralized in `Config/Theme.qml`. To change the entire shell's appearance, edit the color properties there.
+## Themes
+
+8 built-in palettes: Tokyo Night (default), Catppuccin Mocha, Gruvbox Dark, Nord, Dracula, Rosé Pine, Everforest Dark, Catppuccin Latte (light). Switch via Settings > Theme in the launcher. Choice persists across restarts.
 
 ## Architecture
 
@@ -197,7 +205,7 @@ Pure QML — no C++, no build system. QuickShell interprets QML directly. Each s
 
 | Module | Purpose |
 |---|---|
-| `Config/` | Theme singleton — colors, layout, typography, icons |
+| `Config/` | Theme singleton (8 palettes), UserSettings singleton (persistent preferences via JsonAdapter) |
 | `Core/` | Shared non-visual components — SafeProcess, SafePolledProcess, LazyModel |
 | `Bar/` | Status bar — workspaces (Niri IPC), active window, clock + calendar, media, network, volume, battery, system tray |
 | `Launcher/` | App launcher carousel — apps, clipboard, notifications, WiFi, Bluetooth, wallpaper, settings tabs |
@@ -205,7 +213,7 @@ Pure QML — no C++, no build system. QuickShell interprets QML directly. Each s
 | `NotificationHistory/` | Notification history dropdown |
 | `QuickSettings/` | Quick settings panel — brightness, night light, power actions |
 | `LockScreen/` | Wayland session lock with PAM auth |
-| `Wallpaper/` | Background renderer + config persistence |
+| `Wallpaper/` | Background renderer with crossfade transitions |
 | `KeybindHints/` | Keybind parser + hints overlay |
 | `OSD/` | Volume/brightness on-screen display |
 | `Widgets/` | Shared UI components — AnimatedPopup, IconButton, SliderTrack, ControlSlider |
