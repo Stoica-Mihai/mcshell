@@ -9,7 +9,6 @@ Item {
     id: root
 
     required property var modelData
-    property bool showArrow: false
 
     signal triggered()
 
