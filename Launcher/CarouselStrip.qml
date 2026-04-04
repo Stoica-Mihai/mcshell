@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Shapes
 import qs.Config
 
 // Reusable carousel strip item for the app launcher.
@@ -23,7 +24,6 @@ Item {
 
     width: isVisible ? (isCurrent ? expandedWidth : stripWidth) : 0
     height: carouselHeight
-    clip: true
     opacity: isVisible ? 1.0 : 0.0
 
     Behavior on width { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
@@ -37,38 +37,48 @@ Item {
     property color borderColor: focused && isCurrent ? Theme.accent : Theme.border
     property bool showBorder: isCurrent
 
-    Rectangle {
-        id: card
+    // Skew: horizontal offset at top/bottom from center
+    readonly property real _skew: -0.03
+    readonly property real _skewPx: _skew * height / 2
+
+    // Parallelogram corners (top leans right)
+    readonly property real _tl: -_skewPx
+    readonly property real _tr: width - _skewPx
+    readonly property real _bl: _skewPx
+    readonly property real _br: width + _skewPx
+
+    // Background + border — Shape draws antialiased diagonal edges
+    Shape {
         anchors.fill: parent
-        radius: strip.isCurrent ? 14 : 8
-        color: Theme.bg
-        clip: true
+        preferredRendererType: Shape.CurveRenderer
 
-        Behavior on radius { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
+        ShapePath {
+            fillColor: Theme.bg
+            strokeColor: strip.showBorder ? strip.borderColor : "transparent"
+            strokeWidth: strip.showBorder ? (strip.focused ? 2 : 1) : 0
 
-        // Fallback click for expanded card (below content so Flickable takes priority)
-        MouseArea {
-            anchors.fill: parent
-            visible: strip.isCurrent
-            cursorShape: Qt.PointingHandCursor
-            onClicked: strip.onStripActivated()
+            startX: strip._tl; startY: 0
+            PathLine { x: strip._tr; y: 0 }
+            PathLine { x: strip._br; y: strip.height }
+            PathLine { x: strip._bl; y: strip.height }
+            PathLine { x: strip._tl; y: 0 }
         }
+    }
 
-        Item {
-            id: cardContent
-            anchors.fill: parent
-            property bool isCurrent: strip.isCurrent
-            property real cardPadding: 14
-        }
+    // Fallback click for expanded card (below content so Flickable takes priority)
+    MouseArea {
+        anchors.fill: parent
+        visible: strip.isCurrent
+        cursorShape: Qt.PointingHandCursor
+        onClicked: strip.onStripActivated()
+    }
 
-        // Border overlay — on top of content so full-bleed images don't cover it
-        Rectangle {
-            anchors.fill: parent
-            radius: card.radius
-            color: "transparent"
-            border.width: strip.showBorder ? (strip.focused ? 2 : 1) : 0
-            border.color: strip.borderColor
-        }
+    // Content area
+    Item {
+        id: cardContent
+        anchors.fill: parent
+        property bool isCurrent: strip.isCurrent
+        property real cardPadding: 14
     }
 
     // Click to select or activate — override these for custom behavior
