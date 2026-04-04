@@ -85,6 +85,7 @@ PanelWindow {
     readonly property var activeCategory: categories[activeTab]
     readonly property var currentList: activeCategory.model
     readonly property int currentCount: carouselRepeater.count
+    readonly property bool hasItems: currentCount > 0
 
     // Carousel model/delegate — reset together on tab switch to prevent
     // cross-contamination (new delegate rendering against old model data)
@@ -103,12 +104,12 @@ PanelWindow {
     readonly property real stripSpacing: 6
 
     function navigate(delta) {
-        if (currentCount === 0) return;
+        if (!hasItems) return;
         selectedIndex = Math.max(0, Math.min(currentCount - 1, selectedIndex + delta));
     }
 
     function calcRowX() {
-        if (currentCount === 0) return carouselArea.width / 2;
+        if (!hasItems) return carouselArea.width / 2;
         const visibleLeftCount = Math.min(selectedIndex, sideCount);
         const leftWidth = visibleLeftCount * (stripWidth + stripSpacing);
         const centerOffset = expandedWidth / 2;
@@ -429,7 +430,7 @@ PanelWindow {
                             case Qt.Key_Return:
                             case Qt.Key_Enter:
                             case Qt.Key_Down:
-                                if (launcher.currentCount > 0) {
+                                if (launcher.hasItems) {
                                     launcher.editMode = true;
                                     event.accepted = true;
                                 }
@@ -481,7 +482,7 @@ PanelWindow {
             // Empty state — text for search/generic
             Text {
                 anchors.centerIn: parent
-                visible: launcher.currentCount === 0
+                visible: !launcher.hasItems
                       && searchField.text !== ""
                       && !launcher.activeCategory.disabledState
                 text: "No results"
@@ -493,7 +494,7 @@ PanelWindow {
             // Disabled state — generic (WiFi off, BT off)
             DisabledCard {
                 visible: launcher.activeCategory.disabledState
-                      && launcher.currentCount === 0
+                      && !launcher.hasItems
                 anchors.centerIn: parent
                 width: launcher.expandedWidth
                 height: launcher.carouselHeight
@@ -505,7 +506,7 @@ PanelWindow {
             DisabledCard {
                 visible: launcher.activeCategory.scanningState
                       && !launcher.activeCategory.disabledState
-                      && launcher.currentCount === 0
+                      && !launcher.hasItems
                       && searchField.text === ""
                 anchors.centerIn: parent
                 width: launcher.expandedWidth
@@ -522,7 +523,7 @@ PanelWindow {
                 x: launcher.calcRowX()
                 height: launcher.carouselHeight
                 spacing: launcher.stripSpacing
-                visible: launcher.currentCount > 0
+                visible: launcher.hasItems
 
                 Behavior on x {
                     NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic }
@@ -543,7 +544,7 @@ PanelWindow {
                 icon: Theme.iconArrowLeft
                 size: 24
                 normalColor: Theme.fgDim
-                visible: launcher.selectedIndex > 0 && launcher.currentCount > 0
+                visible: launcher.selectedIndex > 0 && launcher.hasItems
                 onClicked: launcher.navigate(-1)
             }
 
@@ -554,7 +555,7 @@ PanelWindow {
                 icon: Theme.iconArrowRight
                 size: 24
                 normalColor: Theme.fgDim
-                visible: launcher.selectedIndex < launcher.currentCount - 1 && launcher.currentCount > 0
+                visible: launcher.selectedIndex < launcher.currentCount - 1 && launcher.hasItems
                 onClicked: launcher.navigate(1)
             }
         }
@@ -583,7 +584,7 @@ PanelWindow {
                 return launcher.activeCategory.legendHint;
 
             // Level 2: standard item navigation
-            if (launcher.currentCount === 0)
+            if (!launcher.hasItems)
                 return Theme.hintBack;
             var parts = [(launcher.selectedIndex + 1) + " / " + launcher.currentCount, Theme.hintNav];
             if (launcher.activeCategory.legendHint)
