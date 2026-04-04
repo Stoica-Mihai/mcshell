@@ -105,22 +105,31 @@ Item {
     }
 
     // Border — on top of content, only for current card
+    // Uses OddEvenFill with two same-direction paths to create a uniform-width ring
     Shape {
         anchors.fill: parent
         visible: strip.showBorder
         preferredRendererType: Shape.CurveRenderer
 
         ShapePath {
-            fillColor: "transparent"
-            strokeColor: strip.borderColor
-            strokeWidth: strip._bw
-            joinStyle: ShapePath.MiterJoin
+            fillColor: strip.borderColor
+            fillRule: ShapePath.OddEvenFill
+            strokeColor: "transparent"
+            strokeWidth: 0
 
+            // Outer parallelogram
             startX: strip._tl; startY: 0
             PathLine { x: strip._tr; y: 0 }
             PathLine { x: strip._br; y: strip.height }
             PathLine { x: strip._bl; y: strip.height }
             PathLine { x: strip._tl; y: 0 }
+
+            // Inner parallelogram (same direction — OddEvenFill cuts the hole)
+            PathMove { x: strip._tl + strip._bw; y: strip._bw }
+            PathLine { x: strip._tr - strip._bw; y: strip._bw }
+            PathLine { x: strip._br - strip._bw; y: strip.height - strip._bw }
+            PathLine { x: strip._bl + strip._bw; y: strip.height - strip._bw }
+            PathLine { x: strip._tl + strip._bw; y: strip._bw }
         }
     }
 
