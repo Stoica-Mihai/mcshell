@@ -429,8 +429,10 @@ PanelWindow {
                             case Qt.Key_Return:
                             case Qt.Key_Enter:
                             case Qt.Key_Down:
-                                launcher.editMode = true;
-                                event.accepted = true;
+                                if (launcher.currentCount > 0) {
+                                    launcher.editMode = true;
+                                    event.accepted = true;
+                                }
                                 break;
                             }
                         } else {
