@@ -204,10 +204,15 @@ Singleton {
         };
     }
 
+    function _strategyIndex() {
+        for (let i = 0; i < wallpaperStrategies.length; i++)
+            if (wallpaperStrategies[i].name === UserSettings.wallpaperStrategy) return i;
+        return 0;
+    }
+
     function _applyWallpaperHue(hue) {
         if (hue < 0) hue = 0.6; // fallback blue
-        const idx = Math.max(0, Math.min(UserSettings.wallpaperStrategy, wallpaperStrategies.length - 1));
-        const p = wallpaperStrategies[idx].fn(hue);
+        const p = wallpaperStrategies[_strategyIndex()].fn(hue);
         _applyColors(p);
     }
 

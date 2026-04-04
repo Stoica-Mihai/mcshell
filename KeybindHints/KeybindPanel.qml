@@ -12,12 +12,14 @@ PanelWindow {
     // ── Public API ──────────────────────────────────────
     property bool isOpen: false
 
+    property int selectedIndex: -1
+
     function open() {
         isOpen = true;
         visible = true;
         searchField.text = "";
+        selectedIndex = -1;
         searchField.forceActiveFocus();
-        if (parser.allBindings.length === 0) parser.loadBindings();
     }
 
     function close() {
@@ -28,6 +30,27 @@ PanelWindow {
 
     function toggle() {
         if (isOpen) close(); else open();
+    }
+
+    function navigateDown() {
+        const groups = parser.filteredGroups;
+        let next = selectedIndex + 1;
+        // Skip section headers
+        while (next < groups.length && groups[next].isHeader) next++;
+        if (next < groups.length) {
+            selectedIndex = next;
+            bindList.positionViewAtIndex(next, ListView.Contain);
+        }
+    }
+
+    function navigateUp() {
+        const groups = parser.filteredGroups;
+        let prev = selectedIndex - 1;
+        while (prev >= 0 && groups[prev].isHeader) prev--;
+        if (prev >= 0) {
+            selectedIndex = prev;
+            bindList.positionViewAtIndex(prev, ListView.Contain);
+        }
     }
 
     // ── Window setup ────────────────────────────────────
@@ -50,6 +73,7 @@ PanelWindow {
     KeybindParser {
         id: parser
         filterText: searchField.text
+        onFilteredGroupsChanged: panel.selectedIndex = -1
     }
 
     // ── UI ──────────────────────────────────────────────
@@ -154,6 +178,12 @@ PanelWindow {
                         Keys.onPressed: event => {
                             if (event.key === Qt.Key_Escape) {
                                 panel.close();
+                                event.accepted = true;
+                            } else if (event.key === Qt.Key_Down) {
+                                panel.navigateDown();
+                                event.accepted = true;
+                            } else if (event.key === Qt.Key_Up) {
+                                panel.navigateUp();
                                 event.accepted = true;
                             }
                         }
@@ -272,7 +302,8 @@ PanelWindow {
                             width: delegateLoader.width
                             height: 34
                             radius: Theme.radiusSmall
-                            color: rowHover.hovered ? Theme.bgHover : "transparent"
+                            color: delegateLoader.index === panel.selectedIndex ? Theme.overlayHover
+                                 : rowHover.hovered ? Theme.bgHover : "transparent"
 
                             Behavior on color {
                                 ColorAnimation { duration: Theme.animFast }

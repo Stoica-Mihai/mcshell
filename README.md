@@ -53,8 +53,8 @@ Horizontal filmstrip carousel with smooth sliding animation. Two-level keyboard 
 - Copies to clipboard + notification with image preview
 
 ### Keybind Hints
-- Parses `~/.config/niri/config.kdl` for keybindings
-- Searchable, categorized display (apps, workspaces, windows, etc.)
+- Parses `~/.config/niri/config.kdl` for keybindings with live file watching
+- Searchable, categorized display with keyboard navigation (apps, workspaces, windows, etc.)
 
 ## Running
 

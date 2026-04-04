@@ -36,7 +36,7 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 | `QuickSettings/` | `QuickSettingsPanel` (dropdown `PopupWindow`) with `VolumeSlider`, brightness slider, night light toggle, and power actions. |
 | `LockScreen/` | Wayland session lock (`ext_session_lock_v1`) with PAM authentication. |
 | `Wallpaper/` | Background renderer per screen with crossfade transitions. Wallpaper picker is in `Launcher/CategoryWallpaper`. |
-| `KeybindHints/` | `KeybindParser` (KDL config parser) + `KeybindPanel` (searchable overlay UI). |
+| `KeybindHints/` | `KeybindParser` (KDL config parser with live file watching) + `KeybindPanel` (searchable, keyboard-navigable overlay UI). |
 | `NotificationHistory/` | Notification history dropdown in the bar. |
 | `Screenshot/` | `ScreenshotOverlay` — native Wayland screencopy for fullscreen + interactive area selection with crop. Always-visible PanelWindow (WlrLayershell destroys QQuickWindow on hide); uses `mask: Region {}` + `opacity: 0` for idle state. |
 | `Widgets/` | Shared UI components — `AnimatedPopup`, `IconButton`, `PolledProcess`, `SliderTrack`, `ControlSlider`. |

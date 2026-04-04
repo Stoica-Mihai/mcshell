@@ -30,19 +30,13 @@ QtObject {
     readonly property string configPath: Quickshell.env("HOME") + "/.config/niri/config.kdl"
 
     property FileView configFile: FileView {
-        path: ""
+        path: parser.configPath
+        watchChanges: true
 
         onLoaded: parser.parseConfig(configFile.text())
+        onFileChanged: configFile.reload()
         onLoadFailed: error => {
             console.warn("KeybindParser: failed to load niri config:", FileViewError.toString(error));
-        }
-    }
-
-    function loadBindings() {
-        if (configFile.path === "") {
-            configFile.path = parser.configPath;
-        } else {
-            configFile.reload();
         }
     }
 

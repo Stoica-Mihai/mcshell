@@ -25,25 +25,17 @@ SettingsPanel {
         Theme.applyPalette(name);
     }
 
-    function adjustLeft() {
-        if (themeNames[selectedItem] === Theme.wallpaperThemeName && isWallpaperTheme) {
-            const len = Theme.wallpaperStrategies.length;
-            UserSettings.wallpaperStrategy = (UserSettings.wallpaperStrategy - 1 + len) % len;
-            Theme.applyPalette(Theme.wallpaperThemeName);
-            return true;
-        }
-        return false;
+    function _cycleStrategy(delta) {
+        if (themeNames[selectedItem] !== Theme.wallpaperThemeName || !isWallpaperTheme) return false;
+        const len = Theme.wallpaperStrategies.length;
+        const idx = (Theme._strategyIndex() + delta + len) % len;
+        UserSettings.wallpaperStrategy = Theme.wallpaperStrategies[idx].name;
+        Theme.applyPalette(Theme.wallpaperThemeName);
+        return true;
     }
 
-    function adjustRight() {
-        if (themeNames[selectedItem] === Theme.wallpaperThemeName && isWallpaperTheme) {
-            const len = Theme.wallpaperStrategies.length;
-            UserSettings.wallpaperStrategy = (UserSettings.wallpaperStrategy + 1) % len;
-            Theme.applyPalette(Theme.wallpaperThemeName);
-            return true;
-        }
-        return false;
-    }
+    function adjustLeft() { return _cycleStrategy(-1); }
+    function adjustRight() { return _cycleStrategy(1); }
 
     Repeater {
         id: themeRepeater
@@ -78,7 +70,7 @@ SettingsPanel {
                 Text {
                     anchors.centerIn: parent
                     visible: isWallpaper
-                    text: Theme.iconArrowLeft + "  " + Theme.wallpaperStrategies[UserSettings.wallpaperStrategy].name + "  " + Theme.iconArrowRight
+                    text: Theme.iconArrowLeft + "  " + UserSettings.wallpaperStrategy + "  " + Theme.iconArrowRight
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeSmall
                     color: root.isWallpaperTheme ? Theme.accent : Theme.fgDim
