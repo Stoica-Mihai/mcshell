@@ -28,10 +28,9 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 | Module | Purpose |
 |---|---|
 | `Config/` | `Theme` singleton — colors (8 palettes + auto wallpaper theming via `VibrantColor`), layout constants, typography, icon codepoints. `UserSettings` singleton — persistent user preferences (`~/.config/mcshell/settings.json`) via `FileView` + `JsonAdapter`. |
-| `Core/` | Non-visual shared components — `SafeProcess`, `SafePolledProcess` (process wrappers with error logging), `LazyModel` (windowed model for large arrays). |
+| `Core/` | Non-visual shared components — `SafeProcess` (process wrapper with error logging). |
 | `Bar/` | `StatusBar` (top bar window) composing: `Workspaces`, `ActiveWindow`, `Clock` + `CalendarPopup`, `Media` (MPRIS), `Network`, `Volume`, `Battery`, `SysTray`, and a system capsule (`CapsuleItem`) with quick-settings dropdown. |
 | `Notifications/` | DBus notification daemon via `NotificationServer`. `NotificationPopup` manages a `ListModel` of active popups; `NotificationCard` renders each one with urgency-colored accent bar and action buttons. |
-| `OSD/` | `OsdOverlay` — volume/brightness on-screen display. |
 | `Launcher/` | `AppLauncher` — generic fullscreen carousel container. Each tab is a `LauncherCategory` component (`CategoryApps`, `CategoryClipboard`, `CategoryWifi`, `CategoryBluetooth`, `CategoryWallpaper`, `CategorySettings`). Shared components: `CarouselStrip` (card layout with `focused` border), `DisabledCard` (off/scanning states), `SettingsCard` (data-driven settings sub-routing), `SettingsRow` (highlighted row for settings panels), `LazyModel` (windowed loading for large lists). |
 | `QuickSettings/` | `QuickSettingsPanel` (dropdown `PopupWindow`) with `VolumeSlider`, brightness slider, night light toggle, and power actions. |
 | `LockScreen/` | Wayland session lock (`ext_session_lock_v1`) with PAM authentication. |
@@ -40,11 +39,11 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 | `NotificationHistory/` | Notification history dropdown in the bar. |
 | `Screenshot/` | `ScreenshotOverlay` — native Wayland screencopy for fullscreen + interactive area selection with crop. Always-visible PanelWindow (WlrLayershell destroys QQuickWindow on hide); uses `mask: Region {}` + `opacity: 0` for idle state. |
 | `WindowSwitcher/` | `WindowSwitcher` — fullscreen overlay with carousel cards showing open windows (icon via `DesktopEntries.heuristicLookup` + title). Navigate with arrows, Enter to focus via niri IPC. |
-| `Widgets/` | Shared UI components — `AnimatedPopup`, `IconButton`, `SliderTrack`, `ControlSlider`. |
+| `Widgets/` | Shared UI components — `AnimatedPopup`, `IconButton`, `SliderTrack`, `ControlSlider`, `CyclePicker`. |
 
 **Key patterns:**
 - **Native APIs first:** Workspaces and active window use `Quickshell.Niri` (reactive, event-driven via niri IPC socket). Network status uses `Quickshell.Networking`. Audio uses `Quickshell.Services.Pipewire`. Media uses `Quickshell.Services.Mpris`. System tray uses `Quickshell.Services.SystemTray`. Bluetooth uses `Quickshell.Bluetooth`. Battery uses `Quickshell.Services.UPower`. Screenshots use `Quickshell.Wayland.ScreencopyView` (native Wayland screencopy). Clipboard history uses `Quickshell.Wayland._DataControl` (native `ext-data-control-v1`). Night light uses `Quickshell.Wayland._GammaControl` (native `zwlr-gamma-control-v1`). Auto-theming uses `VibrantColor` (CIELAB chroma-weighted hue extraction from wallpaper). CLI tools (`brightnessctl`, `nmcli`, `wf-recorder`) are only used where no native API exists.
-- **Error handling:** All subprocess calls use `SafeProcess` / `SafePolledProcess` from `Core/`, which log failures to console with descriptive messages and emit `failed()` / `finished()` signals.
+- **Error handling:** All subprocess calls use `SafeProcess` from `Core/`, which log failures to console with descriptive messages and emit `failed()` / `finished()` signals.
 - **Layer shell windows:** All panels use `WlrLayershell` with explicit namespace prefixes (`mcshell`, `mcshell-notifications`, `mcshell-osd`, `mcshell-launcher`, `mcshell-screenshot`, `mcshell-dismiss`).
 - **Popup dismissal:** The `StatusBar` creates a fullscreen transparent `PanelWindow` (`clickCatcher`) that appears when any popup is open, catching clicks to dismiss them.
 - **Icons:** Uses "Symbols Nerd Font" for all icons (Unicode codepoints, not icon names).
@@ -63,7 +62,7 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 
 - **Native APIs first, CLI fallback only.** Always use QuickShell's built-in service APIs (`Quickshell.Niri`, `Quickshell.Services.Pipewire`, `Quickshell.Services.Mpris`, `Quickshell.Services.SystemTray`, `Quickshell.Services.Notifications`, `Quickshell.Services.UPower`, `Quickshell.Bluetooth`, `Quickshell.Networking`, etc.) before resorting to CLI tools. Native APIs are reactive and instant; CLI polling is laggy. Only use `SafeProcess` + CLI tools when no native QuickShell API exists. When unsure, check noctalia's implementation at `/etc/xdg/quickshell/noctalia-shell/Services/` for reference.
 - All colors and layout constants are centralized in `Config/Theme.qml` — reference `Theme.bg`, `Theme.accent`, `Theme.overlay`, `Theme.backdrop`, etc. rather than hardcoding `Qt.rgba()` values.
-- All subprocess calls must use `SafeProcess` or `SafePolledProcess` from `Core/` — never raw `Process` without error handling.
+- All subprocess calls must use `SafeProcess` from `Core/` — never raw `Process` without error handling.
 - Animation durations use Theme constants: `Theme.animFast` (100ms, hover), `Theme.animNormal` (150ms, state changes), `Theme.animSmooth` (200ms, transitions), `Theme.animCarousel` (350ms, carousel). Never hardcode duration values.
 - **Large list performance:** Use `Core/LazyModel` with a numeric Repeater model for categories with potentially hundreds of items (clipboard, wallpaper). This avoids creating all delegates at once. The `LazyModel` exposes a `count` that grows as the user navigates.
 - Popup windows (`PopupWindow`) anchor to their trigger widget via `anchor.item` / `anchor.rect`.

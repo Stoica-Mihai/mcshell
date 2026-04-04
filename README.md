@@ -217,7 +217,7 @@ Pure QML — no C++, no build system. QuickShell interprets QML directly. Each s
 | Module | Purpose |
 |---|---|
 | `Config/` | Theme singleton (8 palettes + auto wallpaper theming), UserSettings singleton (persistent preferences via JsonAdapter) |
-| `Core/` | Shared non-visual components — SafeProcess, SafePolledProcess, LazyModel |
+| `Core/` | Shared non-visual components — SafeProcess |
 | `Bar/` | Status bar — workspaces (Niri IPC), active window, clock + calendar, media, network, volume, battery, system tray |
 | `Launcher/` | App launcher carousel — apps, clipboard, notifications, WiFi, Bluetooth, wallpaper, settings tabs |
 | `Notifications/` | Notification daemon + popup cards with action buttons |
