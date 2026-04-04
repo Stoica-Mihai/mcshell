@@ -30,6 +30,7 @@ ShellRoot {
             unreadNotifications: notifPopup.unreadCount
             notifHistoryModel: notifPopup.historyModel
             mediaPlaying: shell._mediaPlaying
+            isRecording: screenRecording.active
             onLauncherRequested: appLauncher.toggle()
             onNotifRemoved: nid => notifPopup.removeHistoryById(nid)
             onNotifCleared: notifPopup.clearHistory()
@@ -50,6 +51,7 @@ ShellRoot {
     WallpaperRenderer { id: wallpaper }
     ScreenshotOverlay { id: screenshot }
     WindowSwitcher { id: windowSwitcher }
+    Recording { id: screenRecording }
 
     // ── Idle management ──────────────────────────────────
     // enabled deferred until settings load to avoid timeout=0 race
@@ -113,6 +115,7 @@ ShellRoot {
         function toggleVolume(): void { shell._togglePanel = "volume"; shell._toggleCounter++; }
         function toggleNotifications(): void { shell._togglePanel = "notifications"; shell._toggleCounter++; }
         function toggleSettings(): void { appLauncher.openTab(5); }
+        function toggleRecording(): void { screenRecording.toggleRecording(); }
         function screenshotFull(): void { shell.screenshotFull(); }
         function screenshotArea(): void { shell.screenshotArea(); }
         function screenshotWindow(): void { shell.screenshotWindow(); }

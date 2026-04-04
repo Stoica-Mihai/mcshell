@@ -116,6 +116,24 @@ Scope {
                 z: 1
             }
 
+            // Recording indicator — pulsing red dot left of clock
+            Rectangle {
+                visible: root.isRecording
+                anchors.right: clock.left
+                anchors.rightMargin: 8
+                anchors.verticalCenter: parent.verticalCenter
+                width: 8; height: 8; radius: 4
+                color: Theme.red
+                z: 1
+
+                SequentialAnimation on opacity {
+                    running: root.isRecording
+                    loops: Animation.Infinite
+                    NumberAnimation { to: 0.3; duration: 800 }
+                    NumberAnimation { to: 1.0; duration: 800 }
+                }
+            }
+
             RowLayout {
                 anchors.fill: parent
                 anchors.leftMargin: 12
@@ -377,6 +395,10 @@ Scope {
             }
         }
     }
+
+    // Recording state (passed from shell.qml)
+    property bool isRecording: false
+    signal toggleRecording()
 
     // Volume state — kept at root level for accessibility
     Volume {
