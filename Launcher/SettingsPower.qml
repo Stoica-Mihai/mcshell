@@ -160,20 +160,19 @@ SettingsPanel {
                 required property var modelData
                 required property int index
                 selected: root.active && root.selectedItem === (index + 1)
-                selectedColor: modelData.danger ? Qt.rgba(0.97, 0.47, 0.56, 0.08) : Theme.overlay
+                selectedColor: modelData.danger ? Theme.redLight : Theme.overlay
 
                     Text {
                         text: modelData.icon
                         font.family: Theme.iconFont
-                        font.pixelSize: 16
+                        font.pixelSize: Theme.fontSizeLarge
                         color: modelData.danger ? Theme.red : Theme.fg
                     }
                     Text {
                         text: root.confirmItem === (index + 1) ? "Confirm?" : modelData.name
                         font.family: Theme.fontFamily
-                        font.pixelSize: 13
-                        color: root.confirmItem === (index + 1) ? Theme.red
-                             : modelData.danger ? Theme.fg : Theme.fg
+                        font.pixelSize: Theme.fontSize
+                        color: root.confirmItem === (index + 1) ? Theme.red : Theme.fg
                         Layout.fillWidth: true
                     }
                     Text {

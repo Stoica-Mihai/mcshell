@@ -39,8 +39,8 @@ Item {
         id: label
         anchors.centerIn: parent
         text: {
-            if (!root.enabled) return "Unavailable";
             if (root.model.length === 0) return "";
+            if (!root.enabled) return root.model[root.currentIndex];
             return Theme.iconArrowLeft + "  " + root.model[root.currentIndex] + "  " + Theme.iconArrowRight;
         }
         font.family: Theme.fontFamily

@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
@@ -11,20 +10,21 @@ PanelWindow {
 
     // ── Public API ──────────────────────────────────────
     property bool isOpen: false
-    function open() {
+    function _initLauncher(tab, edit) {
         isOpen = true;
         visible = true;
-        activeTab = 0;
-        editMode = false;
+        activeTab = tab;
+        editMode = edit;
         searchField.text = "";
         selectedIndex = 0;
-        // Re-establish model/delegate (switchTab breaks declarative bindings)
         _carouselDelegate = activeCategory.cardDelegate;
         _carouselModel = Qt.binding(() => activeCategory.model);
         activeCategory.onSearch("");
         activeCategory.onTabEnter();
         searchField.forceActiveFocus();
     }
+
+    function open() { _initLauncher(0, false); }
 
     function close() {
         isOpen = false;
@@ -41,17 +41,7 @@ PanelWindow {
 
     function openTab(tab) {
         if (!isOpen) {
-            isOpen = true;
-            visible = true;
-            activeTab = tab;
-            editMode = true;
-            searchField.text = "";
-            selectedIndex = 0;
-            _carouselDelegate = activeCategory.cardDelegate;
-            _carouselModel = Qt.binding(() => activeCategory.model);
-            activeCategory.onSearch("");
-            activeCategory.onTabEnter();
-            searchField.forceActiveFocus();
+            _initLauncher(tab, true);
         } else {
             switchTab(tab);
             editMode = true;
@@ -207,7 +197,7 @@ PanelWindow {
                             Text {
                                 text: modelData.tabIcon
                                 font.family: Theme.iconFont
-                                font.pixelSize: 11
+                                font.pixelSize: Theme.fontSizeSmall
                                 color: launcher.activeTab === index
                                     ? (launcher.editMode ? Theme.accent : Theme.bgSolid)
                                     : Theme.fgDim
@@ -217,7 +207,7 @@ PanelWindow {
                             Text {
                                 text: modelData.tabLabel
                                 font.family: Theme.fontFamily
-                                font.pixelSize: 11
+                                font.pixelSize: Theme.fontSizeSmall
                                 color: launcher.activeTab === index
                                     ? (launcher.editMode ? Theme.accent : Theme.bgSolid)
                                     : Theme.fgDim
@@ -240,7 +230,7 @@ PanelWindow {
                 Text {
                     text: Theme.iconSearch
                     font.family: Theme.iconFont
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.fontSizeMedium
                     color: Theme.fgDim
                     Layout.alignment: Qt.AlignVCenter
                 }

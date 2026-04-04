@@ -129,8 +129,8 @@ Scope {
                 SequentialAnimation on opacity {
                     running: root.isRecording
                     loops: Animation.Infinite
-                    NumberAnimation { to: 0.3; duration: 800 }
-                    NumberAnimation { to: 1.0; duration: 800 }
+                    NumberAnimation { to: 0.3; duration: Theme.animLockFade }
+                    NumberAnimation { to: 1.0; duration: Theme.animLockFade }
                 }
             }
 

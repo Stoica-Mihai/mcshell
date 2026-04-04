@@ -246,6 +246,11 @@ Singleton {
     Behavior on yellow { ColorAnimation { duration: root.animSmooth } }
     Behavior on cyan { ColorAnimation { duration: root.animSmooth } }
 
+    // Accent tints (derived — adapt automatically to palette changes)
+    readonly property color accentLight: Qt.rgba(accent.r, accent.g, accent.b, 0.12)
+    readonly property color accentBorder: Qt.rgba(accent.r, accent.g, accent.b, 0.25)
+    readonly property color redLight: Qt.rgba(red.r, red.g, red.b, 0.08)
+
     // Surface (adapts for light/dark themes)
     property color bgHover: Qt.rgba(1, 1, 1, 0.08)
     property color border: Qt.rgba(1, 1, 1, 0.06)

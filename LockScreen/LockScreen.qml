@@ -185,7 +185,7 @@ Item {
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         font.family: Theme.iconFont
-                        font.pixelSize: 32
+                        font.pixelSize: Theme.iconSizeLarge
                         color: Theme.accent
                         text: Theme.iconLock
                         visible: lockSession.secure
@@ -195,7 +195,7 @@ Item {
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         font.family: Theme.fontFamily
-                        font.pixelSize: 14
+                        font.pixelSize: Theme.fontSizeMedium
                         color: Theme.yellow
                         text: "Securing..."
                         visible: !lockSession.secure
@@ -234,7 +234,7 @@ Item {
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         font.family: Theme.fontFamily
-                        font.pixelSize: 16
+                        font.pixelSize: Theme.fontSizeLarge
                         color: Theme.fgDim
                         text: Qt.formatDate(clockTimer.currentTime, "dddd, MMMM d")
                     }
@@ -246,7 +246,7 @@ Item {
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         font.family: Theme.fontFamily
-                        font.pixelSize: 14
+                        font.pixelSize: Theme.fontSizeMedium
                         color: Theme.green
                         text: "Press Enter to unlock"
                         visible: root.gracePeriodActive && lockSession.secure
@@ -346,10 +346,8 @@ Item {
                     Text {
                         Layout.alignment: Qt.AlignHCenter
                         font.family: Theme.fontFamily
-                        font.pixelSize: 13
-                        color: root.statusIsError ? Theme.red
-                             : root.authInProgress ? Theme.fgDim
-                             : Theme.fgDim
+                        font.pixelSize: Theme.fontSize
+                        color: root.statusIsError ? Theme.red : Theme.fgDim
                         text: root.authInProgress ? "Authenticating..."
                             : root.statusMessage !== "" ? root.statusMessage
                             : ""

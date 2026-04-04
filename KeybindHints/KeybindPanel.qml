@@ -335,19 +335,9 @@ PanelWindow {
                                             width: capText.implicitWidth + 14
                                             height: 22
                                             radius: Theme.radiusTiny
-                                            color: Qt.rgba(
-                                                Theme.accent.r,
-                                                Theme.accent.g,
-                                                Theme.accent.b,
-                                                0.12
-                                            )
+                                            color: Theme.accentLight
                                             border.width: 1
-                                            border.color: Qt.rgba(
-                                                Theme.accent.r,
-                                                Theme.accent.g,
-                                                Theme.accent.b,
-                                                0.25
-                                            )
+                                            border.color: Theme.accentBorder
 
                                             Text {
                                                 id: capText

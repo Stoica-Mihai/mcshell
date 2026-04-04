@@ -176,7 +176,7 @@ Item {
                     visible: !iconImage.visible
                     text: Theme.iconBell
                     font.family: Theme.iconFont
-                    font.pixelSize: 14
+                    font.pixelSize: Theme.fontSizeMedium
                     color: Theme.accent
                     Layout.alignment: Qt.AlignVCenter
                 }
