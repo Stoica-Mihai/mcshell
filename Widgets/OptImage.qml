@@ -5,6 +5,5 @@ import QtQuick
 // Use instead of raw Image throughout the project.
 Image {
     asynchronous: true
-    mipmap: true
     fillMode: Image.PreserveAspectCrop
 }

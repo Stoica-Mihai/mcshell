@@ -66,7 +66,6 @@ LauncherCategory {
                 source: modelData.imageUrl ?? ""
                 fillMode: Image.PreserveAspectFit
                 asynchronous: true
-                mipmap: true
             }
 
             // Expanded content
@@ -92,8 +91,7 @@ LauncherCategory {
                     source: modelData.imageUrl ?? ""
                     fillMode: Image.PreserveAspectFit
                     asynchronous: true
-                    mipmap: true
-                }
+                    }
 
                 // Text content (non-image)
                 Text {

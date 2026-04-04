@@ -22,6 +22,7 @@ PanelWindow {
         activeCategory.onSearch("");
         activeCategory.onTabEnter();
         searchField.forceActiveFocus();
+        Qt.callLater(tabHighlight._snapToTab, tab);
     }
 
     function open() { _initLauncher(0, false); }
@@ -79,6 +80,7 @@ PanelWindow {
 
     // ── Tab state ───────────────────────────────────────
     property int activeTab: 0
+    onActiveTabChanged: tabHighlight.animateTo(activeTab)
     readonly property int tabCount: categories.length
     readonly property var activeCategory: categories[activeTab]
     readonly property var currentList: activeCategory.model
@@ -116,6 +118,7 @@ PanelWindow {
     // ── Tab switching ───────────────────────────────────
     function switchTab(tab) {
         if (tab < 0 || tab >= categories.length) return;
+        if (blobAnim.running) return;
         if (activeTab === tab && isOpen) {
             searchField.text = "";
             selectedIndex = 0;
@@ -167,6 +170,160 @@ PanelWindow {
             border.width: 1
             border.color: Theme.border
 
+            // ── Liquid blob tab highlight ──────────────────
+            Canvas {
+                id: tabHighlight
+                anchors.fill: parent
+                visible: false
+
+                property color blobColor: launcher.editMode ? Theme.bgHover : Theme.accent
+                onBlobColorChanged: requestPaint()
+
+                // Blob geometry
+                readonly property real blobH: 28
+                readonly property real blobY: (searchBar.height - blobH) / 2
+                readonly property real blobR: Theme.radiusSmall
+
+                // Resting position (where the blob sits when not animating)
+                property real _restX: 0
+                property real _restW: 0
+
+                // Animation state: -1 = at rest, 0..1 = transitioning
+                property real _progress: -1
+                property real _sourceX: 0
+                property real _sourceW: 0
+                property real _targetX: 0
+                property real _targetW: 0
+
+                on_ProgressChanged: requestPaint()
+
+                NumberAnimation {
+                    id: blobAnim
+                    target: tabHighlight; property: "_progress"
+                    from: 0; to: 1
+                    duration: Theme.animCarousel
+                    easing.type: Easing.InOutQuad
+                    onFinished: {
+                        tabHighlight._restX = tabHighlight._targetX;
+                        tabHighlight._restW = tabHighlight._targetW;
+                        tabHighlight._progress = -1;
+                        tabHighlight.requestPaint();
+                    }
+                }
+
+                // ── Snap (no animation) ──
+                property var _pendingConn: null
+                function _snapToTab(idx) {
+                    if (_pendingConn) { _pendingConn.enabled = false; _pendingConn = null; }
+                    const item = tabRepeater.itemAt(idx);
+                    if (!item) return;
+                    if (item.width > 0) {
+                        _applySnap(item);
+                    } else {
+                        _pendingConn = item.widthChanged.connect(function() {
+                            if (item.width > 0) {
+                                item.widthChanged.disconnect(arguments.callee);
+                                tabHighlight._applySnap(item);
+                            }
+                        });
+                    }
+                }
+
+                function _applySnap(item) {
+                    const pos = item.mapToItem(searchBar, 0, 0);
+                    _restX = pos.x;
+                    _restW = item.width;
+                    _progress = -1;
+                    visible = true;
+                    requestPaint();
+                }
+
+                // ── Animated transition ──
+                function animateTo(idx) {
+                    const item = tabRepeater.itemAt(idx);
+                    if (!item) return;
+                    if (!visible) { _snapToTab(idx); return; }
+                    const pos = item.mapToItem(searchBar, 0, 0);
+                    blobAnim.stop();
+                    _sourceX = _restX;
+                    _sourceW = _restW;
+                    _targetX = pos.x;
+                    _targetW = item.width;
+                    blobAnim.start();
+                }
+
+                // ── Drawing ──
+                function _lerp(a, b, t) { return a + (b - a) * t; }
+                function _smoothstep(t) { return t * t * (3 - 2 * t); }
+
+                onPaint: {
+                    var ctx = getContext("2d");
+                    ctx.clearRect(0, 0, width, height);
+                    ctx.fillStyle = blobColor;
+
+                    var h = blobH, top = blobY, r = blobR;
+
+                    if (_progress < 0) {
+                        // At rest — simple rounded rect
+                        _drawPill(ctx, _restX, top, _restW, h, r);
+                        return;
+                    }
+
+                    // Animated: leading edge races ahead, trailing follows
+                    var p = _progress;
+                    var movingRight = _targetX >= _sourceX;
+
+                    var leadT = _smoothstep(Math.min(1, p * 1.4));
+                    var trailT = _smoothstep(Math.max(0, (p - 0.2) / 0.8));
+
+                    var left, right;
+                    if (movingRight) {
+                        left  = _lerp(_sourceX, _targetX, trailT);
+                        right = _lerp(_sourceX + _sourceW, _targetX + _targetW, leadT);
+                    } else {
+                        left  = _lerp(_sourceX, _targetX, leadT);
+                        right = _lerp(_sourceX + _sourceW, _targetX + _targetW, trailT);
+                    }
+
+                    // How much to pinch: proportional to stretch beyond natural width
+                    var blobW = right - left;
+                    var naturalW = Math.max(_sourceW, _targetW);
+                    var stretch = blobW / naturalW;
+                    var pinch = Math.min(0.95, Math.max(0, 1 - 1 / stretch) * 20);
+                    var pinchH = h * (1 - pinch);
+                    var midX = (left + right) / 2;
+                    var pinchTop = top + (h - pinchH) / 2;
+                    var pinchBot = top + (h + pinchH) / 2;
+
+                    // Draw blob: pill ends with bezier-curved pinch in middle
+                    ctx.beginPath();
+                    ctx.moveTo(left + r, top);
+                    ctx.quadraticCurveTo(midX, pinchTop, right - r, top);
+                    ctx.arcTo(right, top, right, top + r, r);
+                    ctx.lineTo(right, top + h - r);
+                    ctx.arcTo(right, top + h, right - r, top + h, r);
+                    ctx.quadraticCurveTo(midX, pinchBot, left + r, top + h);
+                    ctx.arcTo(left, top + h, left, top + h - r, r);
+                    ctx.lineTo(left, top + r);
+                    ctx.arcTo(left, top, left + r, top, r);
+                    ctx.fill();
+                }
+
+                function _drawPill(ctx, px, py, pw, ph, pr) {
+                    ctx.beginPath();
+                    ctx.moveTo(px + pr, py);
+                    ctx.lineTo(px + pw - pr, py);
+                    ctx.arcTo(px + pw, py, px + pw, py + pr, pr);
+                    ctx.lineTo(px + pw, py + ph - pr);
+                    ctx.arcTo(px + pw, py + ph, px + pw - pr, py + ph, pr);
+                    ctx.lineTo(px + pr, py + ph);
+                    ctx.arcTo(px, py + ph, px, py + ph - pr, pr);
+                    ctx.lineTo(px, py + pr);
+                    ctx.arcTo(px, py, px + pr, py, pr);
+                    ctx.fill();
+                }
+            }
+
             RowLayout {
                 anchors.fill: parent
                 anchors.leftMargin: 14
@@ -175,19 +332,14 @@ PanelWindow {
 
                 // Tab buttons — driven by categories
                 Repeater {
+                    id: tabRepeater
                     model: launcher.categories
 
-                    delegate: Rectangle {
+                    delegate: Item {
                         required property var modelData
                         required property int index
                         Layout.preferredWidth: tabContent.implicitWidth + 16
                         Layout.preferredHeight: 28
-                        radius: Theme.radiusSmall
-                        color: launcher.activeTab === index
-                            ? (launcher.editMode ? Theme.bgHover : Theme.accent)
-                            : "transparent"
-
-                        Behavior on color { ColorAnimation { duration: Theme.animNormal } }
 
                         RowLayout {
                             id: tabContent
