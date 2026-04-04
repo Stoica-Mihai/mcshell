@@ -86,6 +86,7 @@ PanelWindow {
     readonly property var currentList: activeCategory.model
     readonly property int currentCount: carouselRepeater.count
     readonly property bool hasItems: currentCount > 0
+    onHasItemsChanged: if (!hasItems && editMode) editMode = false
 
     // Carousel model/delegate — reset together on tab switch to prevent
     // cross-contamination (new delegate rendering against old model data)
