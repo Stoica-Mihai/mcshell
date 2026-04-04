@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.Config
+import qs.Widgets
 
 // Theme settings card content — palette picker.
 SettingsPanel {
@@ -14,6 +15,7 @@ SettingsPanel {
     readonly property color headerColor: Theme.accent
 
     readonly property var themeNames: Theme.paletteNames
+    readonly property var _strategyNames: Theme.wallpaperStrategies.map(s => s.name)
     readonly property string currentTheme: UserSettings.themeName || "Tokyo Night"
     readonly property bool isWallpaperTheme: currentTheme === Theme.wallpaperThemeName
 
@@ -25,17 +27,27 @@ SettingsPanel {
         Theme.applyPalette(name);
     }
 
-    function _cycleStrategy(delta) {
+    function adjustLeft() {
         if (themeNames[selectedItem] !== Theme.wallpaperThemeName || !isWallpaperTheme) return false;
-        const len = Theme.wallpaperStrategies.length;
-        const idx = (Theme._strategyIndex() + delta + len) % len;
-        UserSettings.wallpaperStrategy = Theme.wallpaperStrategies[idx].name;
-        Theme.applyPalette(Theme.wallpaperThemeName);
+        strategyCycler.cycleLeft();
+        return true;
+    }
+    function adjustRight() {
+        if (themeNames[selectedItem] !== Theme.wallpaperThemeName || !isWallpaperTheme) return false;
+        strategyCycler.cycleRight();
         return true;
     }
 
-    function adjustLeft() { return _cycleStrategy(-1); }
-    function adjustRight() { return _cycleStrategy(1); }
+    CyclePicker {
+        id: strategyCycler
+        visible: false
+        model: root._strategyNames
+        currentIndex: Theme._strategyIndex()
+        onIndexChanged: idx => {
+            UserSettings.wallpaperStrategy = Theme.wallpaperStrategies[idx].name;
+            Theme.applyPalette(Theme.wallpaperThemeName);
+        }
+    }
 
     Repeater {
         id: themeRepeater
@@ -67,13 +79,12 @@ SettingsPanel {
                 Layout.preferredWidth: 120
                 Layout.preferredHeight: parent.height
 
-                Text {
+                CyclePicker {
                     anchors.centerIn: parent
                     visible: isWallpaper
-                    text: Theme.iconArrowLeft + "  " + UserSettings.wallpaperStrategy + "  " + Theme.iconArrowRight
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    color: root.isWallpaperTheme ? Theme.accent : Theme.fgDim
+                    model: root._strategyNames
+                    currentIndex: Theme._strategyIndex()
+                    enabled: root.isWallpaperTheme
                 }
                 Row {
                     anchors.centerIn: parent
