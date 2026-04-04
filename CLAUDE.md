@@ -51,7 +51,7 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 
 ## System Dependencies
 
-- **[noctalia-qs](https://github.com/noctalia-dev/noctalia-qs)** — Quickshell fork with `Quickshell.Niri` module (`qs` binary)
+- **[mcs-qs](https://github.com/Stoica-Mihai/mcs-qs)** — Quickshell fork with Niri IPC, clipboard history, night light, VibrantColor (`qs` binary)
 - **niri** compositor
 - **PipeWire + WirePlumber** — audio (native API)
 - **NetworkManager** — network status (native API) + `nmcli` for WiFi connect with password

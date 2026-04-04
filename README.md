@@ -178,7 +178,7 @@ binds {
 ### Required
 | Package | Purpose |
 |---|---|
-| [noctalia-qs](https://github.com/noctalia-dev/noctalia-qs) | Quickshell fork with Niri IPC module (`qs` binary) |
+| [mcs-qs](https://github.com/Stoica-Mihai/mcs-qs) | Quickshell fork with Niri IPC, clipboard history, night light, VibrantColor (`qs` binary) |
 | [niri](https://github.com/YaLTeR/niri) | Wayland compositor |
 | PipeWire + WirePlumber | Audio (native API) |
 | NetworkManager | Network status (native API) + `nmcli` for WiFi password connections |
