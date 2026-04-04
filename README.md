@@ -52,6 +52,18 @@ Horizontal filmstrip carousel with smooth sliding animation. Two-level keyboard 
 - **Area selection** — frozen-frame overlay with drag-to-select, adjustable before confirming with Space
 - Copies to clipboard + notification with image preview
 
+### Screen Recording
+- Start/stop via `toggleRecording` IPC command
+- Auto-detects focused output on multi-monitor
+- Pulsing red dot next to clock during recording
+- Saves to `~/Videos/`, path added to clipboard history
+- Requires `wf-recorder`
+
+### Window Switcher
+- Fullscreen overlay with carousel cards (icon + title)
+- Arrow keys to navigate, Enter to focus, type to filter
+- Triggered via `toggleWindows` IPC command
+
 ### Keybind Hints
 - Parses `~/.config/niri/config.kdl` for keybindings with live file watching
 - Searchable, categorized display with keyboard navigation (apps, workspaces, windows, etc.)
@@ -121,6 +133,9 @@ qs -c mcshell ipc call mcshell <command>
 | `screenshotFull` | Capture full screen to clipboard (native screencopy) |
 | `screenshotArea` | Interactive area selection overlay, Space to confirm |
 | `screenshotWindow` | Capture focused window to clipboard (niri) |
+| `toggleRecording` | Start/stop screen recording (wf-recorder) |
+| `toggleWindows` | Open/close window switcher overlay |
+| `clipboardList` | Print clipboard history to stdout |
 
 ### Example niri keybinds
 
@@ -189,6 +204,7 @@ binds {
 | Package | Purpose |
 |---|---|
 | `brightnessctl` | Screen brightness control |
+| `wf-recorder` | Screen recording |
 
 ## Themes
 
@@ -210,8 +226,8 @@ Pure QML — no C++, no build system. QuickShell interprets QML directly. Each s
 | `LockScreen/` | Wayland session lock with PAM auth |
 | `Wallpaper/` | Background renderer with crossfade transitions |
 | `KeybindHints/` | Keybind parser + hints overlay |
-| `OSD/` | Volume/brightness on-screen display |
 | `Screenshot/` | Native screencopy overlay — fullscreen + interactive area selection with crop |
+| `WindowSwitcher/` | Fullscreen window switcher overlay with carousel cards |
 | `Widgets/` | Shared UI components — AnimatedPopup, IconButton, SliderTrack, ControlSlider |
 
 ## License
