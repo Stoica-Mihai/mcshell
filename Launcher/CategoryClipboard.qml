@@ -49,20 +49,30 @@ LauncherCategory {
             id: clipStrip
             launcher: root.launcher
 
-            // Collapsed icon
+            // Collapsed: icon or thumbnail
             Text {
                 anchors.centerIn: parent
-                visible: !parent.isCurrent
-                text: modelData.isImage ?? false ? Theme.iconImage : Theme.iconClipboard
+                visible: !parent.isCurrent && !(modelData.isImage ?? false)
+                text: Theme.iconClipboard
                 font.family: Theme.iconFont
                 font.pixelSize: 24
                 color: Theme.fgDim
             }
 
+            Image {
+                anchors.fill: parent
+                anchors.margins: 4
+                visible: !parent.isCurrent && (modelData.isImage ?? false)
+                source: modelData.imageUrl ?? ""
+                fillMode: Image.PreserveAspectFit
+                asynchronous: true
+                mipmap: true
+            }
+
             // Expanded content
             ColumnLayout {
-                anchors.centerIn: parent
-                width: parent.width - 40
+                anchors.fill: parent
+                anchors.margins: 16
                 visible: parent.isCurrent
                 spacing: Theme.spacingMedium
 
@@ -74,17 +84,29 @@ LauncherCategory {
                     Layout.alignment: Qt.AlignHCenter
                 }
 
-                Text {
+                // Image preview (expanded)
+                Image {
+                    visible: modelData.isImage ?? false
                     Layout.fillWidth: true
-                    text: modelData.isImage ?? false ? "Image" : (modelData.content || "")
+                    Layout.fillHeight: true
+                    source: modelData.imageUrl ?? ""
+                    fillMode: Image.PreserveAspectFit
+                    asynchronous: true
+                    mipmap: true
+                }
+
+                // Text content (non-image)
+                Text {
+                    visible: !(modelData.isImage ?? false)
+                    Layout.fillWidth: true
+                    text: modelData.content || ""
                     textFormat: Text.PlainText
                     font.family: Theme.fontFamily
-                    font.pixelSize: modelData.isImage ?? false ? 18 : Theme.fontSizeSmall
-                    font.bold: modelData.isImage ?? false
+                    font.pixelSize: Theme.fontSizeSmall
                     color: Theme.fg
                     wrapMode: Text.WrapAtWordBoundaryOrAnywhere
                     elide: Text.ElideRight
-                    maximumLineCount: modelData.isImage ?? false ? 1 : 12
+                    maximumLineCount: 12
                     horizontalAlignment: Text.AlignHCenter
                 }
 
