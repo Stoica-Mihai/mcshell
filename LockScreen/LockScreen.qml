@@ -316,7 +316,7 @@ Item {
 
                                     Behavior on scale {
                                         NumberAnimation {
-                                            duration: 120
+                                            duration: Theme.animPopIn
                                             easing.type: Easing.OutCubic
                                         }
                                     }

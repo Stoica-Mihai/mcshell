@@ -1,5 +1,6 @@
 import QtQuick
 import qs.Config
+import qs.Widgets
 
 // Unified settings card that loads content from a source URL.
 // Renders shared header (icon + title + subtitle) from panel properties,
@@ -68,14 +69,7 @@ Item {
         clip: true
         boundsBehavior: Flickable.StopAtBounds
 
-        WheelHandler {
-            acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-            onWheel: event => {
-                flick.contentY = Math.max(0,
-                    Math.min(flick.contentHeight - flick.height,
-                             flick.contentY - event.angleDelta.y * 1.5));
-            }
-        }
+        SmoothWheelHandler { target: flick }
 
         Column {
             id: wrapper

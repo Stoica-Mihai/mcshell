@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Services.Pipewire
 import qs.Config
+import qs.Widgets
 
 // Audio settings card content — output/input device selection + volume.
 SettingsPanel {
@@ -108,85 +109,37 @@ SettingsPanel {
         }
     }
 
-    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border; Layout.topMargin: 4 }
+    Separator { topMargin: 4 }
 
     // Output section
-    Text {
-        text: "OUTPUT"
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSizeMini
-        color: Theme.fgDim
-        Layout.leftMargin: 12
-        Layout.topMargin: 2
-        opacity: Theme.opacitySubtle
-    }
+    SectionHeader { label: "OUTPUT" }
 
     Repeater {
         id: outputRepeater
         model: root.outputNodes
-        delegate: SettingsRow {
+        delegate: SelectionRow {
             required property var modelData
             required property int index
             selected: root.active && root.selectedItem === (index + 1)
-            Layout.preferredHeight: 30
-
-            Text {
-                text: modelData === root.defaultSink ? Theme.iconCheck : ""
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSizeTiny
-                color: Theme.green
-                Layout.preferredWidth: 14
-            }
-            Text {
-                text: modelData.description || modelData.name || "Unknown"
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeSmall
-                color: modelData === root.defaultSink ? Theme.accent : Theme.fg
-                elide: Text.ElideRight
-                Layout.fillWidth: true
-                maximumLineCount: 1
-            }
+            label: modelData.description || modelData.name || "Unknown"
+            isCurrent: modelData === root.defaultSink
         }
     }
 
-    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border; Layout.topMargin: 2 }
+    Separator { topMargin: 2 }
 
     // Input section
-    Text {
-        text: "INPUT"
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSizeMini
-        color: Theme.fgDim
-        Layout.leftMargin: 12
-        Layout.topMargin: 2
-        opacity: Theme.opacitySubtle
-    }
+    SectionHeader { label: "INPUT" }
 
     Repeater {
         id: inputRepeater
         model: root.inputNodes
-        delegate: SettingsRow {
+        delegate: SelectionRow {
             required property var modelData
             required property int index
             selected: root.active && root.selectedItem === (1 + root.outputNodes.length + index)
-            Layout.preferredHeight: 30
-
-            Text {
-                text: modelData === root.defaultSource ? Theme.iconCheck : ""
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSizeTiny
-                color: Theme.green
-                Layout.preferredWidth: 14
-            }
-            Text {
-                text: modelData.description || modelData.name || "Unknown"
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeSmall
-                color: modelData === root.defaultSource ? Theme.accent : Theme.fg
-                elide: Text.ElideRight
-                Layout.fillWidth: true
-                maximumLineCount: 1
-            }
+            label: modelData.description || modelData.name || "Unknown"
+            isCurrent: modelData === root.defaultSource
         }
     }
 }

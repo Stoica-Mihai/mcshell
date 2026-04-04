@@ -108,7 +108,7 @@ Item {
                     property: "value"
                     from: -12
                     to: 0
-                    duration: 400
+                    duration: Theme.animElastic
                     easing.type: Easing.OutElastic
                     easing.amplitude: 2
                     property real value: 0

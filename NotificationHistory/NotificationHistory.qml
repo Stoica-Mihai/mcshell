@@ -73,11 +73,7 @@ Item {
         }
 
         // ── Separator ───────────────────────────────
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 1
-            color: Theme.border
-        }
+        Separator {}
 
         // ── Empty state ─────────────────────────────
         Item {
@@ -95,7 +91,7 @@ Item {
                     font.family: Theme.iconFont
                     font.pixelSize: 24
                     color: Theme.fgDim
-                    opacity: 0.5
+                    opacity: Theme.opacityMuted
                     horizontalAlignment: Text.AlignHCenter
                     Layout.fillWidth: true
                 }
@@ -122,28 +118,9 @@ Item {
             boundsBehavior: Flickable.StopAtBounds
             spacing: Theme.spacingTiny
 
-            WheelHandler {
-                acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-                onWheel: event => {
-                    historyList.contentY = Math.max(
-                        0,
-                        Math.min(historyList.contentHeight - historyList.height,
-                                 historyList.contentY - event.angleDelta.y * 1.5)
-                    );
-                }
-            }
+            SmoothWheelHandler { target: historyList }
 
-            ScrollBar.vertical: ScrollBar {
-                policy: ScrollBar.AsNeeded
-                width: 4
-
-                contentItem: Rectangle {
-                    implicitWidth: 4
-                    radius: 2
-                    color: Theme.fgDim
-                    opacity: Theme.opacityDim
-                }
-            }
+            ScrollBar.vertical: ThemedScrollBar { barWidth: 4 }
 
             delegate: Rectangle {
                 id: entryItem
@@ -236,7 +213,7 @@ Item {
                         maximumLineCount: 2
                         elide: Text.ElideRight
                         Layout.fillWidth: true
-                        opacity: 0.7
+                        opacity: Theme.opacitySecondary
                     }
 
                 }
@@ -260,7 +237,7 @@ Item {
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeMini
             color: Theme.fgDim
-            opacity: 0.7
+            opacity: Theme.opacitySecondary
             Layout.topMargin: 2
         }
     }

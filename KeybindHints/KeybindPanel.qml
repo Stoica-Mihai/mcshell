@@ -162,7 +162,7 @@ PanelWindow {
                         sourceSize.width: 16
                         sourceSize.height: 16
                         source: "image://icon/edit-find"
-                        opacity: 0.5
+                        opacity: Theme.opacityMuted
                     }
 
                     TextInput {
@@ -210,30 +210,10 @@ PanelWindow {
                 flickDeceleration: 3000
                 maximumFlickVelocity: 4000
 
-                // Fast mouse wheel scrolling
-                WheelHandler {
-                    acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-                    onWheel: event => {
-                        bindList.contentY = Math.max(
-                            0,
-                            Math.min(bindList.contentHeight - bindList.height,
-                                     bindList.contentY - event.angleDelta.y * 1.5)
-                        );
-                    }
-                }
+                SmoothWheelHandler { target: bindList }
                 spacing: 0
 
-                ScrollBar.vertical: ScrollBar {
-                    policy: ScrollBar.AsNeeded
-                    width: 6
-
-                    contentItem: Rectangle {
-                        implicitWidth: 6
-                        radius: 3
-                        color: Theme.fgDim
-                        opacity: Theme.opacityDim
-                    }
-                }
+                ScrollBar.vertical: ThemedScrollBar {}
 
                 delegate: Loader {
                     id: delegateLoader

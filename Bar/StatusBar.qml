@@ -364,12 +364,7 @@ Scope {
                                     Layout.bottomMargin: 2
                                 }
 
-                                Rectangle {
-                                    visible: appVolume.hasStreams
-                                    Layout.fillWidth: true
-                                    Layout.preferredHeight: 1
-                                    color: Theme.border
-                                }
+                                Separator { visible: appVolume.hasStreams }
 
                                 AppVolume {
                                     id: appVolume

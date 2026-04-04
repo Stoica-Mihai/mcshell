@@ -16,7 +16,9 @@ Item {
     property var model: []
     property int currentIndex: 0
     property color textColor: Theme.accent
-    property bool enabled: true
+
+    readonly property int _safeIndex: Math.max(0, Math.min(currentIndex, model.length - 1))
+    readonly property string _currentLabel: model.length > 0 ? model[_safeIndex] : ""
 
     signal indexChanged(int idx)
 
@@ -39,9 +41,9 @@ Item {
         id: label
         anchors.centerIn: parent
         text: {
-            if (root.model.length === 0) return "";
-            if (!root.enabled) return root.model[root.currentIndex];
-            return Theme.iconArrowLeft + "  " + root.model[root.currentIndex] + "  " + Theme.iconArrowRight;
+            if (root._currentLabel === "") return "";
+            if (!root.enabled) return root._currentLabel;
+            return Theme.iconArrowLeft + "  " + root._currentLabel + "  " + Theme.iconArrowRight;
         }
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeSmall

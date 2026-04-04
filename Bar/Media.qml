@@ -239,7 +239,7 @@ Item {
                     font.italic: true
                     elide: Text.ElideRight
                     horizontalAlignment: Text.AlignHCenter
-                    opacity: 0.8
+                    opacity: Theme.opacityBody
                 }
 
                 // ── Seek bar ─────────────────────────────

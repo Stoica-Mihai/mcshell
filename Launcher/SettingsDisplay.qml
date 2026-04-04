@@ -132,7 +132,7 @@ SettingsPanel {
         }
     }
 
-    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+    Separator {}
 
     // Night light mode
     SettingsRow {
@@ -171,7 +171,7 @@ SettingsPanel {
     // Temperature (visible when manual or auto, adjustable only in manual mode)
     SettingsRow {
         visible: root.nightOn
-        opacity: UserSettings.nightLightMode === UserSettings.modeAuto ? 0.5 : 1.0
+        opacity: UserSettings.nightLightMode === UserSettings.modeAuto ? Theme.opacityMuted : 1.0
         selected: root.active && root.selectedItem === 2
         Layout.preferredHeight: 40
 
@@ -264,7 +264,7 @@ SettingsPanel {
         }
     }
 
-    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.border }
+    Separator {}
 
     // Auto-lock timeout
     SettingsRow {

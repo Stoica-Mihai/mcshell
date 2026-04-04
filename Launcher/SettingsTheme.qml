@@ -53,27 +53,15 @@ SettingsPanel {
         id: themeRepeater
         model: root.themeNames
 
-        SettingsRow {
+        SelectionRow {
             required property string modelData
             required property int index
             readonly property bool isWallpaper: modelData === Theme.wallpaperThemeName
             selected: root.active && root.selectedItem === index
             Layout.preferredHeight: 32
+            label: modelData
+            isCurrent: modelData === root.currentTheme
 
-            Text {
-                text: modelData === root.currentTheme ? Theme.iconCheck : ""
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.fontSizeTiny
-                color: Theme.green
-                Layout.preferredWidth: 14
-            }
-            Text {
-                text: modelData
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeSmall
-                color: modelData === root.currentTheme ? Theme.accent : Theme.fg
-                Layout.fillWidth: true
-            }
             // Right column: strategy picker or color dots (fixed width for alignment)
             Item {
                 Layout.preferredWidth: 120

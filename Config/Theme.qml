@@ -266,7 +266,9 @@ Singleton {
 
     // ── Opacity ─────────────────────────────────────────
     readonly property real opacityDim: 0.4
+    readonly property real opacityMuted: 0.5
     readonly property real opacitySubtle: 0.6
+    readonly property real opacitySecondary: 0.7
     readonly property real opacityBody: 0.85
 
     // ── Animation ──────────────────────────────────────
@@ -279,6 +281,8 @@ Singleton {
     readonly property int animCursorBlink: 600 // lock screen cursor
     readonly property int animLockFade: 800   // lock screen pulse
     readonly property int animLockShake: 50   // lock screen error shake
+    readonly property int animPopIn: 120       // element appearance pop-in
+    readonly property int animElastic: 400     // elastic error shake
 
     // ── Layout ──────────────────────────────────────────
     readonly property int barHeight: 34
