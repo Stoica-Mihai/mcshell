@@ -60,41 +60,15 @@ Item {
             }
 
             // Clear All
-            Rectangle {
+            IconButton {
                 visible: panel.historyModel && panel.historyModel.count > 0
-                Layout.alignment: Qt.AlignVCenter
-                width: clearRow.implicitWidth + 12
-                height: 22
-                radius: Theme.radiusTiny
-                color: clearMouse.containsMouse ? Qt.rgba(Theme.red.r, Theme.red.g, Theme.red.b, 0.15) : "transparent"
-
-                RowLayout {
-                    id: clearRow
-                    anchors.centerIn: parent
-                    spacing: Theme.spacingTiny
-
-                    Text {
-                        text: Theme.iconTrash
-                        font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSizeTiny
-                        color: clearMouse.containsMouse ? Theme.red : Theme.fgDim
-                    }
-
-                    Text {
-                        text: "Clear"
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        color: clearMouse.containsMouse ? Theme.red : Theme.fgDim
-                    }
-                }
-
-                MouseArea {
-                    id: clearMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: panel.clearAllHistory()
-                }
+                icon: Theme.iconTrash
+                size: 14
+                implicitWidth: 32
+                implicitHeight: 24
+                normalColor: Theme.fgDim
+                hoverColor: Theme.red
+                onClicked: panel.clearAllHistory()
             }
         }
 
@@ -264,6 +238,7 @@ Item {
                         Layout.fillWidth: true
                         opacity: 0.7
                     }
+
                 }
             }
         }

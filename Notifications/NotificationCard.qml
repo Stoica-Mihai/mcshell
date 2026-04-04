@@ -16,6 +16,9 @@ Item {
     required property int urgency
     required property int timeout
     required property bool hasActions
+    required property bool hasInlineReply
+
+    readonly property bool replyFocused: replyField.activeFocus
 
     // Function to look up the notification object (set by parent)
     property var getNotifRef: function() { return null; }
@@ -73,11 +76,18 @@ Item {
         border.width: 1
         border.color: Theme.border
 
-        // Click anywhere to dismiss
+        // Click to dismiss (but not on interactive elements)
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
-            onClicked: card.userClose()
+            onClicked: mouse => {
+                const pos = replyContainer.mapFromItem(this, mouse.x, mouse.y);
+                if (replyContainer.visible && replyContainer.contains(pos)) {
+                    replyField.forceActiveFocus();
+                } else {
+                    card.userClose();
+                }
+            }
         }
 
         // Circular countdown — top-right, aligned with header
@@ -155,7 +165,7 @@ Item {
             }
             spacing: Theme.spacingTiny
 
-            // Header row: icon + app name + close button
+            // Header row: icon + app name
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Theme.spacingNormal
@@ -284,6 +294,48 @@ Item {
                                 }
                             }
                         }
+                    }
+                }
+            }
+
+            // Inline reply
+            Rectangle {
+                id: replyContainer
+                visible: card.hasInlineReply
+                Layout.fillWidth: true
+                Layout.topMargin: 4
+                height: 28
+                radius: Theme.radiusSmall
+                color: Theme.bgSolid
+                border.width: 1
+                border.color: replyField.activeFocus ? Theme.accent : Theme.border
+
+                TextInput {
+                    id: replyField
+                    anchors.fill: parent
+                    anchors.leftMargin: 8
+                    anchors.rightMargin: 8
+                    verticalAlignment: TextInput.AlignVCenter
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeSmall
+                    color: Theme.fg
+                    clip: true
+
+                    Keys.onReturnPressed: {
+                        if (text.trim() !== "") {
+                            const ref = card.getNotifRef();
+                            if (ref) ref.sendInlineReply(text);
+                            card.animateOut();
+                        }
+                    }
+                    Keys.onEscapePressed: card.userClose()
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "Type a reply..."
+                        color: Theme.fgDim
+                        font: parent.font
+                        visible: !parent.text && !parent.activeFocus
                     }
                 }
             }

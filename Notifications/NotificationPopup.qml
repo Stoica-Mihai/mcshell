@@ -28,6 +28,13 @@ Item {
     property int unreadCount: 0
 
     function markAllRead() {
+        // Dismiss all active popups — they're already in history
+        while (notifModel.count > 0) {
+            const nid = notifModel.get(0).notifId;
+            const ref = _notifRefs[nid];
+            if (ref) ref.expire();
+            notifModel.remove(0);
+        }
         unreadCount = 0;
     }
 
@@ -69,12 +76,15 @@ Item {
         for (let i = 0; i < _historyModel.count; i++) {
             if (_historyModel.get(i).notifId === nid) {
                 _historyModel.remove(i);
+                delete root._notifRefs[nid];
                 return;
             }
         }
     }
 
     function clearHistory() {
+        for (let i = 0; i < _historyModel.count; i++)
+            delete root._notifRefs[_historyModel.get(i).notifId];
         _historyModel.clear();
     }
 
@@ -84,6 +94,7 @@ Item {
         keepOnReload: false
         imageSupported: true
         actionsSupported: true
+        inlineReplySupported: true
         bodyHyperlinksSupported: false
 
         onNotification: notification => {
@@ -117,12 +128,22 @@ Item {
                 urgency: notification.urgency < 0 || notification.urgency > 2
                          ? 1 : notification.urgency,
                 timeout: timeout,
-                hasActions: notification.actions && notification.actions.length > 0
+                hasActions: notification.actions && notification.actions.length > 0,
+                hasInlineReply: !!notification.hasInlineReply
             };
 
             // Show popup only if DND is off
-            if (!UserSettings.doNotDisturb)
+            if (!UserSettings.doNotDisturb) {
+                // Deduplicate: silently dismiss existing popups from the same app
+                // (they're already in history — keep refs alive for reply)
+                for (let i = notifModel.count - 1; i >= 0; i--) {
+                    if (notifModel.get(i).appName === entry.appName) {
+                        unreadCount++;
+                        notifModel.remove(i);
+                    }
+                }
                 notifModel.insert(0, entry);
+            }
 
             // Always append to history
             _historyModel.insert(0, {
@@ -132,6 +153,7 @@ Item {
                 body:    entry.body,
                 iconUrl: icon,
                 urgency: entry.urgency,
+                hasInlineReply: entry.hasInlineReply,
                 timestamp: new Date().toLocaleString(Qt.locale(), "hh:mm AP")
             });
 
@@ -149,14 +171,18 @@ Item {
     function removeById(nid, userDismissed) {
         for (let i = 0; i < notifModel.count; i++) {
             if (notifModel.get(i).notifId === nid) {
+                // Close the D-Bus notification so notify-send unblocks
+                const ref = _notifRefs[nid];
+                if (ref) {
+                    if (userDismissed) ref.dismiss();
+                    else ref.expire();
+                }
                 if (userDismissed) {
-                    // User acknowledged — remove from history too
                     removeHistoryById(nid);
                 } else {
                     unreadCount++;
                 }
                 notifModel.remove(i);
-                delete root._notifRefs[nid];
                 return;
             }
         }
@@ -175,6 +201,7 @@ Item {
             // Layer-shell setup
             WlrLayershell.namespace: "mcshell-notifications"
             WlrLayershell.layer: WlrLayer.Overlay
+            WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
             WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
             color: "transparent"
@@ -216,7 +243,7 @@ Item {
                     delegate: NotificationCard {
                         id: notifCard
                         // required properties auto-bind from ListModel roles:
-                        // notifId, appName, summary, body, iconUrl, urgency, timeout, hasActions
+                        // notifId, appName, summary, body, iconUrl, urgency, timeout, hasActions, hasInlineReply
 
                         Layout.fillWidth: true
                         getNotifRef: function() { return root.getNotifRef(notifCard.notifId); }

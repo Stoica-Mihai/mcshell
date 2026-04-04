@@ -334,6 +334,7 @@ Scope {
                             ColumnLayout {
                                 id: volumeContent
                                 visible: capsule.activePanel === "volume"
+                                enabled: visible
                                 anchors.left: parent.left
                                 anchors.right: parent.right
                                 anchors.top: parent.top
