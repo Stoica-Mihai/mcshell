@@ -14,6 +14,7 @@ import qs.LockScreen
 import qs.Polkit
 import qs.Wallpaper
 import qs.Screenshot
+import Quickshell.Wayland._DataControl
 import qs.WindowSwitcher
 
 ShellRoot {
@@ -116,6 +117,15 @@ ShellRoot {
         function toggleNotifications(): void { shell._togglePanel = "notifications"; shell._toggleCounter++; }
         function toggleSettings(): void { appLauncher.openTab(5); }
         function toggleRecording(): void { screenRecording.toggleRecording(); }
+        function clipboardList(): string {
+            const entries = ClipboardHistory.entries.values;
+            const lines = [];
+            for (let i = 0; i < entries.length; i++) {
+                const e = entries[i];
+                lines.push(i + "\t" + e.mimeType + "\t" + e.content.substring(0, 100));
+            }
+            return lines.join("\n");
+        }
         function screenshotFull(): void { shell.screenshotFull(); }
         function screenshotArea(): void { shell.screenshotArea(); }
         function screenshotWindow(): void { shell.screenshotWindow(); }
