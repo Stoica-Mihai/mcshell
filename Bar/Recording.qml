@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland._DataControl
 import qs.Config
 
 // Screen recording state — managed via wf-recorder process lifecycle.
@@ -52,7 +53,7 @@ Item {
     Process {
         id: recorder
         onExited: (code, status) => {
-            Quickshell.clipboardText = root._currentPath;
+            ClipboardHistory.addText(root._currentPath);
             Quickshell.execDetached({ command: [
                 "notify-send", "-t", "5000",
                 "Recording saved", root._currentPath
