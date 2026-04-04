@@ -47,32 +47,23 @@ LauncherCategory {
     StatusTracker { id: btTracker }
 
     // ── Lifecycle ──
-    SafeProcess {
-        id: btStateCheck
-        property bool _powered: false
-        failMessage: "BT state check failed"
-        onRead: data => {
-            const line = data.trim();
-            if (line.startsWith("Powered:"))
-                _powered = line.indexOf("yes") >= 0;
-        }
-        onFinished: {
-            if (!_powered) {
-                root.filteredBtDevices = [];
-            } else if (root.btReady && root.btAdapter) {
+    Connections {
+        target: root.btAdapter
+        function onPropertiesRefreshed() {
+            if (!root.active) return;
+            if (root.btReady) {
                 root.btAdapter.discovering = true;
                 root.refreshBt();
             } else {
-                root.refreshBt();
+                root.filteredBtDevices = [];
             }
         }
     }
 
     function onTabEnter() {
         active = true;
-        btStateCheck._powered = false;
-        btStateCheck.command = ["bluetoothctl", "show"];
-        btStateCheck.running = true;
+        // Force D-Bus property re-read — bindings may be stale while launcher was hidden
+        if (btAdapter) btAdapter.refreshProperties();
     }
 
     function onTabLeave() {
