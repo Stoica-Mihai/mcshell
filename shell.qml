@@ -14,6 +14,7 @@ import qs.LockScreen
 import qs.Polkit
 import qs.Wallpaper
 import qs.Screenshot
+import qs.WindowSwitcher
 
 ShellRoot {
     id: shell
@@ -48,6 +49,7 @@ ShellRoot {
     PolkitDialog {}
     WallpaperRenderer { id: wallpaper }
     ScreenshotOverlay { id: screenshot }
+    WindowSwitcher { id: windowSwitcher }
 
     // ── Idle management ──────────────────────────────────
     // enabled deferred until settings load to avoid timeout=0 race
@@ -101,6 +103,7 @@ ShellRoot {
         function launcherWallpaper(): void { appLauncher.openTab(4); }
         function launcherSettings(): void { appLauncher.openTab(5); }
         function toggleKeybinds(): void { keybindPanel.toggle(); }
+        function toggleWindows(): void { windowSwitcher.toggle(); }
         function toggleWallpaper(): void { appLauncher.openTab(4); }
         function lock(): void { lockScreen.lock(); }
         function toggleDnd(): void { UserSettings.doNotDisturb = !UserSettings.doNotDisturb; }
