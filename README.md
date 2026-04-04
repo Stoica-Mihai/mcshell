@@ -20,7 +20,7 @@ A custom Wayland desktop shell built with [QuickShell](https://quickshell.outfox
 ### App Launcher
 Horizontal filmstrip carousel with smooth sliding animation. Two-level keyboard navigation: Left/Right to switch categories (Level 1), Enter to dive in, Left/Right to navigate cards (Level 2), Escape to go back. Six tabs:
 - **Apps** — fuzzy search, large icon + name + description in expanded view
-- **Clipboard** — cliphist integration, lazy-loaded, image entry detection with metadata display
+- **Clipboard** — native clipboard history via Wayland data control protocol, live-updating, text and image support
 - **WiFi** — scan and connect to networks, inline password input, signal strength and security display. Ctrl+W to toggle WiFi
 - **Bluetooth** — discover, pair, and connect devices with battery display. Ctrl+B to toggle Bluetooth
 - **Wallpaper** — browse and apply wallpapers from configured folder, lazy-loaded thumbnails, active wallpaper highlighted
@@ -190,7 +190,6 @@ binds {
 |---|---|
 | `brightnessctl` | Screen brightness control |
 | `wl-gammarelay-rs` | Night light — flicker-free color temperature via dbus |
-| `cliphist` + `wl-copy` | Clipboard history tab in launcher |
 
 ## Themes
 

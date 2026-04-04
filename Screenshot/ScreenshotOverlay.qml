@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Wayland._DataControl
 import qs.Config
 
 PanelWindow {
@@ -49,7 +50,8 @@ PanelWindow {
         _savePath = "/tmp/mcshell-screenshot-" + Date.now() + ".png";
         _tmpPath = _savePath + ".tmp.png";
         mask = null;
-        captureView.opacity = 1;
+        // Don't set captureView.opacity yet — capture the clean screen
+        // first, then show the new frame in _onFrameReady.
 
         if (!_captureActive) {
             // First capture ever: activate the ScreencopyView.
@@ -91,6 +93,10 @@ PanelWindow {
         _timeout.stop();
         _frameDelay.stop();
 
+        // Show the fresh frame now (not before capture, to avoid
+        // the overlay's stale content being included in the capture)
+        captureView.opacity = 1;
+
         captureView.grabToImage(function(result) {
             if (!result || !result.saveToFile(root._tmpPath)) {
                 root._close();
@@ -105,17 +111,16 @@ PanelWindow {
         });
     }
 
-    function _copyAndNotify(path) {
-        Quickshell.setClipboardImage(path);
-        Quickshell.execDetached({ command: ["notify-send", "-t", "5000",
-            "-h", "string:image-path:" + path, "Screenshot", "Copied to clipboard"
-        ] });
+    function _copyToClipboard(path) {
+        ClipboardHistory.addFromFile(path, "image/png");
     }
 
     function _finishFullScreen() {
-        // Temp file is the final file — just rename
-        Quickshell.execDetached({ command: ["mv", _tmpPath, _savePath] });
-        _copyAndNotify(_savePath);
+        _copyToClipboard(_tmpPath);
+        Quickshell.execDetached({ command: ["sh", "-c",
+            "mv '" + _tmpPath + "' '" + _savePath + "' && " +
+            "notify-send -t 5000 -h string:image-path:'" + _savePath + "' 'Screenshot' 'Copied to clipboard'"
+        ] });
         _close();
     }
 
@@ -134,8 +139,11 @@ PanelWindow {
     function _finishAreaCrop() {
         cropHelper.grabToImage(function(result) {
             if (result && result.saveToFile(root._savePath)) {
-                Quickshell.execDetached({ command: ["rm", "-f", root._tmpPath] });
-                root._copyAndNotify(root._savePath);
+                root._copyToClipboard(root._savePath);
+                Quickshell.execDetached({ command: ["sh", "-c",
+                    "rm -f '" + root._tmpPath + "' && " +
+                    "notify-send -t 5000 -h string:image-path:'" + root._savePath + "' 'Screenshot' 'Copied to clipboard'"
+                ] });
             }
             root._close();
         });
