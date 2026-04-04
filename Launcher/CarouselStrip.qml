@@ -68,64 +68,59 @@ Item {
         }
     }
 
-    // Content clipped to parallelogram via skewed Rectangle (1px inset hides jagged clip edges)
-    Rectangle {
-        id: contentClip
+    // Fallback click for expanded card
+    MouseArea {
         anchors.fill: parent
-        anchors.margins: 1
-        color: "transparent"
-        clip: true
+        visible: strip.isCurrent
+        cursorShape: Qt.PointingHandCursor
+        onClicked: strip.onStripActivated()
+    }
+
+    // Content wrapper — 1px padding creates transparent edge in the layer texture,
+    // so bilinear filtering smooths the diagonal edges after transform
+    Item {
+        id: contentWrapper
+        anchors.fill: parent
+        anchors.margins: -1
+
+        layer.enabled: true
+        layer.smooth: true
 
         transform: Matrix4x4 {
             matrix: Qt.matrix4x4(
-                1, strip._skew, 0, -strip._skew * contentClip.height / 2,
+                1, strip._skew, 0, -strip._skew * contentWrapper.height / 2,
                 0, 1,           0, 0,
                 0, 0,           1, 0,
                 0, 0,           0, 1
             )
         }
 
-        // Fallback click for expanded card
-        MouseArea {
-            anchors.fill: parent
-            visible: strip.isCurrent
-            cursorShape: Qt.PointingHandCursor
-            onClicked: strip.onStripActivated()
-        }
-
         Item {
             id: cardContent
             anchors.fill: parent
+            anchors.margins: 1
             property bool isCurrent: strip.isCurrent
             property real cardPadding: 14
         }
     }
 
-    // Border ring — on top of content (outer CW, inner CCW = winding fill ring)
+    // Border — on top of content, only for current card
     Shape {
         anchors.fill: parent
         visible: strip.showBorder
         preferredRendererType: Shape.CurveRenderer
 
         ShapePath {
-            fillColor: strip.borderColor
-            fillRule: ShapePath.WindingFill
-            strokeColor: "transparent"
-            strokeWidth: 0
+            fillColor: "transparent"
+            strokeColor: strip.borderColor
+            strokeWidth: strip._bw
+            joinStyle: ShapePath.MiterJoin
 
-            // Outer parallelogram (clockwise)
             startX: strip._tl; startY: 0
             PathLine { x: strip._tr; y: 0 }
             PathLine { x: strip._br; y: strip.height }
             PathLine { x: strip._bl; y: strip.height }
             PathLine { x: strip._tl; y: 0 }
-
-            // Inner parallelogram (counter-clockwise to cut hole)
-            PathMove { x: strip._tl + strip._bw; y: strip._bw }
-            PathLine { x: strip._bl + strip._bw; y: strip.height - strip._bw }
-            PathLine { x: strip._br - strip._bw; y: strip.height - strip._bw }
-            PathLine { x: strip._tr - strip._bw; y: strip._bw }
-            PathLine { x: strip._tl + strip._bw; y: strip._bw }
         }
     }
 
