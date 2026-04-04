@@ -101,7 +101,8 @@ LauncherCategory {
 
     // ── Key handler ──
     function onKeyPressed(event) {
-        if (event.key === Qt.Key_W && (event.modifiers & Qt.ControlModifier)) {
+        if (event.key === Qt.Key_W && (event.modifiers & Qt.ControlModifier)
+                && !event.isAutoRepeat) {
             Networking.wifiEnabled = !Networking.wifiEnabled;
             return true;
         }

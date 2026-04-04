@@ -35,14 +35,22 @@ LauncherCategory {
     property bool active: false  // true when this tab is shown
     readonly property BluetoothAdapter btAdapter: Bluetooth.defaultAdapter
     readonly property bool btEnabled: btAdapter?.enabled ?? false
-    onBtEnabledChanged: if (!btEnabled) filteredBtDevices = []
+    onBtEnabledChanged: {
+        if (!btEnabled) {
+            filteredBtDevices = [];
+            if (btAdapter) btAdapter.discovering = false;
+        } else if (active && btAdapter) {
+            btAdapter.discovering = true;
+            refreshBt();
+        }
+    }
 
     StatusTracker { id: btTracker }
 
     // ── Lifecycle ──
     function onTabEnter() {
         active = true;
-        if (btAdapter) btAdapter.discovering = true;
+        if (btAdapter && btEnabled) btAdapter.discovering = true;
         refreshBt();
     }
 
@@ -127,8 +135,15 @@ LauncherCategory {
 
     // ── Key handler ──
     function onKeyPressed(event) {
-        if (event.key === Qt.Key_B && (event.modifiers & Qt.ControlModifier) && btAdapter) {
-            btAdapter.enabled = !btAdapter.enabled;
+        if (event.key === Qt.Key_B && (event.modifiers & Qt.ControlModifier)
+                && !event.isAutoRepeat && btAdapter) {
+            const enabling = !btAdapter.enabled;
+            if (!enabling) btAdapter.discovering = false;
+            btAdapter.enabled = enabling;
+            if (enabling && active) {
+                btAdapter.discovering = true;
+                refreshBt();
+            }
             return true;
         }
         return false;
