@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Wayland._GammaControl
 import qs.Core
 
 // Persistent user settings.
@@ -101,16 +102,10 @@ Singleton {
         onFinished: configFile.writeAdapter()
     }
 
-    // ── Night light (via wl-gammarelay-rs dbus) ──
-
-    Process {
-        id: gammaRelay
-        command: ["wl-gammarelay-rs", "run"]
-        running: true
-    }
+    // ── Night light (via native gamma control) ──
 
     property bool _autoNightPhase: false
-    property int activeTemp: _autoDayTemp  // the currently applied temperature
+    property int activeTemp: tempMax  // the currently applied temperature
 
     function _restoreNightLight() {
         _applyMode();
@@ -125,7 +120,7 @@ Singleton {
         } else if (nightLightMode === modeAuto) {
             _updateAutoPhase();
         } else {
-            _setGammaTemp(_autoDayTemp);
+            _setGammaTemp(tempMax);
         }
     }
 
@@ -136,8 +131,9 @@ Singleton {
         return parts[0] * 60 + (parts[1] || 0);
     }
 
-    // Auto mode uses fixed endpoints — independent of manual temperature
-    readonly property int _autoDayTemp: 6500
+    // Temperature range and defaults
+    readonly property int tempMin: 2500
+    readonly property int tempMax: 6500
     readonly property int _autoNightTemp: 4000
     readonly property int _transitionMin: 30
 
@@ -147,7 +143,7 @@ Singleton {
         const sunset = _timeToMinutes(root.nightLightSunset);
         const sunrise = _timeToMinutes(root.nightLightSunrise);
         const nightTemp = _autoNightTemp;
-        const dayTemp = _autoDayTemp;
+        const dayTemp = tempMax;
         const trans = _transitionMin;
 
         // Calculate how "night" we are (0.0 = full day, 1.0 = full night)
@@ -200,17 +196,9 @@ Singleton {
         }
     }
 
-    // ── Dbus interface ──
-
-    Process {
-        id: gammaSet
-    }
-
     function _setGammaTemp(temp) {
         activeTemp = temp;
-        gammaSet.command = ["busctl", "--user", "set-property", "rs.wl-gammarelay", "/", "rs.wl.gammarelay", "Temperature", "q", String(temp)];
-        gammaSet.running = false;
-        gammaSet.running = true;
+        NightLight.temperature = temp;
     }
 
     // ── Wallpaper folder default detection ──

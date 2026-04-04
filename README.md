@@ -189,7 +189,6 @@ binds {
 | Package | Purpose |
 |---|---|
 | `brightnessctl` | Screen brightness control |
-| `wl-gammarelay-rs` | Night light — flicker-free color temperature via dbus |
 
 ## Themes
 

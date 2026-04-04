@@ -46,7 +46,7 @@ SettingsPanel {
             return true;
         }
         if (selectedItem === 2 && UserSettings.nightLightMode === UserSettings.modeManual) {
-            UserSettings.nightLightTemp = Math.max(2500, UserSettings.nightLightTemp - 100);
+            UserSettings.nightLightTemp = Math.max(UserSettings.tempMin, UserSettings.nightLightTemp - 100);
             UserSettings.applyNightLight();
             return true;
         }
@@ -67,7 +67,7 @@ SettingsPanel {
             return true;
         }
         if (selectedItem === 2 && UserSettings.nightLightMode === UserSettings.modeManual) {
-            UserSettings.nightLightTemp = Math.min(5500, UserSettings.nightLightTemp + 100);
+            UserSettings.nightLightTemp = Math.min(UserSettings.tempMax, UserSettings.nightLightTemp + 100);
             UserSettings.applyNightLight();
             return true;
         }
@@ -194,7 +194,7 @@ SettingsPanel {
             radius: 2
             color: Theme.overlay
             Rectangle {
-                width: parent.width * ((UserSettings.activeTemp - 2500) / 3000)
+                width: parent.width * ((UserSettings.activeTemp - UserSettings.tempMin) / (UserSettings.tempMax - UserSettings.tempMin))
                 height: parent.height
                 radius: parent.radius
                 color: Theme.yellow

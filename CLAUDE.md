@@ -56,7 +56,6 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 - **PipeWire + WirePlumber** — audio (native API)
 - **NetworkManager** — network status (native API) + `nmcli` for WiFi connect with password
 - **brightnessctl** — screen brightness
-- **wl-gammarelay-rs** — night light (flicker-free color temperature via dbus)
 - **Fonts:** JetBrains Mono, Symbols Nerd Font
 
 ## Conventions
