@@ -1,6 +1,6 @@
 import QtQuick
-import QtQuick.Shapes
 import qs.Config
+import qs.Widgets
 
 // Reusable carousel strip item for the app launcher.
 // Handles sizing, visibility, animations, selection, and card background.
@@ -30,42 +30,21 @@ Item {
     Behavior on opacity { NumberAnimation { duration: Theme.animSmooth } }
 
     // Card content goes here
-    default property alias contentData: cardContent.data
+    default property alias contentData: card.contentData
 
     // Card background
     property bool focused: launcher ? launcher.editMode : false
     property color borderColor: focused && isCurrent ? Theme.accent : Theme.border
     property bool showBorder: isCurrent
 
-    // Skew: horizontal offset at top/bottom from center
-    readonly property real _skew: -0.03
-    readonly property real _skewPx: _skew * height / 2
-
-    // Parallelogram corners (top leans right)
-    readonly property real _tl: -_skewPx
-    readonly property real _tr: width - _skewPx
-    readonly property real _bl: _skewPx
-    readonly property real _br: width + _skewPx
-
-    // Border width
-    readonly property real _bw: showBorder ? (focused ? 2 : 1) : 0
-
-    // Background fill — behind content
-    Shape {
+    ParallelogramCard {
+        id: card
         anchors.fill: parent
-        preferredRendererType: Shape.CurveRenderer
-
-        ShapePath {
-            fillColor: Theme.bg
-            strokeColor: "transparent"
-            strokeWidth: 0
-
-            startX: strip._tl; startY: 0
-            PathLine { x: strip._tr; y: 0 }
-            PathLine { x: strip._br; y: strip.height }
-            PathLine { x: strip._bl; y: strip.height }
-            PathLine { x: strip._tl; y: 0 }
-        }
+        showBorder: strip.showBorder
+        borderColor: strip.borderColor
+        borderWidth: strip.showBorder ? (strip.focused ? 2 : 1) : 0
+        skewContent: true
+        isCurrent: strip.isCurrent
     }
 
     // Fallback click for expanded card
@@ -74,63 +53,6 @@ Item {
         visible: strip.isCurrent
         cursorShape: Qt.PointingHandCursor
         onClicked: strip.onStripActivated()
-    }
-
-    // Content wrapper — 1px padding creates transparent edge in the layer texture,
-    // so bilinear filtering smooths the diagonal edges after transform
-    Item {
-        id: contentWrapper
-        anchors.fill: parent
-        anchors.margins: -1
-
-        layer.enabled: true
-        layer.smooth: true
-
-        transform: Matrix4x4 {
-            matrix: Qt.matrix4x4(
-                1, strip._skew, 0, -strip._skew * contentWrapper.height / 2,
-                0, 1,           0, 0,
-                0, 0,           1, 0,
-                0, 0,           0, 1
-            )
-        }
-
-        Item {
-            id: cardContent
-            anchors.fill: parent
-            anchors.margins: 1
-            property bool isCurrent: strip.isCurrent
-            property real cardPadding: 14
-        }
-    }
-
-    // Border — on top of content, only for current card
-    // Uses OddEvenFill with two same-direction paths to create a uniform-width ring
-    Shape {
-        anchors.fill: parent
-        visible: strip.showBorder
-        preferredRendererType: Shape.CurveRenderer
-
-        ShapePath {
-            fillColor: strip.borderColor
-            fillRule: ShapePath.OddEvenFill
-            strokeColor: "transparent"
-            strokeWidth: 0
-
-            // Outer parallelogram
-            startX: strip._tl; startY: 0
-            PathLine { x: strip._tr; y: 0 }
-            PathLine { x: strip._br; y: strip.height }
-            PathLine { x: strip._bl; y: strip.height }
-            PathLine { x: strip._tl; y: 0 }
-
-            // Inner parallelogram (same direction — OddEvenFill cuts the hole)
-            PathMove { x: strip._tl + strip._bw; y: strip._bw }
-            PathLine { x: strip._tr - strip._bw; y: strip._bw }
-            PathLine { x: strip._br - strip._bw; y: strip.height - strip._bw }
-            PathLine { x: strip._bl + strip._bw; y: strip.height - strip._bw }
-            PathLine { x: strip._tl + strip._bw; y: strip._bw }
-        }
     }
 
     // Click to select or activate — override these for custom behavior

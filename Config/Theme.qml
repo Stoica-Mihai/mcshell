@@ -303,6 +303,9 @@ Singleton {
     readonly property int radiusMedium: 8
     readonly property int radiusLarge: 14
 
+    // Card skew (parallelogram lean factor)
+    readonly property real cardSkew: -0.03
+
     // Popup/panel
     readonly property int popupPadding: 12
 
