@@ -13,6 +13,7 @@ import qs.KeybindHints
 import qs.LockScreen
 import qs.Polkit
 import qs.Wallpaper
+import qs.Screenshot
 
 ShellRoot {
     id: shell
@@ -46,6 +47,7 @@ ShellRoot {
     LockScreen { id: lockScreen }
     PolkitDialog {}
     WallpaperRenderer { id: wallpaper }
+    ScreenshotOverlay { id: screenshot }
 
     // ── Idle management ──────────────────────────────────
     // enabled deferred until settings load to avoid timeout=0 race
@@ -65,18 +67,8 @@ ShellRoot {
     }
 
     // ── Screenshot functions ────────────────────────────
-    function screenshotFull() {
-        Quickshell.execDetached({ command: ["sh", "-c",
-            "f=/tmp/mcshell-screenshot-$$.png && grim \"$f\" && wl-copy < \"$f\" && notify-send -t 5000 -h string:image-path:\"$f\" 'Screenshot' 'Full screen copied to clipboard'"
-        ] });
-    }
-
-    function screenshotArea() {
-        Quickshell.execDetached({ command: ["sh", "-c",
-            "f=/tmp/mcshell-screenshot-$$.png && grim -g \"$(slurp)\" \"$f\" && wl-copy < \"$f\" && notify-send -t 5000 -h string:image-path:\"$f\" 'Screenshot' 'Area copied to clipboard'"
-        ] });
-    }
-
+    function screenshotFull() { screenshot.captureFullScreen(); }
+    function screenshotArea() { screenshot.captureArea(); }
     function screenshotWindow() {
         Quickshell.execDetached({ command: ["sh", "-c",
             "f=/tmp/mcshell-screenshot-$$.png && niri msg action screenshot-window --path \"$f\" && wl-copy < \"$f\" && notify-send -t 5000 -h string:image-path:\"$f\" 'Screenshot' 'Window copied to clipboard'"

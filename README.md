@@ -18,10 +18,9 @@ A custom Wayland desktop shell built with [QuickShell](https://quickshell.outfox
 - **System Tray** — colorized icons, right-click context menus, hover tooltips
 
 ### App Launcher
-Horizontal filmstrip carousel with smooth sliding animation. Two-level keyboard navigation: Left/Right to switch categories (Level 1), Enter to dive in, Left/Right to navigate cards (Level 2), Escape to go back. Seven tabs:
+Horizontal filmstrip carousel with smooth sliding animation. Two-level keyboard navigation: Left/Right to switch categories (Level 1), Enter to dive in, Left/Right to navigate cards (Level 2), Escape to go back. Six tabs:
 - **Apps** — fuzzy search, large icon + name + description in expanded view
 - **Clipboard** — cliphist integration, lazy-loaded, image entry detection with metadata display
-- **Notifications** — browse past notifications with search
 - **WiFi** — scan and connect to networks, inline password input, signal strength and security display. Ctrl+W to toggle WiFi
 - **Bluetooth** — discover, pair, and connect devices with battery display. Ctrl+B to toggle Bluetooth
 - **Wallpaper** — browse and apply wallpapers from configured folder, lazy-loaded thumbnails, active wallpaper highlighted
@@ -49,9 +48,9 @@ Horizontal filmstrip carousel with smooth sliding animation. Two-level keyboard 
 - All settings persist to `~/.config/mcshell/settings.json`
 
 ### Screenshots
-- Full screen, area selection (slurp), and window capture
-- Copies to clipboard + saves to temp file
-- Notification with image preview on capture
+- **Full screen** and **window** capture via native Wayland screencopy (no grim dependency)
+- **Area selection** — frozen-frame overlay with drag-to-select, adjustable before confirming with Space
+- Copies to clipboard + notification with image preview
 
 ### Keybind Hints
 - Parses `~/.config/niri/config.kdl` for keybindings
@@ -86,7 +85,6 @@ qs -c mcshell ipc call mcshell <command>
 | `toggleLauncher` | Open/close the app launcher carousel |
 | `launcherApps` | Open launcher on the Apps tab |
 | `launcherClipboard` | Open launcher on the Clipboard tab |
-| `launcherNotifications` | Open launcher on the Notifications tab |
 | `launcherWifi` | Open launcher on the WiFi tab |
 | `launcherBluetooth` | Open launcher on the Bluetooth tab |
 | `launcherWallpaper` | Open launcher on the Wallpaper tab |
@@ -120,9 +118,9 @@ qs -c mcshell ipc call mcshell <command>
 
 | Command | Description |
 |---|---|
-| `screenshotFull` | Capture full screen to clipboard |
-| `screenshotArea` | Select area with slurp, capture to clipboard |
-| `screenshotWindow` | Capture focused window to clipboard |
+| `screenshotFull` | Capture full screen to clipboard (native screencopy) |
+| `screenshotArea` | Interactive area selection overlay, Space to confirm |
+| `screenshotWindow` | Capture focused window to clipboard (niri) |
 
 ### Example niri keybinds
 
@@ -180,7 +178,7 @@ binds {
 ### Required
 | Package | Purpose |
 |---|---|
-| [Quickshell](https://quickshell.outfoxxed.me/) | Shell runtime (`qs` binary) with Niri module |
+| [noctalia-qs](https://github.com/noctalia-dev/noctalia-qs) | Quickshell fork with Niri IPC module (`qs` binary) |
 | [niri](https://github.com/YaLTeR/niri) | Wayland compositor |
 | PipeWire + WirePlumber | Audio (native API) |
 | NetworkManager | Network status (native API) + `nmcli` for WiFi password connections |
@@ -192,7 +190,7 @@ binds {
 |---|---|
 | `brightnessctl` | Screen brightness control |
 | `wl-gammarelay-rs` | Night light — flicker-free color temperature via dbus |
-| `grim` + `slurp` + `wl-copy` | Screenshots (full, area, window) |
+| `wl-copy` | Screenshot clipboard integration |
 | `cliphist` | Clipboard history tab in launcher |
 
 ## Themes
@@ -216,6 +214,7 @@ Pure QML — no C++, no build system. QuickShell interprets QML directly. Each s
 | `Wallpaper/` | Background renderer with crossfade transitions |
 | `KeybindHints/` | Keybind parser + hints overlay |
 | `OSD/` | Volume/brightness on-screen display |
+| `Screenshot/` | Native screencopy overlay — fullscreen + interactive area selection with crop |
 | `Widgets/` | Shared UI components — AnimatedPopup, IconButton, SliderTrack, ControlSlider |
 
 ## License

@@ -21,7 +21,7 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 
 ## Architecture
 
-**Entry point:** `shell.qml` — creates a `ShellRoot` containing a `StatusBar` per screen, plus singleton `NotificationPopup`, `AppLauncher`, `KeybindPanel`, `LockScreen`, `WallpaperRenderer`, and `WallpaperPicker`.
+**Entry point:** `shell.qml` — creates a `ShellRoot` containing a `StatusBar` per screen, plus singleton `NotificationPopup`, `AppLauncher`, `KeybindPanel`, `LockScreen`, `WallpaperRenderer`, `ScreenshotOverlay`, and `PolkitDialog`.
 
 **Module layout** — each directory is a QML module imported as `qs.<DirName>`:
 
@@ -32,31 +32,32 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 | `Bar/` | `StatusBar` (top bar window) composing: `Workspaces`, `ActiveWindow`, `Clock` + `CalendarPopup`, `Media` (MPRIS), `Network`, `Volume`, `Battery`, `SysTray`, and a system capsule (`CapsuleItem`) with quick-settings dropdown. |
 | `Notifications/` | DBus notification daemon via `NotificationServer`. `NotificationPopup` manages a `ListModel` of active popups; `NotificationCard` renders each one with urgency-colored accent bar and action buttons. |
 | `OSD/` | `OsdOverlay` — volume/brightness on-screen display. |
-| `Launcher/` | `AppLauncher` — generic fullscreen carousel container. Each tab is a `LauncherCategory` component (`CategoryApps`, `CategoryClipboard`, `CategoryNotifications`, `CategoryWifi`, `CategoryBluetooth`, `CategoryWallpaper`, `CategorySettings`). Shared components: `CarouselStrip` (card layout with `focused` border), `DisabledCard` (off/scanning states), `SettingsCard` (data-driven settings sub-routing), `SettingsRow` (highlighted row for settings panels), `LazyModel` (windowed loading for large lists). |
+| `Launcher/` | `AppLauncher` — generic fullscreen carousel container. Each tab is a `LauncherCategory` component (`CategoryApps`, `CategoryClipboard`, `CategoryWifi`, `CategoryBluetooth`, `CategoryWallpaper`, `CategorySettings`). Shared components: `CarouselStrip` (card layout with `focused` border), `DisabledCard` (off/scanning states), `SettingsCard` (data-driven settings sub-routing), `SettingsRow` (highlighted row for settings panels), `LazyModel` (windowed loading for large lists). |
 | `QuickSettings/` | `QuickSettingsPanel` (dropdown `PopupWindow`) with `VolumeSlider`, brightness slider, night light toggle, and power actions. |
 | `LockScreen/` | Wayland session lock (`ext_session_lock_v1`) with PAM authentication. |
 | `Wallpaper/` | Background renderer per screen with crossfade transitions. Wallpaper picker is in `Launcher/CategoryWallpaper`. |
 | `KeybindHints/` | `KeybindParser` (KDL config parser) + `KeybindPanel` (searchable overlay UI). |
 | `NotificationHistory/` | Notification history dropdown in the bar. |
+| `Screenshot/` | `ScreenshotOverlay` — native Wayland screencopy for fullscreen + interactive area selection with crop. Always-visible PanelWindow (WlrLayershell destroys QQuickWindow on hide); uses `mask: Region {}` + `opacity: 0` for idle state. |
 | `Widgets/` | Shared UI components — `AnimatedPopup`, `IconButton`, `PolledProcess`, `SliderTrack`, `ControlSlider`. |
 
 **Key patterns:**
-- **Native APIs first:** Workspaces and active window use `Quickshell.Niri` (reactive, event-driven via niri IPC socket). Network status uses `Quickshell.Networking`. Audio uses `Quickshell.Services.Pipewire`. Media uses `Quickshell.Services.Mpris`. System tray uses `Quickshell.Services.SystemTray`. Bluetooth uses `Quickshell.Bluetooth`. Battery uses `Quickshell.Services.UPower`. CLI tools (`brightnessctl`, `wl-gammarelay-rs`, `nmcli`, `grim`, `slurp`) are only used where no native API exists.
+- **Native APIs first:** Workspaces and active window use `Quickshell.Niri` (reactive, event-driven via niri IPC socket). Network status uses `Quickshell.Networking`. Audio uses `Quickshell.Services.Pipewire`. Media uses `Quickshell.Services.Mpris`. System tray uses `Quickshell.Services.SystemTray`. Bluetooth uses `Quickshell.Bluetooth`. Battery uses `Quickshell.Services.UPower`. Screenshots use `Quickshell.Wayland.ScreencopyView` (native Wayland screencopy). CLI tools (`brightnessctl`, `wl-gammarelay-rs`, `nmcli`) are only used where no native API exists.
 - **Error handling:** All subprocess calls use `SafeProcess` / `SafePolledProcess` from `Core/`, which log failures to console with descriptive messages and emit `failed()` / `finished()` signals.
-- **Layer shell windows:** All panels use `WlrLayershell` with explicit namespace prefixes (`mcshell`, `mcshell-notifications`, `mcshell-osd`, `mcshell-launcher`, `mcshell-dismiss`).
+- **Layer shell windows:** All panels use `WlrLayershell` with explicit namespace prefixes (`mcshell`, `mcshell-notifications`, `mcshell-osd`, `mcshell-launcher`, `mcshell-screenshot`, `mcshell-dismiss`).
 - **Popup dismissal:** The `StatusBar` creates a fullscreen transparent `PanelWindow` (`clickCatcher`) that appears when any popup is open, catching clicks to dismiss them.
 - **Icons:** Uses "Symbols Nerd Font" for all icons (Unicode codepoints, not icon names).
 - **No build system:** Pure QML — no C++, no CMake, no npm. Files are loaded by Quickshell at runtime.
 
 ## System Dependencies
 
-- **Quickshell** (`qs` binary) with `Quickshell.Niri` module
+- **[noctalia-qs](https://github.com/noctalia-dev/noctalia-qs)** — Quickshell fork with `Quickshell.Niri` module (`qs` binary)
 - **niri** compositor
 - **PipeWire + WirePlumber** — audio (native API)
 - **NetworkManager** — network status (native API) + `nmcli` for WiFi connect with password
 - **brightnessctl** — screen brightness
 - **wl-gammarelay-rs** — night light (flicker-free color temperature via dbus)
-- **grim** + **slurp** + **wl-copy** — screenshots
+- **wl-copy** — screenshot clipboard integration
 - **cliphist** — clipboard history
 - **Fonts:** JetBrains Mono, Symbols Nerd Font
 
