@@ -69,10 +69,24 @@ ShellRoot {
     // ── Screenshot functions ────────────────────────────
     function screenshotFull() { screenshot.captureFullScreen(); }
     function screenshotArea() { screenshot.captureArea(); }
+
+    property string _windowScreenshotPath: ""
     function screenshotWindow() {
-        Quickshell.execDetached({ command: ["sh", "-c",
-            "f=/tmp/mcshell-screenshot-$$.png && niri msg action screenshot-window --path \"$f\" && wl-copy < \"$f\" && notify-send -t 5000 -h string:image-path:\"$f\" 'Screenshot' 'Window copied to clipboard'"
-        ] });
+        _windowScreenshotPath = "/tmp/mcshell-screenshot-" + Date.now() + ".png";
+        _windowScreenshotProc.command = ["niri", "msg", "action", "screenshot-window", "--path", _windowScreenshotPath];
+        _windowScreenshotProc.running = true;
+    }
+    Process {
+        id: _windowScreenshotProc
+        onExited: (code, status) => {
+            if (code === 0) {
+                Quickshell.setClipboardImage(shell._windowScreenshotPath);
+                Quickshell.execDetached({ command: ["notify-send", "-t", "5000",
+                    "-h", "string:image-path:" + shell._windowScreenshotPath,
+                    "Screenshot", "Window copied to clipboard"
+                ] });
+            }
+        }
     }
 
     // IPC — qs -c mcshell ipc call mcshell <function>

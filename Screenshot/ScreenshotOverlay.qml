@@ -105,15 +105,17 @@ PanelWindow {
         });
     }
 
-    function _copyAndNotify(extraCmd) {
-        const cmd = (extraCmd ? extraCmd + " && " : "") +
-            "wl-copy < '" + _savePath + "' && " +
-            "notify-send -t 5000 -h string:image-path:'" + _savePath + "' 'Screenshot' 'Copied to clipboard'";
-        Quickshell.execDetached({ command: ["sh", "-c", cmd] });
+    function _copyAndNotify(path) {
+        Quickshell.setClipboardImage(path);
+        Quickshell.execDetached({ command: ["notify-send", "-t", "5000",
+            "-h", "string:image-path:" + path, "Screenshot", "Copied to clipboard"
+        ] });
     }
 
     function _finishFullScreen() {
-        _copyAndNotify("mv '" + _tmpPath + "' '" + _savePath + "'");
+        // Temp file is the final file — just rename
+        Quickshell.execDetached({ command: ["mv", _tmpPath, _savePath] });
+        _copyAndNotify(_savePath);
         _close();
     }
 
@@ -131,8 +133,10 @@ PanelWindow {
 
     function _finishAreaCrop() {
         cropHelper.grabToImage(function(result) {
-            if (result && result.saveToFile(root._savePath))
-                root._copyAndNotify("rm -f '" + root._tmpPath + "'");
+            if (result && result.saveToFile(root._savePath)) {
+                Quickshell.execDetached({ command: ["rm", "-f", root._tmpPath] });
+                root._copyAndNotify(root._savePath);
+            }
             root._close();
         });
     }

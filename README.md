@@ -190,8 +190,7 @@ binds {
 |---|---|
 | `brightnessctl` | Screen brightness control |
 | `wl-gammarelay-rs` | Night light — flicker-free color temperature via dbus |
-| `wl-copy` | Screenshot clipboard integration |
-| `cliphist` | Clipboard history tab in launcher |
+| `cliphist` + `wl-copy` | Clipboard history tab in launcher |
 
 ## Themes
 

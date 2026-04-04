@@ -57,7 +57,7 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 - **NetworkManager** — network status (native API) + `nmcli` for WiFi connect with password
 - **brightnessctl** — screen brightness
 - **wl-gammarelay-rs** — night light (flicker-free color temperature via dbus)
-- **wl-copy** — screenshot clipboard integration
+- **wl-copy** — clipboard history paste (cliphist integration only)
 - **cliphist** — clipboard history
 - **Fonts:** JetBrains Mono, Symbols Nerd Font
 
