@@ -26,6 +26,7 @@ Singleton {
     property alias wallpaperFolder: adapter.wallpaperFolder
     property alias themeName: adapter.themeName
     property alias idleTimeout: adapter.idleTimeout       // auto-lock timeout in minutes (0 = disabled)
+    property alias wallpaperStrategy: adapter.wallpaperStrategy
 
     // Convenience — true when night light is actively applied
     readonly property bool nightLightActive: nightLightMode === modeManual || (nightLightMode === modeAuto && _autoNightPhase)
@@ -68,6 +69,7 @@ Singleton {
             property string wallpaperFolder: ""
             property string themeName: ""
             property int idleTimeout: 0
+            property int wallpaperStrategy: 0
         }
 
         onAdapterUpdated: root._save()

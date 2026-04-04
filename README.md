@@ -192,7 +192,7 @@ binds {
 
 ## Themes
 
-8 built-in palettes: Tokyo Night (default), Catppuccin Mocha, Gruvbox Dark, Nord, Dracula, Rosé Pine, Everforest Dark, Catppuccin Latte (light). Switch via Settings > Theme in the launcher. Choice persists across restarts.
+8 built-in palettes + **Auto** (wallpaper-derived). Auto mode extracts the most vibrant color from the current wallpaper using CIELAB chroma analysis and generates a theme from it. Four strategies: Tonal, Vibrant, Neutral, Muted — cycle with left/right arrows. Built-in palettes: Tokyo Night (default), Catppuccin Mocha, Gruvbox Dark, Nord, Dracula, Rosé Pine, Everforest Dark, Catppuccin Latte (light). Switch via Settings > Theme in the launcher. Choice persists across restarts.
 
 ## Architecture
 
@@ -200,7 +200,7 @@ Pure QML — no C++, no build system. QuickShell interprets QML directly. Each s
 
 | Module | Purpose |
 |---|---|
-| `Config/` | Theme singleton (8 palettes), UserSettings singleton (persistent preferences via JsonAdapter) |
+| `Config/` | Theme singleton (8 palettes + auto wallpaper theming), UserSettings singleton (persistent preferences via JsonAdapter) |
 | `Core/` | Shared non-visual components — SafeProcess, SafePolledProcess, LazyModel |
 | `Bar/` | Status bar — workspaces (Niri IPC), active window, clock + calendar, media, network, volume, battery, system tray |
 | `Launcher/` | App launcher carousel — apps, clipboard, notifications, WiFi, Bluetooth, wallpaper, settings tabs |

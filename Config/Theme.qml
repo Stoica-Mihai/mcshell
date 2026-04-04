@@ -99,23 +99,116 @@ Singleton {
         }
     })
 
-    readonly property var paletteNames: Object.keys(palettes)
+    readonly property string wallpaperThemeName: "Auto"
+    readonly property var paletteNames: [wallpaperThemeName].concat(Object.keys(palettes))
+    readonly property url _wallpaperUrl: UserSettings.wallpaperPath ? Qt.resolvedUrl(UserSettings.wallpaperPath) : ""
 
     function applyPalette(name) {
+        if (name === wallpaperThemeName) {
+            if (_vibrantColor.source.toString() === _wallpaperUrl.toString() && _vibrantColor.hue >= 0) {
+                // Same wallpaper, already extracted — just reapply with current strategy
+                _applyWallpaperHue(_vibrantColor.hue);
+            } else {
+                _vibrantColor.source = _wallpaperUrl;
+            }
+            return;
+        }
         const p = palettes[name];
         if (!p) return;
+        _applyColors(p);
+    }
+
+    function _applyColors(p) {
         bg = p.bg; bgSolid = p.bgSolid;
         fg = p.fg; fgDim = p.fgDim;
         accent = p.accent;
         red = p.red; green = p.green;
         yellow = p.yellow; cyan = p.cyan;
-        // Surface colors flip for light themes
         const light = !!p.light;
         bgHover      = light ? Qt.rgba(0, 0, 0, 0.06) : Qt.rgba(1, 1, 1, 0.08);
         border       = light ? Qt.rgba(0, 0, 0, 0.08) : Qt.rgba(1, 1, 1, 0.06);
         overlay      = light ? Qt.rgba(0, 0, 0, 0.04) : Qt.rgba(1, 1, 1, 0.06);
         overlayHover = light ? Qt.rgba(0, 0, 0, 0.08) : Qt.rgba(1, 1, 1, 0.12);
         backdrop     = light ? Qt.rgba(0, 0, 0, 0.30) : Qt.rgba(0, 0, 0, 0.55);
+    }
+
+    // ── Wallpaper auto-theming ──────────────────────────
+    VibrantColor {
+        id: _vibrantColor
+
+        onHueChanged: {
+            if (UserSettings.themeName === root.wallpaperThemeName)
+                root._applyWallpaperHue(hue);
+        }
+    }
+
+    // Re-extract when wallpaper changes while in Wallpaper theme
+    Connections {
+        target: UserSettings
+        function onWallpaperPathChanged() {
+            if (UserSettings.themeName === root.wallpaperThemeName && root._wallpaperUrl != "")
+                _vibrantColor.source = root._wallpaperUrl;
+        }
+    }
+
+    // ── Wallpaper strategy definitions ──────────────────
+    readonly property var wallpaperStrategies: [
+        { name: "Tonal",   fn: _strategyTonal },
+        { name: "Vibrant", fn: _strategyVibrant },
+        { name: "Neutral", fn: _strategyNeutral },
+        { name: "Muted",   fn: _strategyMuted }
+    ]
+
+    // Tonal: tinted surfaces, balanced chroma (like Material TonalSpot)
+    function _strategyTonal(h) {
+        return {
+            bg: Qt.rgba(0.10, 0.10, 0.14, 0.85), bgSolid: Qt.hsva(h, 0.15, 0.12, 1),
+            fg: Qt.hsva(h, 0.05, 0.90, 1), fgDim: Qt.hsva(h, 0.08, 0.45, 1),
+            accent: Qt.hsva(h, 0.60, 0.85, 1),
+            red: Qt.hsva(0.98, 0.65, 0.90, 1), green: Qt.hsva(0.35, 0.55, 0.75, 1),
+            yellow: Qt.hsva(0.11, 0.60, 0.88, 1), cyan: Qt.hsva(0.52, 0.55, 0.85, 1)
+        };
+    }
+
+    // Vibrant: high chroma, bold tinted surfaces, hue-rotated accent
+    function _strategyVibrant(h) {
+        const h2 = (h + 0.86) % 1.0; // -50° rotation
+        return {
+            bg: Qt.rgba(0.10, 0.10, 0.14, 0.85), bgSolid: Qt.hsva(h, 0.25, 0.13, 1),
+            fg: Qt.hsva(h, 0.08, 0.92, 1), fgDim: Qt.hsva(h, 0.12, 0.50, 1),
+            accent: Qt.hsva(h2, 0.75, 0.90, 1),
+            red: Qt.hsva(0.98, 0.75, 0.92, 1), green: Qt.hsva(0.35, 0.65, 0.80, 1),
+            yellow: Qt.hsva(0.11, 0.70, 0.92, 1), cyan: Qt.hsva(0.52, 0.65, 0.88, 1)
+        };
+    }
+
+    // Neutral: accent from seed, pure gray surfaces
+    function _strategyNeutral(h) {
+        return {
+            bg: Qt.rgba(0.10, 0.10, 0.12, 0.85), bgSolid: Qt.hsva(0, 0, 0.11, 1),
+            fg: Qt.hsva(0, 0, 0.88, 1), fgDim: Qt.hsva(0, 0, 0.42, 1),
+            accent: Qt.hsva(h, 0.60, 0.85, 1),
+            red: Qt.hsva(0.98, 0.65, 0.90, 1), green: Qt.hsva(0.35, 0.55, 0.75, 1),
+            yellow: Qt.hsva(0.11, 0.60, 0.88, 1), cyan: Qt.hsva(0.52, 0.55, 0.85, 1)
+        };
+    }
+
+    // Muted: low chroma tinted surfaces, softer accent
+    function _strategyMuted(h) {
+        return {
+            bg: Qt.rgba(0.10, 0.10, 0.14, 0.85), bgSolid: Qt.hsva(h, 0.10, 0.12, 1),
+            fg: Qt.hsva(h, 0.03, 0.85, 1), fgDim: Qt.hsva(h, 0.05, 0.42, 1),
+            accent: Qt.hsva(h, 0.35, 0.75, 1),
+            red: Qt.hsva(0.98, 0.50, 0.80, 1), green: Qt.hsva(0.35, 0.40, 0.70, 1),
+            yellow: Qt.hsva(0.11, 0.45, 0.80, 1), cyan: Qt.hsva(0.52, 0.40, 0.75, 1)
+        };
+    }
+
+    function _applyWallpaperHue(hue) {
+        if (hue < 0) hue = 0.6; // fallback blue
+        const idx = Math.max(0, Math.min(UserSettings.wallpaperStrategy, wallpaperStrategies.length - 1));
+        const p = wallpaperStrategies[idx].fn(hue);
+        _applyColors(p);
     }
 
     // Apply persisted theme once settings load
