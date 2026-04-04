@@ -35,23 +35,44 @@ LauncherCategory {
     property bool active: false  // true when this tab is shown
     readonly property BluetoothAdapter btAdapter: Bluetooth.defaultAdapter
     readonly property bool btEnabled: btAdapter?.enabled ?? false
-    onBtEnabledChanged: {
-        if (!btEnabled) {
-            filteredBtDevices = [];
-            if (btAdapter) btAdapter.discovering = false;
-        } else if (active && btAdapter) {
+    readonly property bool btReady: btAdapter?.state === BluetoothAdapter.Enabled
+    onBtReadyChanged: {
+        if (btReady && active) {
             btAdapter.discovering = true;
             refreshBt();
         }
     }
+    onBtEnabledChanged: if (!btEnabled) filteredBtDevices = []
 
     StatusTracker { id: btTracker }
 
     // ── Lifecycle ──
+    SafeProcess {
+        id: btStateCheck
+        property bool _powered: false
+        failMessage: "BT state check failed"
+        onRead: data => {
+            const line = data.trim();
+            if (line.startsWith("Powered:"))
+                _powered = line.indexOf("yes") >= 0;
+        }
+        onFinished: {
+            if (!_powered) {
+                root.filteredBtDevices = [];
+            } else if (root.btReady && root.btAdapter) {
+                root.btAdapter.discovering = true;
+                root.refreshBt();
+            } else {
+                root.refreshBt();
+            }
+        }
+    }
+
     function onTabEnter() {
         active = true;
-        if (btAdapter && btEnabled) btAdapter.discovering = true;
-        refreshBt();
+        btStateCheck._powered = false;
+        btStateCheck.command = ["bluetoothctl", "show"];
+        btStateCheck.running = true;
     }
 
     function onTabLeave() {
@@ -77,7 +98,7 @@ LauncherCategory {
     // ── Polling timer (BT devices don't rebind Connections target) ──
     Timer {
         interval: 2000
-        running: root.active && root.btEnabled
+        running: root.active && root.btReady
         repeat: true
         onTriggered: root.refreshBt(root.launcher.searchText)
     }
@@ -137,13 +158,7 @@ LauncherCategory {
     function onKeyPressed(event) {
         if (event.key === Qt.Key_B && (event.modifiers & Qt.ControlModifier)
                 && !event.isAutoRepeat && btAdapter) {
-            const enabling = !btAdapter.enabled;
-            if (!enabling) btAdapter.discovering = false;
-            btAdapter.enabled = enabling;
-            if (enabling && active) {
-                btAdapter.discovering = true;
-                refreshBt();
-            }
+            btAdapter.enabled = !btAdapter.enabled;
             return true;
         }
         return false;
@@ -257,7 +272,7 @@ LauncherCategory {
                 // Action hint / status
                 StatusHintText {
                     tracker: btTracker
-                    targetId: modelData.address
+                    targetId: modelData.address || ""
                     successStatuses: ["connected", "paired"]
                     statusLabels: ({
                         "pairing": "Pairing...",
