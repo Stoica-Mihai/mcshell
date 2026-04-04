@@ -188,18 +188,17 @@ PanelWindow {
             Repeater {
                 model: root._filtered
 
-                Rectangle {
+                ParallelogramCard {
                     id: card
                     required property var modelData
                     required property int index
-                    readonly property bool isCurrent: index === root.selectedIndex
+                    readonly property bool _isCurrent: index === root.selectedIndex
 
-                    width: isCurrent ? root._expandedWidth : root._stripWidth
+                    width: _isCurrent ? root._expandedWidth : root._stripWidth
                     height: cardArea.height
-                    radius: Theme.radiusMedium
-                    color: Theme.bg
-                    border.width: isCurrent ? 2 : 1
-                    border.color: isCurrent ? Theme.accent : Theme.border
+                    showBorder: true
+                    borderColor: _isCurrent ? Theme.accent : Theme.border
+                    borderWidth: _isCurrent ? 2 : 1
 
                     Behavior on width {
                         NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic }
@@ -208,7 +207,7 @@ PanelWindow {
                     // Collapsed: icon only
                     Column {
                         anchors.centerIn: parent
-                        visible: !card.isCurrent
+                        visible: !card._isCurrent
                         spacing: Theme.spacingSmall
 
                         OptImage {
@@ -223,7 +222,7 @@ PanelWindow {
                     ColumnLayout {
                         anchors.centerIn: parent
                         width: parent.width - 48
-                        visible: card.isCurrent
+                        visible: card._isCurrent
                         spacing: Theme.spacingLarge
 
                         OptImage {
@@ -277,7 +276,7 @@ PanelWindow {
                         anchors.fill: parent
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            if (card.isCurrent) root.activate();
+                            if (card._isCurrent) root.activate();
                             else root.selectedIndex = card.index;
                         }
                     }
