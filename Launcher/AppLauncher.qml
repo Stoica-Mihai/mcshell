@@ -491,6 +491,7 @@ PanelWindow {
             // Disabled state — generic (WiFi off, BT off)
             DisabledCard {
                 visible: launcher.activeCategory.disabledState
+                      && launcher.currentCount === 0
                 anchors.centerIn: parent
                 width: launcher.expandedWidth
                 height: launcher.carouselHeight
