@@ -6,6 +6,7 @@ Item {
     visible: false
     width: 0; height: 0
     // ── Tab bar display ──
+    property string tabName: ""
     property string tabLabel: ""
     property string tabIcon: ""
     property string searchPlaceholder: ""
@@ -34,6 +35,7 @@ Item {
     // ── Lifecycle callbacks ──
     function onTabEnter() {}
     function onTabLeave() {}
+    function onOpenCard(cardId) {}
 
     // ── Search callback ──
     function onSearch(text) {}

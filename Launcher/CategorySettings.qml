@@ -9,6 +9,7 @@ LauncherCategory {
     required property var launcher
 
     // ── Tab config ──
+    tabName: "settings"
     tabLabel: "Settings"
     tabIcon: Theme.iconSettings
     searchPlaceholder: "Settings"
@@ -32,6 +33,15 @@ LauncherCategory {
     // ── Lifecycle ──
     function onTabEnter() { editMode = false; }
     function onTabLeave() { editMode = false; }
+    function onOpenCard(cardId) {
+        for (let i = 0; i < settingsCategories.length; i++) {
+            if (settingsCategories[i].id === cardId) {
+                launcher.selectedIndex = i;
+                editMode = true;
+                return;
+            }
+        }
+    }
 
     // ── Key handler ──
     function onKeyPressed(event) {

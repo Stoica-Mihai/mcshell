@@ -11,6 +11,7 @@ LauncherCategory {
     required property var launcher
 
     // ── Tab config ──
+    tabName: "clipboard"
     tabLabel: "Clip"
     tabIcon: Theme.iconClipboard
     searchPlaceholder: "Search clipboard..."

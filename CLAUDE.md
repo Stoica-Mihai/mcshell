@@ -15,7 +15,7 @@ make restart     # stop + start
 make test        # smoke test: start shell, run all IPC commands, check for errors/warnings
 ```
 
-Or directly: `./start.sh` / `qs --path shell.qml`
+Or directly: `./start.sh` / `mcs-qs -c mcshell`
 
 The shell requires a running Wayland session with wlr-layer-shell support (niri, Hyprland, Sway, etc.). There is no build step — Quickshell interprets QML directly.
 
@@ -31,7 +31,7 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 | `Core/` | Non-visual shared components — `SafeProcess` (process wrapper with error logging). |
 | `Bar/` | `StatusBar` (top bar window) composing: `Workspaces`, `ActiveWindow`, `Clock` + `CalendarPopup`, `Media` (MPRIS), `Network`, `Volume`, `Battery`, `SysTray`, and a system capsule (`CapsuleItem`) with quick-settings dropdown. |
 | `Notifications/` | DBus notification daemon via `NotificationServer`. `NotificationPopup` manages a `ListModel` of active popups; `NotificationCard` renders each one with urgency-colored accent bar and action buttons. |
-| `Launcher/` | `AppLauncher` — generic fullscreen carousel container. Each tab is a `LauncherCategory` component (`CategoryApps`, `CategoryClipboard`, `CategoryWifi`, `CategoryBluetooth`, `CategoryWallpaper`, `CategorySettings`). Shared components: `CarouselStrip` (card layout with `focused` border), `DisabledCard` (off/scanning states), `SettingsCard` (data-driven settings sub-routing), `SettingsRow` (highlighted row for settings panels), `LazyModel` (windowed loading for large lists). |
+| `Launcher/` | `AppLauncher` — generic fullscreen carousel container. Each tab is a `LauncherCategory` component with a `tabName` identifier (`CategoryApps`, `CategoryClipboard`, `CategoryWifi`, `CategoryBluetooth`, `CategoryWallpaper`, `CategorySettings`). Tabs are opened by name via `openTab("settings")`, with optional sub-card navigation via `openTab("settings", "power")` dispatched through `onOpenCard()`. Shared components: `CarouselStrip` (card layout with `focused` border), `DisabledCard` (off/scanning states), `SettingsCard` (data-driven settings sub-routing), `SettingsRow` (highlighted row for settings panels), `LazyModel` (windowed loading for large lists). |
 | `QuickSettings/` | `QuickSettingsPanel` (dropdown `PopupWindow`) with `VolumeSlider`, brightness slider, night light toggle, and power actions. |
 | `LockScreen/` | Wayland session lock (`ext_session_lock_v1`) with PAM authentication. |
 | `Wallpaper/` | Background renderer per screen with crossfade transitions. Wallpaper picker is in `Launcher/CategoryWallpaper`. |
@@ -51,7 +51,7 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 
 ## System Dependencies
 
-- **[mcs-qs](https://github.com/Stoica-Mihai/mcs-qs)** — Quickshell fork with Niri IPC, clipboard history, night light, VibrantColor (`qs` binary)
+- **[mcs-qs](https://github.com/Stoica-Mihai/mcs-qs)** — Quickshell fork with Niri IPC, clipboard history, night light, VibrantColor (`mcs-qs` binary)
 - **niri** compositor
 - **PipeWire + WirePlumber** — audio (native API)
 - **NetworkManager** — network status (native API) + `nmcli` for WiFi connect with password
@@ -70,8 +70,8 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
   - **Extract shared components BEFORE using them.** If a pattern will be used more than once, write the shared component first, then use it everywhere. Never copy-paste and "refactor later."
   - **New features must use existing patterns.** Before writing any new code, check how existing similar features work. If the launcher has 5 tabs that all use a Repeater + CarouselStrip inside slidingRow, the 6th tab must use the same pattern — not a separate Row with custom positioning.
   - **Make the system generic, not special-cased.** If adding a new feature requires `if (feature === X)` branches in shared code, the architecture is wrong. Instead, define an interface that all features implement, and have the shared code dispatch generically. Example: `LauncherCategory.qml` defines the interface; each tab implements it; `AppLauncher.qml` uses `activeCategory.model` instead of `if (activeTab === 0) filteredApps else if...`.
-  - **Hardcoded indices are a code smell.** `categories[1].clipboardLoaded` breaks when tabs are reordered. Use properties on the active category instead.
+  - **Hardcoded indices are a code smell.** `categories[1].clipboardLoaded` breaks when tabs are reordered. Use properties on the active category instead. Tabs are referenced by `tabName` strings (`openTab("settings")`), not by index.
   - **Key examples:** `CarouselStrip.qml` is the single card implementation for all launcher tabs. `LauncherCategory.qml` is the base interface for all tab categories. `DisabledCard.qml` is shared across WiFi-off, BT-off, and scanning states. `CapsuleItem.qml` is the shared icon+label pattern in the bar capsule. `SettingsRow.qml` is the shared row for all settings panels. `SafeProcess.qml` wraps all subprocess calls.
 - **Disabled/muted state convention:** When a feature is disabled (volume muted, DND active), its icon must be red (`Theme.red`) with a slashed variant. Red takes priority over hover color — never let hover override the disabled state.
 - **Keyboard-first design.** mcshell targets niri's keyboard-driven paradigm. Interactive features should be controllable via keybinds, not require mouse clicks. Buttons are a last resort — prefer keybind hints in the UI.
-- **Verify before handing off.** Before presenting changes for testing, always run `qs -c mcshell` (or reload the shell) and verify that the code at minimum loads without errors. Check QML console output for warnings. If the shell doesn't load, fix it — don't hand broken code to the user. When refactoring, verify that existing functionality still works: tabs switch, cards render, keyboard shortcuts respond.
+- **Verify before handing off.** Before presenting changes for testing, always run `mcs-qs -c mcshell` (or reload the shell) and verify that the code at minimum loads without errors. Check QML console output for warnings. If the shell doesn't load, fix it — don't hand broken code to the user. When refactoring, verify that existing functionality still works: tabs switch, cards render, keyboard shortcuts respond.

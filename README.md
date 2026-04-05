@@ -80,14 +80,14 @@ make test        # smoke test: start, run all IPC commands, check for errors/war
 Or manually:
 ```sh
 ln -s /path/to/mcshell ~/.config/quickshell/mcshell
-qs -c mcshell
+mcs-qs -c mcshell
 ```
 
 ## IPC Commands
 
 All commands use the format:
 ```sh
-qs -c mcshell ipc call mcshell <command>
+mcs-qs -c mcshell ipc call mcshell <command>
 ```
 
 ### Launcher
@@ -101,6 +101,7 @@ qs -c mcshell ipc call mcshell <command>
 | `launcherBluetooth` | Open launcher on the Bluetooth tab |
 | `launcherWallpaper` | Open launcher on the Wallpaper tab |
 | `launcherSettings` | Open launcher on the Settings tab |
+| `settingsCard <card>` | Open a specific settings card (audio, display, theme, power) |
 
 ### Bar Panels
 
@@ -141,15 +142,16 @@ qs -c mcshell ipc call mcshell <command>
 
 ```kdl
 binds {
-    Mod+Q { spawn "qs" "-c" "mcshell" "ipc" "call" "mcshell" "toggleLauncher"; }
-    Mod+K { spawn "qs" "-c" "mcshell" "ipc" "call" "mcshell" "toggleKeybinds"; }
-    Mod+W { spawn "qs" "-c" "mcshell" "ipc" "call" "mcshell" "toggleWallpaper"; }
-    Mod+L { spawn "qs" "-c" "mcshell" "ipc" "call" "mcshell" "lock"; }
-    Mod+N { spawn "qs" "-c" "mcshell" "ipc" "call" "mcshell" "launcherWifi"; }
-    Mod+B { spawn "qs" "-c" "mcshell" "ipc" "call" "mcshell" "launcherBluetooth"; }
-    Print { spawn "qs" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotArea"; }
-    Shift+Print { spawn "qs" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotFull"; }
-    Ctrl+Print { spawn "qs" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotWindow"; }
+    Mod+Q { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "toggleLauncher"; }
+    Mod+K { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "toggleKeybinds"; }
+    Mod+W { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "toggleWallpaper"; }
+    Mod+L { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "lock"; }
+    Mod+N { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "launcherWifi"; }
+    Mod+B { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "launcherBluetooth"; }
+    Ctrl+Alt+Q { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "settingsCard" "power"; }
+    Print { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotArea"; }
+    Shift+Print { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotFull"; }
+    Ctrl+Print { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotWindow"; }
 }
 ```
 
@@ -193,7 +195,7 @@ binds {
 ### Required
 | Package | Purpose |
 |---|---|
-| [mcs-qs](https://github.com/Stoica-Mihai/mcs-qs) | Quickshell fork with Niri IPC, clipboard history, night light, VibrantColor (`qs` binary) |
+| [mcs-qs](https://github.com/Stoica-Mihai/mcs-qs) | Quickshell fork with Niri IPC, clipboard history, night light, VibrantColor (`mcs-qs` binary) |
 | [niri](https://github.com/YaLTeR/niri) | Wayland compositor |
 | PipeWire + WirePlumber | Audio (native API) |
 | NetworkManager | Network status (native API) + `nmcli` for WiFi password connections |

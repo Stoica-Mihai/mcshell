@@ -14,6 +14,7 @@ LauncherCategory {
     signal wallpaperSelected(string path)
 
     // ── Tab config ──
+    tabName: "wallpaper"
     tabLabel: "Wall"
     tabIcon: Theme.iconImage
     searchPlaceholder: "Search wallpapers..."

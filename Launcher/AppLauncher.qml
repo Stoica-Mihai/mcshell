@@ -40,12 +40,17 @@ PanelWindow {
         if (isOpen) close(); else open();
     }
 
-    function openTab(tab) {
+    function openTab(name, cardId) {
+        const idx = _tabIndex(name);
+        if (idx < 0) return;
         if (!isOpen) {
-            _initLauncher(tab, true);
+            _initLauncher(idx, !!cardId);
         } else {
-            switchTab(tab);
+            switchTab(idx);
+        }
+        if (cardId) {
             editMode = true;
+            activeCategory.onOpenCard(cardId);
         }
     }
 
@@ -118,6 +123,13 @@ PanelWindow {
     }
 
     // ── Tab switching ───────────────────────────────────
+    function _tabIndex(name) {
+        for (let i = 0; i < categories.length; i++)
+            if (categories[i].tabName === name) return i;
+        console.warn("AppLauncher: unknown tab name:", name);
+        return -1;
+    }
+
     function switchTab(tab) {
         if (tab < 0 || tab >= categories.length) return;
         if (blobAnim.running) return;

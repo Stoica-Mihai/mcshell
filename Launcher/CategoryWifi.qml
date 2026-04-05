@@ -11,6 +11,7 @@ LauncherCategory {
     required property var launcher
 
     // ── Tab config ──
+    tabName: "wifi"
     tabLabel: "WiFi"
     tabIcon: Networking.wifiEnabled ? Theme.iconWifi : Theme.iconWifiOff
     searchPlaceholder: "Search networks..."

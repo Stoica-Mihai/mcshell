@@ -3,7 +3,7 @@
 # Usage: ./test.sh
 # Exit code: 0 = pass, 1 = fail
 
-IPC="qs -c mcshell ipc call mcshell"
+IPC="mcs-qs -c mcshell ipc call mcshell"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DELAY=0.5
 FAIL_FILE=$(mktemp)
@@ -31,7 +31,7 @@ if [ ! -e "$LINK" ]; then
     ln -s "$SCRIPT_DIR" "$LINK"
 fi
 
-qs -c mcshell >"$SHELL_LOG" 2>&1 &
+mcs-qs -c mcshell >"$SHELL_LOG" 2>&1 &
 SHELL_PID=$!
 sleep 4
 

@@ -11,6 +11,7 @@ LauncherCategory {
     required property var launcher
 
     // ── Tab config ──
+    tabName: "apps"
     tabLabel: "Apps"
     tabIcon: Theme.iconApps
     searchPlaceholder: "Search apps..."

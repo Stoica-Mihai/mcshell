@@ -1,7 +1,7 @@
 .PHONY: start stop test restart
 
 start:
-	@qs -c mcshell &
+	@mcs-qs -c mcshell &
 
 stop:
 	@kill $$(pgrep -x qs) 2>/dev/null || true

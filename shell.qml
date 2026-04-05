@@ -99,23 +99,24 @@ ShellRoot {
         target: "mcshell"
 
         function toggleLauncher(): void { appLauncher.toggle(); }
-        function launcherApps(): void { appLauncher.openTab(0); }
-        function launcherClipboard(): void { appLauncher.openTab(1); }
-        function launcherWifi(): void { appLauncher.openTab(2); }
-        function launcherBluetooth(): void { appLauncher.openTab(3); }
-        function launcherWallpaper(): void { appLauncher.openTab(4); }
-        function launcherSettings(): void { appLauncher.openTab(5); }
+        function launcherApps(): void { appLauncher.openTab("apps"); }
+        function launcherClipboard(): void { appLauncher.openTab("clipboard"); }
+        function launcherWifi(): void { appLauncher.openTab("wifi"); }
+        function launcherBluetooth(): void { appLauncher.openTab("bluetooth"); }
+        function launcherWallpaper(): void { appLauncher.openTab("wallpaper"); }
+        function launcherSettings(): void { appLauncher.openTab("settings"); }
         function toggleKeybinds(): void { keybindPanel.toggle(); }
         function toggleWindows(): void { windowSwitcher.toggle(); }
-        function toggleWallpaper(): void { appLauncher.openTab(4); }
+        function toggleWallpaper(): void { appLauncher.openTab("wallpaper"); }
         function lock(): void { lockScreen.lock(); }
         function toggleDnd(): void { UserSettings.doNotDisturb = !UserSettings.doNotDisturb; }
         function setWallpaper(path: string): void { wallpaper.setWallpaper(path); }
+        function settingsCard(card: string): void { appLauncher.openTab("settings", card); }
 
         function toggleCalendar(): void { shell._togglePanel = "calendar"; shell._toggleCounter++; }
         function toggleVolume(): void { shell._togglePanel = "volume"; shell._toggleCounter++; }
         function toggleNotifications(): void { shell._togglePanel = "notifications"; shell._toggleCounter++; }
-        function toggleSettings(): void { appLauncher.openTab(5); }
+        function toggleSettings(): void { appLauncher.openTab("settings"); }
         function toggleRecording(): void { screenRecording.toggleRecording(); }
         function clipboardList(): string {
             const entries = ClipboardHistory.entries.values;

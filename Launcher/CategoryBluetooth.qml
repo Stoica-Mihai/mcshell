@@ -12,6 +12,7 @@ LauncherCategory {
     required property var launcher
 
     // ── Tab config ──
+    tabName: "bluetooth"
     tabLabel: "BT"
     tabIcon: Theme.iconBluetooth
     searchPlaceholder: "Search devices..."

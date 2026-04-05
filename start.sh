@@ -16,4 +16,4 @@ elif [ "$(readlink -f "$LINK")" != "$SHELL_DIR" ]; then
 fi
 
 export QT_LOGGING_RULES="qt.qpa.services.warning=false"
-exec qs -c mcshell "$@"
+exec mcs-qs -c mcshell "$@"
