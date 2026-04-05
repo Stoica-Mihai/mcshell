@@ -174,8 +174,10 @@ Item {
                 // Close the D-Bus notification so notify-send unblocks
                 const ref = _notifRefs[nid];
                 if (ref) {
-                    if (userDismissed) ref.dismiss();
-                    else ref.expire();
+                    try {
+                        if (userDismissed) ref.dismiss();
+                        else ref.expire();
+                    } catch(e) {}
                 }
                 if (userDismissed) {
                     removeHistoryById(nid);
