@@ -114,7 +114,7 @@ Scope {
                 id: leftSection
                 anchors.left: parent.left
                 height: parent.height
-                width: rightSection.sectionMaxWidth
+                width: Theme.barSideWidth
 
                 Shape {
                     id: leftBg
@@ -253,10 +253,7 @@ Scope {
                 id: rightSection
                 anchors.right: parent.right
                 height: parent.height
-                property real sectionFullWidth: media.implicitWidth + rightContent.implicitWidth + Theme.barDiagSlant + Theme.itemSpacing * 3 + Theme.trayMenuPadding
-                property real sectionMaxWidth: 0
-                onSectionFullWidthChanged: sectionMaxWidth = Math.max(sectionMaxWidth, sectionFullWidth)
-                width: sectionMaxWidth
+                width: Theme.barSideWidth
 
                 Shape {
                     id: rightBg
