@@ -240,7 +240,7 @@ Scope {
                 id: leftSection
                 anchors.left: parent.left
                 height: parent.height
-                width: leftContent.implicitWidth + Theme.barDiagSlant + 24
+                width: rightSection.sectionMaxWidth
 
                 Canvas {
                     id: leftBg
@@ -257,10 +257,12 @@ Scope {
                         barRect._pulseTime)
                 }
 
+                // Launcher + workspaces — locked to left
                 RowLayout {
                     id: leftContent
-                    anchors.centerIn: parent
-                    anchors.horizontalCenterOffset: -Theme.barDiagSlant / 4
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: parent.left
+                    anchors.leftMargin: Theme.itemSpacing
                     spacing: 0
 
                     IconButton {
@@ -274,12 +276,14 @@ Scope {
                         Layout.alignment: Qt.AlignVCenter
                         screenName: root.screenName
                     }
+                }
 
-                    ActiveWindow {
-                        Layout.alignment: Qt.AlignVCenter
-                        Layout.leftMargin: 10
-                        Layout.maximumWidth: 300
-                    }
+                // Active window — after launcher/workspaces, left-aligned
+                ActiveWindow {
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: leftContent.right
+                    anchors.leftMargin: Theme.itemSpacing
+                    width: Math.min(implicitWidth, parent.width - leftContent.width - Theme.barDiagSlant - Theme.itemSpacing * 3)
                 }
             }
 
