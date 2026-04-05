@@ -128,7 +128,7 @@ PanelWindow {
 
     function switchTab(tab) {
         if (tab < 0 || tab >= categories.length) return;
-        if (blobAnim.running) return;
+        if (leftAnim.running || rightAnim.running) return;
         if (activeTab === tab && isOpen) {
             searchField.text = "";
             selectedIndex = 0;
@@ -201,45 +201,25 @@ PanelWindow {
                 }
             }
 
-            // ── Liquid blob tab highlight ──────────────────
-            Canvas {
+            // ── Tab underline highlight ────────────────────
+            Item {
                 id: tabHighlight
                 anchors.fill: parent
                 visible: false
 
-                property color blobColor: launcher.editMode ? Theme.bgHover : Theme.accent
-                onBlobColorChanged: requestPaint()
-
-                // Blob geometry
-                readonly property real blobH: 28
-                readonly property real blobY: (searchBar.height - blobH) / 2
-                readonly property real blobPad: 8
-
-                // Resting position (where the blob sits when not animating)
-                property real _restX: 0
-                property real _restW: 0
-
-                // Animation state: -1 = at rest, 0..1 = transitioning
-                property real _progress: -1
-                property real _sourceX: 0
-                property real _sourceW: 0
-                property real _targetX: 0
-                property real _targetW: 0
-
-                on_ProgressChanged: requestPaint()
+                readonly property real _pad: 4
+                property real _lineLeft: 0
+                property real _lineRight: 0
 
                 NumberAnimation {
-                    id: blobAnim
-                    target: tabHighlight; property: "_progress"
-                    from: 0; to: 1
-                    duration: Theme.animSmooth
+                    id: leftAnim
+                    target: tabHighlight; property: "_lineLeft"
                     easing.type: Easing.InOutQuad
-                    onFinished: {
-                        tabHighlight._restX = tabHighlight._targetX;
-                        tabHighlight._restW = tabHighlight._targetW;
-                        tabHighlight._progress = -1;
-                        tabHighlight.requestPaint();
-                    }
+                }
+                NumberAnimation {
+                    id: rightAnim
+                    target: tabHighlight; property: "_lineRight"
+                    easing.type: Easing.InOutQuad
                 }
 
                 // ── Snap (no animation) ──
@@ -262,11 +242,10 @@ PanelWindow {
 
                 function _applySnap(item) {
                     const pos = item.mapToItem(searchBar, 0, 0);
-                    _restX = pos.x - blobPad;
-                    _restW = item.width + blobPad * 2;
-                    _progress = -1;
+                    leftAnim.stop(); rightAnim.stop();
+                    _lineLeft = pos.x - _pad;
+                    _lineRight = pos.x + item.width + _pad;
                     visible = true;
-                    requestPaint();
                 }
 
                 // ── Animated transition ──
@@ -275,78 +254,29 @@ PanelWindow {
                     if (!item) return;
                     if (!visible) { _snapToTab(idx); return; }
                     const pos = item.mapToItem(searchBar, 0, 0);
-                    blobAnim.stop();
-                    _sourceX = _restX;
-                    _sourceW = _restW;
-                    _targetX = pos.x - blobPad;
-                    _targetW = item.width + blobPad * 2;
-                    blobAnim.start();
+                    const targetLeft = pos.x - _pad;
+                    const targetRight = pos.x + item.width + _pad;
+                    const movingRight = targetLeft > _lineLeft;
+
+                    leftAnim.stop(); rightAnim.stop();
+                    leftAnim.to = targetLeft;
+                    rightAnim.to = targetRight;
+                    // Leading edge is fast, trailing is slower
+                    leftAnim.duration = movingRight ? 250 : 120;
+                    rightAnim.duration = movingRight ? 120 : 250;
+                    leftAnim.start();
+                    rightAnim.start();
                 }
 
-                // ── Drawing ──
-                function _lerp(a, b, t) { return a + (b - a) * t; }
-                function _smoothstep(t) { return t * t * (3 - 2 * t); }
-
-                // Skew offset proportional to blob height
-                readonly property real _skew: Theme.barDiagSlant * blobH / searchBar.height
-
-                onPaint: {
-                    var ctx = getContext("2d");
-                    ctx.clearRect(0, 0, width, height);
-                    ctx.fillStyle = blobColor;
-
-                    var h = blobH, top = blobY, s = _skew;
-
-                    if (_progress < 0) {
-                        // At rest — parallelogram
-                        _drawSkewed(ctx, _restX, top, _restW, h, s);
-                        return;
-                    }
-
-                    // Animated: leading edge races ahead, trailing follows
-                    var p = _progress;
-                    var movingRight = _targetX >= _sourceX;
-
-                    var leadT = _smoothstep(Math.min(1, p * 1.4));
-                    var trailT = _smoothstep(Math.max(0, (p - 0.2) / 0.8));
-
-                    var left, right;
-                    if (movingRight) {
-                        left  = _lerp(_sourceX, _targetX, trailT);
-                        right = _lerp(_sourceX + _sourceW, _targetX + _targetW, leadT);
-                    } else {
-                        left  = _lerp(_sourceX, _targetX, leadT);
-                        right = _lerp(_sourceX + _sourceW, _targetX + _targetW, trailT);
-                    }
-
-                    // Pinch in the middle for liquid stretch effect
-                    var blobW = right - left;
-                    var naturalW = Math.max(_sourceW, _targetW);
-                    var stretch = blobW / naturalW;
-                    var pinch = Math.min(0.95, Math.max(0, 1 - 1 / stretch) * 20);
-                    var pinchH = h * (1 - pinch);
-                    var midX = (left + right) / 2;
-                    var pinchTop = top + (h - pinchH) / 2;
-                    var pinchBot = top + (h + pinchH) / 2;
-
-                    // Draw skewed blob with bezier pinch
-                    ctx.beginPath();
-                    ctx.moveTo(left + s, top);
-                    ctx.quadraticCurveTo(midX + s * 0.5, pinchTop, right, top);
-                    ctx.lineTo(right - s, top + h);
-                    ctx.quadraticCurveTo(midX - s * 0.5, pinchBot, left, top + h);
-                    ctx.closePath();
-                    ctx.fill();
-                }
-
-                function _drawSkewed(ctx, px, py, pw, ph, s) {
-                    ctx.beginPath();
-                    ctx.moveTo(px + s, py);
-                    ctx.lineTo(px + pw, py);
-                    ctx.lineTo(px + pw - s, py + ph);
-                    ctx.lineTo(px, py + ph);
-                    ctx.closePath();
-                    ctx.fill();
+                // ── The underline ──
+                Rectangle {
+                    x: tabHighlight._lineLeft
+                    y: searchBar.height - 3
+                    width: tabHighlight._lineRight - tabHighlight._lineLeft
+                    height: 2
+                    radius: 1
+                    color: launcher.editMode ? Theme.fgDim : Theme.accent
+                    Behavior on color { ColorAnimation { duration: Theme.animNormal } }
                 }
             }
 
@@ -376,9 +306,7 @@ PanelWindow {
                                 text: modelData.tabIcon
                                 font.family: Theme.iconFont
                                 font.pixelSize: Theme.fontSizeSmall
-                                color: launcher.activeTab === index
-                                    ? (launcher.editMode ? Theme.accent : Theme.bgSolid)
-                                    : Theme.fgDim
+                                color: launcher.activeTab === index ? Theme.fg : Theme.fgDim
                                 Behavior on color { ColorAnimation { duration: Theme.animNormal } }
                             }
 
@@ -386,9 +314,7 @@ PanelWindow {
                                 text: modelData.tabLabel
                                 font.family: Theme.fontFamily
                                 font.pixelSize: Theme.fontSizeSmall
-                                color: launcher.activeTab === index
-                                    ? (launcher.editMode ? Theme.accent : Theme.bgSolid)
-                                    : Theme.fgDim
+                                color: launcher.activeTab === index ? Theme.fg : Theme.fgDim
                                 Behavior on color { ColorAnimation { duration: Theme.animNormal } }
                             }
                         }
