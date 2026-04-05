@@ -450,6 +450,7 @@ Singleton {
 
     // Popup/panel
     readonly property int popupPadding: 12
+    readonly property real popupSkew: barDiagSlant        // edge offset for popup parallelogram
 
     // Settings panel rows
     readonly property int settingsRowHeight: 40

@@ -138,6 +138,7 @@ Item {
 
         fullHeight: popupContent.implicitHeight + Theme.popupPadding * 2
         implicitWidth: popupWidth
+        skewType: "right"
 
         anchor.item: trackLabel
         anchor.rect.x: -(popupWidth / 2 - trackLabel.width / 2)

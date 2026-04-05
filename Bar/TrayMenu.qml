@@ -12,6 +12,7 @@ AnimatedPopup {
     property var anchorItem: null
     property bool closing: false
 
+    skewType: "right"
     implicitWidth: 200
     fullHeight: Math.min(400, menuColumn.implicitHeight + 12)
 

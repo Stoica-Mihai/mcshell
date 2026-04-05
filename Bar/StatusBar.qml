@@ -382,10 +382,10 @@ Scope {
                             } else {
                                 sharedDropdown.close();
                                 activePanel = name;
-                                sharedDropdown.anchor.item = bellIcon;
-                                var barRightPadding = 12 + Theme.barMargin + 2;
-                                sharedDropdown.anchor.rect.x = -(sharedDropdown.implicitWidth - bellIcon.width - barRightPadding);
+                                sharedDropdown.anchor.item = rightSection;
+                                sharedDropdown.anchor.rect.x = 0;
                                 sharedDropdown.open();
+                                sharedDropdown.anchor.rect.y = rightSection.height;
                             }
                         }
 
@@ -516,7 +516,8 @@ Scope {
                         AnimatedPopup {
                             id: sharedDropdown
 
-                            implicitWidth: capsule.activePanel === "notifications" ? 340 : 280
+                            skewType: "right"
+                            implicitWidth: rightSection.width
 
                             fullHeight: {
                                 if (capsule.activePanel === "volume")
