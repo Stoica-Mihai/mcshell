@@ -58,6 +58,8 @@ Singleton {
         path: Quickshell.env("HOME") + "/.config/mcshell/settings.json"
         blockLoading: true
         printErrors: false
+        watchChanges: true
+        onFileChanged: reload()
 
         adapter: JsonAdapter {
             id: adapter

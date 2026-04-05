@@ -35,11 +35,17 @@ LauncherCategory {
     property var _scanLines: []
     property string activeWallpaper: UserSettings.wallpaperPath
     property int activeIndex: 0
+    property string _lastFolder: ""
 
     // ── Lifecycle ──
     function onTabEnter() {
-        if (!loaded) scanFolder();
-        else launcher.selectedIndex = activeIndex;
+        const folder = UserSettings.wallpaperFolder;
+        if (!loaded || folder !== _lastFolder) {
+            _lastFolder = folder;
+            scanFolder();
+        } else {
+            launcher.selectedIndex = activeIndex;
+        }
     }
 
     function onTabLeave() {}
