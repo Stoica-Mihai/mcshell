@@ -75,6 +75,11 @@ Item {
         return results;
     }
 
+    // ── Bounds check helper ──
+    function _validIndex(index) {
+        return index >= 0 && index < _sourceData.length;
+    }
+
     // ── Activate selected item ──
     function onActivate(index) {}
 

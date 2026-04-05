@@ -17,15 +17,15 @@ PanelWindow {
     function open() {
         isOpen = true;
         visible = true;
-        searchField.text = "";
+        searchArea.text = "";
         selectedIndex = -1;
-        searchField.forceActiveFocus();
+        searchArea.field.forceActiveFocus();
     }
 
     function close() {
         isOpen = false;
         visible = false;
-        searchField.text = "";
+        searchArea.text = "";
     }
 
     function toggle() {
@@ -72,7 +72,7 @@ PanelWindow {
     // ── Parser ──────────────────────────────────────────
     KeybindParser {
         id: parser
-        filterText: searchField.text
+        filterText: searchArea.text
         onFilteredGroupsChanged: panel.selectedIndex = -1
     }
 
@@ -141,60 +141,22 @@ PanelWindow {
             }
 
             // ── Search field ────────────────────────────
-            Rectangle {
+            StyledTextField {
+                id: searchArea
                 Layout.fillWidth: true
-                Layout.preferredHeight: 40
-                radius: Theme.radiusMedium
-                color: Theme.bgSolid
-                border.width: 1
-                border.color: searchField.activeFocus ? Theme.accent : Theme.border
+                icon: Theme.iconSearch
+                placeholder: "Filter keybindings..."
 
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: 12
-                    anchors.rightMargin: 12
-                    spacing: Theme.spacingNormal
-
-                    OptImage {
-                        Layout.preferredWidth: 16
-                        Layout.preferredHeight: 16
-                        Layout.alignment: Qt.AlignVCenter
-                        sourceSize.width: 16
-                        sourceSize.height: 16
-                        source: "image://icon/edit-find"
-                        opacity: Theme.opacityMuted
-                    }
-
-                    TextInput {
-                        id: searchField
-                        Layout.fillWidth: true
-                        Layout.alignment: Qt.AlignVCenter
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSize
-                        color: Theme.fg
-                        clip: true
-                        selectByMouse: true
-
-                        Keys.onPressed: event => {
-                            if (event.key === Qt.Key_Escape) {
-                                panel.close();
-                                event.accepted = true;
-                            } else if (event.key === Qt.Key_Down) {
-                                panel.navigateDown();
-                                event.accepted = true;
-                            } else if (event.key === Qt.Key_Up) {
-                                panel.navigateUp();
-                                event.accepted = true;
-                            }
-                        }
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "Filter keybindings..."
-                            color: Theme.fgDim
-                            font: parent.font
-                            visible: !parent.text
-                        }
+                field.Keys.onPressed: event => {
+                    if (event.key === Qt.Key_Escape) {
+                        panel.close();
+                        event.accepted = true;
+                    } else if (event.key === Qt.Key_Down) {
+                        panel.navigateDown();
+                        event.accepted = true;
+                    } else if (event.key === Qt.Key_Up) {
+                        panel.navigateUp();
+                        event.accepted = true;
                     }
                 }
             }
@@ -367,8 +329,8 @@ PanelWindow {
                     for (let i = 0; i < parser.filteredGroups.length; i++) {
                         if (!parser.filteredGroups[i].isHeader) shown++;
                     }
-                    if (searchField.text && shown === 0) return "No matching keybindings";
-                    if (searchField.text) return shown + " of " + total + " keybindings";
+                    if (searchArea.text && shown === 0) return "No matching keybindings";
+                    if (searchArea.text) return shown + " of " + total + " keybindings";
                     return total + " keybinding" + (total !== 1 ? "s" : "") + " from niri config";
                 }
                 font.family: Theme.fontFamily

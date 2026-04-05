@@ -76,7 +76,7 @@ LauncherCategory {
 
     // ── Activate ──
     function onActivate(index) {
-        if (index < 0 || index >= _sourceData.length) return;
+        if (!_validIndex(index)) return;
         launchApp(_sourceData[index]);
     }
 

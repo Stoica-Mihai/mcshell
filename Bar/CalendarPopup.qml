@@ -212,6 +212,35 @@ AnimatedPopup {
             }
         }
 
+        component GridPickerCell: Rectangle {
+            required property int index
+            property bool isCurrent: false
+            property string cellText: ""
+            signal clicked()
+
+            width: 70
+            height: 32
+            radius: Theme.radiusSmall
+            color: isCurrent ? Theme.accent
+                 : cellMouse.containsMouse ? Theme.bgHover : "transparent"
+
+            Text {
+                anchors.centerIn: parent
+                text: parent.cellText
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeSmall
+                color: parent.isCurrent ? Theme.bgSolid : Theme.fg
+            }
+
+            MouseArea {
+                id: cellMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: parent.clicked()
+            }
+        }
+
         // ── MONTHS VIEW ───────────────────────────
         Grid {
             visible: root.viewMode === "months"
@@ -223,38 +252,11 @@ AnimatedPopup {
             Repeater {
                 model: 12
 
-                Rectangle {
-                    required property int index
-                    width: 70
-                    height: 32
-                    radius: Theme.radiusSmall
-                    color: {
-                        if (index === root.currentDate.getMonth()
-                            && root.viewYear === root.currentDate.getFullYear())
-                            return Theme.accent;
-                        return mMouse.containsMouse ? Theme.bgHover : "transparent";
-                    }
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: new Date(2024, index, 1).toLocaleDateString(Qt.locale(), "MMM")
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        color: {
-                            if (index === root.currentDate.getMonth()
-                                && root.viewYear === root.currentDate.getFullYear())
-                                return Theme.bgSolid;
-                            return Theme.fg;
-                        }
-                    }
-
-                    MouseArea {
-                        id: mMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.selectMonth(index)
-                    }
+                GridPickerCell {
+                    isCurrent: index === root.currentDate.getMonth()
+                             && root.viewYear === root.currentDate.getFullYear()
+                    cellText: new Date(2024, index, 1).toLocaleDateString(Qt.locale(), "MMM")
+                    onClicked: root.selectMonth(index)
                 }
             }
         }
@@ -270,37 +272,11 @@ AnimatedPopup {
             Repeater {
                 model: 12
 
-                Rectangle {
-                    required property int index
+                GridPickerCell {
                     property int year: root.viewYear - root.viewYear % 12 + index
-                    width: 70
-                    height: 32
-                    radius: Theme.radiusSmall
-                    color: {
-                        if (year === root.currentDate.getFullYear())
-                            return Theme.accent;
-                        return yMouse.containsMouse ? Theme.bgHover : "transparent";
-                    }
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: parent.year
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        color: {
-                            if (parent.year === root.currentDate.getFullYear())
-                                return Theme.bgSolid;
-                            return Theme.fg;
-                        }
-                    }
-
-                    MouseArea {
-                        id: yMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.selectYear(parent.year)
-                    }
+                    isCurrent: year === root.currentDate.getFullYear()
+                    cellText: String(year)
+                    onClicked: root.selectYear(year)
                 }
             }
         }

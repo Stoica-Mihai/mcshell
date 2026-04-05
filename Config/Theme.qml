@@ -417,6 +417,11 @@ Singleton {
     readonly property int animPopIn: 120       // element appearance pop-in
     readonly property int animElastic: 400     // elastic error shake
 
+    // ── Notification timeouts ──────────────────────────
+    readonly property int notifShort: 2000      // quick status changes (toggle on/off)
+    readonly property int notifNormal: 3000     // standard notifications
+    readonly property int notifLong: 5000       // notifications with images
+
     // ── Layout ──────────────────────────────────────────
     readonly property int barHeight: 34
     readonly property int barMargin: 5

@@ -109,7 +109,7 @@ LauncherCategory {
 
     // ── Activate ──
     function onActivate(index) {
-        if (index < 0 || index >= _sourceData.length) return;
+        if (!_validIndex(index)) return;
         const net = _sourceData[index];
         if (wifiPasswordSsid === net.name) return; // already showing password
         wifiTracker.targetId = net.name;

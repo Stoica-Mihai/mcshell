@@ -32,7 +32,7 @@ PanelWindow {
         for (let i = 0; i < _filtered.length; i++) {
             if (_filtered[i].focused) { selectedIndex = i; break; }
         }
-        searchField.forceActiveFocus();
+        searchBar.field.forceActiveFocus();
     }
 
     function close() {
@@ -81,7 +81,7 @@ PanelWindow {
     }
 
     // Search bar
-    Rectangle {
+    StyledTextField {
         id: searchBar
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: cardArea.top
@@ -90,67 +90,33 @@ PanelWindow {
         height: 44
         radius: 10
         color: Theme.bg
-        border.width: 1
-        border.color: Theme.border
+        icon: Theme.iconSearch
+        placeholder: "Switch window..."
 
-        RowLayout {
-            anchors.fill: parent
-            anchors.leftMargin: 14
-            anchors.rightMargin: 14
-            spacing: Theme.spacingMedium
+        field.onTextChanged: {
+            root._searchText = searchBar.text;
+            root.selectedIndex = 0;
+        }
 
-            Text {
-                text: Theme.iconSearch
-                font.family: Theme.iconFont
-                font.pixelSize: 14
-                color: Theme.fgDim
-                Layout.alignment: Qt.AlignVCenter
-            }
-
-            TextInput {
-                id: searchField
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignVCenter
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize
-                color: Theme.fg
-                clip: true
-                selectByMouse: true
-
-                onTextChanged: {
-                    root._searchText = text;
-                    root.selectedIndex = 0;
-                }
-
-                Keys.onPressed: event => {
-                    switch (event.key) {
-                    case Qt.Key_Escape:
-                        root.close();
-                        event.accepted = true;
-                        break;
-                    case Qt.Key_Left:
-                        root.navigate(-1);
-                        event.accepted = true;
-                        break;
-                    case Qt.Key_Right:
-                        root.navigate(1);
-                        event.accepted = true;
-                        break;
-                    case Qt.Key_Return:
-                    case Qt.Key_Enter:
-                        root.activate();
-                        event.accepted = true;
-                        break;
-                    }
-                }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "Switch window..."
-                    color: Theme.fgDim
-                    font: parent.font
-                    visible: !parent.text
-                }
+        field.Keys.onPressed: event => {
+            switch (event.key) {
+            case Qt.Key_Escape:
+                root.close();
+                event.accepted = true;
+                break;
+            case Qt.Key_Left:
+                root.navigate(-1);
+                event.accepted = true;
+                break;
+            case Qt.Key_Right:
+                root.navigate(1);
+                event.accepted = true;
+                break;
+            case Qt.Key_Return:
+            case Qt.Key_Enter:
+                root.activate();
+                event.accepted = true;
+                break;
             }
         }
     }

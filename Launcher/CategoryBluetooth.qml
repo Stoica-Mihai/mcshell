@@ -104,7 +104,7 @@ LauncherCategory {
             } else if (line === "FAILED") {
                 btTracker.status = "failed";
                 btTracker.autoClear();
-                NotificationDispatcher.send("Bluetooth", "Failed to connect to " + btTracker.targetId, 3000, "critical");
+                NotificationDispatcher.send("Bluetooth", "Failed to connect to " + btTracker.targetId, Theme.notifNormal, "critical");
             }
         }
         onFailed: {
@@ -143,7 +143,7 @@ LauncherCategory {
 
     // ── Activate ──
     function onActivate(index) {
-        if (index < 0 || index >= _sourceData.length) return;
+        if (!_validIndex(index)) return;
         const dev = _sourceData[index];
         btTracker.targetId = dev.address;
         if (dev.connected) {

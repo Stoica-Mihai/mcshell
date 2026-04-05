@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Bluetooth
 import Quickshell.Networking
+import qs.Config
 
 // Centralized notification sender + connection state watchers.
 // Any component can send notifications via NotificationDispatcher.send().
@@ -12,14 +13,14 @@ Singleton {
 
     // ── Public API ──────────────────────────────────────
     function send(title, body, timeout, urgency) {
-        var cmd = ["notify-send", "-t", String(timeout || 3000)];
+        var cmd = ["notify-send", "-t", String(timeout || Theme.notifNormal)];
         if (urgency) cmd.push("-u", urgency);
         cmd.push(title, body);
         Quickshell.execDetached({ command: cmd });
     }
 
     function sendWithImage(title, body, imagePath, timeout) {
-        Quickshell.execDetached({ command: ["notify-send", "-t", String(timeout || 5000),
+        Quickshell.execDetached({ command: ["notify-send", "-t", String(timeout || Theme.notifLong),
             "-h", "string:image-path:" + imagePath, title, body] });
     }
 
@@ -28,7 +29,7 @@ Singleton {
         target: Bluetooth.defaultAdapter
         function onEnabledChanged() {
             if (!Bluetooth.defaultAdapter) return;
-            root.send("Bluetooth", Bluetooth.defaultAdapter.enabled ? "Enabled" : "Disabled", 2000);
+            root.send("Bluetooth", Bluetooth.defaultAdapter.enabled ? "Enabled" : "Disabled", Theme.notifShort);
         }
     }
 
@@ -40,7 +41,7 @@ Singleton {
             function onConnectedChanged() {
                 if (!modelData?.name) return;
                 root.send("Bluetooth",
-                    (modelData.connected ? "Connected to " : "Disconnected from ") + modelData.name, 3000);
+                    (modelData.connected ? "Connected to " : "Disconnected from ") + modelData.name, Theme.notifNormal);
             }
         }
     }
@@ -49,7 +50,7 @@ Singleton {
     Connections {
         target: Networking
         function onWifiEnabledChanged() {
-            root.send("WiFi", Networking.wifiEnabled ? "Enabled" : "Disabled", 2000);
+            root.send("WiFi", Networking.wifiEnabled ? "Enabled" : "Disabled", Theme.notifShort);
         }
     }
 
@@ -68,7 +69,7 @@ Singleton {
             function onConnectedChanged() {
                 if (!modelData?.name) return;
                 root.send("WiFi",
-                    (modelData.connected ? "Connected to " : "Disconnected from ") + modelData.name, 3000);
+                    (modelData.connected ? "Connected to " : "Disconnected from ") + modelData.name, Theme.notifNormal);
             }
         }
     }

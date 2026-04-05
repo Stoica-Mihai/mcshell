@@ -94,8 +94,8 @@ LauncherCategory {
 
     // ── Activate ──
     function onActivate(index) {
+        if (!_validIndex(index)) return;
         const path = _sourceData[index];
-        if (!path) return;
         activeIndex = _fullPaths.indexOf(path);
         ShellActions.setWallpaper(path);
     }

@@ -45,7 +45,7 @@ LauncherCategory {
 
     // ── Activate ──
     function onActivate(index) {
-        if (index >= 0 && index < _sourceData.length) {
+        if (_validIndex(index)) {
             ClipboardHistory.select(_sourceData[index]);
             launcher.close();
         }
