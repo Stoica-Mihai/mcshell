@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Services.SystemTray
 import qs.Config
 import qs.Widgets
 import qs.NotificationHistory
@@ -11,7 +12,7 @@ Scope {
 
     property string screenName: ""
     property var screen: null
-    property bool hasPopup: capsule.activePanel !== "" || clock.popupVisible || sysTray.menuVisible || media.popupVisible
+    property bool hasPopup: rightSection.activeDropdown !== "" || clock.popupVisible
 
     property int unreadNotifications: 0
     property var notifHistoryModel: null
@@ -26,14 +27,12 @@ Scope {
     property string panelToggleName: ""
     onPanelToggleTriggerChanged: {
         if (panelToggleName === "calendar") clock.togglePopup();
-        else if (panelToggleName) capsule.togglePanel(panelToggleName);
+        else if (panelToggleName) rightSection.toggleDropdown(panelToggleName);
     }
 
     function dismissPopups() {
-        capsule.closePanel();
+        rightSection.closeDropdown();
         clock.dismissPopup();
-        sysTray.dismissMenu();
-        media.dismissPopup();
     }
 
     // ── Exclusive zone — reserves bar space, no content ────
@@ -354,12 +353,60 @@ Scope {
                         barRect._pulseTime)
                 }
 
+                // ── Shared dropdown state ─────────────────
+                property string activeDropdown: ""  // "volume", "notifications", "media", "tray"
+                property var activeTrayItem: null
+
+                function toggleDropdown(name) {
+                    if (activeDropdown === name) {
+                        closeDropdown();
+                    } else {
+                        openDropdown(name);
+                    }
+                }
+
+                function openDropdown(name) {
+                    sharedDropdown.close();
+                    activeDropdown = name;
+                    sharedDropdown.anchor.item = rightSection;
+                    sharedDropdown.anchor.rect.x = Theme.barDiagSlant;
+                    sharedDropdown.anchor.rect.y = rightSection.height;
+                    sharedDropdown.open();
+                }
+
+                function closeDropdown() {
+                    sharedDropdown.close();
+                }
+
+                function showTrayDropdown(trayItem) {
+                    if (activeDropdown === "tray" && activeTrayItem === trayItem) {
+                        closeDropdown();
+                        return;
+                    }
+                    sharedDropdown.close();
+                    activeTrayItem = trayItem;
+                    activeDropdown = "tray";
+                    sharedDropdown.anchor.item = rightSection;
+                    sharedDropdown.anchor.rect.x = Theme.barDiagSlant;
+                    sharedDropdown.anchor.rect.y = rightSection.height;
+                    trayOpenDelay.restart();
+                }
+
+                Timer {
+                    id: trayOpenDelay
+                    interval: 16
+                    onTriggered: sharedDropdown.open()
+                }
+
                 // Media zone — left side of right segment
                 Media {
                     id: media
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: parent.left
                     anchors.leftMargin: Theme.barDiagSlant + Theme.itemSpacing
+                    onTogglePopup: rightSection.toggleDropdown("media")
+                    onDismissPopup: rightSection.closeDropdown()
+                    popupVisible: rightSection.activeDropdown === "media"
                 }
 
                 // System tray zone — locked to right side
@@ -373,6 +420,8 @@ Scope {
                     SysTray {
                         id: sysTray
                         Layout.alignment: Qt.AlignVCenter
+                        menuVisible: rightSection.activeDropdown === "tray"
+                        onShowTrayMenu: item => rightSection.showTrayDropdown(item)
                     }
 
                     // ── System capsule ─────────────────────
@@ -382,31 +431,16 @@ Scope {
                         implicitWidth: capsuleRow.implicitWidth + 16
                         implicitHeight: Theme.barHeight - 10
 
-                        property string activePanel: ""  // "volume", "notifications"
-
-                        function togglePanel(name) {
-                            if (activePanel === name) {
-                                closePanel();
-                            } else {
-                                sharedDropdown.close();
-                                activePanel = name;
-                                sharedDropdown.anchor.item = rightSection;
-                                sharedDropdown.anchor.rect.x = 0;
-                                sharedDropdown.anchor.rect.y = rightSection.height;
-                                sharedDropdown.open();
-                            }
-                        }
-
-                        function closePanel() {
-                            sharedDropdown.close();
-                        }
+                        readonly property bool capsuleActive:
+                            rightSection.activeDropdown === "volume"
+                            || rightSection.activeDropdown === "notifications"
 
                         // Capsule background
                         Rectangle {
                             anchors.fill: parent
                             radius: (Theme.barHeight - 10) / 2
-                            color: capsule.activePanel !== "" ? Theme.bgHover : "transparent"
-                            border.width: capsule.activePanel !== "" ? 1 : 0
+                            color: capsule.capsuleActive ? Theme.bgHover : "transparent"
+                            border.width: capsule.capsuleActive ? 1 : 0
                             border.color: Theme.outlineVariant
 
                             Behavior on color { ColorAnimation { duration: Theme.animFast } }
@@ -422,12 +456,12 @@ Scope {
                                 icon: Theme.volumeIcon(volume.rawVolume, volume.muted)
                                 label: volume.volume + "%"
                                 alert: volume.muted
-                                active: capsule.activePanel === "volume"
+                                active: rightSection.activeDropdown === "volume"
                                 onClicked: event => {
                                     if (event.button === Qt.MiddleButton)
                                         volume.toggleMute();
                                     else
-                                        capsule.togglePanel("volume");
+                                        rightSection.toggleDropdown("volume");
                                 }
                                 onWheel: event => {
                                     const step = Theme.volumeStep;
@@ -477,7 +511,7 @@ Scope {
                                 }
 
                                 // Underline
-                                ActiveUnderline { visible: capsule.activePanel === "notifications" }
+                                ActiveUnderline { visible: rightSection.activeDropdown === "notifications" }
 
                                 // Unread badge
                                 Rectangle {
@@ -513,70 +547,344 @@ Scope {
                                         if (event.button === Qt.MiddleButton)
                                             UserSettings.doNotDisturb = !UserSettings.doNotDisturb;
                                         else
-                                            capsule.togglePanel("notifications");
+                                            rightSection.toggleDropdown("notifications");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // ── Shared dropdown (all right-segment panels) ───
+                AnimatedPopup {
+                    id: sharedDropdown
+
+                    autoPosition: false
+                    implicitWidth: rightSection.width - Theme.barDiagSlant
+                    anchor.adjustment: PopupAdjustment.None
+
+                    fullHeight: {
+                        switch (rightSection.activeDropdown) {
+                        case "volume": return volumeContent.implicitHeight + Theme.popupPadding * 2;
+                        case "notifications": return notifContent.fullHeight;
+                        case "media": return mediaContent.implicitHeight + Theme.popupPadding * 2;
+                        case "tray": return Math.min(400, trayMenuColumn.implicitHeight + 12);
+                        default: return 100;
+                        }
+                    }
+
+                    onVisibleChanged: {
+                        if (!visible) {
+                            rightSection.activeDropdown = "";
+                            rightSection.activeTrayItem = null;
+                            traySubMenu.visible = false;
+                        }
+                    }
+
+                    // ── Volume section ────────────────────
+                    ColumnLayout {
+                        id: volumeContent
+                        visible: rightSection.activeDropdown === "volume"
+                        enabled: visible
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.margins: Theme.popupPadding
+                        spacing: Theme.spacingTiny
+
+                        VolumeSlider {
+                            Layout.fillWidth: true
+                            Layout.bottomMargin: 2
+                        }
+
+                        Separator { visible: appVolume.hasStreams }
+
+                        AppVolume {
+                            id: appVolume
+                            Layout.fillWidth: true
+                        }
+                    }
+
+                    // ── Notifications section ─────────────
+                    NotificationHistory {
+                        id: notifContent
+                        visible: rightSection.activeDropdown === "notifications"
+                        historyModel: root.notifHistoryModel
+                        onRemoveFromHistory: nid => root.notifRemoved(nid)
+                        onClearAllHistory: root.notifCleared()
+                        onVisibleChanged: {
+                            if (visible) root.notifPanelOpened();
+                        }
+                    }
+
+                    // ── Media section ─────────────────────
+                    ColumnLayout {
+                        id: mediaContent
+                        visible: rightSection.activeDropdown === "media"
+                        enabled: visible
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.top: parent.top
+                        anchors.topMargin: Theme.popupPadding
+                        width: Math.min(parent.width - Theme.popupPadding * 2, 280)
+                        spacing: Theme.spacingMedium
+
+                        property real currentPos: media.player ? media.player.position : 0
+                        property real trackLen: media.player ? media.player.length : 0
+
+                        FrameAnimation {
+                            running: media.isPlaying && rightSection.activeDropdown === "media"
+                            onTriggered: {
+                                if (media.player && !seekSlider.dragging)
+                                    media.player.positionChanged();
+                            }
+                        }
+
+                        Connections {
+                            target: media.player
+                            enabled: rightSection.activeDropdown === "media"
+                            function onPositionChanged() {
+                                if (!seekSlider.dragging)
+                                    mediaContent.currentPos = media.player ? media.player.position : 0;
+                            }
+                            function onLengthChanged() {
+                                mediaContent.trackLen = media.player ? media.player.length : 0;
+                            }
+                        }
+
+                        // Album art
+                        Rectangle {
+                            Layout.alignment: Qt.AlignHCenter
+                            Layout.preferredWidth: 160
+                            Layout.preferredHeight: 160
+                            radius: Theme.radiusMedium
+                            color: Theme.bgHover
+                            clip: true
+                            layer.enabled: true
+
+                            OptImage {
+                                id: albumArt
+                                anchors.fill: parent
+                                source: media.player && media.player.trackArtUrl ? media.player.trackArtUrl : ""
+                                visible: status === Image.Ready
+                            }
+
+                            Text {
+                                anchors.centerIn: parent
+                                visible: !albumArt.visible
+                                text: Theme.iconPlay
+                                font.family: Theme.iconFont
+                                font.pixelSize: Theme.fontSizeHero
+                                color: Theme.fgDim
+                                opacity: Theme.opacityDim
+                            }
+                        }
+
+                        // Track title
+                        Text {
+                            Layout.fillWidth: true
+                            text: media.title || "Unknown Title"
+                            color: Theme.fg
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSize
+                            font.weight: Font.Medium
+                            elide: Text.ElideRight
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+
+                        // Artist
+                        Text {
+                            Layout.fillWidth: true
+                            Layout.topMargin: -6
+                            text: media.artist || "Unknown Artist"
+                            color: Theme.fgDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeSmall
+                            elide: Text.ElideRight
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+
+                        // Album
+                        Text {
+                            Layout.fillWidth: true
+                            Layout.topMargin: -6
+                            visible: media.player && media.player.trackAlbum !== ""
+                            text: media.player ? (media.player.trackAlbum || "") : ""
+                            color: Theme.fgDim
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeSmall
+                            font.italic: true
+                            elide: Text.ElideRight
+                            horizontalAlignment: Text.AlignHCenter
+                            opacity: Theme.opacityBody
+                        }
+
+                        // Seek bar
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: Theme.spacingTiny
+
+                            SliderTrack {
+                                id: seekSlider
+                                Layout.fillWidth: true
+                                visible: !media.isLive
+                                value: mediaContent.trackLen > 0
+                                    ? Math.max(0, Math.min(1, mediaContent.currentPos / mediaContent.trackLen)) : 0
+                                accentColor: Theme.accent
+                                trackHeight: 4
+                                knobSize: 12
+                                step: Theme.volumeStep
+                                onMoved: function(newValue) {
+                                    if (media.player && media.player.canSeek && mediaContent.trackLen > 0) {
+                                        media.player.position = newValue * mediaContent.trackLen;
+                                        mediaContent.currentPos = newValue * mediaContent.trackLen;
                                     }
                                 }
                             }
 
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 0
+
+                                Text {
+                                    visible: !media.isLive
+                                    text: media.formatTime(mediaContent.currentPos)
+                                    color: Theme.fgDim
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSizeTiny
+                                }
+                                Item { Layout.fillWidth: true }
+                                Text {
+                                    visible: media.isLive
+                                    text: "LIVE"
+                                    color: Theme.red
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSizeTiny
+                                    font.bold: true
+                                    Layout.alignment: Qt.AlignHCenter
+                                }
+                                Item { Layout.fillWidth: true; visible: media.isLive }
+                                Text {
+                                    visible: !media.isLive
+                                    text: media.formatTime(mediaContent.trackLen)
+                                    color: Theme.fgDim
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSizeTiny
+                                }
+                            }
                         }
 
-                        // ── Shared dropdown ───────────────
-                        AnimatedPopup {
-                            id: sharedDropdown
+                        // Transport controls
+                        MediaControls {
+                            Layout.alignment: Qt.AlignHCenter
+                            player: media.player
+                            spacing: 20
+                            playSize: Theme.iconSize + 4
+                        }
+                    }
 
-                            skewType: "right"
-                            autoPosition: false
-                            implicitWidth: rightSection.width
-                            anchor.adjustment: PopupAdjustment.None
+                    // ── Tray menu section ─────────────────
+                    Item {
+                        id: trayContent
+                        visible: rightSection.activeDropdown === "tray"
+                        enabled: visible
+                        anchors.fill: parent
 
-                            fullHeight: {
-                                if (capsule.activePanel === "volume")
-                                    return volumeContent.implicitHeight + Theme.popupPadding * 2;
-                                if (capsule.activePanel === "notifications")
-                                    return notifContent.fullHeight;
-                                return 100;
-                            }
+                        QsMenuOpener {
+                            id: trayOpener
+                            menu: rightSection.activeTrayItem ? rightSection.activeTrayItem.menu : null
+                        }
 
-                            onVisibleChanged: {
-                                if (!visible) capsule.activePanel = "";
-                            }
+                        Flickable {
+                            anchors.fill: parent
+                            anchors.margins: 6
+                            contentHeight: trayMenuColumn.implicitHeight
+                            clip: true
 
-                            // Volume section
                             ColumnLayout {
-                                id: volumeContent
-                                visible: capsule.activePanel === "volume"
-                                enabled: visible
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.top: parent.top
-                                anchors.margins: Theme.popupPadding
-                                spacing: Theme.spacingTiny
+                                id: trayMenuColumn
+                                width: parent.width
+                                spacing: 0
 
-                                VolumeSlider {
-                                    Layout.fillWidth: true
-                                    Layout.bottomMargin: 2
-                                }
+                                Repeater {
+                                    model: trayOpener.children ? [...trayOpener.children.values] : []
 
-                                Separator { visible: appVolume.hasStreams }
+                                    MenuItem {
+                                        id: trayEntry
+                                        Layout.fillWidth: true
+                                        Layout.preferredHeight: implicitHeight
 
-                                AppVolume {
-                                    id: appVolume
-                                    Layout.fillWidth: true
-                                }
-                            }
-
-                            // Notifications section
-                            NotificationHistory {
-                                id: notifContent
-                                visible: capsule.activePanel === "notifications"
-                                historyModel: root.notifHistoryModel
-                                onRemoveFromHistory: nid => root.notifRemoved(nid)
-                                onClearAllHistory: root.notifCleared()
-                                onVisibleChanged: {
-                                    if (visible) root.notifPanelOpened();
+                                        onTriggered: {
+                                            if (!modelData) return;
+                                            if (modelData.hasChildren) {
+                                                traySubMenu.menuSource = modelData;
+                                                traySubMenu.anchorItem = trayEntry;
+                                                traySubMenu.visible = !traySubMenu.visible;
+                                            } else {
+                                                modelData.triggered();
+                                                rightSection.closeDropdown();
+                                            }
+                                        }
+                                    }
                                 }
                             }
+                        }
 
+                        // Submenu popup
+                        PopupWindow {
+                            id: traySubMenu
+                            property var menuSource: null
+                            property var anchorItem: null
+
+                            visible: false
+                            color: "transparent"
+                            implicitWidth: 200
+                            implicitHeight: Math.min(400, subColumn.implicitHeight + 12)
+
+                            anchor.item: anchorItem
+                            anchor.rect.x: anchorItem ? anchorItem.width + 4 : 0
+                            anchor.rect.y: 0
+
+                            QsMenuOpener {
+                                id: subOpener
+                                menu: traySubMenu.menuSource
+                            }
+
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: Theme.radiusMedium
+                                color: Theme.bgSolid
+                                border.width: 1
+                                border.color: Theme.border
+
+                                Flickable {
+                                    anchors.fill: parent
+                                    anchors.margins: 6
+                                    contentHeight: subColumn.implicitHeight
+                                    clip: true
+
+                                    ColumnLayout {
+                                        id: subColumn
+                                        width: parent.width
+                                        spacing: 0
+
+                                        Repeater {
+                                            model: subOpener.children ? [...subOpener.children.values] : []
+
+                                            MenuItem {
+                                                Layout.fillWidth: true
+                                                Layout.preferredHeight: implicitHeight
+
+                                                onTriggered: {
+                                                    if (!modelData) return;
+                                                    modelData.triggered();
+                                                    traySubMenu.visible = false;
+                                                    rightSection.closeDropdown();
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }

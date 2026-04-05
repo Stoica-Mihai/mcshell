@@ -61,6 +61,7 @@ Item {
                 font.pixelSize: Theme.fontSizeSmall
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignLeft
             }
 
             // Submenu arrow

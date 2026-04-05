@@ -16,7 +16,6 @@ AnimatedPopup {
 
     fullHeight: calContent.implicitHeight + 16
     implicitWidth: 240
-    skewType: "center"
 
     function prevMonth() { viewDate = new Date(viewYear, viewMonth - 1, 1); }
     function nextMonth() { viewDate = new Date(viewYear, viewMonth + 1, 1); }

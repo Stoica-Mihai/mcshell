@@ -12,16 +12,10 @@ Item {
     implicitWidth: trayRow.implicitWidth
     implicitHeight: trayRow.implicitHeight
 
-    property bool menuVisible: trayMenu.visible
+    property bool menuVisible: false
 
-    function dismissMenu() {
-        trayMenu.close();
-    }
-
-    // Shared context menu popup (reused for all tray items)
-    TrayMenu {
-        id: trayMenu
-    }
+    signal showTrayMenu(var item)
+    signal dismissMenu()
 
     // Shared tooltip popup (reused for all tray items)
     PopupWindow {
@@ -116,7 +110,7 @@ Item {
                     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
 
                     onContainsMouseChanged: {
-                        if (containsMouse && !trayMenu.visible) {
+                        if (containsMouse && !root.menuVisible) {
                             tooltip.text = trayIcon.modelData.tooltipTitle
                                         || trayIcon.modelData.name
                                         || trayIcon.modelData.id
@@ -132,7 +126,7 @@ Item {
                         tooltip.visible = false;
                         if (event.button === Qt.RightButton) {
                             if (trayIcon.modelData.hasMenu) {
-                                trayMenu.showMenu(trayIcon.modelData, trayIcon);
+                                root.showTrayMenu(trayIcon.modelData);
                             } else {
                                 trayIcon.modelData.secondaryActivate();
                             }
@@ -140,7 +134,7 @@ Item {
                             trayIcon.modelData.secondaryActivate();
                         } else {
                             if (trayIcon.modelData.onlyMenu && trayIcon.modelData.hasMenu) {
-                                trayMenu.showMenu(trayIcon.modelData, trayIcon);
+                                root.showTrayMenu(trayIcon.modelData);
                             } else {
                                 trayIcon.modelData.activate();
                             }
