@@ -28,8 +28,10 @@ PopupWindow {
     color: "transparent"
     implicitHeight: animating ? Math.max(1, fullHeight * openFraction) : (isOpen ? Math.max(1, fullHeight) : 1)
 
+    property bool autoPosition: true
+
     function open() {
-        if (anchor.item)
+        if (anchor.item && autoPosition)
             anchor.rect.y = (Theme.barHeight + anchor.item.height) / 2 - 3;
         visible = true;
         isOpen = true;

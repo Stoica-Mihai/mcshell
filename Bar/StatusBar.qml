@@ -392,8 +392,8 @@ Scope {
                                 activePanel = name;
                                 sharedDropdown.anchor.item = rightSection;
                                 sharedDropdown.anchor.rect.x = 0;
-                                sharedDropdown.open();
                                 sharedDropdown.anchor.rect.y = rightSection.height;
+                                sharedDropdown.open();
                             }
                         }
 
@@ -525,7 +525,9 @@ Scope {
                             id: sharedDropdown
 
                             skewType: "right"
+                            autoPosition: false
                             implicitWidth: rightSection.width
+                            anchor.adjustment: PopupAdjustment.None
 
                             fullHeight: {
                                 if (capsule.activePanel === "volume")
