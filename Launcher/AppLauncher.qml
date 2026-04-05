@@ -10,7 +10,15 @@ PanelWindow {
 
     // ── Public API ──────────────────────────────────────
     property bool isOpen: false
+    property bool _suppressCarouselAnim: false
+    Timer {
+        id: _animEnableTimer
+        interval: Theme.animCarousel
+        onTriggered: launcher._suppressCarouselAnim = false
+    }
+
     function _initLauncher(tab, edit) {
+        _suppressCarouselAnim = true;
         isOpen = true;
         visible = true;
         activeTab = tab;
@@ -23,6 +31,7 @@ PanelWindow {
         activeCategory.onTabEnter();
         searchField.forceActiveFocus();
         Qt.callLater(tabHighlight._snapToTab, tab);
+        _animEnableTimer.restart();
     }
 
     function open() { _initLauncher(0, false); }
@@ -139,6 +148,7 @@ PanelWindow {
         }
         activeCategory.onTabLeave();
         editMode = false;
+        _suppressCarouselAnim = true;
         // Clear carousel before switching — prevents delegate/model cross-contamination
         _carouselModel = [];
         _carouselDelegate = null;
@@ -149,6 +159,7 @@ PanelWindow {
         selectedIndex = 0;
         activeCategory.onSearch("");
         activeCategory.onTabEnter();
+        _animEnableTimer.restart();
         searchField.forceActiveFocus();
     }
 
@@ -477,6 +488,7 @@ PanelWindow {
                 visible: launcher.hasItems
 
                 Behavior on x {
+                    enabled: launcher.isOpen && !launcher._suppressCarouselAnim
                     NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic }
                 }
 

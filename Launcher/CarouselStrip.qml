@@ -26,8 +26,14 @@ Item {
     height: carouselHeight
     opacity: isVisible ? 1.0 : 0.0
 
-    Behavior on width { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
-    Behavior on opacity { NumberAnimation { duration: Theme.animSmooth } }
+    Behavior on width {
+        enabled: launcher && launcher.isOpen && !launcher._suppressCarouselAnim
+        NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic }
+    }
+    Behavior on opacity {
+        enabled: launcher && launcher.isOpen && !launcher._suppressCarouselAnim
+        NumberAnimation { duration: Theme.animSmooth }
+    }
 
     // Card content goes here
     default property alias contentData: card.contentData
