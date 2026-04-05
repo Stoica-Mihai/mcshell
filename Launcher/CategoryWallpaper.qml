@@ -100,7 +100,6 @@ LauncherCategory {
         const paths = launcher.searchText !== "" ? filteredPaths : allPaths;
         const path = paths[index];
         if (!path) return;
-        activeWallpaper = path;
         activeIndex = allPaths.indexOf(path);
         UserSettings.setWallpaper(path);
         wallpaperSelected(path);

@@ -12,15 +12,7 @@ Item {
     property string currentWallpaper: UserSettings.wallpaperPath
 
     function setWallpaper(path) {
-        currentWallpaper = path;
         UserSettings.setWallpaper(path);
-    }
-
-    // Load persisted wallpaper on startup
-    Component.onCompleted: {
-        if (UserSettings.wallpaperPath !== "") {
-            currentWallpaper = UserSettings.wallpaperPath;
-        }
     }
 
     Variants {

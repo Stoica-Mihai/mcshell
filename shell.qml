@@ -45,6 +45,9 @@ ShellRoot {
     AppLauncher {
         id: appLauncher
         onWallpaperSelected: path => wallpaper.setWallpaper(path)
+        onActionRequested: action => {
+            if (action === "lock") lockScreen.lock();
+        }
     }
     KeybindPanel { id: keybindPanel }
     LockScreen { id: lockScreen }

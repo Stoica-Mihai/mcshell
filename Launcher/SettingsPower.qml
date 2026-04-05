@@ -67,12 +67,19 @@ SettingsPanel {
         }
     }
 
-    // ── Actions ──
-    SafeProcess {
-        id: lockProc
-        command: ["qs", "-c", "mcshell", "ipc", "call", "mcshell", "lock"]
-        failMessage: "lock failed"
+    // React to external config changes
+    Connections {
+        target: UserSettings
+        function onPowerProfileChanged() {
+            const idx = root.profileNames.indexOf(UserSettings.powerProfile);
+            if (idx >= 0) {
+                PowerProfiles.profile = root.profileEnums[idx];
+                profileCycler.currentIndex = idx;
+            }
+        }
     }
+
+    // ── Actions ──
     SafeProcess {
         id: rebootProc
         command: ["systemctl", "reboot"]
@@ -120,7 +127,7 @@ SettingsPanel {
         }
         confirmItem = -1;
         switch (actionIdx) {
-        case 0: lockProc.running = true; break;
+        case 0: actionRequested("lock"); break;
         case 1: Niri.dispatch(["quit", "--skip-confirmation"]); break;
         case 2: rebootProc.running = true; break;
         case 3: shutdownProc.running = true; break;

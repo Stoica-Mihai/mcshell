@@ -9,6 +9,7 @@ ColumnLayout {
     property bool active: false
     property int selectedItem: 0
     property int itemCount: 0
+    signal actionRequested(string action)
 
     spacing: Theme.spacingTiny
 

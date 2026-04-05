@@ -70,6 +70,7 @@ PanelWindow {
 
     // ── Categories ──────────────────────────────────────
     signal wallpaperSelected(string path)
+    signal actionRequested(string action)
 
     property list<LauncherCategory> categories: [
         CategoryApps { launcher: launcher },

@@ -11,6 +11,7 @@ Item {
     property string source: ""
     property bool active: false
     readonly property string panelLegend: loader.item?.panelLegend ?? Theme.legend(Theme.hintUpDown, Theme.hintEnter + " select", Theme.hintBack)
+    signal actionRequested(string action)
 
     // ── Common navigation interface ──
     function navigateUp() {
@@ -109,7 +110,12 @@ Item {
                 id: loader
                 width: parent.width
                 source: root.source
-                onLoaded: if (item) item.active = Qt.binding(() => root.active)
+                onLoaded: {
+                    if (!item) return;
+                    item.active = Qt.binding(() => root.active);
+                    if (item.actionRequested)
+                        item.actionRequested.connect(root.actionRequested);
+                }
             }
         }
     }

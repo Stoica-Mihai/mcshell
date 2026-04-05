@@ -142,12 +142,20 @@ Singleton {
         }
     }
 
-    // Re-extract when wallpaper changes while in Wallpaper theme
+    // React to settings changes that affect theming
     Connections {
         target: UserSettings
         function onWallpaperPathChanged() {
             if (UserSettings.themeName === root.wallpaperThemeName && root._wallpaperUrl != "")
                 _vibrantColor.source = root._wallpaperUrl;
+        }
+        function onThemeNameChanged() {
+            if (UserSettings.themeName)
+                root.applyPalette(UserSettings.themeName);
+        }
+        function onWallpaperStrategyChanged() {
+            if (UserSettings.themeName === root.wallpaperThemeName && _vibrantColor.hue >= 0)
+                root._applyWallpaperHue(_vibrantColor.hue);
         }
     }
 

@@ -59,7 +59,10 @@ Singleton {
         blockLoading: true
         printErrors: false
         watchChanges: true
-        onFileChanged: reload()
+        onFileChanged: {
+            reload();
+            root._applyMode();
+        }
 
         adapter: JsonAdapter {
             id: adapter
