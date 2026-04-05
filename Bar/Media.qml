@@ -215,11 +215,9 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                 }
 
-                // ── Artist name ──────────────────────────
-                Text {
+                component MediaSubtext: Text {
                     Layout.fillWidth: true
                     Layout.topMargin: -6
-                    text: root.artist || "Unknown Artist"
                     color: Theme.fgDim
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeSmall
@@ -227,18 +225,14 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                 }
 
+                // ── Artist name ──────────────────────────
+                MediaSubtext { text: root.artist || "Unknown Artist" }
+
                 // ── Album name ───────────────────────────
-                Text {
-                    Layout.fillWidth: true
-                    Layout.topMargin: -6
+                MediaSubtext {
                     visible: root.player && root.player.trackAlbum !== ""
                     text: root.player ? (root.player.trackAlbum || "") : ""
-                    color: Theme.fgDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
                     font.italic: true
-                    elide: Text.ElideRight
-                    horizontalAlignment: Text.AlignHCenter
                     opacity: Theme.opacityBody
                 }
 

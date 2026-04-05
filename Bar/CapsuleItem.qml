@@ -1,5 +1,6 @@
 import QtQuick
 import qs.Config
+import qs.Widgets
 
 // Reusable capsule indicator: icon + optional label with hover/alert coloring.
 // Used in StatusBar's system capsule for volume, battery, etc.
@@ -47,16 +48,7 @@ Item {
     }
 
     // Underline when panel is active
-    Rectangle {
-        visible: root.active
-        anchors.bottom: parent.bottom
-        anchors.bottomMargin: -4
-        anchors.horizontalCenter: parent.horizontalCenter
-        width: parent.width + 4
-        height: 2
-        radius: 1
-        color: Theme.accent
-    }
+    ActiveUnderline { visible: root.active }
 
     MouseArea {
         id: mouse

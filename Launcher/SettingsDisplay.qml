@@ -95,7 +95,7 @@ SettingsPanel {
     // Brightness
     SettingsRow {
         selected: root.active && root.selectedItem === 0
-        Layout.preferredHeight: 40
+        Layout.preferredHeight: Theme.settingsRowHeight
 
         Text {
             text: Theme.iconBrightness
@@ -137,7 +137,7 @@ SettingsPanel {
     // Night light mode
     SettingsRow {
         selected: root.active && root.selectedItem === 1
-        Layout.preferredHeight: 40
+        Layout.preferredHeight: Theme.settingsRowHeight
 
         Text {
             text: Theme.iconNightLight
@@ -173,7 +173,7 @@ SettingsPanel {
         visible: root.nightOn
         opacity: UserSettings.nightLightMode === UserSettings.modeAuto ? Theme.opacityMuted : 1.0
         selected: root.active && root.selectedItem === 2
-        Layout.preferredHeight: 40
+        Layout.preferredHeight: Theme.settingsRowHeight
 
         Text {
             text: Theme.iconThermometer
@@ -214,7 +214,7 @@ SettingsPanel {
     SettingsRow {
         visible: UserSettings.nightLightMode === UserSettings.modeAuto
         selected: root.active && root.selectedItem === 3
-        Layout.preferredHeight: 36
+        Layout.preferredHeight: Theme.settingsRowCompact
 
         Text {
             text: Theme.iconSunrise
@@ -241,7 +241,7 @@ SettingsPanel {
     SettingsRow {
         visible: UserSettings.nightLightMode === UserSettings.modeAuto
         selected: root.active && root.selectedItem === 4
-        Layout.preferredHeight: 36
+        Layout.preferredHeight: Theme.settingsRowCompact
 
         Text {
             text: Theme.iconSunset
@@ -269,7 +269,7 @@ SettingsPanel {
     // Auto-lock timeout
     SettingsRow {
         selected: root.active && root.selectedItem === root._idleItem
-        Layout.preferredHeight: 40
+        Layout.preferredHeight: Theme.settingsRowHeight
 
         Text {
             text: Theme.iconLock

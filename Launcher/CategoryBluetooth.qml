@@ -115,20 +115,21 @@ LauncherCategory {
 
 
 
-    // ── Device icon helper ──
+    // ── Device type data ──
+    readonly property var btDeviceTypes: ({
+        "audio-headset":    { icon: "\u{f01d2}", label: "Headset" },
+        "audio-headphones": { icon: "\u{f02cb}", label: "Headphones" },
+        "audio-card":       { icon: "\u{f04c3}", label: "Speaker" },
+        "input-gaming":     { icon: "\u{f0eb5}", label: "Controller" },
+        "input-keyboard":   { icon: "\uf11c",    label: "Keyboard" },
+        "input-mouse":      { icon: "\u{f037d}", label: "Mouse" },
+        "input-tablet":     { icon: "\u{f04f7}", label: "Tablet" },
+        "phone":            { icon: "\u{f03f2}", label: "Phone" },
+        "computer":         { icon: "\u{f0379}", label: "Computer" }
+    })
+
     function btDeviceIcon(iconType) {
-        switch (iconType) {
-        case "audio-headset":   return "\u{f01d2}"; // nf-md-headset
-        case "audio-headphones": return "\u{f02cb}"; // nf-md-headphones
-        case "audio-card":      return "\u{f04c3}"; // nf-md-speaker
-        case "input-gaming":    return "\u{f0eb5}"; // nf-md-controller
-        case "input-keyboard":  return "\uf11c";     // nf-fa-keyboard
-        case "input-mouse":     return "\u{f037d}"; // nf-md-mouse
-        case "input-tablet":    return "\u{f04f7}"; // nf-md-tablet
-        case "phone":           return "\u{f03f2}"; // nf-md-phone
-        case "computer":        return "\u{f0379}"; // nf-md-monitor
-        default:                return Theme.iconBluetooth;
-        }
+        return (btDeviceTypes[iconType]?.icon) ?? Theme.iconBluetooth;
     }
 
     // ── Key handler ──
@@ -172,7 +173,7 @@ LauncherCategory {
                 visible: !parent.isCurrent
                 text: root.btDeviceIcon(modelData.icon)
                 font.family: Theme.iconFont
-                font.pixelSize: 24
+                font.pixelSize: Theme.launcherIconCollapsed
                 color: modelData.connected ? Theme.accent : Theme.fgDim
             }
 
@@ -187,7 +188,7 @@ LauncherCategory {
                     Layout.alignment: Qt.AlignHCenter
                     text: root.btDeviceIcon(modelData.icon)
                     font.family: Theme.iconFont
-                    font.pixelSize: 48
+                    font.pixelSize: Theme.launcherIconExpanded
                     color: modelData.connected ? Theme.accent : Theme.fg
                 }
 
@@ -214,18 +215,7 @@ LauncherCategory {
                     text: {
                         const parts = [];
                         // Device type from icon property
-                        const typeMap = {
-                            "audio-headset": "Headset",
-                            "audio-headphones": "Headphones",
-                            "audio-card": "Speaker",
-                            "input-gaming": "Controller",
-                            "input-keyboard": "Keyboard",
-                            "input-mouse": "Mouse",
-                            "input-tablet": "Tablet",
-                            "phone": "Phone",
-                            "computer": "Computer",
-                        };
-                        const devType = typeMap[modelData.icon] || "";
+                        const devType = (root.btDeviceTypes[modelData.icon]?.label) ?? "";
                         if (devType) parts.push(devType);
                         if (modelData.connected) parts.push("Connected");
                         else if (modelData.paired) parts.push("Paired");

@@ -126,7 +126,7 @@ SettingsPanel {
     SettingsRow {
         selected: root.active && root.selectedItem === 0
         opacity: root._profileAvailable ? 1.0 : Theme.opacityDim
-        Layout.preferredHeight: 36
+        Layout.preferredHeight: Theme.settingsRowCompact
 
         Text {
             text: Theme.iconBattery

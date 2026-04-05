@@ -63,7 +63,7 @@ LauncherCategory {
                 visible: !parent.isCurrent && !(modelData.isImage ?? false)
                 text: Theme.iconClipboard
                 font.family: Theme.iconFont
-                font.pixelSize: 24
+                font.pixelSize: Theme.launcherIconCollapsed
                 color: Theme.fgDim
             }
 

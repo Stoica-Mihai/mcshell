@@ -422,6 +422,9 @@ Singleton {
     readonly property int notifNormal: 3000     // standard notifications
     readonly property int notifLong: 5000       // notifications with images
 
+    // ── Screenshot ─────────────────────────────────────
+    readonly property string screenshotPrefix: "/tmp/mcshell-screenshot-"
+
     // ── Layout ──────────────────────────────────────────
     readonly property int barHeight: 34
     readonly property int barMargin: 5
@@ -448,6 +451,10 @@ Singleton {
     // Popup/panel
     readonly property int popupPadding: 12
 
+    // Settings panel rows
+    readonly property int settingsRowHeight: 40
+    readonly property int settingsRowCompact: 36
+
     // Audio
     readonly property real volumeStep: 0.02
 
@@ -467,6 +474,8 @@ Singleton {
     readonly property int iconSizeMedium: 28
     readonly property int iconSizeLarge: 32
     readonly property int iconSizeXLarge: 48
+    readonly property int launcherIconCollapsed: 24
+    readonly property int launcherIconExpanded: 48
 
     // ── Icons (Nerd Font codepoints) ────────────────────
     // Volume

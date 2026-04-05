@@ -151,7 +151,7 @@ LauncherCategory {
                 visible: !wifiStrip.isCurrent
                 text: Theme.iconWifi
                 font.family: Theme.iconFont
-                font.pixelSize: 24
+                font.pixelSize: Theme.launcherIconCollapsed
                 color: modelData.connected ? Theme.accent : Theme.fgDim
                 opacity: 0.3 + modelData.signalStrength * 0.7
             }
@@ -168,7 +168,7 @@ LauncherCategory {
                     Layout.alignment: Qt.AlignHCenter
                     text: Theme.iconWifi
                     font.family: Theme.iconFont
-                    font.pixelSize: 48
+                    font.pixelSize: Theme.launcherIconExpanded
                     color: modelData.connected ? Theme.accent : Theme.fg
                     opacity: Theme.opacityDim + modelData.signalStrength * Theme.opacitySubtle
                 }

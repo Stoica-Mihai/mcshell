@@ -469,16 +469,7 @@ Scope {
                                 }
 
                                 // Underline
-                                Rectangle {
-                                    visible: capsule.activePanel === "notifications"
-                                    anchors.bottom: parent.bottom
-                                    anchors.bottomMargin: -4
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: parent.width + 4
-                                    height: 2
-                                    radius: 1
-                                    color: Theme.accent
-                                }
+                                ActiveUnderline { visible: capsule.activePanel === "notifications" }
 
                                 // Unread badge
                                 Rectangle {

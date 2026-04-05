@@ -84,7 +84,7 @@ ShellRoot {
 
     property string _windowScreenshotPath: ""
     function screenshotWindow() {
-        _windowScreenshotPath = "/tmp/mcshell-screenshot-" + Date.now() + ".png";
+        _windowScreenshotPath = Theme.screenshotPrefix + Date.now() + ".png";
         _windowScreenshotProc.command = ["niri", "msg", "action", "screenshot-window", "--path", _windowScreenshotPath];
         _windowScreenshotProc.running = true;
     }

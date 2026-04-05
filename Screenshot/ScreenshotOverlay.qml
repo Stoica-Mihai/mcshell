@@ -48,7 +48,7 @@ PanelWindow {
     function _startCapture(captureMode) {
         _reset();
         mode = captureMode;
-        _savePath = "/tmp/mcshell-screenshot-" + Date.now() + ".png";
+        _savePath = Theme.screenshotPrefix + Date.now() + ".png";
         _tmpPath = _savePath + ".tmp.png";
         mask = null;
         // Don't set captureView.opacity yet — capture the clean screen
