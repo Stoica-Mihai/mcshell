@@ -11,8 +11,32 @@ Item {
     property string tabIcon: ""
     property string searchPlaceholder: ""
 
-    // ── Data model ──
+    // ── Data model (lazy-loaded) ──
     property var model: []
+    property var _sourceData: []
+    property int _loadedCount: 0
+
+    function setItems(items, startIndex) {
+        _sourceData = items;
+        const w = 15;
+        _loadedCount = Math.min(items.length, Math.max(w, (startIndex || 0) + w));
+        model = items.length <= w ? items : items.slice(0, _loadedCount);
+    }
+
+    Timer {
+        id: _growTimer
+        interval: 350
+        onTriggered: model = _sourceData.slice(0, _loadedCount)
+    }
+
+    function growItems(selectedIndex) {
+        if (_loadedCount >= _sourceData.length) return;
+        const need = selectedIndex + 8;
+        if (need > _loadedCount) {
+            _loadedCount = Math.min(_sourceData.length, need + 8);
+            _growTimer.restart();
+        }
+    }
 
     // ── Disabled overlay (e.g. WiFi off, BT off) ──
     property bool disabledState: false

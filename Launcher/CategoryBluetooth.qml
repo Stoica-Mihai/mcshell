@@ -30,9 +30,6 @@ LauncherCategory {
     scanningHint: "Scanning for devices..."
 
     // ── Data ──
-    model: filteredBtDevices
-
-    property var filteredBtDevices: []
     property bool active: false  // true when this tab is shown
     readonly property BluetoothAdapter btAdapter: Bluetooth.defaultAdapter
     readonly property bool btEnabled: btAdapter?.enabled ?? false
@@ -43,7 +40,7 @@ LauncherCategory {
             refreshBt();
         }
     }
-    onBtEnabledChanged: if (!btEnabled) filteredBtDevices = []
+    onBtEnabledChanged: if (!btEnabled) setItems([])
 
     StatusTracker { id: btTracker }
 
@@ -56,7 +53,7 @@ LauncherCategory {
                 root.btAdapter.discovering = true;
                 root.refreshBt();
             } else {
-                root.filteredBtDevices = [];
+                root._sourceData = [];
             }
         }
     }
@@ -76,7 +73,7 @@ LauncherCategory {
     function onSearch(text) { refreshBt(text); }
 
     function refreshBt(searchText) {
-        if (!btAdapter || !btAdapter.devices) { filteredBtDevices = []; return; }
+        if (!btAdapter || !btAdapter.devices) { setItems([]); return; }
         const devs = filterByQuery(searchText, btAdapter.devices.values,
             (d, q) => (d.name || d.deviceName || "").toLowerCase().indexOf(q) >= 0);
         devs.sort((a, b) => {
@@ -84,7 +81,7 @@ LauncherCategory {
             if (a.paired !== b.paired) return a.paired ? -1 : 1;
             return (a.name || "").localeCompare(b.name || "");
         });
-        filteredBtDevices = devs;
+        setItems(devs);
     }
 
     // ── Polling timer (BT devices don't rebind Connections target) ──
@@ -117,10 +114,10 @@ LauncherCategory {
 
 
     // Watch for connect/disconnect completion
-    onFilteredBtDevicesChanged: {
+    onModelChanged: {
         if (btTracker.targetId === "" || btTracker.status === "") return;
-        for (let i = 0; i < filteredBtDevices.length; i++) {
-            const d = filteredBtDevices[i];
+        for (let i = 0; i < _sourceData.length; i++) {
+            const d = _sourceData[i];
             if (d.address !== btTracker.targetId) continue;
             if (btTracker.status === "connecting" && d.connected) {
                 btTracker.status = "connected"; btTracker.autoClear();
@@ -158,8 +155,8 @@ LauncherCategory {
 
     // ── Activate ──
     function onActivate(index) {
-        if (index < 0 || index >= filteredBtDevices.length) return;
-        const dev = filteredBtDevices[index];
+        if (index < 0 || index >= _sourceData.length) return;
+        const dev = _sourceData[index];
         btTracker.targetId = dev.address;
         if (dev.connected) {
             btTracker.status = "disconnecting";

@@ -17,19 +17,13 @@ LauncherCategory {
     tabIcon: Theme.iconImage
     searchPlaceholder: "Search wallpapers..."
     legendHint: Theme.hintEnter + " apply"
-    scanningState: !loaded || allPaths.length === 0
+    scanningState: !loaded || _fullPaths.length === 0
     scanningIcon: Theme.iconImage
     scanningHint: loaded ? "No wallpapers found in " + UserSettings.wallpaperFolder : "Loading..."
 
     // ── Data ──
-    model: ScriptModel {
-        id: wallModel
-        values: root.launcher.searchText !== "" ? root.filteredPaths : root.allPaths
-    }
-
     property bool loaded: false
-    property var allPaths: []
-    property var filteredPaths: []
+    property var _fullPaths: []
     property var _scanLines: []
     property string activeWallpaper: UserSettings.wallpaperPath
     property int activeIndex: 0
@@ -42,6 +36,7 @@ LauncherCategory {
             _lastFolder = folder;
             scanFolder();
         } else {
+            setItems(_fullPaths, activeIndex);
             launcher.selectedIndex = activeIndex;
         }
     }
@@ -53,7 +48,7 @@ LauncherCategory {
         const folder = UserSettings.wallpaperFolder;
         if (folder === "") return;
         loaded = false;
-        allPaths = [];
+        _fullPaths = [];
         _scanLines = [];
         scanProc.command = [
             "find", folder, "-maxdepth", "1", "-type", "f",
@@ -70,17 +65,20 @@ LauncherCategory {
         onRead: data => { root._scanLines.push(data.trim()); }
         onFinished: {
             const sorted = root._scanLines.slice().sort();
-            root.allPaths = sorted;
+            root._fullPaths = sorted;
             root._scanLines = [];
             root.loaded = true;
             // Jump to the active wallpaper
+            let startIdx = 0;
             for (let i = 0; i < sorted.length; i++) {
                 if (sorted[i] === root.activeWallpaper) {
                     root.activeIndex = i;
-                    root.launcher.selectedIndex = i;
+                    startIdx = i;
                     break;
                 }
             }
+            root.setItems(sorted, startIdx);
+            root.launcher.selectedIndex = startIdx;
         }
         onFailed: {
             root.loaded = true;
@@ -89,16 +87,16 @@ LauncherCategory {
 
     // ── Search ──
     function onSearch(text) {
-        filteredPaths = filterByQuery(text, allPaths,
-            (item, q) => item.toLowerCase().indexOf(q) >= 0);
+        if (text === "") { setItems(_fullPaths, activeIndex); return; }
+        setItems(filterByQuery(text, _fullPaths,
+            (item, q) => item.toLowerCase().indexOf(q) >= 0));
     }
 
     // ── Activate ──
     function onActivate(index) {
-        const paths = launcher.searchText !== "" ? filteredPaths : allPaths;
-        const path = paths[index];
+        const path = _sourceData[index];
         if (!path) return;
-        activeIndex = allPaths.indexOf(path);
+        activeIndex = _fullPaths.indexOf(path);
         ShellActions.setWallpaper(path);
     }
 

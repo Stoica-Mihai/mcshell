@@ -21,25 +21,32 @@ LauncherCategory {
     scanningHint: ClipboardHistory.available ? "No clipboard history" : "Clipboard unavailable"
 
     // ── Data ──
-    model: ScriptModel {
-        id: clipModel
-        values: root.launcher.searchText !== "" ? root.filteredClipEntries : ClipboardHistory.entries.values
-        objectProp: "timestamp"
+    Connections {
+        target: ClipboardHistory.entries
+        function onValuesChanged() { root._refreshClip(); }
     }
 
-    property var filteredClipEntries: []
+    function _refreshClip() {
+        if (launcher.searchText !== "")
+            onSearch(launcher.searchText);
+        else
+            setItems(ClipboardHistory.entries.values);
+    }
+
+    // ── Lifecycle ──
+    function onTabEnter() { _refreshClip(); }
 
     // ── Search ──
     function onSearch(text) {
-        filteredClipEntries = filterByQuery(text, ClipboardHistory.entries.values,
-            (item, q) => item.content.toLowerCase().indexOf(q) >= 0);
+        if (text === "") { setItems(ClipboardHistory.entries.values); return; }
+        setItems(filterByQuery(text, ClipboardHistory.entries.values,
+            (item, q) => item.content.toLowerCase().indexOf(q) >= 0));
     }
 
     // ── Activate ──
     function onActivate(index) {
-        const entries = launcher.searchText !== "" ? filteredClipEntries : ClipboardHistory.entries.values;
-        if (index >= 0 && index < entries.length) {
-            ClipboardHistory.select(entries[index]);
+        if (index >= 0 && index < _sourceData.length) {
+            ClipboardHistory.select(_sourceData[index]);
             launcher.close();
         }
     }

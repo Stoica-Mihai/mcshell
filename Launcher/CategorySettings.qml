@@ -25,7 +25,7 @@ LauncherCategory {
         { id: "theme",   icon: Theme.iconPalette,    source: "SettingsTheme.qml" },
         { id: "power",   icon: Theme.iconShutdown,   source: "SettingsPower.qml" }
     ]
-    model: settingsCategories
+    Component.onCompleted: setItems(settingsCategories)
 
     property var activeSettingsCard: null
     property bool editMode: false

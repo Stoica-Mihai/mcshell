@@ -29,9 +29,6 @@ LauncherCategory {
     scanningHint: "Scanning for networks..."
 
     // ── Data ──
-    model: filteredWifiNetworks
-
-    property var filteredWifiNetworks: []
     property string wifiPasswordSsid: ""  // which network is showing password input
 
     StatusTracker { id: wifiTracker }
@@ -59,14 +56,14 @@ LauncherCategory {
     function onSearch(text) { refreshWifi(text); }
 
     function refreshWifi(searchText) {
-        if (!wifiDevice || !wifiDevice.networks) { filteredWifiNetworks = []; return; }
+        if (!wifiDevice || !wifiDevice.networks) { setItems([]); return; }
         const nets = filterByQuery(searchText, wifiDevice.networks.values,
             (n, q) => (n.name || "").toLowerCase().indexOf(q) >= 0);
         nets.sort((a, b) => {
             if (a.connected !== b.connected) return a.connected ? -1 : 1;
             return b.signalStrength - a.signalStrength;
         });
-        filteredWifiNetworks = nets;
+        setItems(nets);
     }
 
     // Re-filter when networks change (scan results arriving)
@@ -112,8 +109,8 @@ LauncherCategory {
 
     // ── Activate ──
     function onActivate(index) {
-        if (index < 0 || index >= filteredWifiNetworks.length) return;
-        const net = filteredWifiNetworks[index];
+        if (index < 0 || index >= _sourceData.length) return;
+        const net = _sourceData[index];
         if (wifiPasswordSsid === net.name) return; // already showing password
         wifiTracker.targetId = net.name;
         if (net.connected) {

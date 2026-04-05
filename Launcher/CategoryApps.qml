@@ -21,8 +21,6 @@ LauncherCategory {
     scanningHint: "No applications found"
 
     // ── Data ──
-    model: filteredApps
-
     readonly property var allApps: {
         if (typeof DesktopEntries === "undefined") return [];
         const raw = DesktopEntries.applications.values;
@@ -35,7 +33,6 @@ LauncherCategory {
         apps.sort((a, b) => (a.name || "").toLowerCase().localeCompare((b.name || "").toLowerCase()));
         return apps;
     }
-    property var filteredApps: []
     onAllAppsChanged: applyAppFilter(launcher.searchText)
 
     // ── Search ──
@@ -43,7 +40,7 @@ LauncherCategory {
 
     function applyAppFilter(text) {
         const query = (text || "").toLowerCase().trim();
-        if (query === "") { filteredApps = allApps; return; }
+        if (query === "") { setItems(allApps); return; }
         const scored = [];
         for (let i = 0; i < allApps.length; i++) {
             const app = allApps[i];
@@ -55,7 +52,7 @@ LauncherCategory {
             if (score >= 0) scored.push({ app: app, score: score });
         }
         scored.sort((a, b) => b.score - a.score);
-        filteredApps = scored.map(s => s.app);
+        setItems(scored.map(s => s.app));
     }
 
     function fuzzyScore(query, target) {
@@ -79,8 +76,8 @@ LauncherCategory {
 
     // ── Activate ──
     function onActivate(index) {
-        if (index < 0 || index >= filteredApps.length) return;
-        launchApp(filteredApps[index]);
+        if (index < 0 || index >= _sourceData.length) return;
+        launchApp(_sourceData[index]);
     }
 
     function launchApp(entry) {

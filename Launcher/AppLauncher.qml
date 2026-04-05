@@ -107,6 +107,7 @@ PanelWindow {
     function navigate(delta) {
         if (!hasItems) return;
         selectedIndex = Math.max(0, Math.min(currentCount - 1, selectedIndex + delta));
+        activeCategory.growItems(selectedIndex);
     }
 
     function calcRowX() {
