@@ -29,6 +29,7 @@ Singleton {
     property alias wallpaperStrategy: adapter.wallpaperStrategy  // strategy name, e.g. "Tonal"
     property alias powerProfile: adapter.powerProfile            // "PowerSaver", "Balanced", "Performance"
     property alias borderAnimation: adapter.borderAnimation      // "midpoint", "clockwise", "corners", "fade"
+    property alias barBorderStyle: adapter.barBorderStyle        // "pulse", "breathe", "dashes", "none"
 
     // Convenience — true when night light is actively applied
     readonly property bool nightLightActive: nightLightMode === modeManual || (nightLightMode === modeAuto && _autoNightPhase)
@@ -79,6 +80,7 @@ Singleton {
             property string wallpaperStrategy: "Tonal"
             property string powerProfile: "Balanced"
             property string borderAnimation: "midpoint"
+            property string barBorderStyle: "pulse"
         }
 
         onAdapterUpdated: root._save()
@@ -86,6 +88,7 @@ Singleton {
         onLoaded: {
             root._restoreNightLight();
             root._detectDefaultFolder();
+            root._save();
             root.settingsLoaded();
         }
 

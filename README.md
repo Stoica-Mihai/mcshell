@@ -5,6 +5,7 @@ A custom Wayland desktop shell built with [QuickShell](https://quickshell.outfox
 ## Features
 
 ### Status Bar
+Three parallelogram segments (left/center/right) with glass effect and animated accent border (flowing light pulse, breathing, marching dashes, or off — configurable).
 - **Workspaces** — animated pills, click to switch, scroll to cycle (native Niri IPC, no polling)
 - **Active Window** — reactive title display via Niri IPC
 - **Clock** — date + time, click for calendar with month/year picker
@@ -18,7 +19,7 @@ A custom Wayland desktop shell built with [QuickShell](https://quickshell.outfox
 - **System Tray** — colorized icons, right-click context menus, hover tooltips
 
 ### App Launcher
-Horizontal filmstrip carousel with smooth sliding animation. Two-level keyboard navigation: Left/Right to switch categories (Level 1), Enter to dive in, Left/Right to navigate cards (Level 2), Escape to go back. Six tabs:
+Horizontal filmstrip carousel with parallelogram cards, smooth sliding animation, and animated border on focus (4 styles: midpoint, clockwise, corners, fade — configurable). Two-level keyboard navigation: Left/Right to switch categories (Level 1), Enter to dive in, Left/Right to navigate cards (Level 2), Escape to go back. Six tabs:
 - **Apps** — fuzzy search, large icon + name + description in expanded view
 - **Clipboard** — native clipboard history via Wayland data control protocol, live-updating, text and image support
 - **WiFi** — scan and connect to networks, inline password input, signal strength and security display. Ctrl+W to toggle WiFi
