@@ -62,8 +62,11 @@ Horizontal filmstrip carousel with parallelogram cards, smooth sliding animation
 
 ### Window Switcher
 - Fullscreen overlay with carousel cards (icon + title)
+- **Alt+Tab behavior**: niri keybind opens/cycles, release Alt to focus selected window
 - Arrow keys to navigate, Enter to focus, type to filter
-- Triggered via `toggleWindows` IPC command
+- Search bar with parallelogram skew matching card design
+- Wrap-around navigation at list boundaries
+- Triggered via `toggleWindows` IPC command or Alt+Tab keybind
 
 ### Keybind Hints
 - Parses `~/.config/niri/config.kdl` for keybindings with live file watching
@@ -150,6 +153,7 @@ binds {
     Mod+N { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "launcherWifi"; }
     Mod+B { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "launcherBluetooth"; }
     Ctrl+Alt+Q { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "settingsCard" "power"; }
+    Alt+Tab { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "toggleWindows"; }
     Print { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotArea"; }
     Shift+Print { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotFull"; }
     Ctrl+Print { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotWindow"; }
@@ -221,7 +225,7 @@ Pure QML — no C++, no build system. QuickShell interprets QML directly. Each s
 |---|---|
 | `Config/` | Theme singleton (8 palettes + auto wallpaper theming), UserSettings singleton (persistent preferences via JsonAdapter, live-reload on external changes) |
 | `Core/` | Shared non-visual components — SafeProcess, ShellActions singleton (lock/logout/reboot/shutdown/wallpaper), Brightness singleton |
-| `Bar/` | Status bar — workspaces (Niri IPC), active window, clock + calendar, media, network, volume, battery, system tray |
+| `Bar/` | Status bar — three parallelogram segments with shared dropdown panels. Left: launcher + workspaces, active window. Center: clock + calendar dropdown. Right: media (MPRIS), system tray, volume/battery/notifications capsule — all sharing one dropdown |
 | `Launcher/` | App launcher carousel — apps, clipboard, WiFi, Bluetooth, wallpaper, settings tabs with lazy-loaded progressive model growth |
 | `Notifications/` | Notification daemon + popup cards with action buttons |
 | `NotificationHistory/` | Notification history dropdown |
@@ -230,8 +234,8 @@ Pure QML — no C++, no build system. QuickShell interprets QML directly. Each s
 | `Wallpaper/` | Background renderer with crossfade transitions |
 | `KeybindHints/` | Keybind parser + hints overlay |
 | `Screenshot/` | Native screencopy overlay — fullscreen + interactive area selection with crop |
-| `WindowSwitcher/` | Fullscreen window switcher overlay with carousel cards |
-| `Widgets/` | Shared UI components — AnimatedPopup, IconButton, SliderTrack, ControlSlider |
+| `WindowSwitcher/` | Window switcher overlay with carousel cards, Alt+Tab behavior, parallelogram search bar |
+| `Widgets/` | Shared UI components — AnimatedPopup (shared dropdown panel API), AnimatedBorder, ParallelogramCard, StyledTextField, MediaControls, ActiveUnderline, IconButton, SliderTrack, ControlSlider, CyclePicker, HoverText, OptImage, Separator, SmoothWheelHandler, ThemedScrollBar, TriToggle |
 
 ## Acknowledgements
 
