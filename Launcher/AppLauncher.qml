@@ -168,17 +168,38 @@ PanelWindow {
     }
 
     // Search bar — fixed position above center
-    Rectangle {
+    Item {
         id: searchBar
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: carouselArea.top
         anchors.bottomMargin: 20
         width: Math.min(740, parent.width - 80)
         height: 44
-            radius: 10
-            color: Theme.surfaceContainer
-            border.width: 1
-            border.color: Theme.outlineVariant
+
+            Canvas {
+                id: searchBarBg
+                anchors.fill: parent
+                Connections {
+                    target: Theme
+                    function onSurfaceContainerChanged() { searchBarBg.requestPaint(); }
+                    function onOutlineVariantChanged() { searchBarBg.requestPaint(); }
+                }
+                onPaint: {
+                    var ctx = getContext("2d"), s = Theme.barDiagSlant;
+                    ctx.clearRect(0, 0, width, height);
+                    ctx.beginPath();
+                    ctx.moveTo(s, 0);
+                    ctx.lineTo(width, 0);
+                    ctx.lineTo(width - s, height);
+                    ctx.lineTo(0, height);
+                    ctx.closePath();
+                    ctx.fillStyle = Qt.rgba(Theme.surfaceContainer.r, Theme.surfaceContainer.g, Theme.surfaceContainer.b, 0.92);
+                    ctx.fill();
+                    ctx.strokeStyle = Theme.outlineVariant;
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+            }
 
             // ── Liquid blob tab highlight ──────────────────
             Canvas {
