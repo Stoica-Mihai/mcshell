@@ -272,16 +272,25 @@ PanelWindow {
             }
         }
 
-        Text {
+        Rectangle {
             anchors.horizontalCenter: parent.horizontalCenter
             anchors.bottom: parent.bottom
             anchors.bottomMargin: 32
-            text: root._selectionReady
-                ? Theme.legend("Space capture", Theme.hintEsc + " cancel")
-                : Theme.legend("Drag to select", Theme.hintEsc + " cancel")
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.fgDim
+            width: legendText.implicitWidth + 16
+            height: legendText.implicitHeight + 8
+            radius: Theme.radiusSmall
+            color: Theme.bg
+
+            Text {
+                id: legendText
+                anchors.centerIn: parent
+                text: root._selectionReady
+                    ? Theme.legend("Space capture", Theme.hintEsc + " cancel")
+                    : Theme.legend("Drag to select", Theme.hintEsc + " cancel")
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeSmall
+                color: Theme.accent
+            }
         }
 
         MouseArea {
