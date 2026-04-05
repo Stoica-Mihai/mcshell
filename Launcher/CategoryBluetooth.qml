@@ -104,6 +104,8 @@ LauncherCategory {
             } else if (line === "FAILED") {
                 btTracker.status = "failed";
                 btTracker.autoClear();
+                Quickshell.execDetached({ command: ["notify-send", "-t", "3000", "-u", "critical",
+                    "Bluetooth", "Failed to connect to " + btTracker.targetId] });
             }
         }
         onFailed: {
@@ -113,19 +115,6 @@ LauncherCategory {
     }
 
 
-    // Watch for connect/disconnect completion
-    onModelChanged: {
-        if (btTracker.targetId === "" || btTracker.status === "") return;
-        for (let i = 0; i < _sourceData.length; i++) {
-            const d = _sourceData[i];
-            if (d.address !== btTracker.targetId) continue;
-            if (btTracker.status === "connecting" && d.connected) {
-                btTracker.status = "connected"; btTracker.autoClear();
-            } else if (btTracker.status === "disconnecting" && !d.connected) {
-                btTracker.clear();
-            }
-        }
-    }
 
     // ── Device icon helper ──
     function btDeviceIcon(iconType) {

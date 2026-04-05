@@ -17,6 +17,8 @@ import qs.Screenshot
 import Quickshell.Wayland._DataControl
 import qs.WindowSwitcher
 import qs.Core
+import Quickshell.Bluetooth
+import Quickshell.Networking
 
 ShellRoot {
     id: shell
@@ -57,6 +59,57 @@ ShellRoot {
     ScreenshotOverlay { id: screenshot }
     WindowSwitcher { id: windowSwitcher }
     Recording { id: screenRecording }
+
+    // ── Connection notifications (global, always active) ──
+    Connections {
+        target: Bluetooth.defaultAdapter
+        function onEnabledChanged() {
+            if (!Bluetooth.defaultAdapter) return;
+            Quickshell.execDetached({ command: ["notify-send", "-t", "2000",
+                "Bluetooth", Bluetooth.defaultAdapter.enabled ? "Enabled" : "Disabled"] });
+        }
+    }
+
+    Variants {
+        model: Bluetooth.defaultAdapter?.devices.values ?? []
+        delegate: Connections {
+            required property var modelData
+            target: modelData
+            function onConnectedChanged() {
+                if (!modelData || !modelData.name) return;
+                Quickshell.execDetached({ command: ["notify-send", "-t", "3000",
+                    "Bluetooth", (modelData.connected ? "Connected to " : "Disconnected from ") + modelData.name] });
+            }
+        }
+    }
+
+    Connections {
+        target: Networking
+        function onWifiEnabledChanged() {
+            Quickshell.execDetached({ command: ["notify-send", "-t", "2000",
+                "WiFi", Networking.wifiEnabled ? "Enabled" : "Disabled"] });
+        }
+    }
+
+    readonly property var _wifiDevice: {
+        const devs = Networking.devices?.values ?? [];
+        for (let i = 0; i < devs.length; i++)
+            if (devs[i].type === DeviceType.Wifi) return devs[i];
+        return null;
+    }
+
+    Variants {
+        model: shell._wifiDevice?.networks.values ?? []
+        delegate: Connections {
+            required property var modelData
+            target: modelData
+            function onConnectedChanged() {
+                if (!modelData || !modelData.name) return;
+                Quickshell.execDetached({ command: ["notify-send", "-t", "3000",
+                    "WiFi", (modelData.connected ? "Connected to " : "Disconnected from ") + modelData.name] });
+            }
+        }
+    }
 
     // ── Idle management ──────────────────────────────────
     // enabled deferred until settings load to avoid timeout=0 race
