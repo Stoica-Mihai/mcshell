@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Shapes
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.SystemTray
@@ -104,136 +105,9 @@ Scope {
             width: parent.width - (Theme.barMargin + 1) * 2
             height: Theme.barHeight
 
-            // Repaint all canvases when theme changes
-            Connections {
-                target: Theme
-                function onBgSolidChanged() { leftBg.requestPaint(); centerBg.requestPaint(); rightBg.requestPaint(); }
-                function onAccentChanged() { leftPulse.requestPaint(); centerPulse.requestPaint(); rightPulse.requestPaint(); }
-            }
 
-            // ── Animated bar border ─────────────────────
-            property real _pulseTime: 0
-            readonly property bool _borderActive: UserSettings.barBorderStyle !== "none"
             readonly property real _glassAlpha: 0.88
-
-            Timer {
-                interval: 32
-                running: barRect._borderActive
-                repeat: true
-                onTriggered: {
-                    barRect._pulseTime += interval;
-                    leftPulse.requestPaint();
-                    centerPulse.requestPaint();
-                    rightPulse.requestPaint();
-                }
-            }
-
-            // ── Shared drawing helpers ──────────────────
-            // Trace the polygon path on ctx (no stroke/fill — caller finishes)
-            function _tracePath(ctx, pts) {
-                ctx.beginPath();
-                ctx.moveTo(pts[0][0], pts[0][1]);
-                for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
-                ctx.closePath();
-            }
-
-            // Segment lengths + total perimeter from vertex array
-            function _segLens(pts) {
-                var lens = [], total = 0;
-                for (var i = 0; i < pts.length; i++) {
-                    var nx = (i + 1) % pts.length;
-                    var dx = pts[nx][0] - pts[i][0], dy = pts[nx][1] - pts[i][1];
-                    var l = Math.sqrt(dx * dx + dy * dy);
-                    lens.push(l);
-                    total += l;
-                }
-                return { lens: lens, total: total };
-            }
-
-            // Point at distance along perimeter
-            function _pointAt(pts, perim, dist) {
-                var r = dist % perim.total;
-                if (r < 0) r += perim.total;
-                for (var j = 0; j < perim.lens.length; j++) {
-                    if (r <= perim.lens[j]) {
-                        var t = r / perim.lens[j];
-                        var nx = (j + 1) % pts.length;
-                        return [pts[j][0] + (pts[nx][0] - pts[j][0]) * t,
-                                pts[j][1] + (pts[nx][1] - pts[j][1]) * t];
-                    }
-                    r -= perim.lens[j];
-                }
-                return pts[0];
-            }
-
-            // Draw filled parallelogram background
-            function _drawSegmentBg(ctx, w, h, pts) {
-                ctx.clearRect(0, 0, w, h);
-                barRect._tracePath(ctx, pts);
-                ctx.fillStyle = Qt.rgba(Theme.surfaceContainer.r, Theme.surfaceContainer.g, Theme.surfaceContainer.b, barRect._glassAlpha);
-                ctx.fill();
-            }
-
-            // Pluggable border styles — each takes (ctx, w, h, pts, time)
-            readonly property var _barBorderStyles: ({
-                "pulse": function(ctx, w, h, pts, time) {
-                    var perim = barRect._segLens(pts);
-
-                    // Dim base border
-                    barRect._tracePath(ctx, pts);
-                    ctx.strokeStyle = Theme.accent;
-                    ctx.lineWidth = 1;
-                    ctx.globalAlpha = 0.15;
-                    ctx.stroke();
-
-                    // Flowing bright pulse
-                    var pulsePos = (time * 0.00015 * perim.total) % perim.total;
-                    var pulseLen = perim.total * 0.25;
-                    var steps = 30;
-                    ctx.lineWidth = 2;
-                    ctx.lineCap = "round";
-                    for (var s = 0; s < steps; s++) {
-                        var d1 = pulsePos + (s / steps) * pulseLen;
-                        var d2 = pulsePos + ((s + 1) / steps) * pulseLen;
-                        var p1 = barRect._pointAt(pts, perim, d1);
-                        var p2 = barRect._pointAt(pts, perim, d2);
-                        ctx.globalAlpha = (1 - s / steps) * 0.7;
-                        ctx.beginPath();
-                        ctx.moveTo(p1[0], p1[1]);
-                        ctx.lineTo(p2[0], p2[1]);
-                        ctx.stroke();
-                    }
-                },
-
-                "breathe": function(ctx, w, h, pts, time) {
-                    barRect._tracePath(ctx, pts);
-                    ctx.strokeStyle = Theme.accent;
-                    ctx.lineWidth = 1.5;
-                    ctx.globalAlpha = 0.25 + 0.55 * (0.5 + 0.5 * Math.sin(time * 0.002));
-                    ctx.stroke();
-                },
-
-                "dashes": function(ctx, w, h, pts, time) {
-                    barRect._tracePath(ctx, pts);
-                    ctx.strokeStyle = Theme.accent;
-                    ctx.lineWidth = 1.5;
-                    ctx.globalAlpha = 0.7;
-                    ctx.setLineDash([8, 12]);
-                    ctx.lineDashOffset = -time * 0.03;
-                    ctx.stroke();
-                    ctx.setLineDash([]);
-                },
-
-                "none": function() {}
-            })
-
-            function _drawBarBorder(ctx, w, h, pts, time) {
-                ctx.clearRect(0, 0, w, h);
-                ctx.globalAlpha = 1;
-                var fn = _barBorderStyles[UserSettings.barBorderStyle] || _barBorderStyles["pulse"];
-                fn(ctx, w, h, pts, time);
-                ctx.globalAlpha = 1;
-            }
+            readonly property color _bgColor: Qt.rgba(Theme.surfaceContainer.r, Theme.surfaceContainer.g, Theme.surfaceContainer.b, _glassAlpha)
 
             // ── Left segment ────────────────────────────
             Item {
@@ -242,19 +116,33 @@ Scope {
                 height: parent.height
                 width: rightSection.sectionMaxWidth
 
-                Canvas {
+                Shape {
                     id: leftBg
                     anchors.fill: parent
-                    onPaint: barRect._drawSegmentBg(getContext("2d"), width, height,
-                        [[0,0], [width,0], [width-Theme.barDiagSlant,height], [0,height]])
+                    preferredRendererType: Shape.CurveRenderer
+                    ShapePath {
+                        fillColor: barRect._bgColor
+                        strokeColor: "transparent"
+                        startX: 0; startY: 0
+                        PathLine { x: leftSection.width; y: 0 }
+                        PathLine { x: leftSection.width - Theme.barDiagSlant; y: leftSection.height }
+                        PathLine { x: 0; y: leftSection.height }
+                        PathLine { x: 0; y: 0 }
+                    }
                 }
-                Canvas {
-                    id: leftPulse
+                Shape {
                     anchors.fill: parent
-                    visible: barRect._borderActive
-                    onPaint: barRect._drawBarBorder(getContext("2d"), width, height,
-                        [[0,0], [width,0], [width-Theme.barDiagSlant,height], [0,height]],
-                        barRect._pulseTime)
+                    preferredRendererType: Shape.CurveRenderer
+                    ShapePath {
+                        fillColor: "transparent"
+                        strokeColor: Theme.accent
+                        strokeWidth: 1
+                        startX: 0; startY: 0
+                        PathLine { x: leftSection.width; y: 0 }
+                        PathLine { x: leftSection.width - Theme.barDiagSlant; y: leftSection.height }
+                        PathLine { x: 0; y: leftSection.height }
+                        PathLine { x: 0; y: 0 }
+                    }
                 }
 
                 // Launcher + workspaces — locked to left
@@ -295,19 +183,33 @@ Scope {
                 width: Math.max(clock.implicitWidth + Theme.barDiagSlant * 2 + Theme.barSegmentPadding, Theme.minCenterWidth)
 
 
-                Canvas {
+                Shape {
                     id: centerBg
                     anchors.fill: parent
-                    onPaint: barRect._drawSegmentBg(getContext("2d"), width, height,
-                        [[Theme.barDiagSlant,0], [width,0], [width-Theme.barDiagSlant,height], [0,height]])
+                    preferredRendererType: Shape.CurveRenderer
+                    ShapePath {
+                        fillColor: barRect._bgColor
+                        strokeColor: "transparent"
+                        startX: Theme.barDiagSlant; startY: 0
+                        PathLine { x: centerSection.width; y: 0 }
+                        PathLine { x: centerSection.width - Theme.barDiagSlant; y: centerSection.height }
+                        PathLine { x: 0; y: centerSection.height }
+                        PathLine { x: Theme.barDiagSlant; y: 0 }
+                    }
                 }
-                Canvas {
-                    id: centerPulse
+                Shape {
                     anchors.fill: parent
-                    visible: barRect._borderActive
-                    onPaint: barRect._drawBarBorder(getContext("2d"), width, height,
-                        [[Theme.barDiagSlant,0], [width,0], [width-Theme.barDiagSlant,height], [0,height]],
-                        barRect._pulseTime)
+                    preferredRendererType: Shape.CurveRenderer
+                    ShapePath {
+                        fillColor: "transparent"
+                        strokeColor: Theme.accent
+                        strokeWidth: 1
+                        startX: Theme.barDiagSlant; startY: 0
+                        PathLine { x: centerSection.width; y: 0 }
+                        PathLine { x: centerSection.width - Theme.barDiagSlant; y: centerSection.height }
+                        PathLine { x: 0; y: centerSection.height }
+                        PathLine { x: Theme.barDiagSlant; y: 0 }
+                    }
                 }
 
                 Clock {
@@ -376,19 +278,33 @@ Scope {
                 onSectionFullWidthChanged: sectionMaxWidth = Math.max(sectionMaxWidth, sectionFullWidth)
                 width: sectionMaxWidth
 
-                Canvas {
+                Shape {
                     id: rightBg
                     anchors.fill: parent
-                    onPaint: barRect._drawSegmentBg(getContext("2d"), width, height,
-                        [[0,0], [width,0], [width,height], [Theme.barDiagSlant,height]])
+                    preferredRendererType: Shape.CurveRenderer
+                    ShapePath {
+                        fillColor: barRect._bgColor
+                        strokeColor: "transparent"
+                        startX: 0; startY: 0
+                        PathLine { x: rightSection.width; y: 0 }
+                        PathLine { x: rightSection.width; y: rightSection.height }
+                        PathLine { x: Theme.barDiagSlant; y: rightSection.height }
+                        PathLine { x: 0; y: 0 }
+                    }
                 }
-                Canvas {
-                    id: rightPulse
+                Shape {
                     anchors.fill: parent
-                    visible: barRect._borderActive
-                    onPaint: barRect._drawBarBorder(getContext("2d"), width, height,
-                        [[0,0], [width,0], [width,height], [Theme.barDiagSlant,height]],
-                        barRect._pulseTime)
+                    preferredRendererType: Shape.CurveRenderer
+                    ShapePath {
+                        fillColor: "transparent"
+                        strokeColor: Theme.accent
+                        strokeWidth: 1
+                        startX: 0; startY: 0
+                        PathLine { x: rightSection.width; y: 0 }
+                        PathLine { x: rightSection.width; y: rightSection.height }
+                        PathLine { x: Theme.barDiagSlant; y: rightSection.height }
+                        PathLine { x: 0; y: 0 }
+                    }
                 }
 
                 // ── Tray-specific state ───────────────────
@@ -918,6 +834,7 @@ Scope {
     Volume {
         id: volume
         visible: false
+        peakEnabled: root.mediaPlaying
     }
 
     // Battery state

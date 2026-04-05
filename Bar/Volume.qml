@@ -12,7 +12,8 @@ Item {
     readonly property real rawVolume: sink?.audio?.volume ?? 0
     readonly property int volume: Math.round(rawVolume * 100)
     readonly property bool muted: sink?.audio?.muted ?? false
-    readonly property real peak: peakMonitor.peak
+    property bool peakEnabled: false
+    readonly property real peak: peakEnabled ? peakMonitor.peak : 0
 
     PwObjectTracker {
         objects: root.sink ? [root.sink] : []
@@ -20,7 +21,7 @@ Item {
 
     PwNodePeakMonitor {
         id: peakMonitor
-        node: root.sink
+        node: root.peakEnabled ? root.sink : null
     }
 
     function setVolume(vol) {
