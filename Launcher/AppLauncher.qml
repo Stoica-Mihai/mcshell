@@ -213,7 +213,7 @@ PanelWindow {
                 // Blob geometry
                 readonly property real blobH: 28
                 readonly property real blobY: (searchBar.height - blobH) / 2
-                readonly property real blobR: Theme.radiusSmall
+                readonly property real blobPad: 8
 
                 // Resting position (where the blob sits when not animating)
                 property real _restX: 0
@@ -232,7 +232,7 @@ PanelWindow {
                     id: blobAnim
                     target: tabHighlight; property: "_progress"
                     from: 0; to: 1
-                    duration: Theme.animCarousel
+                    duration: Theme.animSmooth
                     easing.type: Easing.InOutQuad
                     onFinished: {
                         tabHighlight._restX = tabHighlight._targetX;
@@ -262,8 +262,8 @@ PanelWindow {
 
                 function _applySnap(item) {
                     const pos = item.mapToItem(searchBar, 0, 0);
-                    _restX = pos.x;
-                    _restW = item.width;
+                    _restX = pos.x - blobPad;
+                    _restW = item.width + blobPad * 2;
                     _progress = -1;
                     visible = true;
                     requestPaint();
@@ -278,8 +278,8 @@ PanelWindow {
                     blobAnim.stop();
                     _sourceX = _restX;
                     _sourceW = _restW;
-                    _targetX = pos.x;
-                    _targetW = item.width;
+                    _targetX = pos.x - blobPad;
+                    _targetW = item.width + blobPad * 2;
                     blobAnim.start();
                 }
 
@@ -287,16 +287,19 @@ PanelWindow {
                 function _lerp(a, b, t) { return a + (b - a) * t; }
                 function _smoothstep(t) { return t * t * (3 - 2 * t); }
 
+                // Skew offset proportional to blob height
+                readonly property real _skew: Theme.barDiagSlant * blobH / searchBar.height
+
                 onPaint: {
                     var ctx = getContext("2d");
                     ctx.clearRect(0, 0, width, height);
                     ctx.fillStyle = blobColor;
 
-                    var h = blobH, top = blobY, r = blobR;
+                    var h = blobH, top = blobY, s = _skew;
 
                     if (_progress < 0) {
-                        // At rest — simple rounded rect
-                        _drawPill(ctx, _restX, top, _restW, h, r);
+                        // At rest — parallelogram
+                        _drawSkewed(ctx, _restX, top, _restW, h, s);
                         return;
                     }
 
@@ -316,7 +319,7 @@ PanelWindow {
                         right = _lerp(_sourceX + _sourceW, _targetX + _targetW, trailT);
                     }
 
-                    // How much to pinch: proportional to stretch beyond natural width
+                    // Pinch in the middle for liquid stretch effect
                     var blobW = right - left;
                     var naturalW = Math.max(_sourceW, _targetW);
                     var stretch = blobW / naturalW;
@@ -326,31 +329,23 @@ PanelWindow {
                     var pinchTop = top + (h - pinchH) / 2;
                     var pinchBot = top + (h + pinchH) / 2;
 
-                    // Draw blob: pill ends with bezier-curved pinch in middle
+                    // Draw skewed blob with bezier pinch
                     ctx.beginPath();
-                    ctx.moveTo(left + r, top);
-                    ctx.quadraticCurveTo(midX, pinchTop, right - r, top);
-                    ctx.arcTo(right, top, right, top + r, r);
-                    ctx.lineTo(right, top + h - r);
-                    ctx.arcTo(right, top + h, right - r, top + h, r);
-                    ctx.quadraticCurveTo(midX, pinchBot, left + r, top + h);
-                    ctx.arcTo(left, top + h, left, top + h - r, r);
-                    ctx.lineTo(left, top + r);
-                    ctx.arcTo(left, top, left + r, top, r);
+                    ctx.moveTo(left + s, top);
+                    ctx.quadraticCurveTo(midX + s * 0.5, pinchTop, right, top);
+                    ctx.lineTo(right - s, top + h);
+                    ctx.quadraticCurveTo(midX - s * 0.5, pinchBot, left, top + h);
+                    ctx.closePath();
                     ctx.fill();
                 }
 
-                function _drawPill(ctx, px, py, pw, ph, pr) {
+                function _drawSkewed(ctx, px, py, pw, ph, s) {
                     ctx.beginPath();
-                    ctx.moveTo(px + pr, py);
-                    ctx.lineTo(px + pw - pr, py);
-                    ctx.arcTo(px + pw, py, px + pw, py + pr, pr);
-                    ctx.lineTo(px + pw, py + ph - pr);
-                    ctx.arcTo(px + pw, py + ph, px + pw - pr, py + ph, pr);
-                    ctx.lineTo(px + pr, py + ph);
-                    ctx.arcTo(px, py + ph, px, py + ph - pr, pr);
-                    ctx.lineTo(px, py + pr);
-                    ctx.arcTo(px, py, px + pr, py, pr);
+                    ctx.moveTo(px + s, py);
+                    ctx.lineTo(px + pw, py);
+                    ctx.lineTo(px + pw - s, py + ph);
+                    ctx.lineTo(px, py + ph);
+                    ctx.closePath();
                     ctx.fill();
                 }
             }
