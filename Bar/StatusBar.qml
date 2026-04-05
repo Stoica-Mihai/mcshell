@@ -115,6 +115,7 @@ Scope {
             // ── Animated bar border ─────────────────────
             property real _pulseTime: 0
             readonly property bool _borderActive: UserSettings.barBorderStyle !== "none"
+            readonly property real _glassAlpha: 0.88
 
             Timer {
                 interval: 32
@@ -128,70 +129,75 @@ Scope {
                 }
             }
 
-            // Shared perimeter helpers
-            function _perimLen(pts) {
-                var total = 0;
+            // ── Shared drawing helpers ──────────────────
+            // Trace the polygon path on ctx (no stroke/fill — caller finishes)
+            function _tracePath(ctx, pts) {
+                ctx.beginPath();
+                ctx.moveTo(pts[0][0], pts[0][1]);
+                for (var i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+                ctx.closePath();
+            }
+
+            // Segment lengths + total perimeter from vertex array
+            function _segLens(pts) {
+                var lens = [], total = 0;
                 for (var i = 0; i < pts.length; i++) {
                     var nx = (i + 1) % pts.length;
                     var dx = pts[nx][0] - pts[i][0], dy = pts[nx][1] - pts[i][1];
-                    total += Math.sqrt(dx * dx + dy * dy);
+                    var l = Math.sqrt(dx * dx + dy * dy);
+                    lens.push(l);
+                    total += l;
                 }
-                return total;
+                return { lens: lens, total: total };
             }
 
-            function _pointAt(pts, lens, total, dist) {
-                var r = dist % total;
-                if (r < 0) r += total;
-                for (var j = 0; j < lens.length; j++) {
-                    if (r <= lens[j]) {
-                        var t = r / lens[j];
+            // Point at distance along perimeter
+            function _pointAt(pts, perim, dist) {
+                var r = dist % perim.total;
+                if (r < 0) r += perim.total;
+                for (var j = 0; j < perim.lens.length; j++) {
+                    if (r <= perim.lens[j]) {
+                        var t = r / perim.lens[j];
                         var nx = (j + 1) % pts.length;
                         return [pts[j][0] + (pts[nx][0] - pts[j][0]) * t,
                                 pts[j][1] + (pts[nx][1] - pts[j][1]) * t];
                     }
-                    r -= lens[j];
+                    r -= perim.lens[j];
                 }
                 return pts[0];
             }
 
-            function _segLens(pts) {
-                var lens = [];
-                for (var i = 0; i < pts.length; i++) {
-                    var nx = (i + 1) % pts.length;
-                    var dx = pts[nx][0] - pts[i][0], dy = pts[nx][1] - pts[i][1];
-                    lens.push(Math.sqrt(dx * dx + dy * dy));
-                }
-                return lens;
+            // Draw filled parallelogram background
+            function _drawSegmentBg(ctx, w, h, pts) {
+                ctx.clearRect(0, 0, w, h);
+                barRect._tracePath(ctx, pts);
+                ctx.fillStyle = Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, barRect._glassAlpha);
+                ctx.fill();
             }
 
-            // Pluggable styles — each takes (ctx, w, h, pts, time)
+            // Pluggable border styles — each takes (ctx, w, h, pts, time)
             readonly property var _barBorderStyles: ({
                 "pulse": function(ctx, w, h, pts, time) {
-                    var lens = barRect._segLens(pts);
-                    var total = 0;
-                    for (var i = 0; i < lens.length; i++) total += lens[i];
+                    var perim = barRect._segLens(pts);
 
                     // Dim base border
-                    ctx.beginPath();
-                    ctx.moveTo(pts[0][0], pts[0][1]);
-                    for (var k = 1; k < pts.length; k++) ctx.lineTo(pts[k][0], pts[k][1]);
-                    ctx.closePath();
+                    barRect._tracePath(ctx, pts);
                     ctx.strokeStyle = Theme.accent;
                     ctx.lineWidth = 1;
                     ctx.globalAlpha = 0.15;
                     ctx.stroke();
 
                     // Flowing bright pulse
-                    var pulsePos = (time * 0.00015 * total) % total;
-                    var pulseLen = total * 0.25;
+                    var pulsePos = (time * 0.00015 * perim.total) % perim.total;
+                    var pulseLen = perim.total * 0.25;
                     var steps = 30;
                     ctx.lineWidth = 2;
                     ctx.lineCap = "round";
                     for (var s = 0; s < steps; s++) {
                         var d1 = pulsePos + (s / steps) * pulseLen;
                         var d2 = pulsePos + ((s + 1) / steps) * pulseLen;
-                        var p1 = barRect._pointAt(pts, lens, total, d1);
-                        var p2 = barRect._pointAt(pts, lens, total, d2);
+                        var p1 = barRect._pointAt(pts, perim, d1);
+                        var p2 = barRect._pointAt(pts, perim, d2);
                         ctx.globalAlpha = (1 - s / steps) * 0.7;
                         ctx.beginPath();
                         ctx.moveTo(p1[0], p1[1]);
@@ -201,22 +207,15 @@ Scope {
                 },
 
                 "breathe": function(ctx, w, h, pts, time) {
-                    var alpha = 0.25 + 0.55 * (0.5 + 0.5 * Math.sin(time * 0.002));
-                    ctx.beginPath();
-                    ctx.moveTo(pts[0][0], pts[0][1]);
-                    for (var k = 1; k < pts.length; k++) ctx.lineTo(pts[k][0], pts[k][1]);
-                    ctx.closePath();
+                    barRect._tracePath(ctx, pts);
                     ctx.strokeStyle = Theme.accent;
                     ctx.lineWidth = 1.5;
-                    ctx.globalAlpha = alpha;
+                    ctx.globalAlpha = 0.25 + 0.55 * (0.5 + 0.5 * Math.sin(time * 0.002));
                     ctx.stroke();
                 },
 
                 "dashes": function(ctx, w, h, pts, time) {
-                    ctx.beginPath();
-                    ctx.moveTo(pts[0][0], pts[0][1]);
-                    for (var k = 1; k < pts.length; k++) ctx.lineTo(pts[k][0], pts[k][1]);
-                    ctx.closePath();
+                    barRect._tracePath(ctx, pts);
                     ctx.strokeStyle = Theme.accent;
                     ctx.lineWidth = 1.5;
                     ctx.globalAlpha = 0.7;
@@ -247,18 +246,8 @@ Scope {
                 Canvas {
                     id: leftBg
                     anchors.fill: parent
-                    onPaint: {
-                        var ctx = getContext("2d"), s = Theme.barDiagSlant;
-                        ctx.clearRect(0, 0, width, height);
-                        ctx.beginPath();
-                        ctx.moveTo(0, 0);
-                        ctx.lineTo(width, 0);
-                        ctx.lineTo(width - s, height);
-                        ctx.lineTo(0, height);
-                        ctx.closePath();
-                        ctx.fillStyle = Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, 0.88);
-                        ctx.fill();
-                    }
+                    onPaint: barRect._drawSegmentBg(getContext("2d"), width, height,
+                        [[0,0], [width,0], [width-Theme.barDiagSlant,height], [0,height]])
                 }
                 Canvas {
                     id: leftPulse
@@ -305,18 +294,8 @@ Scope {
                 Canvas {
                     id: centerBg
                     anchors.fill: parent
-                    onPaint: {
-                        var ctx = getContext("2d"), s = Theme.barDiagSlant;
-                        ctx.clearRect(0, 0, width, height);
-                        ctx.beginPath();
-                        ctx.moveTo(s, 0);
-                        ctx.lineTo(width, 0);
-                        ctx.lineTo(width - s, height);
-                        ctx.lineTo(0, height);
-                        ctx.closePath();
-                        ctx.fillStyle = Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, 0.88);
-                        ctx.fill();
-                    }
+                    onPaint: barRect._drawSegmentBg(getContext("2d"), width, height,
+                        [[Theme.barDiagSlant,0], [width,0], [width-Theme.barDiagSlant,height], [0,height]])
                 }
                 Canvas {
                     id: centerPulse
@@ -360,18 +339,8 @@ Scope {
                 Canvas {
                     id: rightBg
                     anchors.fill: parent
-                    onPaint: {
-                        var ctx = getContext("2d"), s = Theme.barDiagSlant;
-                        ctx.clearRect(0, 0, width, height);
-                        ctx.beginPath();
-                        ctx.moveTo(0, 0);
-                        ctx.lineTo(width, 0);
-                        ctx.lineTo(width, height);
-                        ctx.lineTo(s, height);
-                        ctx.closePath();
-                        ctx.fillStyle = Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, 0.88);
-                        ctx.fill();
-                    }
+                    onPaint: barRect._drawSegmentBg(getContext("2d"), width, height,
+                        [[0,0], [width,0], [width,height], [Theme.barDiagSlant,height]])
                 }
                 Canvas {
                     id: rightPulse

@@ -18,7 +18,7 @@ Item {
     property real borderWidth: 1
 
     // Background
-    property color backgroundColor: Theme.bg
+    property color backgroundColor: Theme.surfaceContainer
 
     // Stroke on background shape (used by DisabledCard for thin outline)
     property color bgStrokeColor: "transparent"
