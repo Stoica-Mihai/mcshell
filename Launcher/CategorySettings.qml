@@ -30,6 +30,13 @@ LauncherCategory {
     property var activeSettingsCard: null
     property bool editMode: false
 
+    // ── Search ──
+    function onSearch(text) {
+        if (text === "") { setItems(settingsCategories); return; }
+        setItems(filterByQuery(text, settingsCategories,
+            (item, q) => item.id.toLowerCase().indexOf(q) >= 0));
+    }
+
     // ── Lifecycle ──
     function onTabEnter() { editMode = false; }
     function onTabLeave() { editMode = false; }
