@@ -171,7 +171,7 @@ Scope {
             function _drawSegmentBg(ctx, w, h, pts) {
                 ctx.clearRect(0, 0, w, h);
                 barRect._tracePath(ctx, pts);
-                ctx.fillStyle = Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, barRect._glassAlpha);
+                ctx.fillStyle = Qt.rgba(Theme.surfaceContainer.r, Theme.surfaceContainer.g, Theme.surfaceContainer.b, barRect._glassAlpha);
                 ctx.fill();
             }
 
