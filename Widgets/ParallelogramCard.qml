@@ -14,7 +14,7 @@ Item {
 
     // Border
     property bool showBorder: false
-    property color borderColor: Theme.border
+    property color borderColor: Theme.outlineVariant
     property real borderWidth: 1
 
     // Background

@@ -34,7 +34,7 @@ Item {
 
     // Card background
     property bool focused: launcher ? launcher.editMode : false
-    property color borderColor: focused && isCurrent ? Theme.accent : Theme.border
+    property color borderColor: focused && isCurrent ? Theme.accent : Theme.outlineVariant
     property bool showBorder: isCurrent
 
     ParallelogramCard {

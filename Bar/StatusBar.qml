@@ -430,7 +430,7 @@ Scope {
                             radius: (Theme.barHeight - 10) / 2
                             color: capsule.activePanel !== "" ? Theme.bgHover : "transparent"
                             border.width: capsule.activePanel !== "" ? 1 : 0
-                            border.color: Theme.border
+                            border.color: Theme.outlineVariant
 
                             Behavior on color { ColorAnimation { duration: Theme.animFast } }
                         }
@@ -528,7 +528,7 @@ Scope {
                                         id: badgeText
                                         anchors.centerIn: parent
                                         text: root.unreadNotifications > 99 ? "99+" : root.unreadNotifications
-                                        color: Theme.bgSolid
+                                        color: Theme.accentFg
                                         font.family: Theme.fontFamily
                                         font.pixelSize: Theme.fontSizeMini
                                         font.bold: true

@@ -17,7 +17,16 @@ Singleton {
             red:     "#f7768e",
             green:   "#9ece6a",
             yellow:  "#e0af68",
-            cyan:    "#7dcfff"
+            cyan:    "#7dcfff",
+            secondary: "#9aa5ce",
+            tertiary:  "#bb9af7",
+            primaryContainer:   "#24283b",
+            secondaryContainer: "#1f2335",
+            surfaceContainer:   "#1f2233",
+            surfaceBright:      "#292e42",
+            accentFg: "#1a1b26",
+            outline:  "#3b4261",
+            outlineVariant: "#2b3049"
         },
         "Catppuccin Mocha": {
             bg:      Qt.rgba(0.12, 0.12, 0.18, 0.85),
@@ -28,7 +37,16 @@ Singleton {
             red:     "#f38ba8",
             green:   "#a6e3a1",
             yellow:  "#f9e2af",
-            cyan:    "#89dceb"
+            cyan:    "#89dceb",
+            secondary: "#a6adc8",
+            tertiary:  "#cba6f7",
+            primaryContainer:   "#27273a",
+            secondaryContainer: "#232338",
+            surfaceContainer:   "#232336",
+            surfaceBright:      "#2e2e44",
+            accentFg: "#1e1e2e",
+            outline:  "#45475a",
+            outlineVariant: "#363849"
         },
         "Gruvbox Dark": {
             bg:      Qt.rgba(0.16, 0.15, 0.13, 0.85),
@@ -39,7 +57,16 @@ Singleton {
             red:     "#fb4934",
             green:   "#b8bb26",
             yellow:  "#fabd2f",
-            cyan:    "#8ec07c"
+            cyan:    "#8ec07c",
+            secondary: "#bdae93",
+            tertiary:  "#d3869b",
+            primaryContainer:   "#3c3836",
+            secondaryContainer: "#32302f",
+            surfaceContainer:   "#32302f",
+            surfaceBright:      "#3c3836",
+            accentFg: "#282828",
+            outline:  "#504945",
+            outlineVariant: "#3c3836"
         },
         "Nord": {
             bg:      Qt.rgba(0.18, 0.20, 0.25, 0.85),
@@ -50,7 +77,16 @@ Singleton {
             red:     "#bf616a",
             green:   "#a3be8c",
             yellow:  "#ebcb8b",
-            cyan:    "#8fbcbb"
+            cyan:    "#8fbcbb",
+            secondary: "#81a1c1",
+            tertiary:  "#b48ead",
+            primaryContainer:   "#3b4252",
+            secondaryContainer: "#353c4a",
+            surfaceContainer:   "#353c4a",
+            surfaceBright:      "#434c5e",
+            accentFg: "#2e3440",
+            outline:  "#4c566a",
+            outlineVariant: "#3b4252"
         },
         "Dracula": {
             bg:      Qt.rgba(0.16, 0.16, 0.21, 0.85),
@@ -61,7 +97,16 @@ Singleton {
             red:     "#ff5555",
             green:   "#50fa7b",
             yellow:  "#f1fa8c",
-            cyan:    "#8be9fd"
+            cyan:    "#8be9fd",
+            secondary: "#6272a4",
+            tertiary:  "#ff79c6",
+            primaryContainer:   "#343746",
+            secondaryContainer: "#2d2f3e",
+            surfaceContainer:   "#2d2f3e",
+            surfaceBright:      "#383a4c",
+            accentFg: "#282a36",
+            outline:  "#44475a",
+            outlineVariant: "#363949"
         },
         "Rosé Pine": {
             bg:      Qt.rgba(0.14, 0.13, 0.18, 0.85),
@@ -72,7 +117,16 @@ Singleton {
             red:     "#eb6f92",
             green:   "#9ccfd8",
             yellow:  "#f6c177",
-            cyan:    "#31748f"
+            cyan:    "#31748f",
+            secondary: "#908caa",
+            tertiary:  "#ea9a97",
+            primaryContainer:   "#26233a",
+            secondaryContainer: "#201e30",
+            surfaceContainer:   "#1f1d2e",
+            surfaceBright:      "#2a2839",
+            accentFg: "#191724",
+            outline:  "#524f67",
+            outlineVariant: "#3a384a"
         },
         "Everforest Dark": {
             bg:      Qt.rgba(0.17, 0.20, 0.17, 0.85),
@@ -83,7 +137,16 @@ Singleton {
             red:     "#e67e80",
             green:   "#a7c080",
             yellow:  "#dbbc7f",
-            cyan:    "#83c092"
+            cyan:    "#83c092",
+            secondary: "#7fbbb3",
+            tertiary:  "#d699b6",
+            primaryContainer:   "#374145",
+            secondaryContainer: "#323c40",
+            surfaceContainer:   "#323c40",
+            surfaceBright:      "#3d484d",
+            accentFg: "#2d353b",
+            outline:  "#4f585e",
+            outlineVariant: "#3d484d"
         },
         "Catppuccin Latte": {
             light:   true,
@@ -95,7 +158,16 @@ Singleton {
             red:     "#d20f39",
             green:   "#40a02b",
             yellow:  "#df8e1d",
-            cyan:    "#04a5e5"
+            cyan:    "#04a5e5",
+            secondary: "#7287fd",
+            tertiary:  "#8839ef",
+            primaryContainer:   "#dce0e8",
+            secondaryContainer: "#e2e4ec",
+            surfaceContainer:   "#e6e9ef",
+            surfaceBright:      "#dce0e8",
+            accentFg: "#ffffff",
+            outline:  "#8c8fa1",
+            outlineVariant: "#bcc0cc"
         }
     })
 
@@ -130,6 +202,16 @@ Singleton {
         overlay      = light ? Qt.rgba(0, 0, 0, 0.04) : Qt.rgba(1, 1, 1, 0.06);
         overlayHover = light ? Qt.rgba(0, 0, 0, 0.08) : Qt.rgba(1, 1, 1, 0.12);
         backdrop     = light ? Qt.rgba(0, 0, 0, 0.30) : Qt.rgba(0, 0, 0, 0.55);
+        // MD3 extended — use palette values or derive from existing colors
+        secondary          = p.secondary          ?? Qt.lighter(p.fgDim, 1.3);
+        tertiary           = p.tertiary           ?? p.cyan;
+        primaryContainer   = p.primaryContainer   ?? Qt.rgba(p.accent.r, p.accent.g, p.accent.b, 0.12);
+        secondaryContainer = p.secondaryContainer ?? Qt.darker(p.bgSolid, 0.9);
+        surfaceContainer   = p.surfaceContainer   ?? Qt.lighter(p.bgSolid, 1.15);
+        surfaceBright      = p.surfaceBright      ?? Qt.lighter(p.bgSolid, 1.30);
+        accentFg           = p.accentFg           ?? (light ? "#ffffff" : p.bgSolid);
+        outline            = p.outline            ?? p.fgDim;
+        outlineVariant     = p.outlineVariant     ?? Qt.darker(p.fgDim, 1.5);
     }
 
     // ── Wallpaper auto-theming ──────────────────────────
@@ -169,46 +251,69 @@ Singleton {
 
     // Tonal: tinted surfaces, balanced chroma (like Material TonalSpot)
     function _strategyTonal(h) {
+        var h2 = (h + 0.17) % 1.0, h3 = (h + 0.33) % 1.0;
         return {
             bg: Qt.rgba(0.10, 0.10, 0.14, 0.85), bgSolid: Qt.hsva(h, 0.15, 0.12, 1),
             fg: Qt.hsva(h, 0.05, 0.90, 1), fgDim: Qt.hsva(h, 0.08, 0.45, 1),
             accent: Qt.hsva(h, 0.60, 0.85, 1),
             red: Qt.hsva(0.98, 0.65, 0.90, 1), green: Qt.hsva(0.35, 0.55, 0.75, 1),
-            yellow: Qt.hsva(0.11, 0.60, 0.88, 1), cyan: Qt.hsva(0.52, 0.55, 0.85, 1)
+            yellow: Qt.hsva(0.11, 0.60, 0.88, 1), cyan: Qt.hsva(0.52, 0.55, 0.85, 1),
+            secondary: Qt.hsva(h2, 0.35, 0.80, 1), tertiary: Qt.hsva(h3, 0.45, 0.80, 1),
+            primaryContainer: Qt.hsva(h, 0.20, 0.16, 1), secondaryContainer: Qt.hsva(h2, 0.12, 0.14, 1),
+            surfaceContainer: Qt.hsva(h, 0.08, 0.14, 1), surfaceBright: Qt.hsva(h, 0.08, 0.20, 1),
+            accentFg: Qt.hsva(h, 0.15, 0.12, 1),
+            outline: Qt.hsva(h, 0.10, 0.35, 1), outlineVariant: Qt.hsva(h, 0.08, 0.22, 1)
         };
     }
 
     // Vibrant: high chroma, bold tinted surfaces, hue-rotated accent
     function _strategyVibrant(h) {
-        const h2 = (h + 0.86) % 1.0; // -50° rotation
+        var h2 = (h + 0.86) % 1.0, h3 = (h + 0.33) % 1.0;
         return {
             bg: Qt.rgba(0.10, 0.10, 0.14, 0.85), bgSolid: Qt.hsva(h, 0.25, 0.13, 1),
             fg: Qt.hsva(h, 0.08, 0.92, 1), fgDim: Qt.hsva(h, 0.12, 0.50, 1),
             accent: Qt.hsva(h2, 0.75, 0.90, 1),
             red: Qt.hsva(0.98, 0.75, 0.92, 1), green: Qt.hsva(0.35, 0.65, 0.80, 1),
-            yellow: Qt.hsva(0.11, 0.70, 0.92, 1), cyan: Qt.hsva(0.52, 0.65, 0.88, 1)
+            yellow: Qt.hsva(0.11, 0.70, 0.92, 1), cyan: Qt.hsva(0.52, 0.65, 0.88, 1),
+            secondary: Qt.hsva(h, 0.45, 0.85, 1), tertiary: Qt.hsva(h3, 0.55, 0.85, 1),
+            primaryContainer: Qt.hsva(h2, 0.30, 0.18, 1), secondaryContainer: Qt.hsva(h, 0.18, 0.15, 1),
+            surfaceContainer: Qt.hsva(h, 0.12, 0.15, 1), surfaceBright: Qt.hsva(h, 0.15, 0.22, 1),
+            accentFg: Qt.hsva(h2, 0.25, 0.13, 1),
+            outline: Qt.hsva(h, 0.15, 0.40, 1), outlineVariant: Qt.hsva(h, 0.10, 0.25, 1)
         };
     }
 
     // Neutral: accent from seed, pure gray surfaces
     function _strategyNeutral(h) {
+        var h2 = (h + 0.17) % 1.0, h3 = (h + 0.33) % 1.0;
         return {
             bg: Qt.rgba(0.10, 0.10, 0.12, 0.85), bgSolid: Qt.hsva(0, 0, 0.11, 1),
             fg: Qt.hsva(0, 0, 0.88, 1), fgDim: Qt.hsva(0, 0, 0.42, 1),
             accent: Qt.hsva(h, 0.60, 0.85, 1),
             red: Qt.hsva(0.98, 0.65, 0.90, 1), green: Qt.hsva(0.35, 0.55, 0.75, 1),
-            yellow: Qt.hsva(0.11, 0.60, 0.88, 1), cyan: Qt.hsva(0.52, 0.55, 0.85, 1)
+            yellow: Qt.hsva(0.11, 0.60, 0.88, 1), cyan: Qt.hsva(0.52, 0.55, 0.85, 1),
+            secondary: Qt.hsva(h2, 0.30, 0.75, 1), tertiary: Qt.hsva(h3, 0.40, 0.75, 1),
+            primaryContainer: Qt.hsva(h, 0.15, 0.15, 1), secondaryContainer: Qt.hsva(0, 0, 0.13, 1),
+            surfaceContainer: Qt.hsva(0, 0, 0.13, 1), surfaceBright: Qt.hsva(0, 0, 0.18, 1),
+            accentFg: Qt.hsva(0, 0, 0.11, 1),
+            outline: Qt.hsva(0, 0, 0.35, 1), outlineVariant: Qt.hsva(0, 0, 0.22, 1)
         };
     }
 
     // Muted: low chroma tinted surfaces, softer accent
     function _strategyMuted(h) {
+        var h2 = (h + 0.17) % 1.0, h3 = (h + 0.33) % 1.0;
         return {
             bg: Qt.rgba(0.10, 0.10, 0.14, 0.85), bgSolid: Qt.hsva(h, 0.10, 0.12, 1),
             fg: Qt.hsva(h, 0.03, 0.85, 1), fgDim: Qt.hsva(h, 0.05, 0.42, 1),
             accent: Qt.hsva(h, 0.35, 0.75, 1),
             red: Qt.hsva(0.98, 0.50, 0.80, 1), green: Qt.hsva(0.35, 0.40, 0.70, 1),
-            yellow: Qt.hsva(0.11, 0.45, 0.80, 1), cyan: Qt.hsva(0.52, 0.40, 0.75, 1)
+            yellow: Qt.hsva(0.11, 0.45, 0.80, 1), cyan: Qt.hsva(0.52, 0.40, 0.75, 1),
+            secondary: Qt.hsva(h2, 0.20, 0.65, 1), tertiary: Qt.hsva(h3, 0.25, 0.65, 1),
+            primaryContainer: Qt.hsva(h, 0.12, 0.15, 1), secondaryContainer: Qt.hsva(h2, 0.08, 0.13, 1),
+            surfaceContainer: Qt.hsva(h, 0.06, 0.14, 1), surfaceBright: Qt.hsva(h, 0.06, 0.19, 1),
+            accentFg: Qt.hsva(h, 0.10, 0.12, 1),
+            outline: Qt.hsva(h, 0.06, 0.32, 1), outlineVariant: Qt.hsva(h, 0.04, 0.20, 1)
         };
     }
 
@@ -244,6 +349,17 @@ Singleton {
     property color yellow: "#e0af68"
     property color cyan: "#7dcfff"
 
+    // MD3 extended palette
+    property color secondary: "#9aa5ce"
+    property color tertiary: "#bb9af7"
+    property color primaryContainer: "#24283b"
+    property color secondaryContainer: "#1f2335"
+    property color surfaceContainer: "#1f2233"
+    property color surfaceBright: "#292e42"
+    property color accentFg: "#1a1b26"
+    property color outline: "#3b4261"
+    property color outlineVariant: "#2b3049"
+
     Behavior on bg { ColorAnimation { duration: root.animSmooth } }
     Behavior on bgSolid { ColorAnimation { duration: root.animSmooth } }
     Behavior on fg { ColorAnimation { duration: root.animSmooth } }
@@ -253,6 +369,15 @@ Singleton {
     Behavior on green { ColorAnimation { duration: root.animSmooth } }
     Behavior on yellow { ColorAnimation { duration: root.animSmooth } }
     Behavior on cyan { ColorAnimation { duration: root.animSmooth } }
+    Behavior on secondary { ColorAnimation { duration: root.animSmooth } }
+    Behavior on tertiary { ColorAnimation { duration: root.animSmooth } }
+    Behavior on primaryContainer { ColorAnimation { duration: root.animSmooth } }
+    Behavior on secondaryContainer { ColorAnimation { duration: root.animSmooth } }
+    Behavior on surfaceContainer { ColorAnimation { duration: root.animSmooth } }
+    Behavior on surfaceBright { ColorAnimation { duration: root.animSmooth } }
+    Behavior on accentFg { ColorAnimation { duration: root.animSmooth } }
+    Behavior on outline { ColorAnimation { duration: root.animSmooth } }
+    Behavior on outlineVariant { ColorAnimation { duration: root.animSmooth } }
 
     // Accent tints (derived — adapt automatically to palette changes)
     readonly property color accentLight: Qt.rgba(accent.r, accent.g, accent.b, 0.12)

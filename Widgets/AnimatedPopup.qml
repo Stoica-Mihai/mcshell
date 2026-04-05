@@ -64,9 +64,9 @@ PopupWindow {
         id: bg
         anchors.fill: parent
         radius: Theme.barRadius
-        color: Theme.bg
+        color: Theme.surfaceContainer
         border.width: 1
-        border.color: Theme.border
+        border.color: Theme.outlineVariant
         clip: true
 
         Item {

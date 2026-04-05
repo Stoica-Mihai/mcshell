@@ -176,9 +176,9 @@ PanelWindow {
         width: Math.min(740, parent.width - 80)
         height: 44
             radius: 10
-            color: Theme.bg
+            color: Theme.surfaceContainer
             border.width: 1
-            border.color: Theme.border
+            border.color: Theme.outlineVariant
 
             // ── Liquid blob tab highlight ──────────────────
             Canvas {
@@ -386,7 +386,7 @@ PanelWindow {
                 }
 
                 // Separator
-                Rectangle { width: 1; Layout.preferredHeight: 20; color: Theme.border }
+                Rectangle { width: 1; Layout.preferredHeight: 20; color: Theme.outlineVariant }
 
                 // Search icon
                 Text {
