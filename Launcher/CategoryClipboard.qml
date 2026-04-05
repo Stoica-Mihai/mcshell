@@ -83,6 +83,8 @@ LauncherCategory {
                 visible: parent.isCurrent
                 spacing: Theme.spacingMedium
 
+                Item { Layout.fillHeight: true; visible: !(modelData.isImage ?? false) }
+
                 Text {
                     text: modelData.isImage ?? false ? Theme.iconImage : Theme.iconClipboard
                     font.family: Theme.iconFont
@@ -115,6 +117,8 @@ LauncherCategory {
                     maximumLineCount: 12
                     horizontalAlignment: Text.AlignHCenter
                 }
+
+                Item { Layout.fillHeight: true; visible: !(modelData.isImage ?? false) }
 
                 // Image metadata
                 Text {

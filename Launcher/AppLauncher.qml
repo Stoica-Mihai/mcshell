@@ -99,9 +99,9 @@ PanelWindow {
 
     // ── Carousel config ─────────────────────────────────
     readonly property int sideCount: 5
-    readonly property real stripWidth: 80
-    readonly property real expandedWidth: 500
-    readonly property real carouselHeight: 350
+    readonly property real stripWidth: 100
+    readonly property real expandedWidth: 700
+    readonly property real carouselHeight: 480
     readonly property real stripSpacing: 6
 
     function navigate(delta) {

@@ -449,14 +449,14 @@ Singleton {
     // ── Typography ──────────────────────────────────────
     readonly property string fontFamily: "JetBrains Mono"
     readonly property string iconFont: "Symbols Nerd Font"
-    readonly property int fontSizeMini: 9
-    readonly property int fontSizeTiny: 10
-    readonly property int fontSizeSmall: 11
-    readonly property int fontSize: 13
-    readonly property int fontSizeMedium: 14
-    readonly property int fontSizeLarge: 16
-    readonly property int fontSizeXLarge: 18
-    readonly property int fontSizeHero: 40
+    readonly property int fontSizeMini: 10
+    readonly property int fontSizeTiny: 11
+    readonly property int fontSizeSmall: 13
+    readonly property int fontSize: 15
+    readonly property int fontSizeMedium: 16
+    readonly property int fontSizeLarge: 18
+    readonly property int fontSizeXLarge: 20
+    readonly property int fontSizeHero: 44
     readonly property int iconSize: 16
     readonly property int iconSizeSmall: 24
     readonly property int iconSizeMedium: 28
