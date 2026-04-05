@@ -40,11 +40,19 @@ Item {
     ParallelogramCard {
         id: card
         anchors.fill: parent
-        showBorder: strip.showBorder
+        showBorder: strip.showBorder && !animBorder.active && animBorder._progress === 0
         borderColor: strip.borderColor
         borderWidth: strip.showBorder ? (strip.focused ? 2 : 1) : 0
         skewContent: true
         isCurrent: strip.isCurrent
+    }
+
+    AnimatedBorder {
+        id: animBorder
+        anchors.fill: parent
+        active: strip.isCurrent && strip.focused
+        color: Theme.accent
+        thickness: 2
     }
 
     // Fallback click for expanded card
