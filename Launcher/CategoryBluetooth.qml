@@ -14,14 +14,14 @@ LauncherCategory {
     // ── Tab config ──
     tabName: "bluetooth"
     tabLabel: "BT"
-    tabIcon: Theme.iconBluetooth
+    tabIcon: btEnabled ? Theme.iconBluetooth : Theme.iconBluetoothOff
     searchPlaceholder: "Search devices..."
     legendHint: Theme.legend(Theme.hintEnter + " connect", "Ctrl+B toggle Bluetooth")
     disabledLegendHint: "Ctrl+B toggle Bluetooth"
 
     // ── Disabled state ──
     disabledState: !btEnabled
-    disabledIcon: Theme.iconBluetooth
+    disabledIcon: Theme.iconBluetoothOff
     disabledHint: "Ctrl+B to enable"
 
     // ── Scanning state ──

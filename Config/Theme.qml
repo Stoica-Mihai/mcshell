@@ -485,7 +485,7 @@ Singleton {
     // System
     readonly property string iconBrightness: "\uf185"
     readonly property string iconBluetooth: "\uf294"
-    readonly property string iconBluetoothOff: "\u{f00b7}"
+    readonly property string iconBluetoothOff: "\u{f00b2}"
     readonly property string iconSettings: "\uf013"
     readonly property string iconSearch: "\uf002"
     readonly property string iconKeyboard: "\uf11c"
