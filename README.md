@@ -218,10 +218,10 @@ Pure QML — no C++, no build system. QuickShell interprets QML directly. Each s
 
 | Module | Purpose |
 |---|---|
-| `Config/` | Theme singleton (8 palettes + auto wallpaper theming), UserSettings singleton (persistent preferences via JsonAdapter) |
-| `Core/` | Shared non-visual components — SafeProcess |
+| `Config/` | Theme singleton (8 palettes + auto wallpaper theming), UserSettings singleton (persistent preferences via JsonAdapter, live-reload on external changes) |
+| `Core/` | Shared non-visual components — SafeProcess, ShellActions singleton (lock/logout/reboot/shutdown/wallpaper), Brightness singleton |
 | `Bar/` | Status bar — workspaces (Niri IPC), active window, clock + calendar, media, network, volume, battery, system tray |
-| `Launcher/` | App launcher carousel — apps, clipboard, notifications, WiFi, Bluetooth, wallpaper, settings tabs |
+| `Launcher/` | App launcher carousel — apps, clipboard, WiFi, Bluetooth, wallpaper, settings tabs with lazy-loaded progressive model growth |
 | `Notifications/` | Notification daemon + popup cards with action buttons |
 | `NotificationHistory/` | Notification history dropdown |
 | `QuickSettings/` | Quick settings panel — brightness, night light, power actions |
@@ -231,6 +231,10 @@ Pure QML — no C++, no build system. QuickShell interprets QML directly. Each s
 | `Screenshot/` | Native screencopy overlay — fullscreen + interactive area selection with crop |
 | `WindowSwitcher/` | Fullscreen window switcher overlay with carousel cards |
 | `Widgets/` | Shared UI components — AnimatedPopup, IconButton, SliderTrack, ControlSlider |
+
+## Acknowledgements
+
+- [skwd](https://github.com/liixini/skwd) by liixini — the parallelogram card design and carousel-based launcher concept that inspired mcshell's visual direction
 
 ## License
 
