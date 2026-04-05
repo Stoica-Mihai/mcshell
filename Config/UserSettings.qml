@@ -18,6 +18,7 @@ Singleton {
     readonly property string modeOff: "off"
     readonly property string modeManual: "manual"
     readonly property string modeAuto: "auto"
+    readonly property int defaultNightTemp: 4000
 
     property alias nightLightMode: adapter.nightLightMode
     property alias nightLightTemp: adapter.nightLightTemp
@@ -70,7 +71,7 @@ Singleton {
             id: adapter
             property bool doNotDisturb: false
             property string nightLightMode: "off"
-            property int nightLightTemp: 4000
+            property int nightLightTemp: root.defaultNightTemp
             property string nightLightSunrise: "06:30"
             property string nightLightSunset: "18:30"
             property string wallpaper: ""
@@ -148,7 +149,7 @@ Singleton {
     // Temperature range and defaults
     readonly property int tempMin: 2500
     readonly property int tempMax: 6500
-    readonly property int _autoNightTemp: 4000
+    readonly property int _autoNightTemp: defaultNightTemp
     readonly property int _transitionMin: 30
 
     function _updateAutoPhase() {

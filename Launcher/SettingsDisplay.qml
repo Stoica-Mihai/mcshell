@@ -108,7 +108,7 @@ SettingsPanel {
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeSmall
             color: Theme.fg
-            Layout.preferredWidth: 70
+            Layout.preferredWidth: tempLabel.implicitWidth
         }
         Rectangle {
             Layout.fillWidth: true
@@ -182,11 +182,11 @@ SettingsPanel {
             color: Theme.yellow
         }
         Text {
+            id: tempLabel
             text: "Temperature"
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeSmall
             color: Theme.fg
-            Layout.preferredWidth: 70
         }
         Rectangle {
             Layout.fillWidth: true
