@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland._DataControl
 import qs.Config
+import qs.Core
 
 // Screen recording state — managed via wf-recorder process lifecycle.
 // Start/stop via toggleRecording(). Bar shows a pulsing red dot when active.
@@ -54,10 +55,7 @@ Item {
         id: recorder
         onExited: (code, status) => {
             ClipboardHistory.addText(root._currentPath);
-            Quickshell.execDetached({ command: [
-                "notify-send", "-t", "5000",
-                "Recording saved", root._currentPath
-            ] });
+            NotificationDispatcher.send("Recording saved", root._currentPath, 5000);
             root._currentPath = "";
         }
     }

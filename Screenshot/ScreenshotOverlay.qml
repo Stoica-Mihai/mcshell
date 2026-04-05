@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Wayland._DataControl
 import qs.Config
+import qs.Core
 
 PanelWindow {
     id: root
@@ -117,10 +118,8 @@ PanelWindow {
 
     function _finishFullScreen() {
         _copyToClipboard(_tmpPath);
-        Quickshell.execDetached({ command: ["sh", "-c",
-            "mv '" + _tmpPath + "' '" + _savePath + "' && " +
-            "notify-send -t 5000 -h string:image-path:'" + _savePath + "' 'Screenshot' 'Copied to clipboard'"
-        ] });
+        Quickshell.execDetached({ command: ["mv", _tmpPath, _savePath] });
+        NotificationDispatcher.sendWithImage("Screenshot", "Copied to clipboard", _savePath);
         _close();
     }
 
@@ -140,10 +139,8 @@ PanelWindow {
         cropHelper.grabToImage(function(result) {
             if (result && result.saveToFile(root._savePath)) {
                 root._copyToClipboard(root._savePath);
-                Quickshell.execDetached({ command: ["sh", "-c",
-                    "rm -f '" + root._tmpPath + "' && " +
-                    "notify-send -t 5000 -h string:image-path:'" + root._savePath + "' 'Screenshot' 'Copied to clipboard'"
-                ] });
+                Quickshell.execDetached({ command: ["rm", "-f", root._tmpPath] });
+                NotificationDispatcher.sendWithImage("Screenshot", "Copied to clipboard", root._savePath);
             }
             root._close();
         });

@@ -104,8 +104,7 @@ LauncherCategory {
             } else if (line === "FAILED") {
                 btTracker.status = "failed";
                 btTracker.autoClear();
-                Quickshell.execDetached({ command: ["notify-send", "-t", "3000", "-u", "critical",
-                    "Bluetooth", "Failed to connect to " + btTracker.targetId] });
+                NotificationDispatcher.send("Bluetooth", "Failed to connect to " + btTracker.targetId, 3000, "critical");
             }
         }
         onFailed: {
