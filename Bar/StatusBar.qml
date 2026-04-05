@@ -369,18 +369,6 @@ Scope {
                                     else
                                         volume.setVolume(volume.rawVolume - step);
                                 }
-
-                                // VU peak bar
-                                Rectangle {
-                                    anchors.bottom: parent.bottom
-                                    anchors.bottomMargin: -2
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    width: parent.width * Math.min(1.0, volume.peak)
-                                    height: 2
-                                    radius: 1
-                                    color: volume.muted ? Theme.red : Theme.accent
-                                    opacity: volume.peak > 0.01 ? 0.8 : 0
-                                }
                             }
 
                             // Battery
@@ -801,7 +789,6 @@ Scope {
     Volume {
         id: volume
         visible: false
-        peakEnabled: root.mediaPlaying
     }
 
     // Battery state
