@@ -12,7 +12,7 @@ Scope {
 
     property string screenName: ""
     property var screen: null
-    property bool hasPopup: rightSection.activeDropdown !== "" || clock.popupVisible
+    property bool hasPopup: rightSection.activeDropdown !== "" || centerSection.activeDropdown !== ""
 
     property int unreadNotifications: 0
     property var notifHistoryModel: null
@@ -26,13 +26,13 @@ Scope {
     property int panelToggleTrigger: 0
     property string panelToggleName: ""
     onPanelToggleTriggerChanged: {
-        if (panelToggleName === "calendar") clock.togglePopup();
+        if (panelToggleName === "calendar") centerSection.toggleDropdown("calendar");
         else if (panelToggleName) rightSection.toggleDropdown(panelToggleName);
     }
 
     function dismissPopups() {
         rightSection.closeDropdown();
-        clock.dismissPopup();
+        centerSection.closeDropdown();
     }
 
     // ── Exclusive zone — reserves bar space, no content ────
@@ -288,7 +288,32 @@ Scope {
                 id: centerSection
                 anchors.horizontalCenter: parent.horizontalCenter
                 height: parent.height
-                width: clock.implicitWidth + Theme.barDiagSlant * 2 + 24
+                width: Math.max(clock.implicitWidth + Theme.barDiagSlant * 2 + 24, 280)
+
+                // ── Shared dropdown state ─────────────────
+                property string activeDropdown: ""  // "calendar"
+
+                function toggleDropdown(name) {
+                    if (activeDropdown === name) closeDropdown();
+                    else openDropdown(name);
+                }
+
+                function openDropdown(name) {
+                    centerDropdown.close();
+                    activeDropdown = name;
+                    if (name === "calendar") {
+                        calendarContent.viewDate = new Date();
+                        calendarContent.viewMode = "days";
+                    }
+                    centerDropdown.anchor.item = centerSection;
+                    centerDropdown.anchor.rect.x = 0;
+                    centerDropdown.anchor.rect.y = centerSection.height;
+                    centerDropdown.open();
+                }
+
+                function closeDropdown() {
+                    centerDropdown.close();
+                }
 
                 Canvas {
                     id: centerBg
@@ -308,6 +333,9 @@ Scope {
                 Clock {
                     id: clock
                     anchors.centerIn: parent
+                    popupVisible: centerSection.activeDropdown === "calendar"
+                    onTogglePopup: centerSection.toggleDropdown("calendar")
+                    onDismissPopup: centerSection.closeDropdown()
                 }
 
                 // Recording indicator — pulsing red dot left of clock
@@ -324,6 +352,27 @@ Scope {
                         loops: Animation.Infinite
                         NumberAnimation { to: 0.3; duration: Theme.animLockFade }
                         NumberAnimation { to: 1.0; duration: Theme.animLockFade }
+                    }
+                }
+
+                // ── Center shared dropdown ───────────────
+                AnimatedPopup {
+                    id: centerDropdown
+
+                    autoPosition: false
+                    implicitWidth: centerSection.width - Theme.barDiagSlant
+                    anchor.adjustment: PopupAdjustment.None
+
+                    fullHeight: calendarContent.fullHeight
+
+                    onVisibleChanged: {
+                        if (!visible) centerSection.activeDropdown = "";
+                    }
+
+                    CalendarPopup {
+                        id: calendarContent
+                        visible: centerSection.activeDropdown === "calendar"
+                        currentDate: clock.currentDate
                     }
                 }
             }

@@ -9,21 +9,10 @@ Item {
     implicitHeight: label.implicitHeight
 
     property alias currentDate: clock.date
-    property bool popupVisible: calendarPopup.isOpen
+    property bool popupVisible: false
 
-    function dismissPopup() {
-        calendarPopup.close();
-    }
-
-    function togglePopup() {
-        if (calendarPopup.isOpen) {
-            calendarPopup.close();
-        } else {
-            calendarPopup.viewDate = new Date();
-            calendarPopup.viewMode = "days";
-            calendarPopup.open();
-        }
-    }
+    signal togglePopup()
+    signal dismissPopup()
 
     SystemClock {
         id: clock
@@ -44,12 +33,5 @@ Item {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         onClicked: root.togglePopup()
-    }
-
-    CalendarPopup {
-        id: calendarPopup
-        currentDate: root.currentDate
-        anchor.item: root
-        anchor.rect.x: Theme.centerAnchorX(implicitWidth, root.width)
     }
 }

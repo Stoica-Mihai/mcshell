@@ -1,10 +1,9 @@
 import QtQuick
 import QtQuick.Layouts
-import Quickshell
 import qs.Config
 import qs.Widgets
 
-AnimatedPopup {
+Item {
     id: root
 
     property date currentDate: new Date()
@@ -14,8 +13,9 @@ AnimatedPopup {
     property int viewMonth: viewDate.getMonth()
     property string viewMode: "days"  // "days", "months", "years"
 
-    fullHeight: calContent.implicitHeight + 16
-    implicitWidth: 240
+    readonly property real fullHeight: calContent.implicitHeight + 16
+
+    anchors.fill: parent
 
     function prevMonth() { viewDate = new Date(viewYear, viewMonth - 1, 1); }
     function nextMonth() { viewDate = new Date(viewYear, viewMonth + 1, 1); }
