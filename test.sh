@@ -13,9 +13,9 @@ echo 0 > "$FAIL_FILE"
 fail() { echo "FAIL: $1"; echo 1 > "$FAIL_FILE"; }
 
 ipc_test() {
-    result=$($IPC "$1" 2>&1)
+    result=$($IPC "$@" 2>&1)
     if [ -n "$result" ]; then
-        fail "[$1] $result"
+        fail "[$*] $result"
     fi
     sleep "$DELAY"
 }
@@ -50,11 +50,15 @@ echo "Shell running. Testing IPC commands..."
 ipc_test toggleLauncher;       ipc_test toggleLauncher
 ipc_test launcherApps;         ipc_test toggleLauncher
 ipc_test launcherClipboard;    ipc_test toggleLauncher
-ipc_test launcherNotifications; ipc_test toggleLauncher
 ipc_test launcherWifi;         ipc_test toggleLauncher
 ipc_test launcherBluetooth;    ipc_test toggleLauncher
 ipc_test launcherWallpaper;    ipc_test toggleLauncher
 ipc_test launcherSettings;     ipc_test toggleLauncher
+
+# Settings card sub-navigation
+ipc_test settingsCard audio;    ipc_test toggleLauncher
+ipc_test settingsCard power;    ipc_test toggleLauncher
+
 ipc_test toggleCalendar;       ipc_test toggleCalendar
 ipc_test toggleVolume;         ipc_test toggleVolume
 ipc_test toggleNotifications;  ipc_test toggleNotifications

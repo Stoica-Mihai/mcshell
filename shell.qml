@@ -16,6 +16,7 @@ import qs.Wallpaper
 import qs.Screenshot
 import Quickshell.Wayland._DataControl
 import qs.WindowSwitcher
+import qs.Core
 
 ShellRoot {
     id: shell
@@ -42,17 +43,17 @@ ShellRoot {
     }
 
     NotificationPopup { id: notifPopup }
-    AppLauncher {
-        id: appLauncher
-        onWallpaperSelected: path => wallpaper.setWallpaper(path)
-        onActionRequested: action => {
-            if (action === "lock") lockScreen.lock();
-        }
-    }
+    AppLauncher { id: appLauncher }
     KeybindPanel { id: keybindPanel }
-    LockScreen { id: lockScreen }
+    LockScreen {
+        id: lockScreen
+        Component.onCompleted: ShellActions.lockScreen = lockScreen
+    }
     PolkitDialog {}
-    WallpaperRenderer { id: wallpaper }
+    WallpaperRenderer {
+        id: wallpaper
+        Component.onCompleted: ShellActions.wallpaper = wallpaper
+    }
     ScreenshotOverlay { id: screenshot }
     WindowSwitcher { id: windowSwitcher }
     Recording { id: screenRecording }
@@ -111,9 +112,9 @@ ShellRoot {
         function toggleKeybinds(): void { keybindPanel.toggle(); }
         function toggleWindows(): void { windowSwitcher.toggle(); }
         function toggleWallpaper(): void { appLauncher.openTab("wallpaper"); }
-        function lock(): void { lockScreen.lock(); }
+        function lock(): void { ShellActions.lock(); }
         function toggleDnd(): void { UserSettings.doNotDisturb = !UserSettings.doNotDisturb; }
-        function setWallpaper(path: string): void { wallpaper.setWallpaper(path); }
+        function setWallpaper(path: string): void { ShellActions.setWallpaper(path); }
         function settingsCard(card: string): void { appLauncher.openTab("settings", card); }
 
         function toggleCalendar(): void { shell._togglePanel = "calendar"; shell._toggleCounter++; }

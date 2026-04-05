@@ -11,8 +11,6 @@ LauncherCategory {
     // ── Launcher reference ──
     required property var launcher
 
-    signal wallpaperSelected(string path)
-
     // ── Tab config ──
     tabName: "wallpaper"
     tabLabel: "Wall"
@@ -101,8 +99,7 @@ LauncherCategory {
         const path = paths[index];
         if (!path) return;
         activeIndex = allPaths.indexOf(path);
-        UserSettings.setWallpaper(path);
-        wallpaperSelected(path);
+        ShellActions.setWallpaper(path);
     }
 
     // ── Card delegate ──

@@ -115,8 +115,6 @@ LauncherCategory {
                 visible: parent.isCurrent
                 source: modelData.source ?? ""
                 active: parent.isCurrent && root.editMode
-                onActionRequested: action => root.launcher.actionRequested(action)
-
                 onActiveChanged: {
                     if (active) root.activeSettingsCard = settingsCard;
                 }

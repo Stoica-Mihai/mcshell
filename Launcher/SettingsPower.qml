@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
-import Quickshell.Niri
 import qs.Widgets
 import Quickshell.Services.UPower
 import qs.Config
@@ -80,17 +79,6 @@ SettingsPanel {
     }
 
     // ── Actions ──
-    SafeProcess {
-        id: rebootProc
-        command: ["systemctl", "reboot"]
-        failMessage: "reboot failed"
-    }
-    SafeProcess {
-        id: shutdownProc
-        command: ["systemctl", "poweroff"]
-        failMessage: "shutdown failed"
-    }
-
     readonly property var actions: [
         { name: "Lock", icon: Theme.iconLock, danger: false },
         { name: "Log out", icon: Theme.iconLogout, danger: false },
@@ -127,10 +115,10 @@ SettingsPanel {
         }
         confirmItem = -1;
         switch (actionIdx) {
-        case 0: actionRequested("lock"); break;
-        case 1: Niri.dispatch(["quit", "--skip-confirmation"]); break;
-        case 2: rebootProc.running = true; break;
-        case 3: shutdownProc.running = true; break;
+        case 0: ShellActions.lock(); break;
+        case 1: ShellActions.logout(); break;
+        case 2: ShellActions.reboot(); break;
+        case 3: ShellActions.shutdown(); break;
         }
     }
 

@@ -69,18 +69,12 @@ PanelWindow {
     WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
     // ── Categories ──────────────────────────────────────
-    signal wallpaperSelected(string path)
-    signal actionRequested(string action)
-
     property list<LauncherCategory> categories: [
         CategoryApps { launcher: launcher },
         CategoryClipboard { launcher: launcher },
         CategoryWifi { launcher: launcher },
         CategoryBluetooth { launcher: launcher },
-        CategoryWallpaper {
-            launcher: launcher
-            onWallpaperSelected: path => launcher.wallpaperSelected(path)
-        },
+        CategoryWallpaper { launcher: launcher },
         CategorySettings { launcher: launcher }
     ]
 
