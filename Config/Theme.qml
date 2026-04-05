@@ -432,6 +432,13 @@ Singleton {
     readonly property real barDiagSlant: 20
     readonly property int itemSpacing: 14
 
+    // Bar border gradient stops — all wallpaper-derived colors
+    readonly property var barBorderGradient: [
+        { position: 0.0, color: accent },
+        { position: 0.5, color: secondary },
+        { position: 1.0, color: tertiary }
+    ]
+
     // Spacing scale
     readonly property int spacingTiny: 4
     readonly property int spacingSmall: 6

@@ -130,19 +130,9 @@ Scope {
                         PathLine { x: 0; y: 0 }
                     }
                 }
-                Shape {
+                BarBorder {
                     anchors.fill: parent
-                    preferredRendererType: Shape.CurveRenderer
-                    ShapePath {
-                        fillColor: "transparent"
-                        strokeColor: Theme.accent
-                        strokeWidth: 1
-                        startX: 0; startY: 0
-                        PathLine { x: leftSection.width; y: 0 }
-                        PathLine { x: leftSection.width - Theme.barDiagSlant; y: leftSection.height }
-                        PathLine { x: 0; y: leftSection.height }
-                        PathLine { x: 0; y: 0 }
-                    }
+                    pts: [[0,0], [width,0], [width-Theme.barDiagSlant,height], [0,height]]
                 }
 
                 // Launcher + workspaces — locked to left
@@ -197,19 +187,9 @@ Scope {
                         PathLine { x: Theme.barDiagSlant; y: 0 }
                     }
                 }
-                Shape {
+                BarBorder {
                     anchors.fill: parent
-                    preferredRendererType: Shape.CurveRenderer
-                    ShapePath {
-                        fillColor: "transparent"
-                        strokeColor: Theme.accent
-                        strokeWidth: 1
-                        startX: Theme.barDiagSlant; startY: 0
-                        PathLine { x: centerSection.width; y: 0 }
-                        PathLine { x: centerSection.width - Theme.barDiagSlant; y: centerSection.height }
-                        PathLine { x: 0; y: centerSection.height }
-                        PathLine { x: Theme.barDiagSlant; y: 0 }
-                    }
+                    pts: [[Theme.barDiagSlant,0], [width,0], [width-Theme.barDiagSlant,height], [0,height]]
                 }
 
                 Clock {
@@ -292,19 +272,9 @@ Scope {
                         PathLine { x: 0; y: 0 }
                     }
                 }
-                Shape {
+                BarBorder {
                     anchors.fill: parent
-                    preferredRendererType: Shape.CurveRenderer
-                    ShapePath {
-                        fillColor: "transparent"
-                        strokeColor: Theme.accent
-                        strokeWidth: 1
-                        startX: 0; startY: 0
-                        PathLine { x: rightSection.width; y: 0 }
-                        PathLine { x: rightSection.width; y: rightSection.height }
-                        PathLine { x: Theme.barDiagSlant; y: rightSection.height }
-                        PathLine { x: 0; y: 0 }
-                    }
+                    pts: [[0,0], [width,0], [width,height], [Theme.barDiagSlant,height]]
                 }
 
                 // ── Tray-specific state ───────────────────
