@@ -51,6 +51,7 @@ Item {
         id: animBorder
         anchors.fill: parent
         active: strip.isCurrent && strip.focused
+        style: UserSettings.borderAnimation
         color: Theme.accent
         thickness: 2
     }

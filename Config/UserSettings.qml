@@ -28,6 +28,7 @@ Singleton {
     property alias idleTimeout: adapter.idleTimeout       // auto-lock timeout in minutes (0 = disabled)
     property alias wallpaperStrategy: adapter.wallpaperStrategy  // strategy name, e.g. "Tonal"
     property alias powerProfile: adapter.powerProfile            // "PowerSaver", "Balanced", "Performance"
+    property alias borderAnimation: adapter.borderAnimation      // "midpoint", "clockwise", "corners", "fade"
 
     // Convenience — true when night light is actively applied
     readonly property bool nightLightActive: nightLightMode === modeManual || (nightLightMode === modeAuto && _autoNightPhase)
@@ -77,6 +78,7 @@ Singleton {
             property int idleTimeout: 0
             property string wallpaperStrategy: "Tonal"
             property string powerProfile: "Balanced"
+            property string borderAnimation: "midpoint"
         }
 
         onAdapterUpdated: root._save()
