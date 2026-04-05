@@ -98,72 +98,144 @@ Scope {
         }
 
         // ── Bar content — positioned at top ──────────────────
-        Rectangle {
+        Item {
             id: barRect
             x: Theme.barMargin + 1
             y: Theme.barMargin
             width: parent.width - (Theme.barMargin + 1) * 2
             height: Theme.barHeight
-            radius: Theme.barRadius
-            color: Theme.bg
-            border.width: 1
-            border.color: Theme.border
 
-            // Clock — absolutely centered on bar, independent of left/right content
-            Clock {
-                id: clock
-                anchors.centerIn: parent
-                z: 1
+            // Repaint all canvases when theme changes
+            Connections {
+                target: Theme
+                function onBgSolidChanged() { leftBg.requestPaint(); centerBg.requestPaint(); rightBg.requestPaint(); }
             }
 
-            // Recording indicator — pulsing red dot left of clock
-            Rectangle {
-                visible: root.isRecording
-                anchors.right: clock.left
-                anchors.rightMargin: 8
-                anchors.verticalCenter: parent.verticalCenter
-                width: 8; height: 8; radius: 4
-                color: Theme.red
-                z: 1
+            // ── Left segment ────────────────────────────
+            Item {
+                id: leftSection
+                anchors.left: parent.left
+                height: parent.height
+                width: leftContent.implicitWidth + Theme.barDiagSlant + 24
 
-                SequentialAnimation on opacity {
-                    running: root.isRecording
-                    loops: Animation.Infinite
-                    NumberAnimation { to: 0.3; duration: Theme.animLockFade }
-                    NumberAnimation { to: 1.0; duration: Theme.animLockFade }
-                }
-            }
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: 12
-                anchors.rightMargin: 12
-                spacing: 0
-
-                // Left: launcher button + workspaces + window title
-                IconButton {
-                    icon: Theme.iconSearch
-                    Layout.alignment: Qt.AlignVCenter
-                    Layout.rightMargin: 10
-                    onClicked: root.launcherRequested()
+                Canvas {
+                    id: leftBg
+                    anchors.fill: parent
+                    onPaint: {
+                        var ctx = getContext("2d"), s = Theme.barDiagSlant;
+                        ctx.clearRect(0, 0, width, height);
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(width, 0);
+                        ctx.lineTo(width - s, height);
+                        ctx.lineTo(0, height);
+                        ctx.closePath();
+                        ctx.fillStyle = Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, 0.88);
+                        ctx.fill();
+                    }
                 }
 
-                Workspaces {
-                    Layout.alignment: Qt.AlignVCenter
-                    screenName: root.screenName
-                }
-
-                ActiveWindow {
-                    Layout.alignment: Qt.AlignVCenter
-                    Layout.leftMargin: 10
-                    Layout.maximumWidth: 300
-                }
-
-                Item { Layout.fillWidth: true }
-
-                // Right: media, tray, then system capsule
                 RowLayout {
-                    Layout.alignment: Qt.AlignVCenter
+                    id: leftContent
+                    anchors.centerIn: parent
+                    anchors.horizontalCenterOffset: -Theme.barDiagSlant / 4
+                    spacing: 0
+
+                    IconButton {
+                        icon: Theme.iconSearch
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.rightMargin: 10
+                        onClicked: root.launcherRequested()
+                    }
+
+                    Workspaces {
+                        Layout.alignment: Qt.AlignVCenter
+                        screenName: root.screenName
+                    }
+
+                    ActiveWindow {
+                        Layout.alignment: Qt.AlignVCenter
+                        Layout.leftMargin: 10
+                        Layout.maximumWidth: 300
+                    }
+                }
+            }
+
+            // ── Center segment ──────────────────────────
+            Item {
+                id: centerSection
+                anchors.horizontalCenter: parent.horizontalCenter
+                height: parent.height
+                width: clock.implicitWidth + Theme.barDiagSlant * 2 + 24
+
+                Canvas {
+                    id: centerBg
+                    anchors.fill: parent
+                    onPaint: {
+                        var ctx = getContext("2d"), s = Theme.barDiagSlant;
+                        ctx.clearRect(0, 0, width, height);
+                        ctx.beginPath();
+                        ctx.moveTo(s, 0);
+                        ctx.lineTo(width, 0);
+                        ctx.lineTo(width - s, height);
+                        ctx.lineTo(0, height);
+                        ctx.closePath();
+                        ctx.fillStyle = Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, 0.88);
+                        ctx.fill();
+                    }
+                }
+
+                Clock {
+                    id: clock
+                    anchors.centerIn: parent
+                }
+
+                // Recording indicator — pulsing red dot left of clock
+                Rectangle {
+                    visible: root.isRecording
+                    anchors.right: clock.left
+                    anchors.rightMargin: 8
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 8; height: 8; radius: 4
+                    color: Theme.red
+
+                    SequentialAnimation on opacity {
+                        running: root.isRecording
+                        loops: Animation.Infinite
+                        NumberAnimation { to: 0.3; duration: Theme.animLockFade }
+                        NumberAnimation { to: 1.0; duration: Theme.animLockFade }
+                    }
+                }
+            }
+
+            // ── Right segment ───────────────────────────
+            Item {
+                id: rightSection
+                anchors.right: parent.right
+                height: parent.height
+                width: rightContent.implicitWidth + Theme.barDiagSlant + 24
+
+                Canvas {
+                    id: rightBg
+                    anchors.fill: parent
+                    onPaint: {
+                        var ctx = getContext("2d"), s = Theme.barDiagSlant;
+                        ctx.clearRect(0, 0, width, height);
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(width, 0);
+                        ctx.lineTo(width, height);
+                        ctx.lineTo(s, height);
+                        ctx.closePath();
+                        ctx.fillStyle = Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, 0.88);
+                        ctx.fill();
+                    }
+                }
+
+                RowLayout {
+                    id: rightContent
+                    anchors.centerIn: parent
+                    anchors.horizontalCenterOffset: Theme.barDiagSlant / 4
                     spacing: Theme.itemSpacing
 
                     Media {

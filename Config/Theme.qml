@@ -296,6 +296,7 @@ Singleton {
     readonly property int barHeight: 34
     readonly property int barMargin: 5
     readonly property int barRadius: 10
+    readonly property real barDiagSlant: 20
     readonly property int itemSpacing: 14
 
     // Spacing scale
