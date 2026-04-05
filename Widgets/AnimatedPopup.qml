@@ -23,6 +23,32 @@ PopupWindow {
 
     property bool autoPosition: true
 
+    // ── Panel state (shared dropdown API) ─────────────────
+    property string activePanel: ""
+    property Item anchorSection: null
+    property real anchorX: 0
+
+    function togglePanel(name) {
+        if (activePanel === name) closePanel();
+        else openPanel(name);
+    }
+
+    function openPanel(name) {
+        close();
+        activePanel = name;
+        if (anchorSection) {
+            anchor.item = anchorSection;
+            anchor.rect.x = anchorX;
+            anchor.rect.y = anchorSection.height;
+        }
+        open();
+    }
+
+    function closePanel() {
+        close();
+    }
+
+    // ── Raw open/close (used by panel API and standalone popups) ──
     function open() {
         if (anchor.item && autoPosition)
             anchor.rect.y = (Theme.barHeight + anchor.item.height) / 2 - 3;

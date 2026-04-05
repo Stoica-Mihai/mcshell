@@ -12,7 +12,7 @@ Scope {
 
     property string screenName: ""
     property var screen: null
-    property bool hasPopup: rightSection.activeDropdown !== "" || centerSection.activeDropdown !== ""
+    property bool hasPopup: sharedDropdown.activePanel !== "" || centerDropdown.activePanel !== ""
 
     property int unreadNotifications: 0
     property var notifHistoryModel: null
@@ -26,13 +26,13 @@ Scope {
     property int panelToggleTrigger: 0
     property string panelToggleName: ""
     onPanelToggleTriggerChanged: {
-        if (panelToggleName === "calendar") centerSection.toggleDropdown("calendar");
-        else if (panelToggleName) rightSection.toggleDropdown(panelToggleName);
+        if (panelToggleName === "calendar") centerDropdown.togglePanel("calendar");
+        else if (panelToggleName) sharedDropdown.togglePanel(panelToggleName);
     }
 
     function dismissPopups() {
-        rightSection.closeDropdown();
-        centerSection.closeDropdown();
+        sharedDropdown.closePanel();
+        centerDropdown.closePanel();
     }
 
     // ── Exclusive zone — reserves bar space, no content ────
@@ -292,32 +292,8 @@ Scope {
                 id: centerSection
                 anchors.horizontalCenter: parent.horizontalCenter
                 height: parent.height
-                width: Math.max(clock.implicitWidth + Theme.barDiagSlant * 2 + 24, 280)
+                width: Math.max(clock.implicitWidth + Theme.barDiagSlant * 2 + Theme.barSegmentPadding, Theme.minCenterWidth)
 
-                // ── Shared dropdown state ─────────────────
-                property string activeDropdown: ""  // "calendar"
-
-                function toggleDropdown(name) {
-                    if (activeDropdown === name) closeDropdown();
-                    else openDropdown(name);
-                }
-
-                function openDropdown(name) {
-                    centerDropdown.close();
-                    activeDropdown = name;
-                    if (name === "calendar") {
-                        calendarContent.viewDate = new Date();
-                        calendarContent.viewMode = "days";
-                    }
-                    centerDropdown.anchor.item = centerSection;
-                    centerDropdown.anchor.rect.x = 0;
-                    centerDropdown.anchor.rect.y = centerSection.height;
-                    centerDropdown.open();
-                }
-
-                function closeDropdown() {
-                    centerDropdown.close();
-                }
 
                 Canvas {
                     id: centerBg
@@ -337,9 +313,9 @@ Scope {
                 Clock {
                     id: clock
                     anchors.centerIn: parent
-                    popupVisible: centerSection.activeDropdown === "calendar"
-                    onTogglePopup: centerSection.toggleDropdown("calendar")
-                    onDismissPopup: centerSection.closeDropdown()
+                    popupVisible: centerDropdown.activePanel === "calendar"
+                    onTogglePopup: centerDropdown.togglePanel("calendar")
+                    onDismissPopup: centerDropdown.closePanel()
                 }
 
                 // Recording indicator — pulsing red dot left of clock
@@ -364,18 +340,27 @@ Scope {
                     id: centerDropdown
 
                     autoPosition: false
+                    anchorSection: centerSection
+                    anchorX: 0
                     implicitWidth: centerSection.width - Theme.barDiagSlant
                     anchor.adjustment: PopupAdjustment.None
 
                     fullHeight: calendarContent.fullHeight
 
                     onVisibleChanged: {
-                        if (!visible) centerSection.activeDropdown = "";
+                        if (!visible) activePanel = "";
+                    }
+
+                    onActivePanelChanged: {
+                        if (activePanel === "calendar") {
+                            calendarContent.viewDate = new Date();
+                            calendarContent.viewMode = "days";
+                        }
                     }
 
                     CalendarPopup {
                         id: calendarContent
-                        visible: centerSection.activeDropdown === "calendar"
+                        visible: centerDropdown.activePanel === "calendar"
                         currentDate: clock.currentDate
                     }
                 }
@@ -386,7 +371,7 @@ Scope {
                 id: rightSection
                 anchors.right: parent.right
                 height: parent.height
-                property real sectionFullWidth: media.implicitWidth + rightContent.implicitWidth + Theme.barDiagSlant + Theme.itemSpacing * 3 + 12
+                property real sectionFullWidth: media.implicitWidth + rightContent.implicitWidth + Theme.barDiagSlant + Theme.itemSpacing * 3 + Theme.trayMenuPadding
                 property real sectionMaxWidth: 0
                 onSectionFullWidthChanged: sectionMaxWidth = Math.max(sectionMaxWidth, sectionFullWidth)
                 width: sectionMaxWidth
@@ -406,48 +391,26 @@ Scope {
                         barRect._pulseTime)
                 }
 
-                // ── Shared dropdown state ─────────────────
-                property string activeDropdown: ""  // "volume", "notifications", "media", "tray"
+                // ── Tray-specific state ───────────────────
                 property var activeTrayItem: null
 
-                function toggleDropdown(name) {
-                    if (activeDropdown === name) {
-                        closeDropdown();
-                    } else {
-                        openDropdown(name);
-                    }
-                }
-
-                function openDropdown(name) {
-                    sharedDropdown.close();
-                    activeDropdown = name;
-                    sharedDropdown.anchor.item = rightSection;
-                    sharedDropdown.anchor.rect.x = Theme.barDiagSlant;
-                    sharedDropdown.anchor.rect.y = rightSection.height;
-                    sharedDropdown.open();
-                }
-
-                function closeDropdown() {
-                    sharedDropdown.close();
-                }
-
                 function showTrayDropdown(trayItem) {
-                    if (activeDropdown === "tray" && activeTrayItem === trayItem) {
-                        closeDropdown();
+                    if (sharedDropdown.activePanel === "tray" && activeTrayItem === trayItem) {
+                        sharedDropdown.closePanel();
                         return;
                     }
                     sharedDropdown.close();
                     activeTrayItem = trayItem;
-                    activeDropdown = "tray";
+                    sharedDropdown.activePanel = "tray";
                     sharedDropdown.anchor.item = rightSection;
-                    sharedDropdown.anchor.rect.x = Theme.barDiagSlant;
+                    sharedDropdown.anchor.rect.x = sharedDropdown.anchorX;
                     sharedDropdown.anchor.rect.y = rightSection.height;
                     trayOpenDelay.restart();
                 }
 
                 Timer {
                     id: trayOpenDelay
-                    interval: 16
+                    interval: Theme.menuRebuildDelay
                     onTriggered: sharedDropdown.open()
                 }
 
@@ -457,9 +420,9 @@ Scope {
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: parent.left
                     anchors.leftMargin: Theme.barDiagSlant + Theme.itemSpacing
-                    onTogglePopup: rightSection.toggleDropdown("media")
-                    onDismissPopup: rightSection.closeDropdown()
-                    popupVisible: rightSection.activeDropdown === "media"
+                    onTogglePopup: sharedDropdown.togglePanel("media")
+                    onDismissPopup: sharedDropdown.closePanel()
+                    popupVisible: sharedDropdown.activePanel === "media"
                 }
 
                 // System tray zone — locked to right side
@@ -473,7 +436,7 @@ Scope {
                     SysTray {
                         id: sysTray
                         Layout.alignment: Qt.AlignVCenter
-                        menuVisible: rightSection.activeDropdown === "tray"
+                        menuVisible: sharedDropdown.activePanel === "tray"
                         onShowTrayMenu: item => rightSection.showTrayDropdown(item)
                     }
 
@@ -485,8 +448,8 @@ Scope {
                         implicitHeight: Theme.barHeight - 10
 
                         readonly property bool capsuleActive:
-                            rightSection.activeDropdown === "volume"
-                            || rightSection.activeDropdown === "notifications"
+                            sharedDropdown.activePanel === "volume"
+                            || sharedDropdown.activePanel === "notifications"
 
                         // Capsule background
                         Rectangle {
@@ -509,12 +472,12 @@ Scope {
                                 icon: Theme.volumeIcon(volume.rawVolume, volume.muted)
                                 label: volume.volume + "%"
                                 alert: volume.muted
-                                active: rightSection.activeDropdown === "volume"
+                                active: sharedDropdown.activePanel === "volume"
                                 onClicked: event => {
                                     if (event.button === Qt.MiddleButton)
                                         volume.toggleMute();
                                     else
-                                        rightSection.toggleDropdown("volume");
+                                        sharedDropdown.togglePanel("volume");
                                 }
                                 onWheel: event => {
                                     const step = Theme.volumeStep;
@@ -564,7 +527,7 @@ Scope {
                                 }
 
                                 // Underline
-                                ActiveUnderline { visible: rightSection.activeDropdown === "notifications" }
+                                ActiveUnderline { visible: sharedDropdown.activePanel === "notifications" }
 
                                 // Unread badge
                                 Rectangle {
@@ -600,7 +563,7 @@ Scope {
                                         if (event.button === Qt.MiddleButton)
                                             UserSettings.doNotDisturb = !UserSettings.doNotDisturb;
                                         else
-                                            rightSection.toggleDropdown("notifications");
+                                            sharedDropdown.togglePanel("notifications");
                                     }
                                 }
                             }
@@ -613,22 +576,24 @@ Scope {
                     id: sharedDropdown
 
                     autoPosition: false
+                    anchorSection: rightSection
+                    anchorX: Theme.barDiagSlant
                     implicitWidth: rightSection.width - Theme.barDiagSlant
                     anchor.adjustment: PopupAdjustment.None
 
                     fullHeight: {
-                        switch (rightSection.activeDropdown) {
+                        switch (sharedDropdown.activePanel) {
                         case "volume": return volumeContent.implicitHeight + Theme.popupPadding * 2;
                         case "notifications": return notifContent.fullHeight;
                         case "media": return mediaContent.implicitHeight + Theme.popupPadding * 2;
-                        case "tray": return Math.min(400, trayMenuColumn.implicitHeight + 12);
+                        case "tray": return Math.min(Theme.trayMenuMaxHeight, trayMenuColumn.implicitHeight + Theme.trayMenuPadding);
                         default: return 100;
                         }
                     }
 
                     onVisibleChanged: {
                         if (!visible) {
-                            rightSection.activeDropdown = "";
+                            sharedDropdown.activePanel = "";
                             rightSection.activeTrayItem = null;
                             traySubMenu.visible = false;
                         }
@@ -637,7 +602,7 @@ Scope {
                     // ── Volume section ────────────────────
                     ColumnLayout {
                         id: volumeContent
-                        visible: rightSection.activeDropdown === "volume"
+                        visible: sharedDropdown.activePanel === "volume"
                         enabled: visible
                         anchors.left: parent.left
                         anchors.right: parent.right
@@ -661,7 +626,7 @@ Scope {
                     // ── Notifications section ─────────────
                     NotificationHistory {
                         id: notifContent
-                        visible: rightSection.activeDropdown === "notifications"
+                        visible: sharedDropdown.activePanel === "notifications"
                         historyModel: root.notifHistoryModel
                         onRemoveFromHistory: nid => root.notifRemoved(nid)
                         onClearAllHistory: root.notifCleared()
@@ -673,7 +638,7 @@ Scope {
                     // ── Media section ─────────────────────
                     ColumnLayout {
                         id: mediaContent
-                        visible: rightSection.activeDropdown === "media"
+                        visible: sharedDropdown.activePanel === "media"
                         enabled: visible
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.top: parent.top
@@ -685,7 +650,7 @@ Scope {
                         property real trackLen: media.player ? media.player.length : 0
 
                         FrameAnimation {
-                            running: media.isPlaying && rightSection.activeDropdown === "media"
+                            running: media.isPlaying && sharedDropdown.activePanel === "media"
                             onTriggered: {
                                 if (media.player && !seekSlider.dragging)
                                     media.player.positionChanged();
@@ -694,7 +659,7 @@ Scope {
 
                         Connections {
                             target: media.player
-                            enabled: rightSection.activeDropdown === "media"
+                            enabled: sharedDropdown.activePanel === "media"
                             function onPositionChanged() {
                                 if (!seekSlider.dragging)
                                     mediaContent.currentPos = media.player ? media.player.position : 0;
@@ -838,7 +803,7 @@ Scope {
                     // ── Tray menu section ─────────────────
                     Item {
                         id: trayContent
-                        visible: rightSection.activeDropdown === "tray"
+                        visible: sharedDropdown.activePanel === "tray"
                         enabled: visible
                         anchors.fill: parent
 
@@ -874,7 +839,7 @@ Scope {
                                                 traySubMenu.visible = !traySubMenu.visible;
                                             } else {
                                                 modelData.triggered();
-                                                rightSection.closeDropdown();
+                                                sharedDropdown.closePanel();
                                             }
                                         }
                                     }
@@ -891,7 +856,7 @@ Scope {
                             visible: false
                             color: "transparent"
                             implicitWidth: 200
-                            implicitHeight: Math.min(400, subColumn.implicitHeight + 12)
+                            implicitHeight: Math.min(Theme.trayMenuMaxHeight, subColumn.implicitHeight + Theme.trayMenuPadding)
 
                             anchor.item: anchorItem
                             anchor.rect.x: anchorItem ? anchorItem.width + 4 : 0
@@ -931,7 +896,7 @@ Scope {
                                                     if (!modelData) return;
                                                     modelData.triggered();
                                                     traySubMenu.visible = false;
-                                                    rightSection.closeDropdown();
+                                                    sharedDropdown.closePanel();
                                                 }
                                             }
                                         }

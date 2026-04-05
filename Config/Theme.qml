@@ -450,6 +450,11 @@ Singleton {
 
     // Popup/panel
     readonly property int popupPadding: 12
+    readonly property int barSegmentPadding: 24      // inner padding for bar segments
+    readonly property int minCenterWidth: 280        // minimum center segment width
+    readonly property int trayMenuMaxHeight: 400     // max tray context menu height
+    readonly property int trayMenuPadding: 12        // tray menu content padding
+    readonly property int menuRebuildDelay: 16       // ms delay for menu rebuild
 
     // Settings panel rows
     readonly property int settingsRowHeight: 40
