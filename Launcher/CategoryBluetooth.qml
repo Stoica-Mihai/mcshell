@@ -53,7 +53,7 @@ LauncherCategory {
                 root.btAdapter.discovering = true;
                 root.refreshBt();
             } else {
-                root._sourceData = [];
+                root.setItems([]);
             }
         }
     }
