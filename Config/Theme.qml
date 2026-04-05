@@ -477,6 +477,7 @@ Singleton {
     readonly property int fontSizeMini: 10
     readonly property int fontSizeTiny: 11
     readonly property int fontSizeSmall: 13
+    readonly property int fontSizeBody: 14
     readonly property int fontSize: 15
     readonly property int fontSizeMedium: 16
     readonly property int fontSizeLarge: 18
@@ -489,6 +490,8 @@ Singleton {
     readonly property int iconSizeXLarge: 48
     readonly property int launcherIconCollapsed: 24
     readonly property int launcherIconExpanded: 48
+    readonly property int appIconSmall: 40
+    readonly property int appIconLarge: 80
 
     // ── Icons (Nerd Font codepoints) ────────────────────
     // Volume

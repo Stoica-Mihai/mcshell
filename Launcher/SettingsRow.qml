@@ -22,8 +22,8 @@ Rectangle {
     RowLayout {
         id: rowContent
         anchors.fill: parent
-        anchors.leftMargin: 12
-        anchors.rightMargin: 12
+        anchors.leftMargin: Theme.spacingLarge
+        anchors.rightMargin: Theme.spacingLarge
         spacing: Theme.spacingNormal
     }
 }

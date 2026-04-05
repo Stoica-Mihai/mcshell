@@ -10,7 +10,7 @@ Text {
     font.family: Theme.fontFamily
     font.pixelSize: Theme.fontSizeMini
     color: Theme.fgDim
-    Layout.leftMargin: 12
+    Layout.leftMargin: Theme.spacingLarge
     Layout.topMargin: 2
     opacity: Theme.opacitySubtle
 }

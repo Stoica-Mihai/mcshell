@@ -123,7 +123,7 @@ PanelWindow {
                 Text {
                     text: "Keybindings"
                     font.family: Theme.fontFamily
-                    font.pixelSize: 16
+                    font.pixelSize: Theme.fontSizeMedium
                     font.bold: true
                     color: Theme.fg
                     Layout.alignment: Qt.AlignVCenter
@@ -204,7 +204,7 @@ PanelWindow {
                                 Text {
                                     text: delegateLoader.modelData.icon || ""
                                     font.family: Theme.iconFont
-                                    font.pixelSize: 14
+                                    font.pixelSize: Theme.fontSizeBody
                                     color: Theme.accent
                                     Layout.alignment: Qt.AlignVCenter
                                 }
@@ -257,8 +257,8 @@ PanelWindow {
 
                             RowLayout {
                                 anchors.fill: parent
-                                anchors.leftMargin: 8
-                                anchors.rightMargin: 8
+                                anchors.leftMargin: Theme.spacingNormal
+                                anchors.rightMargin: Theme.spacingNormal
                                 spacing: Theme.spacingLarge
 
                                 // Key caps

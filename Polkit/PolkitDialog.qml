@@ -168,8 +168,8 @@ Item {
                         TextInput {
                             id: passwordInput
                             anchors.fill: parent
-                            anchors.leftMargin: 12
-                            anchors.rightMargin: 12
+                            anchors.leftMargin: Theme.spacingLarge
+                            anchors.rightMargin: Theme.spacingLarge
                             verticalAlignment: TextInput.AlignVCenter
                             font.family: Theme.fontFamily
                             font.pixelSize: Theme.fontSize

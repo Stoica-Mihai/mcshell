@@ -44,7 +44,7 @@ Item {
             Text {
                 text: Theme.iconBell
                 font.family: Theme.iconFont
-                font.pixelSize: 14
+                font.pixelSize: Theme.fontSizeBody
                 color: Theme.accent
                 Layout.alignment: Qt.AlignVCenter
             }
@@ -153,7 +153,7 @@ Item {
                         left: parent.left
                         right: parent.right
                         margins: 7
-                        leftMargin: 10
+                        leftMargin: Theme.spacingMedium
                     }
                     spacing: 2
 

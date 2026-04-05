@@ -94,8 +94,8 @@ LauncherCategory {
             OptImage {
                 anchors.centerIn: parent
                 visible: !parent.isCurrent
-                width: 40; height: 40
-                sourceSize.width: 40; sourceSize.height: 40
+                width: Theme.appIconSmall; height: Theme.appIconSmall
+                sourceSize.width: Theme.appIconSmall; sourceSize.height: Theme.appIconSmall
                 source: "image://icon/" + (modelData.icon || "application-x-executable")
             }
 
@@ -104,12 +104,12 @@ LauncherCategory {
                 anchors.centerIn: parent
                 visible: parent.isCurrent
                 spacing: Theme.spacingLarge
-                width: parent.width - 40
+                width: parent.width - Theme.appIconSmall
 
                 OptImage {
                     Layout.alignment: Qt.AlignHCenter
-                    width: 80; height: 80
-                    sourceSize.width: 80; sourceSize.height: 80
+                    width: Theme.appIconLarge; height: Theme.appIconLarge
+                    sourceSize.width: Theme.appIconLarge; sourceSize.height: Theme.appIconLarge
                     source: "image://icon/" + (modelData.icon || "application-x-executable")
                 }
 

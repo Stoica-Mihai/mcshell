@@ -231,8 +231,8 @@ LauncherCategory {
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 10
-                        anchors.rightMargin: 10
+                        anchors.leftMargin: Theme.spacingMedium
+                        anchors.rightMargin: Theme.spacingMedium
                         spacing: Theme.spacingNormal
 
                         Text {

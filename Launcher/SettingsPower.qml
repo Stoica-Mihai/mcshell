@@ -131,13 +131,13 @@ SettingsPanel {
         Text {
             text: Theme.iconBattery
             font.family: Theme.iconFont
-            font.pixelSize: 16
+            font.pixelSize: Theme.fontSizeMedium
             color: Theme.accent
         }
         Text {
             text: "Profile"
             font.family: Theme.fontFamily
-            font.pixelSize: 13
+            font.pixelSize: Theme.fontSizeSmall
             color: Theme.fg
             Layout.fillWidth: true
         }

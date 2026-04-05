@@ -96,9 +96,9 @@ Item {
             width: 28
             height: 28
             anchors.right: parent.right
-            anchors.rightMargin: 12
+            anchors.rightMargin: Theme.spacingLarge
             anchors.top: parent.top
-            anchors.topMargin: 12
+            anchors.topMargin: Theme.spacingLarge
 
             property real fraction: 1.0
             property bool paused: false
@@ -161,7 +161,7 @@ Item {
                 left: parent.left
                 right: countdownItem.left
                 margins: Theme.popupPadding
-                rightMargin: 8
+                rightMargin: Theme.spacingNormal
             }
             spacing: Theme.spacingTiny
 
@@ -313,8 +313,8 @@ Item {
                 TextInput {
                     id: replyField
                     anchors.fill: parent
-                    anchors.leftMargin: 8
-                    anchors.rightMargin: 8
+                    anchors.leftMargin: Theme.spacingNormal
+                    anchors.rightMargin: Theme.spacingNormal
                     verticalAlignment: TextInput.AlignVCenter
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeSmall

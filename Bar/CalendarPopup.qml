@@ -30,7 +30,7 @@ Item {
     ColumnLayout {
         id: calContent
         anchors.fill: parent
-        anchors.margins: 8
+        anchors.margins: Theme.spacingNormal
         spacing: Theme.spacingSmall
 
         // ── Header with nav ────────────────────────

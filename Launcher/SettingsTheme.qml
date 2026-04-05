@@ -85,7 +85,7 @@ SettingsPanel {
                         }
                         Rectangle {
                             required property color modelData
-                            width: 8; height: 8; radius: 4
+                            width: 8; height: 8; radius: Theme.radiusTiny
                             color: modelData
                         }
                     }

@@ -33,8 +33,8 @@ Item {
 
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: 10
-            Layout.rightMargin: 10
+            Layout.leftMargin: Theme.spacingMedium
+            Layout.rightMargin: Theme.spacingMedium
             spacing: Theme.spacingMedium
 
             Text {
@@ -71,8 +71,8 @@ Item {
         SliderTrack {
             id: slider
             Layout.fillWidth: true
-            Layout.leftMargin: 10
-            Layout.rightMargin: 10
+            Layout.leftMargin: Theme.spacingMedium
+            Layout.rightMargin: Theme.spacingMedium
             value: root.value
             accentColor: root.muted ? Theme.red : root.accentColor
             knobColor: root.muted ? Theme.red : Theme.fg

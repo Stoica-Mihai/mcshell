@@ -221,7 +221,7 @@ PanelWindow {
                             Layout.fillWidth: true
                             text: card.modelData.appId || "Unknown"
                             font.family: Theme.fontFamily
-                            font.pixelSize: 18
+                            font.pixelSize: Theme.fontSizeLarge
                             font.bold: true
                             color: Theme.fg
                             horizontalAlignment: Text.AlignHCenter

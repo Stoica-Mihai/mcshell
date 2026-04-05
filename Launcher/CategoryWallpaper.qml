@@ -150,7 +150,7 @@ LauncherCategory {
                         anchors.bottom: parent.bottom
                         anchors.left: parent.left
                         anchors.right: parent.right
-                        anchors.margins: 10
+                        anchors.margins: Theme.spacingMedium
                         text: wallStrip.fileName
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeSmall
@@ -163,7 +163,7 @@ LauncherCategory {
                 Rectangle {
                     anchors.top: parent.top
                     anchors.right: parent.right
-                    anchors.margins: 8
+                    anchors.margins: Theme.spacingNormal
                     width: 28
                     height: 28
                     radius: Theme.radiusLarge
@@ -174,7 +174,7 @@ LauncherCategory {
                         anchors.centerIn: parent
                         text: Theme.iconCheck
                         font.family: Theme.iconFont
-                        font.pixelSize: 14
+                        font.pixelSize: Theme.fontSizeBody
                         color: Theme.bgSolid
                     }
                 }

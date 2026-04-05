@@ -146,7 +146,7 @@ Scope {
                     IconButton {
                         icon: Theme.iconSearch
                         Layout.alignment: Qt.AlignVCenter
-                        Layout.rightMargin: 10
+                        Layout.rightMargin: Theme.spacingMedium
                         onClicked: root.launcherRequested()
                     }
 
@@ -204,9 +204,9 @@ Scope {
                 Rectangle {
                     visible: root.isRecording
                     anchors.right: clock.left
-                    anchors.rightMargin: 8
+                    anchors.rightMargin: Theme.spacingNormal
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 8; height: 8; radius: 4
+                    width: 8; height: 8; radius: Theme.radiusTiny
                     color: Theme.red
 
                     SequentialAnimation on opacity {
@@ -482,6 +482,7 @@ Scope {
                         spacing: Theme.spacingTiny
 
                         VolumeSlider {
+                            volumeSource: volume
                             Layout.fillWidth: true
                             Layout.bottomMargin: 2
                         }

@@ -234,7 +234,7 @@ Item {
                 id: stack
                 anchors.top: parent.top
                 anchors.right: parent.right
-                anchors.rightMargin: 8
+                anchors.rightMargin: Theme.spacingNormal
                 anchors.topMargin: 4
                 width: root.popupWidth
                 spacing: Theme.spacingNormal

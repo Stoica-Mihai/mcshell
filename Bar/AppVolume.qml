@@ -33,7 +33,7 @@ Item {
             font.pixelSize: Theme.fontSizeSmall
             font.weight: Font.Medium
             Layout.fillWidth: true
-            Layout.leftMargin: 10
+            Layout.leftMargin: Theme.spacingMedium
             Layout.topMargin: 2
         }
 

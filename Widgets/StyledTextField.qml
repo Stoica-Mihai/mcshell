@@ -18,15 +18,15 @@ Rectangle {
 
     RowLayout {
         anchors.fill: parent
-        anchors.leftMargin: 12
-        anchors.rightMargin: 12
+        anchors.leftMargin: Theme.spacingLarge
+        anchors.rightMargin: Theme.spacingLarge
         spacing: Theme.spacingNormal
 
         Text {
             visible: root.icon !== ""
             text: root.icon
             font.family: Theme.iconFont
-            font.pixelSize: 14
+            font.pixelSize: Theme.fontSizeBody
             color: Theme.fgDim
             Layout.alignment: Qt.AlignVCenter
         }
