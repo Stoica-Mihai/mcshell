@@ -12,6 +12,24 @@ PanelWindow {
     property bool isOpen: false
     property int selectedIndex: 0
     property string _searchText: ""
+    property int _currentId: -1
+    property int _previousId: -1
+
+    // Track focus changes to maintain current/previous
+    readonly property int _focusedId: {
+        for (const w of (Niri.windows ? Niri.windows.values : [])) {
+            if (w.focused) return w.id;
+        }
+        return -1;
+    }
+    on_FocusedIdChanged: {
+        if (_focusedId < 0 || isOpen) return;
+        if (_focusedId !== _currentId) {
+            _previousId = _currentId;
+            _currentId = _focusedId;
+        }
+    }
+
     readonly property var _allWindows: Niri.windows ? Niri.windows.values : []
     readonly property var _filtered: {
         if (_searchText === "") return _allWindows;
@@ -27,10 +45,12 @@ PanelWindow {
         isOpen = true;
         visible = true;
         _searchText = "";
-        // Start on the focused window
+        // Start on the previous window for quick alt+tab toggle
         selectedIndex = 0;
-        for (let i = 0; i < _filtered.length; i++) {
-            if (_filtered[i].focused) { selectedIndex = i; break; }
+        if (_previousId >= 0) {
+            for (let i = 0; i < _filtered.length; i++) {
+                if (_filtered[i].id === _previousId) { selectedIndex = i; break; }
+            }
         }
         searchBar.field.forceActiveFocus();
     }
@@ -48,8 +68,8 @@ PanelWindow {
     function activate() {
         if (selectedIndex < 0 || selectedIndex >= _filtered.length) return;
         const win = _filtered[selectedIndex];
-        Quickshell.execDetached({ command: ["niri", "msg", "action", "focus-window", "--id", String(win.id)] });
         close();
+        Quickshell.execDetached({ command: ["niri", "msg", "action", "focus-window", "--id", String(win.id)] });
     }
 
     function _windowIcon(appId) {
