@@ -42,7 +42,7 @@ PanelWindow {
     }
 
     function toggle() {
-        if (isOpen) close(); else open();
+        if (isOpen) navigate(1); else open();
     }
 
     function activate() {
@@ -60,7 +60,7 @@ PanelWindow {
 
     function navigate(delta) {
         if (_filtered.length === 0) return;
-        selectedIndex = Math.max(0, Math.min(_filtered.length - 1, selectedIndex + delta));
+        selectedIndex = (selectedIndex + delta + _filtered.length) % _filtered.length;
     }
 
     // ── Window setup ────────────────────────────────────
@@ -127,6 +127,13 @@ PanelWindow {
                     root.activate();
                     event.accepted = true;
                     break;
+                }
+            }
+
+            field.Keys.onReleased: event => {
+                if (event.key === Qt.Key_Alt) {
+                    root.activate();
+                    event.accepted = true;
                 }
             }
         }
