@@ -80,43 +80,54 @@ PanelWindow {
         MouseArea { anchors.fill: parent; onClicked: root.close() }
     }
 
-    // Search bar
-    StyledTextField {
-        id: searchBar
+    // Search bar — ParallelogramCard provides the skewed background
+    ParallelogramCard {
+        id: searchBarCard
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: cardArea.top
         anchors.bottomMargin: 20
         width: Math.min(600, parent.width - 80)
         height: 44
-        radius: 10
-        color: Theme.bg
-        icon: Theme.iconSearch
-        placeholder: "Switch window..."
+        backgroundColor: Theme.bg
+        showBorder: true
+        borderColor: searchBar.field.activeFocus ? Theme.accent : Theme.border
+        _skew: Theme.cardSkew * cardArea.height / height
 
-        field.onTextChanged: {
-            root._searchText = searchBar.text;
-            root.selectedIndex = 0;
-        }
+        StyledTextField {
+            id: searchBar
+            anchors.fill: parent
+            anchors.leftMargin: Math.abs(searchBarCard._skew * searchBarCard.height / 2) + 4
+            anchors.rightMargin: Math.abs(searchBarCard._skew * searchBarCard.height / 2) + 4
+            color: "transparent"
+            border.width: 0
+            icon: Theme.iconSearch
+            placeholder: "Switch window..."
 
-        field.Keys.onPressed: event => {
-            switch (event.key) {
-            case Qt.Key_Escape:
-                root.close();
-                event.accepted = true;
-                break;
-            case Qt.Key_Left:
-                root.navigate(-1);
-                event.accepted = true;
-                break;
-            case Qt.Key_Right:
-                root.navigate(1);
-                event.accepted = true;
-                break;
-            case Qt.Key_Return:
-            case Qt.Key_Enter:
-                root.activate();
-                event.accepted = true;
-                break;
+            field.onTextChanged: {
+                root._searchText = searchBar.text;
+                root.selectedIndex = 0;
+            }
+
+            field.Keys.onPressed: event => {
+                switch (event.key) {
+                case Qt.Key_Escape:
+                    root.close();
+                    event.accepted = true;
+                    break;
+                case Qt.Key_Left:
+                    root.navigate(-1);
+                    event.accepted = true;
+                    break;
+                case Qt.Key_Right:
+                    root.navigate(1);
+                    event.accepted = true;
+                    break;
+                case Qt.Key_Return:
+                case Qt.Key_Enter:
+                    root.activate();
+                    event.accepted = true;
+                    break;
+                }
             }
         }
     }

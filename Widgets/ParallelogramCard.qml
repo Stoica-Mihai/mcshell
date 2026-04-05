@@ -28,7 +28,7 @@ Item {
     property bool skewContent: false
 
     // Skew geometry
-    readonly property real _skew: Theme.cardSkew
+    property real _skew: Theme.cardSkew
     readonly property real _skewPx: _skew * height / 2
     readonly property real _tl: -_skewPx
     readonly property real _tr: width - _skewPx
