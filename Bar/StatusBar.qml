@@ -334,7 +334,10 @@ Scope {
                 id: rightSection
                 anchors.right: parent.right
                 height: parent.height
-                width: rightContent.implicitWidth + Theme.barDiagSlant + 24
+                property real sectionFullWidth: media.implicitWidth + rightContent.implicitWidth + Theme.barDiagSlant + Theme.itemSpacing * 3 + 12
+                property real sectionMaxWidth: 0
+                onSectionFullWidthChanged: sectionMaxWidth = Math.max(sectionMaxWidth, sectionFullWidth)
+                width: sectionMaxWidth
 
                 Canvas {
                     id: rightBg
@@ -351,16 +354,21 @@ Scope {
                         barRect._pulseTime)
                 }
 
+                // Media zone — left side of right segment
+                Media {
+                    id: media
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: parent.left
+                    anchors.leftMargin: Theme.barDiagSlant + Theme.itemSpacing
+                }
+
+                // System tray zone — locked to right side
                 RowLayout {
                     id: rightContent
-                    anchors.centerIn: parent
-                    anchors.horizontalCenterOffset: Theme.barDiagSlant / 4
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.right: parent.right
+                    anchors.rightMargin: Theme.itemSpacing
                     spacing: Theme.itemSpacing
-
-                    Media {
-                        id: media
-                        Layout.alignment: Qt.AlignVCenter
-                    }
 
                     SysTray {
                         id: sysTray
