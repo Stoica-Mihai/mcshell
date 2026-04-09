@@ -422,6 +422,11 @@ PanelWindow {
                         }
                     }
 
+                    Keys.onReleased: event => {
+                        if (launcher.activeCategory.onKeyReleased?.(event))
+                            event.accepted = true;
+                    }
+
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: launcher.activeCategory.searchPlaceholder

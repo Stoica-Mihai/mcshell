@@ -64,7 +64,7 @@ LauncherCategory {
                 return true;
             case Qt.Key_Return:
             case Qt.Key_Enter:
-                activeSettingsCard.activateItem();
+                if (!event.isAutoRepeat) activeSettingsCard.activateItem();
                 return true;
             case Qt.Key_Left:
                 if (activeSettingsCard.adjustLeft) activeSettingsCard.adjustLeft();
@@ -87,6 +87,16 @@ LauncherCategory {
             case Qt.Key_Return:
             case Qt.Key_Enter:
                 editMode = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function onKeyReleased(event) {
+        if (editMode && activeSettingsCard && !event.isAutoRepeat) {
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                activeSettingsCard.deactivateItem();
                 return true;
             }
         }

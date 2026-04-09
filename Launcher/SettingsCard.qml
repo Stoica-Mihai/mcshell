@@ -24,6 +24,9 @@ Item {
     function activateItem() {
         if (loader.item && loader.item.activateItem) loader.item.activateItem();
     }
+    function deactivateItem() {
+        if (loader.item && loader.item.deactivateItem) loader.item.deactivateItem();
+    }
     function adjustLeft() {
         if (loader.item && loader.item.adjustLeft) return loader.item.adjustLeft();
         return false;
