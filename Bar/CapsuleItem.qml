@@ -10,6 +10,7 @@ Item {
     property string icon: ""
     property string label: ""
     property bool alert: false
+    property bool connected: false
     property bool active: false
 
     signal clicked(var event)
@@ -20,6 +21,7 @@ Item {
 
     readonly property bool hovered: mouse.containsMouse
     readonly property color activeColor: alert ? Theme.red
+                                       : connected ? Theme.green
                                        : hovered ? Theme.accent
                                        : Theme.fg
 

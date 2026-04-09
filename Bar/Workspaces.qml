@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Shapes
 import Quickshell.Niri
 import qs.Config
+import qs.Widgets
 
 Item {
     id: root
@@ -176,37 +177,9 @@ Item {
                     onClicked: Niri.dispatch(["focus-workspace", wsItem.modelData.idx.toString()])
                 }
 
-                // Themed tooltip — appears after hover delay
-                Rectangle {
-                    id: wsTip
-                    visible: opacity > 0
-                    opacity: wsMouse.containsMouse && wsItem.appCount > 0 && _showTimer.running === false ? 1 : 0
-                    anchors.top: parent.bottom
-                    anchors.topMargin: Theme.spacingSmall
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    width: tipText.implicitWidth + Theme.spacingMedium * 2
-                    height: tipText.implicitHeight + Theme.spacingSmall * 2
-                    radius: Theme.radiusSmall
-                    color: Theme.surfaceContainer
-                    border.width: 1
-                    border.color: Theme.outlineVariant
-
-                    Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
-
-                    Text {
-                        id: tipText
-                        anchors.centerIn: parent
-                        text: wsItem.apps.join("\n")
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        color: Theme.fgDim
-                    }
-
-                    Timer {
-                        id: _showTimer
-                        interval: Theme.animCarousel
-                        running: wsMouse.containsMouse && wsItem.appCount > 0
-                    }
+                ThemedTooltip {
+                    showWhen: wsMouse.containsMouse && wsItem.appCount > 0
+                    text: wsItem.apps.join("\n")
                 }
             }
         }

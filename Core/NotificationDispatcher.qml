@@ -47,11 +47,15 @@ Singleton {
     }
 
     // ── WiFi watchers ───────────────────────────────────
+    // Debounce — NM bounces wifiEnabled during state transitions
+    Timer {
+        id: _wifiDebounce
+        interval: 500
+        onTriggered: root.send("WiFi", Networking.wifiEnabled ? "Enabled" : "Disabled", Theme.notifShort)
+    }
     Connections {
         target: Networking
-        function onWifiEnabledChanged() {
-            root.send("WiFi", Networking.wifiEnabled ? "Enabled" : "Disabled", Theme.notifShort);
-        }
+        function onWifiEnabledChanged() { _wifiDebounce.restart(); }
     }
 
     readonly property var _wifiDevice: {

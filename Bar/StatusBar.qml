@@ -3,6 +3,8 @@ import QtQuick.Layouts
 import QtQuick.Shapes
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Bluetooth
+import Quickshell.Networking
 import Quickshell.Services.SystemTray
 import qs.Config
 import qs.Widgets
@@ -18,6 +20,8 @@ Scope {
     property int unreadNotifications: 0
     property var notifHistoryModel: null
     signal launcherRequested()
+    signal wifiRequested()
+    signal bluetoothRequested()
     signal notifRemoved(string nid)
     signal notifCleared()
     signal notifPanelOpened()
@@ -358,6 +362,58 @@ Scope {
                             id: capsuleRow
                             anchors.centerIn: parent
                             spacing: Theme.spacingMedium
+
+                            // WiFi
+                            CapsuleItem {
+                                id: wifiCapsule
+                                icon: Networking.wifiEnabled ? Theme.iconWifi : Theme.iconWifiOff
+                                label: root._wifiConnected ? root._connectedNetwork.name : ""
+                                alert: !Networking.wifiEnabled
+                                connected: root._wifiConnected
+                                onClicked: event => {
+                                    if (event.button === Qt.MiddleButton)
+                                        Networking.wifiEnabled = !Networking.wifiEnabled;
+                                    else
+                                        root.wifiRequested();
+                                }
+
+                                ThemedTooltip {
+                                    showWhen: wifiCapsule.hovered
+                                    text: {
+                                        if (!Networking.wifiEnabled) return "WiFi Off";
+                                        if (!root._wifiConnected) return "WiFi On — Not connected";
+                                        const net = root._connectedNetwork;
+                                        return "Connected to " + net.name + "\nSignal: " + Math.round(net.signalStrength * 100) + "%";
+                                    }
+                                }
+                            }
+
+                            // Bluetooth
+                            CapsuleItem {
+                                id: btCapsule
+                                icon: root._btAdapter?.enabled ? Theme.iconBluetooth : Theme.iconBluetoothOff
+                                label: root._btConnected ? (root._connectedBtDevice.name || "") : ""
+                                alert: !(root._btAdapter?.enabled ?? false)
+                                connected: root._btConnected
+                                onClicked: event => {
+                                    if (event.button === Qt.MiddleButton && root._btAdapter)
+                                        root._btAdapter.enabled = !root._btAdapter.enabled;
+                                    else
+                                        root.bluetoothRequested();
+                                }
+
+                                ThemedTooltip {
+                                    showWhen: btCapsule.hovered
+                                    text: {
+                                        if (!(root._btAdapter?.enabled ?? false)) return "Bluetooth Off";
+                                        if (!root._btConnected) return "Bluetooth On — No device";
+                                        const dev = root._connectedBtDevice;
+                                        let t = "Connected to " + (dev.name || "Unknown");
+                                        if (dev.batteryAvailable) t += "\nBattery: " + Math.round(dev.battery * 100) + "%";
+                                        return t;
+                                    }
+                                }
+                            }
 
                             // Volume
                             CapsuleItem {
@@ -806,4 +862,32 @@ Scope {
         id: battery
         visible: false
     }
+
+    // ── WiFi state ──
+    readonly property var _wifiDevice: {
+        const devs = Networking.devices?.values ?? [];
+        for (let i = 0; i < devs.length; i++) {
+            if (devs[i].type === DeviceType.Wifi) return devs[i];
+        }
+        return null;
+    }
+    readonly property var _connectedNetwork: {
+        const nets = _wifiDevice?.networks?.values ?? [];
+        for (let i = 0; i < nets.length; i++) {
+            if (nets[i].connected) return nets[i];
+        }
+        return null;
+    }
+    readonly property bool _wifiConnected: _connectedNetwork !== null
+
+    // ── Bluetooth state ──
+    readonly property var _btAdapter: Bluetooth.defaultAdapter
+    readonly property var _connectedBtDevice: {
+        const devs = _btAdapter?.devices?.values ?? [];
+        for (let i = 0; i < devs.length; i++) {
+            if (devs[i].connected) return devs[i];
+        }
+        return null;
+    }
+    readonly property bool _btConnected: _connectedBtDevice !== null
 }

@@ -39,6 +39,8 @@ ShellRoot {
             mediaPlaying: shell._mediaPlaying
             isRecording: screenRecording.active
             onLauncherRequested: appLauncher.toggle()
+            onWifiRequested: appLauncher.openTab("wifi")
+            onBluetoothRequested: appLauncher.openTab("bluetooth")
             onNotifRemoved: nid => notifPopup.removeHistoryById(nid)
             onNotifCleared: notifPopup.clearHistory()
             onNotifPanelOpened: notifPopup.markAllRead()
