@@ -19,6 +19,7 @@ Item {
 
     property real _progress: 0
     on_ProgressChanged: canvas.requestPaint()
+    onColorChanged: canvas.requestPaint()
 
     onActiveChanged: {
         if (active) {
