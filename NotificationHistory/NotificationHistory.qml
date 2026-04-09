@@ -16,17 +16,10 @@ Item {
     signal removeFromHistory(string nid)
     signal clearAllHistory()
 
-    readonly property int maxVisibleEntries: 4
-    readonly property int entryHeight: 60
-    readonly property int headerHeight: 80
+    readonly property int _maxListHeight: 215
 
-    // Height the host dropdown should use
-    readonly property int fullHeight: {
-        if (!historyModel || historyModel.count === 0)
-            return headerHeight + 80;
-        const visibleCount = Math.min(maxVisibleEntries, historyModel.count);
-        return headerHeight + visibleCount * entryHeight;
-    }
+    // Height the host dropdown should use — derived from actual layout
+    readonly property int fullHeight: content.implicitHeight + Theme.popupPadding * 2
 
     anchors.fill: parent
 
@@ -108,137 +101,125 @@ Item {
         }
 
         // ── Notification list ───────────────────────
-        ListView {
+        Flickable {
             id: historyList
             Layout.fillWidth: true
             Layout.fillHeight: true
+            Layout.preferredHeight: Math.min(panel._maxListHeight, notifColumn.implicitHeight)
             visible: panel.historyModel && panel.historyModel.count > 0
             clip: true
-            model: panel.historyModel
+            contentHeight: notifColumn.implicitHeight
             boundsBehavior: Flickable.StopAtBounds
-            spacing: Theme.spacingTiny
 
             SmoothWheelHandler { target: historyList }
 
             ScrollBar.vertical: ThemedScrollBar { barWidth: 4 }
 
-            delegate: Rectangle {
-                id: entryItem
+            Column {
+                id: notifColumn
+                width: historyList.width
+                spacing: Theme.spacingTiny
 
-                width: historyList.width - 4
-                height: entryContent.implicitHeight + 14
-                radius: Theme.radiusSmall
-                color: entryHover.hovered ? Theme.bgHover : "transparent"
+                Repeater {
+                    model: panel.historyModel
 
-                HoverHandler {
-                    id: entryHover
-                }
+                    Rectangle {
+                        id: entryItem
 
-                // Urgency accent bar
-                Rectangle {
-                    anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
-                    anchors.topMargin: 3
-                    anchors.bottomMargin: 3
-                    width: 2
-                    radius: 1
-                    color: Theme.urgencyColor(model.urgency)
-                }
+                        width: notifColumn.width - 4
+                        height: entryContent.implicitHeight + 14
+                        radius: Theme.radiusSmall
+                        color: entryHover.hovered ? Theme.bgHover : "transparent"
 
-                ColumnLayout {
-                    id: entryContent
-                    anchors {
-                        top: parent.top
-                        left: parent.left
-                        right: parent.right
-                        margins: 7
-                        leftMargin: Theme.spacingMedium
-                    }
-                    spacing: 2
-
-                    // Header
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: Theme.spacingSmall
-
-                        Text {
-                            text: model.appName || "Notification"
-                            color: Theme.fgDim
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeSmall
-                            font.bold: true
-                            elide: Text.ElideRight
-                            Layout.fillWidth: true
+                        HoverHandler {
+                            id: entryHover
                         }
 
-                        Text {
-                            text: model.timestamp || ""
-                            color: Theme.fgDim
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeMini
+                        // Urgency accent bar
+                        Rectangle {
+                            anchors.left: parent.left
+                            anchors.top: parent.top
+                            anchors.bottom: parent.bottom
+                            anchors.topMargin: 3
+                            anchors.bottomMargin: 3
+                            width: 2
+                            radius: 1
+                            color: Theme.urgencyColor(model.urgency)
                         }
 
-                        IconButton {
-                            icon: Theme.iconClose
-                            size: 10
-                            normalColor: Theme.fgDim
-                            hoverColor: Theme.red
-                            visible: entryHover.hovered
-                            onClicked: panel.removeFromHistory(model.notifId)
+                        ColumnLayout {
+                            id: entryContent
+                            anchors {
+                                top: parent.top
+                                left: parent.left
+                                right: parent.right
+                                margins: 7
+                                leftMargin: Theme.spacingMedium
+                            }
+                            spacing: 2
+
+                            // Header
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: Theme.spacingSmall
+
+                                Text {
+                                    text: model.appName || "Notification"
+                                    color: Theme.fgDim
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSizeSmall
+                                    font.bold: true
+                                    elide: Text.ElideRight
+                                    Layout.fillWidth: true
+                                }
+
+                                Text {
+                                    text: model.timestamp || ""
+                                    color: Theme.fgDim
+                                    font.family: Theme.fontFamily
+                                    font.pixelSize: Theme.fontSizeMini
+                                }
+
+                                IconButton {
+                                    icon: Theme.iconClose
+                                    size: 10
+                                    normalColor: Theme.fgDim
+                                    hoverColor: Theme.red
+                                    visible: entryHover.hovered
+                                    onClicked: panel.removeFromHistory(model.notifId)
+                                }
+                            }
+
+                            // Summary
+                            Text {
+                                visible: text.length > 0
+                                text: model.summary
+                                color: Theme.fg
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                                maximumLineCount: 1
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+
+                            // Body
+                            Text {
+                                visible: text.length > 0
+                                text: model.body
+                                color: Theme.fg
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeTiny
+                                wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                                maximumLineCount: 2
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                                opacity: Theme.opacitySecondary
+                            }
                         }
                     }
-
-                    // Summary
-                    Text {
-                        visible: text.length > 0
-                        text: model.summary
-                        color: Theme.fg
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                        maximumLineCount: 1
-                        elide: Text.ElideRight
-                        Layout.fillWidth: true
-                    }
-
-                    // Body
-                    Text {
-                        visible: text.length > 0
-                        text: model.body
-                        color: Theme.fg
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeTiny
-                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
-                        maximumLineCount: 2
-                        elide: Text.ElideRight
-                        Layout.fillWidth: true
-                        opacity: Theme.opacitySecondary
-                    }
-
                 }
             }
-        }
-
-        // "N more" indicator when list is scrollable
-        Text {
-            visible: panel.historyModel
-                  && panel.historyModel.count > panel.maxVisibleEntries
-                  && historyList.contentHeight > historyList.height
-                  && historyList.contentY + historyList.height < historyList.contentHeight - 5
-            Layout.fillWidth: true
-            horizontalAlignment: Text.AlignHCenter
-            text: {
-                if (!panel.historyModel) return "";
-                const hidden = panel.historyModel.count - panel.maxVisibleEntries;
-                if (hidden <= 0) return "";
-                return "\u25BC " + hidden + " more";
-            }
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeMini
-            color: Theme.fgDim
-            opacity: Theme.opacitySecondary
-            Layout.topMargin: 2
         }
     }
 }
