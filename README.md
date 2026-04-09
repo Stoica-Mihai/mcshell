@@ -33,6 +33,7 @@ Horizontal filmstrip carousel with parallelogram cards, smooth sliding animation
 - Click anywhere to dismiss, hover to pause countdown
 - Screenshot previews in notification body
 - History persists across dismissals
+- Auto-clean: configurable expiry (30m/1h/6h/24h) removes old notifications automatically
 - Do Not Disturb mode suppresses popups (still saves to history)
 
 ### Lock Screen
@@ -49,7 +50,7 @@ Horizontal filmstrip carousel with parallelogram cards, smooth sliding animation
 - All settings persist to `~/.config/mcshell/settings.json`
 
 ### Screenshots
-- **Full screen** and **window** capture via native Wayland screencopy (no grim dependency)
+- **Full screen** and **window** capture via native Wayland screencopy (no grim dependency), auto-targets focused monitor on multi-screen setups
 - **Area selection** — frozen-frame overlay with drag-to-select, adjustable before confirming with Space
 - Copies to clipboard + notification with image preview
 
@@ -62,7 +63,7 @@ Horizontal filmstrip carousel with parallelogram cards, smooth sliding animation
 
 ### Window Switcher
 - Fullscreen overlay with carousel cards (icon + title)
-- **Alt+Tab behavior**: niri keybind opens/cycles, release Alt to focus selected window
+- **Alt+Tab behavior**: niri keybind opens/cycles, release Alt to focus selected window, starts on previous window for quick two-window toggle
 - Arrow keys to navigate, Enter to focus, type to filter
 - Search bar with parallelogram skew matching card design
 - Wrap-around navigation at list boundaries
@@ -124,6 +125,8 @@ mcs-qs -c mcshell ipc call mcshell <command>
 |---|---|
 | `lock` | Lock the screen |
 | `toggleDnd` | Toggle Do Not Disturb mode |
+| `toggleBluetooth` | Toggle Bluetooth on/off |
+| `toggleWifi` | Toggle WiFi on/off |
 
 ### Wallpaper
 

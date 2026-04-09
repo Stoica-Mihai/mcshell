@@ -17,6 +17,8 @@ import qs.Screenshot
 import Quickshell.Wayland._DataControl
 import qs.WindowSwitcher
 import qs.Core
+import Quickshell.Bluetooth
+import Quickshell.Networking
 
 ShellRoot {
     id: shell
@@ -134,5 +136,8 @@ ShellRoot {
         function screenshotFull(): void { shell.screenshotFull(); }
         function screenshotArea(): void { shell.screenshotArea(); }
         function screenshotWindow(): void { shell.screenshotWindow(); }
+
+        function toggleBluetooth(): void { const a = Bluetooth.defaultAdapter; if (a) a.enabled = !a.enabled; }
+        function toggleWifi(): void { Networking.wifiEnabled = !Networking.wifiEnabled; }
     }
 }
