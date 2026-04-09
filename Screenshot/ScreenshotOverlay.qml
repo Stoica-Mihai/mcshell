@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Wayland._DataControl
 import qs.Config
@@ -41,11 +42,40 @@ PanelWindow {
         _emptyRegion = Qt.createQmlObject('import Quickshell; Region {}', root);
     }
 
+    property string _pendingMode: ""
+
     // ── Public API ──────────────────────────────────────
     function captureFullScreen() { _startCapture("full"); }
     function captureArea() { _startCapture("area"); }
 
     function _startCapture(captureMode) {
+        _pendingMode = captureMode;
+        _outputDetect.running = true;
+    }
+
+    Process {
+        id: _outputDetect
+        command: ["niri", "msg", "-j", "focused-output"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const name = JSON.parse(this.text).name;
+                    for (const s of Quickshell.screens) {
+                        if (s.name === name && root.screen !== s) {
+                            // Invalidate capture context before switching screen
+                            // to avoid stale wl_output proxy crash
+                            root._captureActive = false;
+                            root.screen = s;
+                            break;
+                        }
+                    }
+                } catch(e) {}
+                root._beginCapture(root._pendingMode);
+            }
+        }
+    }
+
+    function _beginCapture(captureMode) {
         _reset();
         mode = captureMode;
         _savePath = Theme.screenshotPrefix + Date.now() + ".png";
