@@ -31,6 +31,7 @@ Singleton {
     property alias powerProfile: adapter.powerProfile            // "PowerSaver", "Balanced", "Performance"
     property alias borderAnimation: adapter.borderAnimation      // "midpoint", "clockwise", "corners", "fade"
     property alias barBorderStyle: adapter.barBorderStyle        // "solid", "gradient"
+    property alias notifAutoClean: adapter.notifAutoClean        // "never", "30m", "1h", "6h", "24h"
 
     // Convenience — true when night light is actively applied
     readonly property bool nightLightActive: nightLightMode === modeManual || (nightLightMode === modeAuto && _autoNightPhase)
@@ -82,6 +83,7 @@ Singleton {
             property string powerProfile: "Balanced"
             property string borderAnimation: "midpoint"
             property string barBorderStyle: "gradient"
+            property string notifAutoClean: "never"
         }
 
         onAdapterUpdated: root._save()

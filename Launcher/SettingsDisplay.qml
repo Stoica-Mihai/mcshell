@@ -18,6 +18,7 @@ SettingsPanel {
         if (UserSettings.nightLightMode === UserSettings.modeManual) parts.push("Night light manual");
         else if (UserSettings.nightLightMode === UserSettings.modeAuto) parts.push("Night light auto");
         if (UserSettings.idleTimeout > 0) parts.push("Lock " + UserSettings.idleTimeout + "m");
+        if (UserSettings.notifAutoClean !== "never") parts.push("Clean " + UserSettings.notifAutoClean);
         return parts.length > 0 ? bri + Theme.separator + parts.join(Theme.separator) : bri;
     }
     readonly property color headerColor: Theme.yellow
@@ -27,13 +28,19 @@ SettingsPanel {
     readonly property int modeIndex: modes.indexOf(UserSettings.nightLightMode)
     readonly property bool nightOn: UserSettings.nightLightMode !== UserSettings.modeOff
 
-    // 0 = brightness, 1 = night light toggle, 2 = temperature, 3 = sunrise, 4 = sunset, last = idle timeout
+    // ── Notification auto-clean mapping ──
+    readonly property var _cleanValues: ["never", "30m", "1h", "6h", "24h"]
+    readonly property var _cleanLabels: ["Never", "30 min", "1 hour", "6 hours", "24 hours"]
+    readonly property int _cleanIndex: Math.max(0, _cleanValues.indexOf(UserSettings.notifAutoClean))
+
+    // 0 = brightness, 1 = night light toggle, 2 = temperature, 3 = sunrise, 4 = sunset, then idle, then auto-clean
     readonly property int _idleItem: {
         if (!nightOn) return 2;
         if (UserSettings.nightLightMode === UserSettings.modeAuto) return 5;
         return 3;
     }
-    itemCount: _idleItem + 1
+    readonly property int _cleanItem: _idleItem + 1
+    itemCount: _cleanItem + 1
     function adjustLeft() {
         if (selectedItem === 0) {
             Brightness.set(Math.max(0, Brightness.percent - 5));
@@ -53,6 +60,7 @@ SettingsPanel {
         if (selectedItem === 3 && UserSettings.nightLightMode === UserSettings.modeAuto) { adjustTime("sunrise", -30); return true; }
         if (selectedItem === 4 && UserSettings.nightLightMode === UserSettings.modeAuto) { adjustTime("sunset", -30); return true; }
         if (selectedItem === _idleItem) { UserSettings.idleTimeout = Math.max(0, UserSettings.idleTimeout - 5); return true; }
+        if (selectedItem === _cleanItem) { UserSettings.notifAutoClean = _cleanValues[Math.max(0, _cleanIndex - 1)]; return true; }
         return false;
     }
     function adjustRight() {
@@ -74,6 +82,7 @@ SettingsPanel {
         if (selectedItem === 3 && UserSettings.nightLightMode === UserSettings.modeAuto) { adjustTime("sunrise", 30); return true; }
         if (selectedItem === 4 && UserSettings.nightLightMode === UserSettings.modeAuto) { adjustTime("sunset", 30); return true; }
         if (selectedItem === _idleItem) { UserSettings.idleTimeout = Math.min(60, UserSettings.idleTimeout + 5); return true; }
+        if (selectedItem === _cleanItem) { UserSettings.notifAutoClean = _cleanValues[Math.min(_cleanValues.length - 1, _cleanIndex + 1)]; return true; }
         return false;
     }
 
@@ -289,6 +298,32 @@ SettingsPanel {
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeTiny
             color: UserSettings.idleTimeout > 0 ? Theme.accent : Theme.fgDim
+        }
+    }
+
+    // Notification auto-clean
+    SettingsRow {
+        selected: root.active && root.selectedItem === root._cleanItem
+        Layout.preferredHeight: Theme.settingsRowHeight
+
+        Text {
+            text: Theme.iconBell
+            font.family: Theme.iconFont
+            font.pixelSize: Theme.fontSizeMedium
+            color: root._cleanIndex > 0 ? Theme.accent : Theme.fgDim
+        }
+        Text {
+            text: "Auto Clean"
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeSmall
+            color: Theme.fg
+            Layout.fillWidth: true
+        }
+        Text {
+            text: root._cleanLabels[root._cleanIndex]
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeTiny
+            color: root._cleanIndex > 0 ? Theme.accent : Theme.fgDim
         }
     }
 }

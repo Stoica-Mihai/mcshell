@@ -88,6 +88,44 @@ Item {
         _historyModel.clear();
     }
 
+    // ── Auto-clean (event-driven, no polling) ──────────────
+    readonly property var _autoCleanMs: ({
+        "never": 0, "30m": 1800000, "1h": 3600000, "6h": 21600000, "24h": 86400000
+    })
+    onVisibleChanged: _scheduleClean()  // re-evaluate on reload
+    Connections { target: UserSettings; function onNotifAutoCleanChanged() { root._scheduleClean(); } }
+
+    Timer {
+        id: _cleanTimer
+        onTriggered: root._cleanExpired()
+    }
+
+    function _scheduleClean() {
+        const threshold = _autoCleanMs[UserSettings.notifAutoClean] || 0;
+        if (threshold <= 0 || _historyModel.count === 0) { _cleanTimer.stop(); return; }
+        // Oldest entry is last in the model (newest-first order)
+        const oldestMs = _historyModel.get(_historyModel.count - 1).epochMs;
+        const expiresIn = (oldestMs + threshold) - Date.now();
+        if (expiresIn <= 0) { _cleanExpired(); return; }
+        _cleanTimer.interval = expiresIn;
+        _cleanTimer.restart();
+    }
+
+    function _cleanExpired() {
+        const threshold = _autoCleanMs[UserSettings.notifAutoClean] || 0;
+        if (threshold <= 0) return;
+        const now = Date.now();
+        for (let i = _historyModel.count - 1; i >= 0; i--) {
+            if (now - _historyModel.get(i).epochMs >= threshold) {
+                delete root._notifRefs[_historyModel.get(i).notifId];
+                _historyModel.remove(i);
+            }
+        }
+        if (unreadCount > _historyModel.count)
+            unreadCount = _historyModel.count;
+        _scheduleClean();
+    }
+
     // ── Notification server (DBus daemon) ─────────────────
     NotificationServer {
         id: server
@@ -154,12 +192,15 @@ Item {
                 iconUrl: icon,
                 urgency: entry.urgency,
                 hasInlineReply: entry.hasInlineReply,
-                timestamp: new Date().toLocaleString(Qt.locale(), "hh:mm AP")
+                timestamp: new Date().toLocaleString(Qt.locale(), "hh:mm AP"),
+                epochMs: Date.now()
             });
 
             // Cap history
             while (_historyModel.count > root.maxHistory)
                 _historyModel.remove(_historyModel.count - 1);
+
+            root._scheduleClean();
 
             // Cap visible popups
             while (notifModel.count > root.maxPopups)
