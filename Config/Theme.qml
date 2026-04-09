@@ -397,6 +397,9 @@ Singleton {
     Behavior on overlayHover { ColorAnimation { duration: root.animSmooth } }
     Behavior on backdrop { ColorAnimation { duration: root.animSmooth } }
 
+    // Workspace ring segment colors (ordered to avoid adjacent duplicates)
+    readonly property var ringColors: [accent, green, yellow, cyan, red, secondary, tertiary]
+
     // ── Opacity ─────────────────────────────────────────
     readonly property real opacityDim: 0.4
     readonly property real opacityMuted: 0.5
