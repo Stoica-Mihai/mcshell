@@ -124,15 +124,19 @@ SettingsPanel {
         _holdProgress = 0;
     }
 
-    function _executeHeldAction() {
-        const actionIdx = _holdingItem - 1;
-        _cancelHold();
+    function _runAction(actionIdx) {
         switch (actionIdx) {
         case 0: ShellActions.lock(); break;
         case 1: ShellActions.logout(); break;
         case 2: ShellActions.reboot(); break;
         case 3: ShellActions.shutdown(); break;
         }
+    }
+
+    function _executeHeldAction() {
+        const actionIdx = _holdingItem - 1;
+        _cancelHold();
+        _runAction(actionIdx);
     }
 
     function activateItem() {
@@ -143,10 +147,7 @@ SettingsPanel {
 
         // Non-danger: fire immediately
         if (!action.danger) {
-            switch (actionIdx) {
-            case 0: ShellActions.lock(); break;
-            case 1: ShellActions.logout(); break;
-            }
+            _runAction(actionIdx);
             return;
         }
 
@@ -202,6 +203,11 @@ SettingsPanel {
             selectedColor: modelData.danger ? Theme.redLight : Theme.overlay
 
             readonly property bool _isHolding: root._holdingItem === (index + 1)
+            readonly property color _holdColor: Qt.rgba(
+                Theme.accent.r + (Theme.red.r - Theme.accent.r) * root._holdProgress,
+                Theme.accent.g + (Theme.red.g - Theme.accent.g) * root._holdProgress,
+                Theme.accent.b + (Theme.red.b - Theme.accent.b) * root._holdProgress,
+                1.0)
 
             Text {
                 text: modelData.icon
@@ -247,13 +253,7 @@ SettingsPanel {
                         fillColor: "transparent"
                         strokeWidth: root._ringStroke
                         capStyle: ShapePath.RoundCap
-                        strokeColor: _isHolding
-                            ? Qt.rgba(
-                                Theme.accent.r + (Theme.red.r - Theme.accent.r) * root._holdProgress,
-                                Theme.accent.g + (Theme.red.g - Theme.accent.g) * root._holdProgress,
-                                Theme.accent.b + (Theme.red.b - Theme.accent.b) * root._holdProgress,
-                                1.0)
-                            : "transparent"
+                        strokeColor: _isHolding ? _holdColor : "transparent"
                         PathAngleArc {
                             centerX: root._ringCenter
                             centerY: root._ringCenter
@@ -271,13 +271,7 @@ SettingsPanel {
                     text: "hold"
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeMini
-                    color: _isHolding
-                        ? Qt.rgba(
-                            Theme.accent.r + (Theme.red.r - Theme.accent.r) * root._holdProgress,
-                            Theme.accent.g + (Theme.red.g - Theme.accent.g) * root._holdProgress,
-                            Theme.accent.b + (Theme.red.b - Theme.accent.b) * root._holdProgress,
-                            1.0)
-                        : Theme.fgDim
+                    color: _isHolding ? _holdColor : Theme.fgDim
                 }
             }
         }
