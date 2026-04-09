@@ -13,8 +13,8 @@ ColumnLayout {
     spacing: Theme.spacingTiny
 
     function resetSelection() { selectedItem = 0; }
-    function navigateUp() { if (selectedItem > 0) selectedItem--; }
-    function navigateDown() { if (selectedItem < itemCount - 1) selectedItem++; }
+    function navigateUp() { selectedItem = selectedItem > 0 ? selectedItem - 1 : itemCount - 1; }
+    function navigateDown() { selectedItem = selectedItem < itemCount - 1 ? selectedItem + 1 : 0; }
     function activateItem() {}
     function adjustLeft() { return false; }
     function adjustRight() { return false; }
