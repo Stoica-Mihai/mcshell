@@ -17,10 +17,12 @@ PanelWindow {
         onTriggered: launcher._suppressCarouselAnim = false
     }
 
+
     function _initLauncher(tab, edit) {
         _suppressCarouselAnim = true;
         isOpen = true;
         visible = true;
+        _openTransition();
         activeTab = tab;
         editMode = edit;
         searchField.text = "";
@@ -37,8 +39,7 @@ PanelWindow {
     function open() { _initLauncher(0, false); }
 
     function close() {
-        isOpen = false;
-        visible = false;
+        _closeTransition();
         editMode = false;
         searchField.text = "";
         for (let i = 0; i < categories.length; i++)
@@ -65,6 +66,40 @@ PanelWindow {
 
     function refocusSearch() {
         searchField.forceActiveFocus();
+    }
+
+    // ── Open/close transitions ──────────────────────────
+    property real _animProgress: 0
+
+    function _openTransition() {
+        _closeAnim.stop();
+        _animProgress = 0;
+        Qt.callLater(_openAnim.start);
+    }
+
+    function _closeTransition() {
+        isOpen = false;
+        _openAnim.stop();
+        _closeAnim.start();
+    }
+
+    NumberAnimation {
+        id: _openAnim
+        target: launcher
+        property: "_animProgress"
+        from: 0; to: 1
+        duration: Theme.animCarousel
+        easing.type: Easing.OutCubic
+    }
+
+    NumberAnimation {
+        id: _closeAnim
+        target: launcher
+        property: "_animProgress"
+        from: launcher._animProgress; to: 0
+        duration: Theme.animSmooth
+        easing.type: Easing.InCubic
+        onFinished: launcher.visible = false
     }
 
     // ── Window setup ────────────────────────────────────
@@ -175,8 +210,17 @@ PanelWindow {
     Rectangle {
         anchors.fill: parent
         color: Theme.backdrop
+        opacity: launcher._animProgress
         MouseArea { anchors.fill: parent; onClicked: launcher.close() }
     }
+
+    // Content wrapper — animated on open/close
+    Item {
+        id: _contentRoot
+        anchors.fill: parent
+        opacity: launcher._animProgress
+        scale: 0.85 + 0.15 * launcher._animProgress
+        transformOrigin: Item.Center
 
     // Search bar — fixed position above center
     Item {
@@ -564,4 +608,6 @@ PanelWindow {
         font.pixelSize: Theme.fontSizeSmall
         color: Theme.fgDim
     }
+
+    } // _contentRoot
 }
