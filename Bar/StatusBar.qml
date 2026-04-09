@@ -297,15 +297,24 @@ Scope {
                     onTriggered: sharedDropdown.open()
                 }
 
-                // Media zone — left side of right segment
-                Media {
-                    id: media
+                // Media zone — left side of right segment, clipped to available space
+                Item {
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: parent.left
                     anchors.leftMargin: Theme.barDiagSlant + Theme.itemSpacing
-                    onTogglePopup: sharedDropdown.togglePanel("media")
-                    onDismissPopup: sharedDropdown.closePanel()
-                    popupVisible: sharedDropdown.activePanel === "media"
+                    anchors.right: rightContent.left
+                    anchors.rightMargin: Theme.itemSpacing
+                    implicitHeight: media.implicitHeight
+                    clip: true
+
+                    Media {
+                        id: media
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: Math.min(implicitWidth, parent.width)
+                        onTogglePopup: sharedDropdown.togglePanel("media")
+                        onDismissPopup: sharedDropdown.closePanel()
+                        popupVisible: sharedDropdown.activePanel === "media"
+                    }
                 }
 
                 // System tray zone — locked to right side

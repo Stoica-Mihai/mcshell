@@ -14,13 +14,12 @@ Item {
     implicitHeight: label.implicitHeight
     visible: title !== ""
 
-    HoverText {
+    InfiniteText {
         id: label
         anchors.verticalCenter: parent.verticalCenter
         width: Math.min(implicitWidth, 300)
         text: root.title
         font.pixelSize: Theme.fontSizeSmall
-        elide: Text.ElideRight
         onClicked: {
             if (root.windowId >= 0)
                 Niri.dispatch(["focus-window", "--id", root.windowId.toString()]);

@@ -82,12 +82,11 @@ Item {
             controlColor: Theme.fgDim
         }
 
-        // Track info: "Artist - Title" (truncated) — click to toggle popup
-        HoverText {
+        // Track info: "Artist - Title" — scrolls on hover if truncated
+        InfiniteText {
             id: trackLabel
             Layout.maximumWidth: 200
             font.pixelSize: Theme.fontSizeSmall
-            elide: Text.ElideRight
             text: root.artist ? root.artist + " - " + root.title : root.title
             onClicked: root.togglePopup()
         }
