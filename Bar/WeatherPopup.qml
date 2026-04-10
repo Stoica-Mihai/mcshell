@@ -91,6 +91,7 @@ Item {
                             name: r.name,
                             admin1: r.admin1 ?? "",
                             country: r.country ?? "",
+                            countryCode: r.country_code ?? "",
                             latitude: r.latitude,
                             longitude: r.longitude,
                             displayName: parts.join(", ")
@@ -119,6 +120,7 @@ Item {
         UserSettings.weatherLocation = loc.displayName;
         UserSettings.weatherLat = loc.latitude;
         UserSettings.weatherLon = loc.longitude;
+        if (loc.countryCode) UserSettings.weatherCountryCode = loc.countryCode;
         editMode = false;
         _resetGeocode();
     }

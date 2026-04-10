@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.Config
+import qs.Core
 import qs.Widgets
 
 Item {
@@ -26,6 +27,20 @@ Item {
 
     function selectMonth(m) { viewDate = new Date(viewYear, m, 1); viewMode = "days"; }
     function selectYear(y) { viewDate = new Date(y, viewMonth, 1); viewMode = "months"; }
+
+    onViewYearChanged: HolidayService.ensureYear(viewYear)
+
+    readonly property var _monthHolidays: viewMode === "days"
+        ? HolidayService.holidaysInMonth(viewYear, viewMonth)
+        : []
+
+    component HolidayDot: Rectangle {
+        property color dotColor: Theme.accent
+        width: 3
+        height: 3
+        radius: 1.5
+        color: dotColor
+    }
 
     ColumnLayout {
         id: calContent
@@ -183,35 +198,84 @@ Item {
                 }
 
                 Rectangle {
+                    id: dayCell
                     required property var modelData
+
+                    readonly property bool isToday: modelData.current
+                        && modelData.day === root.currentDate.getDate()
+                        && root.viewMonth === root.currentDate.getMonth()
+                        && root.viewYear === root.currentDate.getFullYear()
+                    readonly property string holidayName: modelData.current
+                        ? HolidayService.holidayFor(new Date(root.viewYear, root.viewMonth, modelData.day))
+                        : ""
 
                     width: 32
                     height: 24
                     radius: Theme.radiusTiny
-                    color: {
-                        const now = root.currentDate;
-                        if (modelData.current
-                            && modelData.day === now.getDate()
-                            && root.viewMonth === now.getMonth()
-                            && root.viewYear === now.getFullYear())
-                            return Theme.accent;
-                        return "transparent";
-                    }
+                    color: isToday ? Theme.accent : "transparent"
 
                     Text {
                         anchors.centerIn: parent
-                        text: modelData.day
+                        text: dayCell.modelData.day
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeSmall
                         color: {
-                            const now = root.currentDate;
-                            const isToday = modelData.current
-                                && modelData.day === now.getDate()
-                                && root.viewMonth === now.getMonth()
-                                && root.viewYear === now.getFullYear();
-                            if (isToday) return Theme.bgSolid;
-                            return modelData.current ? Theme.fg : Theme.fgDim;
+                            if (dayCell.isToday) return Theme.bgSolid;
+                            return dayCell.modelData.current ? Theme.fg : Theme.fgDim;
                         }
+                    }
+
+                    HolidayDot {
+                        visible: dayCell.holidayName !== ""
+                        anchors.bottom: parent.bottom
+                        anchors.bottomMargin: 1
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        dotColor: dayCell.isToday ? Theme.bgSolid : Theme.accent
+                    }
+                }
+            }
+        }
+
+        Separator {
+            visible: root.viewMode === "days" && root._monthHolidays.length > 0
+            topMargin: Theme.spacingSmall
+            leftMargin: Theme.spacingLarge
+            rightMargin: Theme.spacingLarge
+            color: Theme.accent
+        }
+
+        ColumnLayout {
+            visible: root.viewMode === "days" && root._monthHolidays.length > 0
+            Layout.fillWidth: true
+            Layout.leftMargin: Theme.spacingNormal
+            Layout.rightMargin: Theme.spacingNormal
+            Layout.topMargin: Theme.spacingSmall
+            spacing: 2
+
+            Repeater {
+                model: root._monthHolidays
+
+                RowLayout {
+                    required property var modelData
+                    Layout.fillWidth: true
+                    spacing: Theme.spacingSmall
+
+                    HolidayDot { Layout.alignment: Qt.AlignVCenter }
+                    Text {
+                        Layout.preferredWidth: 20
+                        horizontalAlignment: Text.AlignRight
+                        text: modelData.date.getDate()
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeMini
+                        color: Theme.fgDim
+                    }
+                    Text {
+                        Layout.fillWidth: true
+                        text: modelData.name
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeMini
+                        color: Theme.fg
+                        elide: Text.ElideRight
                     }
                 }
             }

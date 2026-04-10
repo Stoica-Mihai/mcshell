@@ -35,6 +35,7 @@ Singleton {
     property alias weatherLocation: adapter.weatherLocation      // display name, e.g. "Bucharest, Romania"
     property alias weatherLat: adapter.weatherLat                // latitude (real)
     property alias weatherLon: adapter.weatherLon                // longitude (real)
+    property alias weatherCountryCode: adapter.weatherCountryCode // ISO 3166-1 alpha-2, e.g. "DE"
     property alias clockTimeFormat: adapter.clockTimeFormat      // "24h" or "12h"
     property alias clockShowSeconds: adapter.clockShowSeconds    // bool
     property alias clockDateFormat: adapter.clockDateFormat      // Qt format pattern, e.g. "ddd d MMM yyyy"
@@ -106,6 +107,7 @@ Singleton {
             property string weatherLocation: ""
             property real weatherLat: 0
             property real weatherLon: 0
+            property string weatherCountryCode: ""
             property string clockTimeFormat: "24h"
             property bool clockShowSeconds: true
             property string clockDateFormat: "ddd d MMM yyyy"
