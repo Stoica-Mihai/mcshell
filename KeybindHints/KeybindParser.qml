@@ -29,13 +29,28 @@ QtObject {
     // ── Config file reading via FileView ────────────────
     readonly property string configPath: Quickshell.env("HOME") + "/.config/niri/config.kdl"
 
+    // Editors atomic-save by renaming a temp file over config.kdl, briefly
+    // unlinking the inode the inotify watcher is attached to. The first
+    // reload after a save sees a missing file; a short retry picks up the
+    // new inode. `printErrors: false` suppresses the framework-level C++
+    // warning so only real failures surface via our handler.
+    property Timer _reloadRetry: Timer {
+        interval: 100
+        onTriggered: parser.configFile.reload()
+    }
+
     property FileView configFile: FileView {
         path: parser.configPath
         watchChanges: true
+        printErrors: false
 
         onLoaded: parser.parseConfig(configFile.text())
         onFileChanged: configFile.reload()
         onLoadFailed: error => {
+            if (!parser._reloadRetry.running) {
+                parser._reloadRetry.start();
+                return;
+            }
             console.warn("KeybindParser: failed to load niri config:", FileViewError.toString(error));
         }
     }
