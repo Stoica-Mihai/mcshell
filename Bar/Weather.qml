@@ -19,6 +19,8 @@ Item {
     // ── State exposed to WeatherPopup ─────────────────────
     property string fetchState: "idle"  // "idle" | "loading" | "ok" | "error"
     property string errorMsg: ""
+    // Epoch-0 sentinel means "never refreshed" — the popup hides the footer.
+    property date lastRefresh: new Date(0)
 
     // Current conditions
     property real tempC: 0
@@ -118,6 +120,7 @@ Item {
         }
         daily = dailyArr;
 
+        lastRefresh = new Date();
         fetchState = "ok";
         errorMsg = "";
     }

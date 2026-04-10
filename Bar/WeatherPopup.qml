@@ -607,6 +607,21 @@ Item {
                     }
                 }
             }
+
+            // Last refresh footer
+            Text {
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: Theme.spacingTiny
+                visible: weather && weather.lastRefresh.getTime() > 0
+                text: weather
+                    ? "Updated " + weather.lastRefresh.toLocaleTimeString(
+                        Qt.locale(),
+                        UserSettings.clockTimeFormat === "12h" ? "h:mm AP" : "HH:mm")
+                    : ""
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeMini
+                color: Theme.fgDim
+            }
         }
     }
 
