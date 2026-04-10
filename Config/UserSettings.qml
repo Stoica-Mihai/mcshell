@@ -32,6 +32,11 @@ Singleton {
     property alias borderAnimation: adapter.borderAnimation      // "midpoint", "clockwise", "corners", "fade"
     property alias barBorderStyle: adapter.barBorderStyle        // "solid", "gradient"
     property alias notifAutoClean: adapter.notifAutoClean        // "never", "30m", "1h", "6h", "24h"
+    property alias weatherLocation: adapter.weatherLocation      // display name, e.g. "Bucharest, Romania"
+    property alias weatherLat: adapter.weatherLat                // latitude (real)
+    property alias weatherLon: adapter.weatherLon                // longitude (real)
+
+    readonly property bool weatherConfigured: adapter.weatherLocation !== ""
 
     // Convenience — true when night light is actively applied
     readonly property bool nightLightActive: nightLightMode === modeManual || (nightLightMode === modeAuto && _autoNightPhase)
@@ -84,6 +89,9 @@ Singleton {
             property string borderAnimation: "midpoint"
             property string barBorderStyle: "gradient"
             property string notifAutoClean: "never"
+            property string weatherLocation: ""
+            property real weatherLat: 0
+            property real weatherLon: 0
         }
 
         onAdapterUpdated: root._save()

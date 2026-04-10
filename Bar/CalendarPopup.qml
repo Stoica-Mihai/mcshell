@@ -120,7 +120,7 @@ Item {
         // Day-of-week headers
         Grid {
             visible: root.viewMode === "days"
-            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignHCenter
             columns: 7
             columnSpacing: 0
             rowSpacing: 2
@@ -150,7 +150,7 @@ Item {
         // Day grid
         Grid {
             visible: root.viewMode === "days"
-            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignHCenter
             columns: 7
             columnSpacing: 0
             rowSpacing: 2
@@ -244,7 +244,7 @@ Item {
         // ── MONTHS VIEW ───────────────────────────
         Grid {
             visible: root.viewMode === "months"
-            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignHCenter
             columns: 3
             columnSpacing: 4
             rowSpacing: 4
@@ -264,7 +264,7 @@ Item {
         // ── YEARS VIEW ────────────────────────────
         Grid {
             visible: root.viewMode === "years"
-            Layout.fillWidth: true
+            Layout.alignment: Qt.AlignHCenter
             columns: 3
             columnSpacing: 4
             rowSpacing: 4

@@ -26,7 +26,7 @@ Item {
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSize
         font.weight: Font.Medium
-        text: Qt.formatDateTime(clock.date, "ddd d MMM  HH:mm:ss")
+        text: Qt.formatDateTime(clock.date, "ddd d MMM yyyy  HH:mm:ss")
     }
 
     MouseArea {

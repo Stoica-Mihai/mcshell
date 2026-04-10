@@ -552,6 +552,19 @@ Singleton {
     readonly property string iconSunrise: "\uf185"
     readonly property string iconSunset: "\uf186"
 
+    // Weather (Material Design Icons via Nerd Font)
+    readonly property string iconSun: "\u{f0599}"           // weather-sunny
+    readonly property string iconCloudSun: "\u{f0595}"      // weather-partly-cloudy
+    readonly property string iconCloud: "\u{f0590}"         // weather-cloudy
+    readonly property string iconCloudRain: "\u{f0597}"     // weather-pouring
+    readonly property string iconSnowflake: "\u{f0598}"     // weather-snowy
+    readonly property string iconBolt: "\u{f067e}"          // weather-lightning
+    readonly property string iconSmog: "\u{f0591}"          // weather-fog
+    readonly property string iconWeatherQuestion: "\u{f0f30}" // help-rhombus-outline
+    readonly property string iconWeatherError: "\u{f0028}"  // alert-circle
+    readonly property string iconLocationPin: "\u{f034e}"   // map-marker
+    readonly property string iconGlobe: "\u{f01e7}"         // earth
+
     // Battery
     readonly property string iconBattery: "\u{f008e}"
     readonly property string iconBattery10: "\u{f007a}"

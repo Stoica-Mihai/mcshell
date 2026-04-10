@@ -15,7 +15,7 @@ Scope {
 
     property string screenName: ""
     property var screen: null
-    property bool hasPopup: sharedDropdown.activePanel !== "" || centerDropdown.activePanel !== ""
+    property bool hasPopup: sharedDropdown.activePanel !== "" || calendarWindow.isOpen || weatherWindow.isOpen
 
     property int unreadNotifications: 0
     property var notifHistoryModel: null
@@ -31,13 +31,15 @@ Scope {
     property int panelToggleTrigger: 0
     property string panelToggleName: ""
     onPanelToggleTriggerChanged: {
-        if (panelToggleName === "calendar") centerDropdown.togglePanel("calendar");
+        if (panelToggleName === "calendar") calendarWindow.toggle();
+        else if (panelToggleName === "weather") weatherWindow.toggle();
         else if (panelToggleName) sharedDropdown.togglePanel(panelToggleName);
     }
 
     function dismissPopups() {
         sharedDropdown.closePanel();
-        centerDropdown.closePanel();
+        calendarWindow.close();
+        weatherWindow.close();
     }
 
     // ── Exclusive zone — reserves bar space, no content ────
@@ -174,7 +176,7 @@ Scope {
                 id: centerSection
                 anchors.horizontalCenter: parent.horizontalCenter
                 height: parent.height
-                width: Math.max(clock.implicitWidth + Theme.barDiagSlant * 2 + Theme.barSegmentPadding, Theme.minCenterWidth)
+                width: Math.max(centerContent.implicitWidth + Theme.barDiagSlant * 2 + Theme.barSegmentPadding, Theme.minCenterWidth)
 
 
                 Shape {
@@ -184,72 +186,65 @@ Scope {
                     ShapePath {
                         fillColor: barRect._bgColor
                         strokeColor: "transparent"
+                        // Trapezoid — narrow top, wide bottom: /----\
                         startX: Theme.barDiagSlant; startY: 0
-                        PathLine { x: centerSection.width; y: 0 }
-                        PathLine { x: centerSection.width - Theme.barDiagSlant; y: centerSection.height }
+                        PathLine { x: centerSection.width - Theme.barDiagSlant; y: 0 }
+                        PathLine { x: centerSection.width; y: centerSection.height }
                         PathLine { x: 0; y: centerSection.height }
                         PathLine { x: Theme.barDiagSlant; y: 0 }
                     }
                 }
                 BarBorder {
                     anchors.fill: parent
-                    pts: [[Theme.barDiagSlant,0], [width,0], [width-Theme.barDiagSlant,height], [0,height]]
+                    pts: [[Theme.barDiagSlant,0], [width-Theme.barDiagSlant,0], [width,height], [0,height]]
                 }
 
-                Clock {
-                    id: clock
+                // Center content: recording dot | clock | separator | weather
+                Row {
+                    id: centerContent
                     anchors.centerIn: parent
-                    popupVisible: centerDropdown.activePanel === "calendar"
-                    onTogglePopup: centerDropdown.togglePanel("calendar")
-                    onDismissPopup: centerDropdown.closePanel()
-                }
+                    spacing: Theme.spacingMedium
 
-                // Recording indicator — pulsing red dot left of clock
-                Rectangle {
-                    visible: root.isRecording
-                    anchors.right: clock.left
-                    anchors.rightMargin: Theme.spacingNormal
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 8; height: 8; radius: Theme.radiusTiny
-                    color: Theme.red
+                    // Recording indicator — pulsing red dot before clock
+                    Rectangle {
+                        visible: root.isRecording
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 8; height: 8; radius: Theme.radiusTiny
+                        color: Theme.red
 
-                    SequentialAnimation on opacity {
-                        running: root.isRecording
-                        loops: Animation.Infinite
-                        NumberAnimation { to: 0.3; duration: Theme.animLockFade }
-                        NumberAnimation { to: 1.0; duration: Theme.animLockFade }
-                    }
-                }
-
-                // ── Center shared dropdown ───────────────
-                AnimatedPopup {
-                    id: centerDropdown
-
-                    autoPosition: false
-                    anchorSection: centerSection
-                    anchorX: 0
-                    implicitWidth: centerSection.width - Theme.barDiagSlant
-                    anchor.adjustment: PopupAdjustment.None
-
-                    fullHeight: calendarContent.fullHeight
-
-                    onVisibleChanged: {
-                        if (!visible) activePanel = "";
-                    }
-
-                    onActivePanelChanged: {
-                        if (activePanel === "calendar") {
-                            calendarContent.viewDate = new Date();
-                            calendarContent.viewMode = "days";
+                        SequentialAnimation on opacity {
+                            running: root.isRecording
+                            loops: Animation.Infinite
+                            NumberAnimation { to: 0.3; duration: Theme.animLockFade }
+                            NumberAnimation { to: 1.0; duration: Theme.animLockFade }
                         }
                     }
 
-                    CalendarPopup {
-                        id: calendarContent
-                        visible: centerDropdown.activePanel === "calendar"
-                        currentDate: clock.currentDate
+                    Clock {
+                        id: clock
+                        anchors.verticalCenter: parent.verticalCenter
+                        popupVisible: calendarWindow.isOpen
+                        onTogglePopup: calendarWindow.toggle()
+                        onDismissPopup: calendarWindow.close()
+                    }
+
+                    // Separator between clock and weather
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 1
+                        height: 14
+                        color: Theme.outlineVariant
+                    }
+
+                    Weather {
+                        id: weather
+                        anchors.verticalCenter: parent.verticalCenter
+                        popupVisible: weatherWindow.isOpen
+                        onTogglePopup: weatherWindow.toggle()
+                        onDismissPopup: weatherWindow.close()
                     }
                 }
+
             }
 
             // ── Right segment ───────────────────────────
@@ -845,6 +840,25 @@ Scope {
                 }
             }
         }
+    }
+
+    // Calendar dropdown — shares BarPopupWindow chrome with weather.
+    // Width matches the center trapezoid's wide bottom edge so the
+    // dropdown visually continues the bar below.
+    CalendarWindow {
+        id: calendarWindow
+        screen: root.screen
+        currentDate: clock.currentDate
+        cardWidth: centerSection.width
+    }
+
+    // Weather dropdown — its own layer shell window so it can receive
+    // keyboard focus for the search field without affecting the bar.
+    WeatherWindow {
+        id: weatherWindow
+        screen: root.screen
+        weather: weather
+        cardWidth: centerSection.width
     }
 
     // Recording state (passed from shell.qml)
