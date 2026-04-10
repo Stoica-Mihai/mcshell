@@ -12,6 +12,7 @@ Item {
     property bool popupVisible: false
 
     signal togglePopup()
+    signal toggleConfigPopup()
     signal dismissPopup()
 
     SystemClock {
@@ -26,12 +27,16 @@ Item {
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSize
         font.weight: Font.Medium
-        text: Qt.formatDateTime(clock.date, "ddd d MMM yyyy  HH:mm:ss")
+        text: clock.date.toLocaleString(Qt.locale(), UserSettings.clockFormatString)
     }
 
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.togglePopup()
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: event => {
+            if (event.button === Qt.RightButton) root.toggleConfigPopup();
+            else root.togglePopup();
+        }
     }
 }

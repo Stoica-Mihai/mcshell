@@ -127,9 +127,11 @@ Item {
 
             Repeater {
                 model: {
+                    // 2024-01-01 is Mon, 2023-12-31 is Sun — seed a week starting from either day
                     const names = [];
-                    for (let i = 1; i <= 7; i++) {
-                        const d = new Date(2024, 0, i);
+                    const start = UserSettings.weekStartsOnMonday ? 1 : 0;
+                    for (let i = 0; i < 7; i++) {
+                        const d = new Date(2024, 0, start + i);
                         names.push(d.toLocaleDateString(Qt.locale(), "ddd").substring(0, 2));
                     }
                     return names;
@@ -162,8 +164,11 @@ Item {
                     const firstDay = new Date(year, month, 1);
                     const lastDay = new Date(year, month + 1, 0);
 
-                    let startDow = firstDay.getDay() - 1;
-                    if (startDow < 0) startDow = 6;
+                    // JS getDay(): Sun=0..Sat=6 — rotate for Mon-first
+                    let startDow = firstDay.getDay();
+                    if (UserSettings.weekStartsOnMonday) {
+                        startDow = startDow === 0 ? 6 : startDow - 1;
+                    }
 
                     const cells = [];
                     const prevLast = new Date(year, month, 0).getDate();

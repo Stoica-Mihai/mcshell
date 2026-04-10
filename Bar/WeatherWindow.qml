@@ -11,6 +11,15 @@ BarPopupWindow {
     wantsKeyboardFocus: true
     layershellNamespace: "mcshell-weather"
 
+    function toggleEdit() {
+        if (isOpen) {
+            close();
+        } else {
+            weatherContent.editMode = true;
+            open();
+        }
+    }
+
     WeatherPopup {
         id: weatherContent
         anchors.fill: parent

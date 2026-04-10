@@ -13,6 +13,7 @@ Item {
     // ── Public API ────────────────────────────────────────
     property bool popupVisible: false
     signal togglePopup()
+    signal toggleEditPopup()
     signal dismissPopup()
 
     // ── State exposed to WeatherPopup ─────────────────────
@@ -146,9 +147,8 @@ Item {
         return Theme.fgDim;
     }
 
-    // ── Auto-refresh ──────────────────────────────────────
     Timer {
-        interval: 30 * 60 * 1000  // 30 minutes
+        interval: 30 * 60 * 1000
         running: UserSettings.weatherConfigured
         repeat: true
         onTriggered: root.fetch()
@@ -158,7 +158,6 @@ Item {
         if (UserSettings.weatherConfigured) fetch();
     }
 
-    // Refetch when location changes
     Connections {
         target: UserSettings
         function onWeatherLatChanged() { if (UserSettings.weatherConfigured) root.fetch(); }
@@ -217,9 +216,11 @@ Item {
     MouseArea {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            root.fetch();  // Always refresh on open
-            root.togglePopup();
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: event => {
+            root.fetch();  // always refresh on open
+            if (event.button === Qt.RightButton) root.toggleEditPopup();
+            else root.togglePopup();
         }
     }
 }

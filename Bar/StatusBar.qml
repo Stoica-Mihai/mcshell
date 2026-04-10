@@ -15,7 +15,10 @@ Scope {
 
     property string screenName: ""
     property var screen: null
-    property bool hasPopup: sharedDropdown.activePanel !== "" || calendarWindow.isOpen || weatherWindow.isOpen
+    property bool hasPopup: sharedDropdown.activePanel !== ""
+        || calendarWindow.isOpen
+        || weatherWindow.isOpen
+        || clockSettingsWindow.isOpen
 
     property int unreadNotifications: 0
     property var notifHistoryModel: null
@@ -40,6 +43,7 @@ Scope {
         sharedDropdown.closePanel();
         calendarWindow.close();
         weatherWindow.close();
+        clockSettingsWindow.close();
     }
 
     // ── Exclusive zone — reserves bar space, no content ────
@@ -223,9 +227,19 @@ Scope {
                     Clock {
                         id: clock
                         anchors.verticalCenter: parent.verticalCenter
-                        popupVisible: calendarWindow.isOpen
-                        onTogglePopup: calendarWindow.toggle()
-                        onDismissPopup: calendarWindow.close()
+                        popupVisible: calendarWindow.isOpen || clockSettingsWindow.isOpen
+                        onTogglePopup: {
+                            clockSettingsWindow.close();
+                            calendarWindow.toggle();
+                        }
+                        onToggleConfigPopup: {
+                            calendarWindow.close();
+                            clockSettingsWindow.toggle();
+                        }
+                        onDismissPopup: {
+                            calendarWindow.close();
+                            clockSettingsWindow.close();
+                        }
                     }
 
                     // Separator between clock and weather
@@ -241,6 +255,7 @@ Scope {
                         anchors.verticalCenter: parent.verticalCenter
                         popupVisible: weatherWindow.isOpen
                         onTogglePopup: weatherWindow.toggle()
+                        onToggleEditPopup: weatherWindow.toggleEdit()
                         onDismissPopup: weatherWindow.close()
                     }
                 }
@@ -858,6 +873,12 @@ Scope {
         id: weatherWindow
         screen: root.screen
         weather: weather
+        cardWidth: centerSection.width
+    }
+
+    ClockSettingsWindow {
+        id: clockSettingsWindow
+        screen: root.screen
         cardWidth: centerSection.width
     }
 

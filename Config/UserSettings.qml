@@ -35,8 +35,22 @@ Singleton {
     property alias weatherLocation: adapter.weatherLocation      // display name, e.g. "Bucharest, Romania"
     property alias weatherLat: adapter.weatherLat                // latitude (real)
     property alias weatherLon: adapter.weatherLon                // longitude (real)
+    property alias clockTimeFormat: adapter.clockTimeFormat      // "24h" or "12h"
+    property alias clockShowSeconds: adapter.clockShowSeconds    // bool
+    property alias clockDateFormat: adapter.clockDateFormat      // Qt format pattern, e.g. "ddd d MMM yyyy"
+    property alias weekStartsOnMonday: adapter.weekStartsOnMonday // bool
 
     readonly property bool weatherConfigured: adapter.weatherLocation !== ""
+
+    // Composed time format string — single source of truth.
+    readonly property string clockTimeFormatString: {
+        let fmt = adapter.clockTimeFormat === "12h" ? "h:mm" : "HH:mm";
+        if (adapter.clockShowSeconds) fmt += ":ss";
+        if (adapter.clockTimeFormat === "12h") fmt += " AP";
+        return fmt;
+    }
+    // Full bar string = date + double space + time.
+    readonly property string clockFormatString: adapter.clockDateFormat + "  " + clockTimeFormatString
 
     // Convenience — true when night light is actively applied
     readonly property bool nightLightActive: nightLightMode === modeManual || (nightLightMode === modeAuto && _autoNightPhase)
@@ -92,6 +106,10 @@ Singleton {
             property string weatherLocation: ""
             property real weatherLat: 0
             property real weatherLon: 0
+            property string clockTimeFormat: "24h"
+            property bool clockShowSeconds: true
+            property string clockDateFormat: "ddd d MMM yyyy"
+            property bool weekStartsOnMonday: true
         }
 
         onAdapterUpdated: root._save()

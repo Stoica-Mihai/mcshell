@@ -14,11 +14,9 @@ Item {
 
     property var weather: null  // Bar/Weather.qml instance
 
-    // Whether the user is actively editing the location (either because it's
-    // unconfigured, or they clicked the edit icon).
+    // Default: edit mode if no location is configured (onboarding), view mode otherwise.
     property bool editMode: !UserSettings.weatherConfigured
 
-    // Geocoding results (array of { name, admin1, country, latitude, longitude, displayName })
     property var geoResults: []
     property string geoError: ""
     property bool geoLoading: false
@@ -28,12 +26,15 @@ Item {
 
     anchors.fill: parent
 
-    // Reset edit mode when the popup becomes visible (new open = fresh state)
     onVisibleChanged: {
         if (visible) {
-            editMode = !UserSettings.weatherConfigured;
+            // Only reset to default if not already explicitly set to edit (e.g. via WeatherWindow.toggleEdit)
+            if (!editMode) editMode = !UserSettings.weatherConfigured;
             _resetGeocode();
             if (editMode) _focusTimer.restart();
+        } else {
+            // Reset to default state on hide so next open picks the right mode
+            editMode = !UserSettings.weatherConfigured;
         }
     }
 
@@ -437,20 +438,6 @@ Item {
                     font.weight: Font.Medium
                     color: Theme.fg
                     elide: Text.ElideRight
-                }
-
-                IconButton {
-                    anchors.right: parent.right
-                    anchors.verticalCenter: parent.verticalCenter
-                    icon: Theme.iconSettings
-                    size: 12
-                    implicitWidth: 24
-                    implicitHeight: 24
-                    normalColor: Theme.fgDim
-                    onClicked: {
-                        root.editMode = true;
-                        Qt.callLater(() => searchField.forceActiveFocus());
-                    }
                 }
             }
 
