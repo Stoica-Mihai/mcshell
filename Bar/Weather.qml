@@ -200,15 +200,6 @@ Item {
                 font.pixelSize: Theme.iconSize
                 color: root._displayColor
                 Behavior on color { ColorAnimation { duration: Theme.animNormal } }
-
-                // Spin animation while fetching
-                RotationAnimation on rotation {
-                    from: 0; to: 360
-                    duration: 1000
-                    loops: Animation.Infinite
-                    running: root.fetchState === "loading"
-                    onRunningChanged: if (!running) iconText.rotation = 0
-                }
             }
         }
 
