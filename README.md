@@ -19,7 +19,7 @@ Three parallelogram segments (left/center/right) with glass effect and animated 
 - **System Tray** — colorized icons, right-click context menus, hover tooltips
 
 ### App Launcher
-Horizontal filmstrip carousel with parallelogram cards, smooth sliding animation, and animated border on focus (4 styles: midpoint, clockwise, corners, fade — configurable). Two-level keyboard navigation: Left/Right to switch categories (Level 1), Enter to dive in, Left/Right to navigate cards (Level 2), Escape to go back. Six tabs:
+Horizontal filmstrip carousel with parallelogram cards, smooth sliding animation, and animated border on focus (4 styles: midpoint, clockwise, corners, fade — configurable). Three-level keyboard navigation — `view` (search/browse categories), `list` (scroll cards in a tab), `edit` (drill into a selected card, Settings only today) — with each level entered via arrow-Down and exited via Escape. Six tabs:
 - **Apps** — fuzzy search, large icon + name + description in expanded view
 - **Clipboard** — native clipboard history via Wayland data control protocol, live-updating, text and image support
 - **WiFi** — scan and connect to networks, inline password input, signal strength and security display. Ctrl+W to toggle WiFi
@@ -97,27 +97,36 @@ mcs-qs -c mcshell ipc call mcshell <command>
 
 ### Launcher
 
+Every `launcherX` IPC accepts two optional positional arguments: `<mode>` and `<target>`.
+
+- `<mode>` is one of `view` / `list` / `edit`. Empty = `view`. Invalid modes log a warning and skip the open.
+  - `view` — launcher opens with the search field focused
+  - `list` — launcher opens with the card carousel focused (ready to arrow-navigate)
+  - `edit` — launcher opens with the currently selected card drilled into (Settings tab only supports `edit` today)
+- `<target>` optionally pre-selects an item within the tab before the mode is applied. Each category interprets the string — Settings treats it as a card id (`audio` / `display` / `theme` / `power`).
+
 | Command | Description |
 |---|---|
-| `toggleLauncher` | Open/close the app launcher carousel |
-| `launcherApps` | Open launcher on the Apps tab |
-| `launcherClipboard` | Open launcher on the Clipboard tab |
-| `launcherWifi` | Open launcher on the WiFi tab |
-| `launcherBluetooth` | Open launcher on the Bluetooth tab |
-| `launcherWallpaper` | Open launcher on the Wallpaper tab |
-| `launcherSettings` | Open launcher on the Settings tab |
-| `settingsCard <card>` | Open a specific settings card (audio, display, theme, power) |
+| `toggleLauncher` | Toggle launcher visibility (keeps last state) |
+| `launcherApps [mode] [target]` | Open launcher on the Apps tab |
+| `launcherClipboard [mode] [target]` | Open launcher on the Clipboard tab |
+| `launcherWifi [mode] [target]` | Open launcher on the WiFi tab |
+| `launcherBluetooth [mode] [target]` | Open launcher on the Bluetooth tab |
+| `launcherWallpaper [mode] [target]` | Open launcher on the Wallpaper tab |
+| `launcherSettings [mode] [target]` | Open launcher on the Settings tab. `launcherSettings edit power` drills straight into the power card. |
 
 ### Bar Panels
 
+Bar panel IPCs also accept an optional `<mode>` argument (`view` default). Only Weather currently supports a non-view mode (`edit` opens the location search). Invalid modes log a warning and skip the open.
+
 | Command | Description |
 |---|---|
-| `toggleCalendar` | Open/close the calendar popup |
-| `toggleVolume` | Open/close the volume panel |
-| `toggleNotifications` | Open/close the notification history |
-| `toggleSettings` | Open/close the quick settings panel |
+| `toggleCalendar [mode]` | Open/close the calendar popup |
+| `toggleVolume [mode]` | Open/close the volume panel |
+| `toggleNotifications [mode]` | Open/close the notification history |
+| `toggleWeather [mode]` | Open/close the weather dropdown. `toggleWeather edit` opens the location editor directly. |
+| `toggleClockSettings [mode]` | Open/close the clock settings dropdown (time format, date format, week start) |
 | `toggleKeybinds` | Open/close the keybind hints overlay |
-| `toggleWallpaper` | Open launcher on the Wallpaper tab |
 
 ### Session
 
@@ -155,7 +164,7 @@ binds {
     Mod+L { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "lock"; }
     Mod+N { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "launcherWifi"; }
     Mod+B { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "launcherBluetooth"; }
-    Ctrl+Alt+Q { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "settingsCard" "power"; }
+    Ctrl+Alt+Q { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "launcherSettings" "edit" "power"; }
     Alt+Tab { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "toggleWindows"; }
     Print { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotArea"; }
     Shift+Print { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotFull"; }
@@ -179,24 +188,34 @@ binds {
 
 ## Launcher Keyboard Shortcuts
 
-**Level 1 (Category browse):**
+**View (search / category browse):**
 
 | Key | Action |
 |---|---|
 | ← → | Switch between categories |
-| Enter / ↓ | Enter category (Level 2) |
+| Enter / ↓ | Enter the card carousel (list level) |
 | Escape | Close launcher |
-| Type | Search + auto-enter Level 2 |
+| Type | Search + auto-enter list level |
 
-**Level 2 (Inside category):**
+**List (card carousel):**
 
 | Key | Action |
 |---|---|
 | ← → | Navigate between cards |
+| ↓ | Drill into the selected card (edit level — Settings only) |
 | Enter | Activate selected card (launch app, copy clip, connect network, apply wallpaper) |
-| Escape | Back to Level 1 |
+| Escape | Back to view |
 | Ctrl+W | Toggle WiFi (WiFi tab) |
 | Ctrl+B | Toggle Bluetooth (BT tab) |
+
+**Edit (inside a Settings card):**
+
+| Key | Action |
+|---|---|
+| ↑ ↓ | Navigate rows inside the card |
+| ← → | Adjust the selected row's value |
+| Enter | Activate (hold-to-confirm for destructive power actions) |
+| Escape | Back to list |
 
 ## Dependencies
 
