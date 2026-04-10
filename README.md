@@ -8,7 +8,7 @@ A custom Wayland desktop shell built with [QuickShell](https://quickshell.outfox
 Three parallelogram segments (left/center/right) with glass effect and animated accent border (flowing light pulse, breathing, marching dashes, or off — configurable).
 - **Workspaces** — animated pills, click to switch, scroll to cycle (native Niri IPC, no polling)
 - **Active Window** — reactive title display via Niri IPC
-- **Clock** — date + time, click for calendar with month/year picker
+- **Clock** — date + time, click for calendar with month/year picker and public holidays for the weather location's country (via [Nager.Date](https://date.nager.at)), right-click for time/date format settings
 - **Media** — MPRIS controls (prev/play/next), click track title for expanded player with album art, seek bar, live stream detection
 - **System Capsule** — grouped volume, battery, notifications, and settings icons sharing a single dropdown panel with accent underline on the active icon
   - **Volume** — PipeWire native, scroll to adjust, middle-click mute, per-app sliders
