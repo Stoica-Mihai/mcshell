@@ -8,14 +8,16 @@ A custom Wayland desktop shell built with [QuickShell](https://quickshell.outfox
 Three parallelogram segments (left/center/right) with glass effect and animated accent border (flowing light pulse, breathing, marching dashes, or off — configurable).
 - **Workspaces** — animated pills, click to switch, scroll to cycle (native Niri IPC, no polling)
 - **Active Window** — reactive title display via Niri IPC
-- **Clock** — date + time, click for calendar with month/year picker and public holidays for the weather location's country (via [Nager.Date](https://date.nager.at)), right-click for time/date format settings
+- **Clock** — date + time, left-click for calendar with month/year picker and public holidays for the weather location's country (via [Nager.Date](https://date.nager.at)), right-click for time/date format settings
+- **Weather** — current temperature + icon, left-click for forecast dropdown (current conditions, hourly, 5-day), right-click to edit location (inline city search via Open-Meteo geocoding)
+- **Recording indicator** — pulsing red dot next to the clock while `wf-recorder` is active
 - **Media** — MPRIS controls (prev/play/next), click track title for expanded player with album art, seek bar, live stream detection
-- **System Capsule** — grouped volume, battery, notifications, and settings icons sharing a single dropdown panel with accent underline on the active icon
+- **System Capsule** — WiFi, Bluetooth, Volume, Battery, and the notification bell sharing a single dropdown panel with accent underline on the active icon
+  - **WiFi** — native `Quickshell.Networking`, shows connected SSID, left-click opens launcher WiFi tab, middle-click toggles radio
+  - **Bluetooth** — native `Quickshell.Bluetooth`, shows connected device + battery, left-click opens launcher Bluetooth tab, middle-click toggles radio
   - **Volume** — PipeWire native, scroll to adjust, middle-click mute, per-app sliders
   - **Battery** — UPower native, icon + percentage, red below 20%, hidden on desktops
   - **Notifications** — unread badge, history list, middle-click for Do Not Disturb, action buttons
-  - **Quick Settings** — power menu (lock/logout/reboot/shutdown), brightness slider, night light toggle
-- **Network** — reactive status via native Networking API
 - **System Tray** — colorized icons, right-click context menus, hover tooltips
 
 ### App Launcher
@@ -160,7 +162,7 @@ Bar panel IPCs also accept an optional `<mode>` argument (`view` default). Only 
 binds {
     Mod+Q { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "toggleLauncher"; }
     Mod+K { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "toggleKeybinds"; }
-    Mod+W { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "toggleWallpaper"; }
+    Mod+W { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "launcherWallpaper" "list"; }
     Mod+L { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "lock"; }
     Mod+N { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "launcherWifi"; }
     Mod+B { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "launcherBluetooth"; }
@@ -178,12 +180,14 @@ binds {
 |---|---|---|---|---|
 | Workspaces | Switch to workspace | — | — | Cycle workspaces |
 | Active Window | Focus window | — | — | — |
-| Clock | Toggle calendar | — | — | — |
+| Clock | Toggle calendar | — | Toggle clock settings | — |
+| Weather | Toggle forecast | — | Edit location | — |
 | Media | Toggle expanded player | — | — | — |
+| WiFi (capsule) | Open WiFi launcher tab | Toggle WiFi on/off | — | — |
+| Bluetooth (capsule) | Open Bluetooth launcher tab | Toggle Bluetooth on/off | — | — |
 | Volume (capsule) | Toggle volume panel | Toggle mute | — | Adjust volume |
 | Battery (capsule) | — | — | — | — |
 | Bell (capsule) | Toggle notification history | Toggle DND | — | — |
-| Settings (capsule) | Toggle quick settings | — | — | — |
 | Tray Icon | Activate | Secondary activate | Context menu | — |
 
 ## Launcher Keyboard Shortcuts
@@ -241,23 +245,23 @@ binds {
 
 ## Architecture
 
-Pure QML — no C++, no build system. QuickShell interprets QML directly. Each subdirectory is a module imported as `qs.<DirName>`.
+Pure QML — no C++, no build system. QuickShell interprets QML directly. Each subdirectory is a module imported as `qs.<DirName>`. For a deeper per-module breakdown see [CLAUDE.md](CLAUDE.md).
 
 | Module | Purpose |
 |---|---|
-| `Config/` | Theme singleton (8 palettes + auto wallpaper theming), UserSettings singleton (persistent preferences via JsonAdapter, live-reload on external changes) |
-| `Core/` | Shared non-visual components — SafeProcess, ShellActions singleton (lock/logout/reboot/shutdown/wallpaper), Brightness singleton |
-| `Bar/` | Status bar — three parallelogram segments with shared dropdown panels. Left: launcher + workspaces, active window. Center: clock + calendar dropdown. Right: media (MPRIS), system tray, volume/battery/notifications capsule — all sharing one dropdown |
-| `Launcher/` | App launcher carousel — apps, clipboard, WiFi, Bluetooth, wallpaper, settings tabs with lazy-loaded progressive model growth |
-| `Notifications/` | Notification daemon + popup cards with action buttons |
+| `Config/` | `Theme` singleton (8 palettes + auto wallpaper theming), `UserSettings` singleton (persistent preferences via `JsonAdapter`, live-reload on external changes) |
+| `Core/` | Shared non-visual singletons — `SafeProcess`, `ShellActions` (lock/logout/reboot/shutdown/wallpaper), `Brightness`, `HolidayService` (Nager.Date), `NotificationDispatcher` |
+| `Bar/` | Status bar — three parallelogram segments with shared dropdown panels. Left: launcher + workspaces, active window. Center: clock + calendar/clock-settings, weather + forecast/edit (via shared `BarPopupWindow`). Right: media (MPRIS), system tray, WiFi/BT/volume/battery/notifications capsule sharing one dropdown. Also `Recording` (wf-recorder driver) |
+| `Launcher/` | App launcher carousel — apps, clipboard, WiFi, Bluetooth, wallpaper, settings tabs with 3-level keyboard navigation (view/list/edit) and lazy-loaded progressive model growth |
+| `Notifications/` | DBus notification daemon + popup cards with action buttons |
 | `NotificationHistory/` | Notification history dropdown |
-| `QuickSettings/` | Quick settings panel — brightness, night light, power actions |
 | `LockScreen/` | Wayland session lock with PAM auth |
+| `Polkit/` | Polkit authentication agent dialog |
 | `Wallpaper/` | Background renderer with crossfade transitions |
 | `KeybindHints/` | Keybind parser + hints overlay |
 | `Screenshot/` | Native screencopy overlay — fullscreen + interactive area selection with crop |
 | `WindowSwitcher/` | Window switcher overlay with carousel cards, Alt+Tab behavior, parallelogram search bar |
-| `Widgets/` | Shared UI components — AnimatedPopup (shared dropdown panel API), AnimatedBorder, ParallelogramCard, StyledTextField, MediaControls, ActiveUnderline, IconButton, SliderTrack, ControlSlider, CyclePicker, HoverText, OptImage, Separator, SmoothWheelHandler, ThemedScrollBar, TriToggle |
+| `Widgets/` | Shared UI components — `AnimatedPopup`, `AnimatedBorder`, `ParallelogramCard`, `StyledTextField`, `MediaControls`, `ActiveUnderline`, `IconButton`, `SliderTrack`, `ControlSlider`, `CyclePicker`, `HoverText`, `InfiniteText`, `OptImage`, `Separator`, `SmoothWheelHandler`, `ThemedScrollBar`, `ThemedTooltip`, `TriToggle` |
 
 ## Acknowledgements
 
