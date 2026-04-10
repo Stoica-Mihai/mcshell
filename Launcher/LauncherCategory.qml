@@ -48,6 +48,10 @@ Item {
     property string scanningIcon: ""
     property string scanningHint: ""
 
+    // ── Supported navigation levels ──
+    // Override to add "edit" for categories that drill into cards.
+    property var supportedModes: ["view", "list"]
+
     // ── Footer legend suffix ──
     property string legendHint: ""
     property string disabledLegendHint: ""  // shown when disabledState is true
@@ -59,7 +63,8 @@ Item {
     // ── Lifecycle callbacks ──
     function onTabEnter() {}
     function onTabLeave() {}
-    function onOpenCard(cardId) {}
+
+    function onOpenTarget(target) {}
 
     // ── Search callback ──
     function onSearch(text) {}

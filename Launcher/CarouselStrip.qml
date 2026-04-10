@@ -39,7 +39,7 @@ Item {
     default property alias contentData: card.contentData
 
     // Card background
-    property bool focused: launcher ? launcher.editMode : false
+    property bool focused: launcher ? launcher.inCarousel : false
     property color borderColor: focused && isCurrent ? Theme.accent : Theme.outlineVariant
     property bool showBorder: isCurrent
 

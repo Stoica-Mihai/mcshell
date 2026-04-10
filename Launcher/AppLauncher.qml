@@ -18,13 +18,13 @@ PanelWindow {
     }
 
 
-    function _initLauncher(tab, edit) {
+    function _initLauncher(tab, initialLevel) {
         _suppressCarouselAnim = true;
         isOpen = true;
         visible = true;
         _openTransition();
         activeTab = tab;
-        editMode = edit;
+        level = initialLevel;
         searchField.text = "";
         selectedIndex = 0;
         _carouselDelegate = activeCategory.cardDelegate;
@@ -36,11 +36,11 @@ PanelWindow {
         _animEnableTimer.restart();
     }
 
-    function open() { _initLauncher(0, false); }
+    function open() { _initLauncher(0, "view"); }
 
     function close() {
         _closeTransition();
-        editMode = false;
+        level = "view";
         searchField.text = "";
         for (let i = 0; i < categories.length; i++)
             categories[i].onTabLeave();
@@ -50,18 +50,24 @@ PanelWindow {
         if (isOpen) close(); else open();
     }
 
-    function openTab(name, cardId) {
+    function openTab(name, mode, target) {
         const idx = _tabIndex(name);
         if (idx < 0) return;
+        const resolved = mode || "view";
         if (!isOpen) {
-            _initLauncher(idx, !!cardId);
-        } else {
+            _initLauncher(idx, resolved);
+        } else if (activeTab !== idx) {
             switchTab(idx);
+            level = resolved;
+        } else {
+            level = resolved;
         }
-        if (cardId) {
-            editMode = true;
-            activeCategory.onOpenCard(cardId);
-        }
+        if (target) activeCategory.onOpenTarget(target);
+    }
+
+    function supportedModesFor(tabName) {
+        const idx = _tabIndex(tabName);
+        return idx >= 0 ? categories[idx].supportedModes : [];
     }
 
     function refocusSearch() {
@@ -130,7 +136,7 @@ PanelWindow {
     readonly property var currentList: activeCategory.model
     readonly property int currentCount: carouselRepeater.count
     readonly property bool hasItems: currentCount > 0
-    onHasItemsChanged: if (!hasItems && editMode) editMode = false
+    onHasItemsChanged: if (!hasItems && inCarousel) level = "view"
 
     // Carousel model/delegate — reset together on tab switch to prevent
     // cross-contamination (new delegate rendering against old model data)
@@ -139,7 +145,11 @@ PanelWindow {
     readonly property string searchText: searchField.text
 
     property int selectedIndex: 0
-    property bool editMode: false
+    property string level: "view"
+    readonly property bool inView: level === "view"
+    readonly property bool inList: level === "list"
+    readonly property bool inEdit: level === "edit"
+    readonly property bool inCarousel: level !== "view"
 
     // ── Carousel config ─────────────────────────────────
     readonly property int sideCount: 5
@@ -176,13 +186,13 @@ PanelWindow {
         if (activeTab === tab && isOpen) {
             searchField.text = "";
             selectedIndex = 0;
-            editMode = false;
+            level = "view";
             activeCategory.onSearch("");
             searchField.forceActiveFocus();
             return;
         }
         activeCategory.onTabLeave();
-        editMode = false;
+        level = "view";
         _suppressCarouselAnim = true;
         // Clear carousel before switching — prevents delegate/model cross-contamination
         _carouselModel = [];
@@ -330,7 +340,7 @@ PanelWindow {
                     width: tabHighlight._lineRight - tabHighlight._lineLeft
                     height: 2
                     radius: 1
-                    color: launcher.editMode ? Theme.fgDim : Theme.accent
+                    color: launcher.inView ? Theme.accent : Theme.fgDim
                     Behavior on color { ColorAnimation { duration: Theme.animNormal } }
                 }
             }
@@ -407,8 +417,8 @@ PanelWindow {
                     onTextChanged: {
                         launcher.selectedIndex = 0;
                         launcher.activeCategory.onSearch(text);
-                        if (text !== "" && !launcher.editMode)
-                            launcher.editMode = true;
+                        if (text !== "" && launcher.inView)
+                            launcher.level = "list";
                     }
 
                     Keys.onPressed: event => {
@@ -418,8 +428,7 @@ PanelWindow {
                             return;
                         }
 
-                        if (!launcher.editMode) {
-                            // Level 1: category browse — arrows switch categories
+                        if (launcher.inView) {
                             switch (event.key) {
                             case Qt.Key_Escape:
                                 launcher.close();
@@ -437,16 +446,15 @@ PanelWindow {
                             case Qt.Key_Enter:
                             case Qt.Key_Down:
                                 if (launcher.hasItems) {
-                                    launcher.editMode = true;
+                                    launcher.level = "list";
                                     event.accepted = true;
                                 }
                                 break;
                             }
-                        } else {
-                            // Level 2: inside category — arrows navigate items
+                        } else if (launcher.inList) {
                             switch (event.key) {
                             case Qt.Key_Escape:
-                                launcher.editMode = false;
+                                launcher.level = "view";
                                 event.accepted = true;
                                 break;
                             case Qt.Key_Left:
@@ -457,11 +465,21 @@ PanelWindow {
                                 launcher.navigate(1);
                                 event.accepted = true;
                                 break;
+                            case Qt.Key_Down:
+                                if (launcher.activeCategory.supportedModes.indexOf("edit") >= 0)
+                                    launcher.level = "edit";
+                                event.accepted = true;
+                                break;
                             case Qt.Key_Return:
                             case Qt.Key_Enter:
                                 launcher.activate();
                                 event.accepted = true;
                                 break;
+                            }
+                        } else if (launcher.inEdit) {
+                            if (event.key === Qt.Key_Escape) {
+                                launcher.level = "list";
+                                event.accepted = true;
                             }
                         }
                     }
@@ -579,23 +597,19 @@ PanelWindow {
         anchors.topMargin: 16
         visible: true
         text: {
-            // Disabled state
             if (launcher.activeCategory.disabledState) {
                 const hint = launcher.activeCategory.disabledLegendHint || "";
-                if (!launcher.editMode)
+                if (launcher.inView)
                     return Theme.legend(...[hint, Theme.hintCategory, Theme.hintClose].filter(Boolean));
                 return Theme.legend(...[hint, Theme.hintBack].filter(Boolean));
             }
 
-            // Level 1: category browse
-            if (!launcher.editMode)
+            if (launcher.inView)
                 return Theme.legend(Theme.hintCategory, Theme.hintEnter + " open", Theme.hintClose);
 
-            // Level 2+: category overrides full legend
             if (launcher.activeCategory.legendOverride)
                 return launcher.activeCategory.legendHint;
 
-            // Level 2: standard item navigation
             if (!launcher.hasItems)
                 return Theme.hintBack;
             var parts = [(launcher.selectedIndex + 1) + " / " + launcher.currentCount, Theme.hintNav];

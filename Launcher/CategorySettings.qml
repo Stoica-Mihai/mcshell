@@ -13,8 +13,10 @@ LauncherCategory {
     tabLabel: "Settings"
     tabIcon: Theme.iconSettings
     searchPlaceholder: "Settings"
-    legendOverride: editMode
-    legendHint: editMode
+    supportedModes: ["view", "list", "edit"]
+
+    legendOverride: launcher.inEdit
+    legendHint: launcher.inEdit
         ? activeSettingsCard?.panelLegend ?? ""
         : "Enter edit"
 
@@ -28,7 +30,6 @@ LauncherCategory {
     Component.onCompleted: setItems(settingsCategories)
 
     property var activeSettingsCard: null
-    property bool editMode: false
 
     // ── Search ──
     function onSearch(text) {
@@ -37,64 +38,43 @@ LauncherCategory {
             (item, q) => item.id.toLowerCase().indexOf(q) >= 0));
     }
 
-    // ── Lifecycle ──
-    function onTabEnter() { editMode = false; }
-    function onTabLeave() { editMode = false; }
-    function onOpenCard(cardId) {
+    function onOpenTarget(target) {
         for (let i = 0; i < settingsCategories.length; i++) {
-            if (settingsCategories[i].id === cardId) {
+            if (settingsCategories[i].id === target) {
                 launcher.selectedIndex = i;
-                editMode = true;
                 return;
             }
         }
     }
 
-    // ── Key handler ──
     function onKeyPressed(event) {
-        if (editMode) {
-            // Sub-edit: Up/Down navigate items, Left/Right adjust, Enter activates, Escape exits
-            if (!activeSettingsCard) return false;
-            switch (event.key) {
-            case Qt.Key_Up:
-                activeSettingsCard.navigateUp();
-                return true;
-            case Qt.Key_Down:
-                activeSettingsCard.navigateDown();
-                return true;
-            case Qt.Key_Return:
-            case Qt.Key_Enter:
-                if (!event.isAutoRepeat) activeSettingsCard.activateItem();
-                return true;
-            case Qt.Key_Left:
-                if (activeSettingsCard.adjustLeft) activeSettingsCard.adjustLeft();
-                return true;
-            case Qt.Key_Right:
-                if (activeSettingsCard.adjustRight) activeSettingsCard.adjustRight();
-                return true;
-            case Qt.Key_Escape:
-                editMode = false;
-                if (activeSettingsCard.resetSelection) activeSettingsCard.resetSelection();
-                return true;
-            }
+        if (!launcher.inEdit || !activeSettingsCard) return false;
+        switch (event.key) {
+        case Qt.Key_Up:
+            activeSettingsCard.navigateUp();
+            return true;
+        case Qt.Key_Down:
+            activeSettingsCard.navigateDown();
+            return true;
+        case Qt.Key_Return:
+        case Qt.Key_Enter:
+            if (!event.isAutoRepeat) activeSettingsCard.activateItem();
+            return true;
+        case Qt.Key_Left:
+            if (activeSettingsCard.adjustLeft) activeSettingsCard.adjustLeft();
+            return true;
+        case Qt.Key_Right:
+            if (activeSettingsCard.adjustRight) activeSettingsCard.adjustRight();
+            return true;
+        case Qt.Key_Escape:
+            if (activeSettingsCard.resetSelection) activeSettingsCard.resetSelection();
             return false;
-        }
-        // Level 2: Enter/Up/Down enters sub-edit (only when launcher is in edit mode)
-        if (root.launcher.editMode) {
-            switch (event.key) {
-            case Qt.Key_Up:
-            case Qt.Key_Down:
-            case Qt.Key_Return:
-            case Qt.Key_Enter:
-                editMode = true;
-                return true;
-            }
         }
         return false;
     }
 
     function onKeyReleased(event) {
-        if (editMode && activeSettingsCard && !event.isAutoRepeat) {
+        if (launcher.inEdit && activeSettingsCard && !event.isAutoRepeat) {
             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                 activeSettingsCard.deactivateItem();
                 return true;
@@ -105,15 +85,15 @@ LauncherCategory {
 
     // ── Activate ──
     function onActivate(index) {
-        if (editMode && activeSettingsCard) activeSettingsCard.activateItem();
-        else editMode = true;
+        if (launcher.inEdit && activeSettingsCard) activeSettingsCard.activateItem();
+        else launcher.level = "edit";
     }
 
     // ── Card delegate ──
     cardDelegate: Component {
         CarouselStrip {
             launcher: root.launcher
-            function onStripActivated() { if (settingsCard.active) root.editMode = true; }
+            function onStripActivated() { if (settingsCard.active) root.launcher.level = "edit"; }
 
             // Collapsed icon
             Text {
@@ -121,7 +101,7 @@ LauncherCategory {
                 visible: !parent.isCurrent
                 text: modelData.icon ?? Theme.iconMissing
                 font.family: Theme.iconFont
-                font.pixelSize: Theme.iconSizeSmall
+                font.pixelSize: Theme.fontSizeSmall
                 color: Theme.fgDim
             }
 
@@ -131,7 +111,7 @@ LauncherCategory {
                 anchors.fill: parent
                 visible: parent.isCurrent
                 source: modelData.source ?? ""
-                active: parent.isCurrent && root.editMode
+                active: parent.isCurrent && launcher.inEdit
                 onActiveChanged: {
                     if (active) root.activeSettingsCard = settingsCard;
                 }

@@ -33,9 +33,14 @@ Scope {
 
     property int panelToggleTrigger: 0
     property string panelToggleName: ""
+    property string panelToggleMode: ""
     onPanelToggleTriggerChanged: {
         if (panelToggleName === "calendar") calendarWindow.toggle();
-        else if (panelToggleName === "weather") weatherWindow.toggle();
+        else if (panelToggleName === "weather") {
+            if (panelToggleMode === "edit") weatherWindow.toggleEdit();
+            else weatherWindow.toggle();
+        }
+        else if (panelToggleName === "clockSettings") clockSettingsWindow.toggle();
         else if (panelToggleName) sharedDropdown.togglePanel(panelToggleName);
     }
 

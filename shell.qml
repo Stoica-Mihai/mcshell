@@ -23,7 +23,52 @@ import Quickshell.Networking
 ShellRoot {
     id: shell
     property string _togglePanel: ""
+    property string _toggleMode: ""
     property int _toggleCounter: 0
+
+    // First entry in each list is the default when the caller passes an empty mode.
+    // Launcher tabs are not listed here — they declare modes on each LauncherCategory.
+    readonly property var _panelModes: ({
+        weather:       ["view", "edit"],
+        calendar:      ["view"],
+        clockSettings: ["view"],
+        volume:        ["view"],
+        notifications: ["view"],
+        media:         ["view"],
+        tray:          ["view"]
+    })
+
+    // Validate a mode against a panel/tab's supported modes. Returns the
+    // resolved mode string (falls back to modes[0] when empty), or null
+    // if the kind is unknown or the mode is unsupported — in both cases
+    // a console.warn is emitted with the "mcshell IPC:" prefix that
+    // test.sh's WARN filter relies on.
+    function _resolveMode(kind, name, modes, mode) {
+        if (!modes || modes.length === 0) {
+            console.warn("mcshell IPC: unknown " + kind + " '" + name + "'");
+            return null;
+        }
+        const resolved = mode || modes[0];
+        if (modes.indexOf(resolved) < 0) {
+            console.warn("mcshell IPC: " + kind + " '" + name + "' does not support mode '" + resolved + "' (valid: " + modes.join(", ") + ")");
+            return null;
+        }
+        return resolved;
+    }
+
+    function _dispatchPanel(name, mode) {
+        const resolved = _resolveMode("panel", name, _panelModes[name], mode);
+        if (resolved === null) return;
+        shell._togglePanel = name;
+        shell._toggleMode = resolved;
+        shell._toggleCounter++;
+    }
+
+    function _dispatchLauncher(tab, mode, target) {
+        const resolved = _resolveMode("launcher tab", tab, appLauncher.supportedModesFor(tab), mode);
+        if (resolved === null) return;
+        appLauncher.openTab(tab, resolved, target);
+    }
 
     // Force singleton initialization so connection watchers start immediately
     Component.onCompleted: NotificationDispatcher
@@ -46,6 +91,7 @@ ShellRoot {
             onNotifPanelOpened: notifPopup.markAllRead()
             panelToggleTrigger: shell._toggleCounter
             panelToggleName: shell._togglePanel
+            panelToggleMode: shell._toggleMode
         }
     }
 
@@ -107,24 +153,24 @@ ShellRoot {
         target: "mcshell"
 
         function toggleLauncher(): void { appLauncher.toggle(); }
-        function launcherApps(): void { appLauncher.openTab("apps"); }
-        function launcherClipboard(): void { appLauncher.openTab("clipboard"); }
-        function launcherWifi(): void { appLauncher.openTab("wifi"); }
-        function launcherBluetooth(): void { appLauncher.openTab("bluetooth"); }
-        function launcherWallpaper(): void { appLauncher.openTab("wallpaper"); }
-        function launcherSettings(): void { appLauncher.openTab("settings"); }
+        function launcherApps(mode: string, target: string): void { shell._dispatchLauncher("apps", mode, target); }
+        function launcherClipboard(mode: string, target: string): void { shell._dispatchLauncher("clipboard", mode, target); }
+        function launcherWifi(mode: string, target: string): void { shell._dispatchLauncher("wifi", mode, target); }
+        function launcherBluetooth(mode: string, target: string): void { shell._dispatchLauncher("bluetooth", mode, target); }
+        function launcherWallpaper(mode: string, target: string): void { shell._dispatchLauncher("wallpaper", mode, target); }
+        function launcherSettings(mode: string, target: string): void { shell._dispatchLauncher("settings", mode, target); }
+
         function toggleKeybinds(): void { keybindPanel.toggle(); }
         function toggleWindows(): void { windowSwitcher.toggle(); }
-        function toggleWallpaper(): void { appLauncher.openTab("wallpaper"); }
         function lock(): void { ShellActions.lock(); }
         function toggleDnd(): void { UserSettings.doNotDisturb = !UserSettings.doNotDisturb; }
         function setWallpaper(path: string): void { ShellActions.setWallpaper(path); }
-        function settingsCard(card: string): void { appLauncher.openTab("settings", card); }
 
-        function toggleCalendar(): void { shell._togglePanel = "calendar"; shell._toggleCounter++; }
-        function toggleVolume(): void { shell._togglePanel = "volume"; shell._toggleCounter++; }
-        function toggleNotifications(): void { shell._togglePanel = "notifications"; shell._toggleCounter++; }
-        function toggleSettings(): void { appLauncher.openTab("settings"); }
+        function toggleCalendar(mode: string): void { shell._dispatchPanel("calendar", mode); }
+        function toggleVolume(mode: string): void { shell._dispatchPanel("volume", mode); }
+        function toggleNotifications(mode: string): void { shell._dispatchPanel("notifications", mode); }
+        function toggleWeather(mode: string): void { shell._dispatchPanel("weather", mode); }
+        function toggleClockSettings(mode: string): void { shell._dispatchPanel("clockSettings", mode); }
         function toggleRecording(): void { screenRecording.toggleRecording(); }
         function clipboardList(): string {
             const entries = ClipboardHistory.entries.values;
