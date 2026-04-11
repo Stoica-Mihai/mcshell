@@ -73,6 +73,8 @@ Item {
 
     RowLayout {
         id: row
+        anchors.left: parent.left
+        anchors.right: parent.right
         anchors.verticalCenter: parent.verticalCenter
         spacing: Theme.spacingSmall
 
@@ -85,6 +87,7 @@ Item {
         // Track info: "Artist - Title" — scrolls on hover if truncated
         InfiniteText {
             id: trackLabel
+            Layout.fillWidth: true
             Layout.maximumWidth: 200
             font.pixelSize: Theme.fontSizeSmall
             text: root.artist ? `${root.artist} - ${root.title}` : root.title
