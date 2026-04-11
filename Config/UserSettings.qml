@@ -25,6 +25,17 @@ Singleton {
     property alias nightLightSunrise: adapter.nightLightSunrise
     property alias nightLightSunset: adapter.nightLightSunset
     property alias wallpaperFolder: adapter.wallpaperFolder
+    property alias wallpaperRotateInterval: adapter.wallpaperRotateInterval
+    // Canonical list for both the settings UI (ids + labels) and the rotator
+    // (ms). Adding or renaming an interval means editing exactly this array.
+    readonly property var wallpaperRotateOptions: [
+        { id: "off", label: "Off",      ms: 0 },
+        { id: "30m", label: "30 min",   ms: 30 * 60 * 1000 },
+        { id: "1h",  label: "1 hour",   ms: 60 * 60 * 1000 },
+        { id: "3h",  label: "3 hours",  ms: 3 * 60 * 60 * 1000 },
+        { id: "6h",  label: "6 hours",  ms: 6 * 60 * 60 * 1000 },
+        { id: "12h", label: "12 hours", ms: 12 * 60 * 60 * 1000 }
+    ]
     property alias themeName: adapter.themeName
     property alias idleTimeout: adapter.idleTimeout       // auto-lock timeout in minutes (0 = disabled)
     property alias wallpaperStrategy: adapter.wallpaperStrategy  // strategy name, e.g. "Tonal"
@@ -97,6 +108,7 @@ Singleton {
             property string nightLightSunset: "18:30"
             property string wallpaper: ""
             property string wallpaperFolder: ""
+            property string wallpaperRotateInterval: "off"
             property string themeName: ""
             property int idleTimeout: 0
             property string wallpaperStrategy: "Tonal"

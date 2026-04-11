@@ -107,6 +107,9 @@ ShellRoot {
         id: wallpaper
         Component.onCompleted: ShellActions.wallpaper = wallpaper
     }
+    WallpaperRotator {
+        locked: lockScreen.isLocked
+    }
     ScreenshotOverlay { id: screenshot }
     WindowSwitcher { id: windowSwitcher }
     Recording { id: screenRecording }

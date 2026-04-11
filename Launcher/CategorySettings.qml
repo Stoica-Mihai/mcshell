@@ -22,10 +22,11 @@ LauncherCategory {
 
     // ── Data ──
     readonly property var settingsCategories: [
-        { id: "audio",   icon: Theme.iconVolHigh,    source: "SettingsAudio.qml" },
-        { id: "display", icon: Theme.iconBrightness, source: "SettingsDisplay.qml" },
-        { id: "theme",   icon: Theme.iconPalette,    source: "SettingsTheme.qml" },
-        { id: "power",   icon: Theme.iconShutdown,   source: "SettingsPower.qml" }
+        { id: "audio",     icon: Theme.iconVolHigh,    source: "SettingsAudio.qml" },
+        { id: "display",   icon: Theme.iconBrightness, source: "SettingsDisplay.qml" },
+        { id: "wallpaper", icon: Theme.iconImage,      source: "SettingsWallpaper.qml" },
+        { id: "theme",     icon: Theme.iconPalette,    source: "SettingsTheme.qml" },
+        { id: "power",     icon: Theme.iconShutdown,   source: "SettingsPower.qml" }
     ]
     Component.onCompleted: setItems(settingsCategories)
 

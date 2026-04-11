@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import qs.Config
 import qs.Core
+import qs.Wallpaper
 import qs.Widgets
 
 LauncherCategory {
@@ -17,87 +18,47 @@ LauncherCategory {
     tabIcon: Theme.iconImage
     searchPlaceholder: "Search wallpapers..."
     legendHint: Theme.hintEnter + " apply"
-    scanningState: !loaded || _fullPaths.length === 0
+    scanningState: !WallpaperScanner.loaded || WallpaperScanner.paths.length === 0
     scanningIcon: Theme.iconImage
-    scanningHint: loaded ? `No wallpapers found in ${UserSettings.wallpaperFolder}` : "Loading..."
+    scanningHint: WallpaperScanner.loaded
+        ? `No wallpapers found in ${UserSettings.wallpaperFolder}`
+        : "Loading..."
 
-    // ── Data ──
-    property bool loaded: false
-    property var _fullPaths: []
-    property var _scanLines: []
     property string activeWallpaper: UserSettings.wallpaperPath
-    property int activeIndex: 0
-    property string _lastFolder: ""
 
     // ── Lifecycle ──
     function onTabEnter() {
-        const folder = UserSettings.wallpaperFolder;
-        if (!loaded || folder !== _lastFolder) {
-            _lastFolder = folder;
-            scanFolder();
-        } else {
-            setItems(_fullPaths, activeIndex);
-            launcher.selectedIndex = activeIndex;
-        }
+        if (!WallpaperScanner.loaded) WallpaperScanner.scan();
+        else _syncItems();
     }
 
     function onTabLeave() {}
 
-    // ── Folder scanning ──
-    function scanFolder() {
-        const folder = UserSettings.wallpaperFolder;
-        if (folder === "") return;
-        loaded = false;
-        _fullPaths = [];
-        _scanLines = [];
-        scanProc.command = [
-            "find", folder, "-maxdepth", "1", "-type", "f",
-            "(", "-name", "*.png", "-o", "-name", "*.jpg",
-            "-o", "-name", "*.jpeg",
-            "-o", "-name", "*.bmp", ")"
-        ];
-        scanProc.running = true;
+    function _syncItems() {
+        const paths = WallpaperScanner.paths;
+        let startIdx = 0;
+        for (let i = 0; i < paths.length; i++) {
+            if (paths[i] === activeWallpaper) { startIdx = i; break; }
+        }
+        setItems(paths, startIdx);
+        launcher.selectedIndex = startIdx;
     }
 
-    SafeProcess {
-        id: scanProc
-        failMessage: "wallpaper scan failed — check folder path"
-        onRead: data => { root._scanLines.push(data.trim()); }
-        onFinished: {
-            const sorted = root._scanLines.slice().sort();
-            root._fullPaths = sorted;
-            root._scanLines = [];
-            root.loaded = true;
-            // Jump to the active wallpaper
-            let startIdx = 0;
-            for (let i = 0; i < sorted.length; i++) {
-                if (sorted[i] === root.activeWallpaper) {
-                    root.activeIndex = i;
-                    startIdx = i;
-                    break;
-                }
-            }
-            root.setItems(sorted, startIdx);
-            root.launcher.selectedIndex = startIdx;
-        }
-        onFailed: {
-            root.loaded = true;
-        }
+    Connections {
+        target: WallpaperScanner
+        function onScanned() { root._syncItems(); }
     }
 
     // ── Search ──
     function onSearch(text) {
-        if (text === "") { setItems(_fullPaths, activeIndex); return; }
-        setItems(filterByQuery(text, _fullPaths,
+        setItems(filterByQuery(text, WallpaperScanner.paths,
             (item, q) => item.toLowerCase().indexOf(q) >= 0));
     }
 
     // ── Activate ──
     function onActivate(index) {
         if (!_validIndex(index)) return;
-        const path = _sourceData[index];
-        activeIndex = _fullPaths.indexOf(path);
-        ShellActions.setWallpaper(path);
+        ShellActions.setWallpaper(_sourceData[index]);
     }
 
     // ── Card delegate ──
