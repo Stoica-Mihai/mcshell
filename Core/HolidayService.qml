@@ -17,6 +17,9 @@ Singleton {
     // this as a binding dependency so stale-empty years get a retry when
     // the network comes back up.
     property int _retryTick: 0
+    // Plain property (not a binding) so the Connections handler compares
+    // against the value it last observed, not the live one.
+    property int _lastConnectivity: NetworkConnectivity.None
 
     function holidayFor(date) {
         if (!date) return "";
@@ -101,12 +104,12 @@ Singleton {
 
     Connections {
         target: Networking
-        property int _prev: Networking.connectivity
         function onConnectivityChanged() {
             const curr = Networking.connectivity;
-            if (curr === NetworkConnectivity.Full && _prev !== NetworkConnectivity.Full)
+            if (curr === NetworkConnectivity.Full
+                && root._lastConnectivity !== NetworkConnectivity.Full)
                 root._retryTick++;
-            _prev = curr;
+            root._lastConnectivity = curr;
         }
     }
 }

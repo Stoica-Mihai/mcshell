@@ -40,8 +40,12 @@ Item {
     visible: true
 
     // ── Fetch trigger ─────────────────────────────────────
+    // Gate on connectivity here so we don't flip fetchState → loading while
+    // offline — the Connections block below picks up the retry once the
+    // network comes back.
     function fetch() {
         if (!UserSettings.weatherConfigured) return;
+        if (Networking.connectivity !== NetworkConnectivity.Full) return;
         root.fetchState = "loading";
         _fetcher.fetch(
             `https://api.open-meteo.com/v1/forecast`
@@ -63,25 +67,23 @@ Item {
             root._onFetchSuccess(data);
         }
         onError: reason => {
-            if (reason === "offline") {
-                // Network not up yet — revert to idle, the Connections block
-                // below will retry when connectivity flips to Full.
-                root.fetchState = "idle";
-                return;
-            }
             root._onFetchError(reason === "parse" ? "Could not parse weather data" : "Network error");
         }
     }
 
+    // Retry when the network genuinely transitions from not-Full to Full.
+    // _lastConnectivity is a plain property (not a binding) so the handler
+    // compares against the value it last observed, not the live one.
+    property int _lastConnectivity: NetworkConnectivity.None
     Connections {
         target: Networking
-        property int _prev: Networking.connectivity
         function onConnectivityChanged() {
             const curr = Networking.connectivity;
-            if (curr === NetworkConnectivity.Full && _prev !== NetworkConnectivity.Full
+            if (curr === NetworkConnectivity.Full
+                && root._lastConnectivity !== NetworkConnectivity.Full
                 && UserSettings.weatherConfigured)
                 root.fetch();
-            _prev = curr;
+            root._lastConnectivity = curr;
         }
     }
 
@@ -179,19 +181,21 @@ Item {
     }
 
     // ── Display ───────────────────────────────────────────
+    // True while we have no usable reading yet (fresh startup, network still
+    // coming up, or a retry pending after an error).
+    readonly property bool _noData: fetchState !== "ok" && tempC === 0
     readonly property string _displayIcon: {
-        if (!UserSettings.weatherConfigured) return Theme.iconWeatherQuestion;
+        if (!UserSettings.weatherConfigured || _noData) return Theme.iconWeatherQuestion;
         if (fetchState === "error") return Theme.iconWeatherError;
         return iconForCode(weatherCode);
     }
     readonly property color _displayColor: {
-        if (!UserSettings.weatherConfigured) return Theme.fgDim;
+        if (!UserSettings.weatherConfigured || _noData) return Theme.fgDim;
         if (fetchState === "error") return Theme.red;
         return colorForCode(weatherCode);
     }
     readonly property string _displayLabel: {
-        if (!UserSettings.weatherConfigured || fetchState === "error") return "--°";
-        if (fetchState === "loading" && tempC === 0) return "--°";
+        if (!UserSettings.weatherConfigured || fetchState === "error" || _noData) return "--°";
         return Math.round(tempC) + "°";
     }
 
