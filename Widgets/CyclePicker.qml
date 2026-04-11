@@ -43,7 +43,7 @@ Item {
         text: {
             if (root._currentLabel === "") return "";
             if (!root.enabled) return root._currentLabel;
-            return Theme.iconArrowLeft + "  " + root._currentLabel + "  " + Theme.iconArrowRight;
+            return `${Theme.iconArrowLeft}  ${root._currentLabel}  ${Theme.iconArrowRight}`;
         }
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeSmall

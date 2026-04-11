@@ -612,7 +612,7 @@ PanelWindow {
 
             if (!launcher.hasItems)
                 return Theme.hintBack;
-            var parts = [(launcher.selectedIndex + 1) + " / " + launcher.currentCount, Theme.hintNav];
+            var parts = [`${launcher.selectedIndex + 1} / ${launcher.currentCount}`, Theme.hintNav];
             if (launcher.activeCategory.legendHint)
                 parts.push(launcher.activeCategory.legendHint);
             parts.push(Theme.hintBack);

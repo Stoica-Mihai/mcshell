@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
-import Quickshell.Io
 import qs.Config
+import qs.Core
 import qs.Widgets
 
 // Weather dropdown content.
@@ -19,7 +19,7 @@ Item {
 
     property var geoResults: []
     property string geoError: ""
-    property bool geoLoading: false
+    readonly property bool geoLoading: _geocodeFetcher.loading
     property int selectedIndex: 0
 
     readonly property real fullHeight: content.implicitHeight + Theme.spacingNormal * 2
@@ -46,9 +46,9 @@ Item {
     }
 
     function _resetGeocode() {
+        _geocodeFetcher.cancel();
         geoResults = [];
         geoError = "";
-        geoLoading = false;
         searchField.text = "";
     }
 
@@ -59,13 +59,11 @@ Item {
             geoError = "";
             return;
         }
-        geoLoading = true;
         geoError = "";
-        const url = "https://geocoding-api.open-meteo.com/v1/search"
-            + "?name=" + encodeURIComponent(query.trim())
-            + "&count=8&language=en&format=json";
-        geocodeProc.command = ["curl", "-s", "--max-time", "8", url];
-        geocodeProc.running = true;
+        _geocodeFetcher.fetch(
+            `https://geocoding-api.open-meteo.com/v1/search`
+            + `?name=${encodeURIComponent(query.trim())}`
+            + `&count=8&language=en&format=json`);
     }
 
     Timer {
@@ -74,45 +72,36 @@ Item {
         onTriggered: root._doGeocode(searchField.text)
     }
 
-    Process {
-        id: geocodeProc
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const data = JSON.parse(this.text);
-                    const results = data.results ?? [];
-                    const items = [];
-                    for (let i = 0; i < results.length; i++) {
-                        const r = results[i];
-                        const parts = [r.name];
-                        if (r.admin1 && r.admin1 !== r.name) parts.push(r.admin1);
-                        if (r.country) parts.push(r.country);
-                        items.push({
-                            name: r.name,
-                            admin1: r.admin1 ?? "",
-                            country: r.country ?? "",
-                            countryCode: r.country_code ?? "",
-                            latitude: r.latitude,
-                            longitude: r.longitude,
-                            displayName: parts.join(", ")
-                        });
-                    }
-                    root.geoResults = items;
-                    root.selectedIndex = 0;
-                    root.geoError = items.length === 0 ? "No cities found" : "";
-                } catch (e) {
-                    root.geoError = "Could not reach geocoding service";
-                    root.geoResults = [];
-                }
-                root.geoLoading = false;
+    JsonFetcher {
+        id: _geocodeFetcher
+        timeoutSeconds: 8
+        onSuccess: data => {
+            const results = data.results ?? [];
+            const items = [];
+            for (let i = 0; i < results.length; i++) {
+                const r = results[i];
+                const parts = [r.name];
+                if (r.admin1 && r.admin1 !== r.name) parts.push(r.admin1);
+                if (r.country) parts.push(r.country);
+                items.push({
+                    name: r.name,
+                    admin1: r.admin1 ?? "",
+                    country: r.country ?? "",
+                    countryCode: r.country_code ?? "",
+                    latitude: r.latitude,
+                    longitude: r.longitude,
+                    displayName: parts.join(", ")
+                });
             }
+            root.geoResults = items;
+            root.selectedIndex = 0;
+            root.geoError = items.length === 0 ? "No cities found" : "";
         }
-        onExited: (code) => {
-            if (code !== 0 && root.geoLoading) {
-                root.geoError = "Network error";
-                root.geoResults = [];
-                root.geoLoading = false;
-            }
+        onError: reason => {
+            root.geoResults = [];
+            root.geoError = reason === "offline" ? "No network connection"
+                : reason === "parse" ? "Could not reach geocoding service"
+                : "Network error";
         }
     }
 
@@ -472,7 +461,7 @@ Item {
 
                     Text {
                         text: weather
-                            ? "Feels " + Math.round(weather.feelsLike) + "° · Humidity " + weather.humidity + "%"
+                            ? `Feels ${Math.round(weather.feelsLike)}° · Humidity ${weather.humidity}%`
                             : ""
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeSmall
@@ -616,9 +605,9 @@ Item {
                 Layout.topMargin: Theme.spacingTiny
                 visible: weather && weather.lastRefresh.getTime() > 0
                 text: weather
-                    ? "Updated " + weather.lastRefresh.toLocaleTimeString(
+                    ? `Updated ${weather.lastRefresh.toLocaleTimeString(
                         Qt.locale(),
-                        UserSettings.clockTimeFormat === "12h" ? "h:mm AP" : "HH:mm")
+                        UserSettings.clockTimeFormat === "12h" ? "h:mm AP" : "HH:mm")}`
                     : ""
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeMini

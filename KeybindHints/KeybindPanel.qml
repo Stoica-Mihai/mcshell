@@ -330,8 +330,8 @@ PanelWindow {
                         if (!parser.filteredGroups[i].isHeader) shown++;
                     }
                     if (searchArea.text && shown === 0) return "No matching keybindings";
-                    if (searchArea.text) return shown + " of " + total + " keybindings";
-                    return total + " keybinding" + (total !== 1 ? "s" : "") + " from niri config";
+                    if (searchArea.text) return `${shown} of ${total} keybindings`;
+                    return `${total} keybinding${total !== 1 ? "s" : ""} from niri config`;
                 }
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeSmall

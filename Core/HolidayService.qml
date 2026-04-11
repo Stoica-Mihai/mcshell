@@ -2,7 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import Quickshell.Io
+import Quickshell.Networking
 import qs.Config
 
 // Public holidays for the weather location's country.
@@ -13,6 +13,10 @@ Singleton {
 
     property var _cache: ({})
     property var _pending: ({})
+    // Bumped on every false→Full connectivity transition. _cachedMap takes
+    // this as a binding dependency so stale-empty years get a retry when
+    // the network comes back up.
+    property int _retryTick: 0
 
     function holidayFor(date) {
         if (!date) return "";
@@ -34,11 +38,14 @@ Singleton {
     }
 
     // Side effect: kicks off a background fetch on cache miss so the next
-    // binding re-evaluation picks up the data once it arrives.
+    // binding re-evaluation picks up the data once it arrives. _retryTick
+    // is a binding dependency — a false→Full connectivity transition bumps
+    // it, which re-evaluates every consumer binding and retries the fetch.
     function _cachedMap(year) {
+        _retryTick;
         const cc = UserSettings.weatherCountryCode;
         if (!cc || !year) return null;
-        const key = year + "-" + cc;
+        const key = `${year}-${cc}`;
         const map = _cache[key];
         if (!map) { ensureYear(year); return null; }
         return map;
@@ -47,46 +54,40 @@ Singleton {
     function ensureYear(year) {
         const cc = UserSettings.weatherCountryCode;
         if (!cc || !year) return;
-        const key = year + "-" + cc;
+        const key = `${year}-${cc}`;
         if (_cache[key] || _pending[key]) return;
+        // Single-flight: drop if another year is in-flight. The consumer
+        // binding will re-eval and call back in once the running fetch
+        // completes (its _cache assignment triggers re-evaluation).
+        if (_fetcher.loading) return;
         _pending[key] = true;
-        const url = "https://date.nager.at/api/v3/PublicHolidays/" + year + "/" + cc;
-        _fetchProc.command = ["curl", "-s", "--max-time", "10", url];
-        _fetchProc._pendingKey = key;
-        _fetchProc.running = true;
+        _fetcher._pendingKey = key;
+        _fetcher.fetch(`https://date.nager.at/api/v3/PublicHolidays/${year}/${cc}`);
     }
 
-    Process {
-        id: _fetchProc
+    JsonFetcher {
+        id: _fetcher
         property string _pendingKey: ""
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const key = _fetchProc._pendingKey;
-                // Skip if the pending key was cleared (e.g. country change mid-flight)
-                if (!root._pending[key]) return;
-                try {
-                    const arr = JSON.parse(this.text);
-                    const map = {};
-                    for (let i = 0; i < arr.length; i++) {
-                        const entry = arr[i];
-                        if (entry && entry.date) {
-                            map[entry.date] = entry.localName || entry.name || "";
-                        }
-                    }
-                    const copy = Object.assign({}, root._cache);
-                    copy[key] = map;
-                    root._cache = copy;
-                } catch (e) {
-                    console.warn("HolidayService: parse failed for", key);
+        onSuccess: data => {
+            const key = _fetcher._pendingKey;
+            if (!root._pending[key]) return;
+            const map = {};
+            for (let i = 0; i < data.length; i++) {
+                const entry = data[i];
+                if (entry && entry.date) {
+                    map[entry.date] = entry.localName || entry.name || "";
                 }
-                delete root._pending[key];
             }
+            const copy = Object.assign({}, root._cache);
+            copy[key] = map;
+            root._cache = copy;
+            delete root._pending[key];
         }
-        onExited: code => {
-            if (code !== 0) {
-                console.warn("HolidayService: fetch failed for", _fetchProc._pendingKey, "(exit " + code + ")");
-                delete root._pending[_fetchProc._pendingKey];
-            }
+        onError: reason => {
+            const key = _fetcher._pendingKey;
+            delete root._pending[key];
+            if (reason !== "offline")
+                console.warn(`HolidayService: fetch failed for ${key} (${reason})`);
         }
     }
 
@@ -95,6 +96,17 @@ Singleton {
         function onWeatherCountryCodeChanged() {
             root._cache = ({});
             root._pending = ({});
+        }
+    }
+
+    Connections {
+        target: Networking
+        property int _prev: Networking.connectivity
+        function onConnectivityChanged() {
+            const curr = Networking.connectivity;
+            if (curr === NetworkConnectivity.Full && _prev !== NetworkConnectivity.Full)
+                root._retryTick++;
+            _prev = curr;
         }
     }
 }

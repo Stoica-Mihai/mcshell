@@ -297,9 +297,9 @@ PanelWindow {
         text: {
             if (root._filtered.length === 0) return "";
             return Theme.legend(
-                (root.selectedIndex + 1) + " / " + root._filtered.length,
+                `${root.selectedIndex + 1} / ${root._filtered.length}`,
                 Theme.hintNav,
-                Theme.hintEnter + " focus",
+                `${Theme.hintEnter} focus`,
                 Theme.hintClose
             );
         }

@@ -199,13 +199,13 @@ QtObject {
         if (spawnMatch) {
             const cmd = spawnMatch[1].split("/").pop(); // basename
             const args = spawnMatch[2].trim().replace(/"/g, "");
-            return "Run: " + cmd + (args ? " " + args : "");
+            return args ? `Run: ${cmd} ${args}` : `Run: ${cmd}`;
         }
         const spawnSimple = s.match(/^spawn\s+(\S+)(.*)$/);
         if (spawnSimple) {
             const cmd = spawnSimple[1].replace(/"/g, "").split("/").pop();
             const args = spawnSimple[2].trim().replace(/"/g, "");
-            return "Run: " + cmd + (args ? " " + args : "");
+            return args ? `Run: ${cmd} ${args}` : `Run: ${cmd}`;
         }
 
         // Replace hyphens with spaces and capitalize

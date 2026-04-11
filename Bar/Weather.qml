@@ -1,12 +1,13 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
+import Quickshell.Networking
 import qs.Config
+import qs.Core
 
 // Weather indicator — icon + temperature, click to toggle popup.
-// Fetches from Open-Meteo (free, no API key) using curl via SafeProcess.
-// Spins its icon while fetching. Auto-refreshes every 30 minutes.
+// Fetches from Open-Meteo (free, no API key) via Core/JsonFetcher.
+// Auto-refreshes every 30 minutes and when the network becomes available.
 Item {
     id: root
 
@@ -42,35 +43,45 @@ Item {
     function fetch() {
         if (!UserSettings.weatherConfigured) return;
         root.fetchState = "loading";
-        const url = "https://api.open-meteo.com/v1/forecast"
-            + "?latitude=" + UserSettings.weatherLat
-            + "&longitude=" + UserSettings.weatherLon
-            + "&current_weather=true"
-            + "&current=relativehumidity_2m,apparent_temperature"
-            + "&hourly=temperature_2m,weathercode"
-            + "&daily=temperature_2m_max,temperature_2m_min,weathercode"
-            + "&forecast_days=5"
-            + "&timezone=auto";
-        fetchProc.command = ["curl", "-s", "--max-time", "10", url];
-        fetchProc.running = true;
+        _fetcher.fetch(
+            `https://api.open-meteo.com/v1/forecast`
+            + `?latitude=${UserSettings.weatherLat}&longitude=${UserSettings.weatherLon}`
+            + `&current_weather=true`
+            + `&current=relativehumidity_2m,apparent_temperature`
+            + `&hourly=temperature_2m,weathercode`
+            + `&daily=temperature_2m_max,temperature_2m_min,weathercode`
+            + `&forecast_days=5&timezone=auto`);
     }
 
-    Process {
-        id: fetchProc
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const data = JSON.parse(this.text);
-                    if (!data.current_weather) throw new Error("No current_weather in response");
-                    root._onFetchSuccess(data);
-                } catch (e) {
-                    root._onFetchError("Could not parse weather data");
-                }
+    JsonFetcher {
+        id: _fetcher
+        onSuccess: data => {
+            if (!data.current_weather) {
+                root._onFetchError("Could not parse weather data");
+                return;
             }
+            root._onFetchSuccess(data);
         }
-        onExited: (code) => {
-            if (code !== 0 && root.fetchState === "loading")
-                root._onFetchError("Network error");
+        onError: reason => {
+            if (reason === "offline") {
+                // Network not up yet — revert to idle, the Connections block
+                // below will retry when connectivity flips to Full.
+                root.fetchState = "idle";
+                return;
+            }
+            root._onFetchError(reason === "parse" ? "Could not parse weather data" : "Network error");
+        }
+    }
+
+    Connections {
+        target: Networking
+        property int _prev: Networking.connectivity
+        function onConnectivityChanged() {
+            const curr = Networking.connectivity;
+            if (curr === NetworkConnectivity.Full && _prev !== NetworkConnectivity.Full
+                && UserSettings.weatherConfigured)
+                root.fetch();
+            _prev = curr;
         }
     }
 

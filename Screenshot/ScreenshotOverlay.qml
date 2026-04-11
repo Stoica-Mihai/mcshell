@@ -295,7 +295,7 @@ PanelWindow {
             Text {
                 id: sizeText
                 anchors.centerIn: parent
-                text: Math.round(root._selW) + " \u00d7 " + Math.round(root._selH)
+                text: `${Math.round(root._selW)} \u00d7 ${Math.round(root._selH)}`
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeSmall
                 color: Theme.fg

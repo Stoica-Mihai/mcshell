@@ -21,8 +21,7 @@ Item {
 
     function start() {
         const ts = new Date().toISOString().replace(/[:.]/g, "-").replace("T", "_").slice(0, 19);
-        const dir = Quickshell.env("HOME") + "/Videos";
-        _currentPath = dir + "/recording_" + ts + ".mp4";
+        _currentPath = `${Quickshell.env("HOME")}/Videos/recording_${ts}.mp4`;
         mkdirProc.running = true;
     }
 

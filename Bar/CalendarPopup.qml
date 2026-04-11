@@ -108,7 +108,7 @@ Item {
             Text {
                 visible: root.viewMode === "years"
                 property int startYear: root.viewYear - root.viewYear % 12
-                text: startYear + " \u2013 " + (startYear + 11)
+                text: `${startYear} \u2013 ${startYear + 11}`
                 color: Theme.fg
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize

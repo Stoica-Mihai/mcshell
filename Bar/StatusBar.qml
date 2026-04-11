@@ -398,7 +398,7 @@ Scope {
                                         if (!Networking.wifiEnabled) return "WiFi Off";
                                         if (!root._wifiConnected) return "WiFi On — Not connected";
                                         const net = root._connectedNetwork;
-                                        return "Connected to " + net.name + "\nSignal: " + Math.round(net.signalStrength * 100) + "%";
+                                        return `Connected to ${net.name}\nSignal: ${Math.round(net.signalStrength * 100)}%`;
                                     }
                                 }
                             }
@@ -423,8 +423,8 @@ Scope {
                                         if (!(root._btAdapter?.enabled ?? false)) return "Bluetooth Off";
                                         if (!root._btConnected) return "Bluetooth On — No device";
                                         const dev = root._connectedBtDevice;
-                                        let t = "Connected to " + (dev.name || "Unknown");
-                                        if (dev.batteryAvailable) t += "\nBattery: " + Math.round(dev.battery * 100) + "%";
+                                        let t = `Connected to ${dev.name || "Unknown"}`;
+                                        if (dev.batteryAvailable) t += `\nBattery: ${Math.round(dev.battery * 100)}%`;
                                         return t;
                                     }
                                 }

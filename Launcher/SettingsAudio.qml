@@ -12,7 +12,7 @@ SettingsPanel {
     readonly property string headerIcon: Theme.iconVolHigh
     readonly property string headerTitle: "Audio"
     readonly property string panelLegend: Theme.legend(Theme.hintUpDown, Theme.hintAdjust, Theme.hintEnter + " select", Theme.hintBack)
-    readonly property string headerSubtitle: (defaultSink?.description ?? "No output") + Theme.separator + volume + "%"
+    readonly property string headerSubtitle: `${defaultSink?.description ?? "No output"}${Theme.separator}${volume}%`
     readonly property color headerColor: Theme.accent
 
     // ── Output sinks ──

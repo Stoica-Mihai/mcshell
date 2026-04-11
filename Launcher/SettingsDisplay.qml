@@ -13,13 +13,13 @@ SettingsPanel {
     readonly property string headerTitle: "Display"
     readonly property string panelLegend: Theme.legend(Theme.hintUpDown, Theme.hintAdjust, Theme.hintEnter + " select", Theme.hintBack)
     readonly property string headerSubtitle: {
-        const bri = Brightness.percent + "%";
+        const bri = `${Brightness.percent}%`;
         const parts = [];
         if (UserSettings.nightLightMode === UserSettings.modeManual) parts.push("Night light manual");
         else if (UserSettings.nightLightMode === UserSettings.modeAuto) parts.push("Night light auto");
-        if (UserSettings.idleTimeout > 0) parts.push("Lock " + UserSettings.idleTimeout + "m");
-        if (UserSettings.notifAutoClean !== "never") parts.push("Clean " + UserSettings.notifAutoClean);
-        return parts.length > 0 ? bri + Theme.separator + parts.join(Theme.separator) : bri;
+        if (UserSettings.idleTimeout > 0) parts.push(`Lock ${UserSettings.idleTimeout}m`);
+        if (UserSettings.notifAutoClean !== "never") parts.push(`Clean ${UserSettings.notifAutoClean}`);
+        return parts.length > 0 ? `${bri}${Theme.separator}${parts.join(Theme.separator)}` : bri;
     }
     readonly property color headerColor: Theme.yellow
 

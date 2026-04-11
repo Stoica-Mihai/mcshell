@@ -19,7 +19,7 @@ LauncherCategory {
     legendHint: Theme.hintEnter + " apply"
     scanningState: !loaded || _fullPaths.length === 0
     scanningIcon: Theme.iconImage
-    scanningHint: loaded ? "No wallpapers found in " + UserSettings.wallpaperFolder : "Loading..."
+    scanningHint: loaded ? `No wallpapers found in ${UserSettings.wallpaperFolder}` : "Loading..."
 
     // ── Data ──
     property bool loaded: false

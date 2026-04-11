@@ -104,7 +104,7 @@ LauncherCategory {
             } else if (line === "FAILED") {
                 btTracker.status = "failed";
                 btTracker.autoClear();
-                NotificationDispatcher.send("Bluetooth", "Failed to connect to " + btTracker.targetId, Theme.notifNormal, "critical");
+                NotificationDispatcher.send("Bluetooth", `Failed to connect to ${btTracker.targetId}`, Theme.notifNormal, "critical");
             }
         }
         onFailed: {

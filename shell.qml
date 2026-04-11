@@ -45,12 +45,12 @@ ShellRoot {
     // test.sh's WARN filter relies on.
     function _resolveMode(kind, name, modes, mode) {
         if (!modes || modes.length === 0) {
-            console.warn("mcshell IPC: unknown " + kind + " '" + name + "'");
+            console.warn(`mcshell IPC: unknown ${kind} '${name}'`);
             return null;
         }
         const resolved = mode || modes[0];
         if (modes.indexOf(resolved) < 0) {
-            console.warn("mcshell IPC: " + kind + " '" + name + "' does not support mode '" + resolved + "' (valid: " + modes.join(", ") + ")");
+            console.warn(`mcshell IPC: ${kind} '${name}' does not support mode '${resolved}' (valid: ${modes.join(", ")})`);
             return null;
         }
         return resolved;
@@ -177,7 +177,7 @@ ShellRoot {
             const lines = [];
             for (let i = 0; i < entries.length; i++) {
                 const e = entries[i];
-                lines.push(i + "\t" + e.mimeType + "\t" + e.content.substring(0, 100));
+                lines.push(`${i}\t${e.mimeType}\t${e.content.substring(0, 100)}`);
             }
             return lines.join("\n");
         }

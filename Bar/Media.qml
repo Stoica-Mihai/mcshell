@@ -52,9 +52,9 @@ Item {
         const h = Math.floor(seconds / 3600);
         const m = Math.floor((seconds % 3600) / 60);
         const s = Math.floor(seconds % 60);
-        const pad = s < 10 ? "0" : "";
-        if (h > 0) return h + ":" + (m < 10 ? "0" : "") + m + ":" + pad + s;
-        return m + ":" + pad + s;
+        const ss = String(s).padStart(2, "0");
+        if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${ss}`;
+        return `${m}:${ss}`;
     }
 
     readonly property bool isLive: player && player.length > maxReasonableLength
@@ -87,7 +87,7 @@ Item {
             id: trackLabel
             Layout.maximumWidth: 200
             font.pixelSize: Theme.fontSizeSmall
-            text: root.artist ? root.artist + " - " + root.title : root.title
+            text: root.artist ? `${root.artist} - ${root.title}` : root.title
             onClicked: root.togglePopup()
         }
     }
