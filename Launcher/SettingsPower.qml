@@ -174,7 +174,7 @@ SettingsPanel {
         Layout.preferredHeight: Theme.settingsRowCompact
 
         Text {
-            text: Theme.iconBattery
+            text: Theme.iconTune
             font.family: Theme.iconFont
             font.pixelSize: Theme.fontSizeMedium
             color: Theme.accent

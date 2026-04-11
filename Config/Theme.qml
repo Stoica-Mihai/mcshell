@@ -525,6 +525,7 @@ Singleton {
     readonly property string iconBluetooth: "\uf294"
     readonly property string iconBluetoothOff: "\u{f00b2}"
     readonly property string iconSettings: "\uf013"
+    readonly property string iconTune: "\u{f062e}"  // MDI tune — EQ-style sliders, used for the power profile picker
     readonly property string iconSearch: "\uf002"
     readonly property string iconKeyboard: "\uf11c"
     readonly property string iconBell: "\uf0f3"
