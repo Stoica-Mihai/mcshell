@@ -15,7 +15,9 @@ SettingsPanel {
     // ── Header ──
     readonly property string headerIcon: Theme.iconShutdown
     readonly property string headerTitle: "Power"
-    readonly property string panelLegend: Theme.legend(Theme.hintUpDown, Theme.hintAdjust, Theme.hintEnter + " activate", Theme.hintBack)
+    readonly property string panelLegend: _confirmingItem >= 0
+        ? Theme.legend(Theme.hintEnter + " cancel", Theme.hintBack)
+        : Theme.legend(Theme.hintUpDown, Theme.hintAdjust, Theme.hintEnter + " activate", Theme.hintBack)
     readonly property string headerSubtitle: _profileAvailable ? profileNames[Math.max(0, _profileIndex)] : ""
     readonly property color headerColor: Theme.fg
 
@@ -81,10 +83,10 @@ SettingsPanel {
 
     // ── Actions ──
     readonly property var actions: [
-        { name: "Lock", icon: Theme.iconLock, danger: false },
-        { name: "Log out", icon: Theme.iconLogout, danger: false },
-        { name: "Reboot", icon: Theme.iconReboot, danger: true },
-        { name: "Shutdown", icon: Theme.iconShutdown, danger: true },
+        { name: "Lock",     icon: Theme.iconLock,     danger: false, run: () => ShellActions.lock() },
+        { name: "Log out",  icon: Theme.iconLogout,   danger: false, run: () => ShellActions.logout() },
+        { name: "Reboot",   icon: Theme.iconReboot,   danger: true,  run: () => ShellActions.reboot() },
+        { name: "Shutdown", icon: Theme.iconShutdown, danger: true,  run: () => ShellActions.shutdown() },
     ]
 
     property bool _profileAvailable: false
@@ -96,75 +98,65 @@ SettingsPanel {
         Component.onCompleted: running = true
     }
     itemCount: 5
-    function resetSelection() { selectedItem = 0; _cancelHold(); }
+    function resetSelection() { selectedItem = 0; _cancelConfirm(); }
 
-    // ── Hold-to-confirm countdown ──
-    readonly property int _holdDuration: 3000
+    // ── Confirmation countdown ──
+    // Danger actions (reboot, shutdown) arm a 3s countdown on first Enter,
+    // fire when it expires, and cancel on a second Enter press.
+    readonly property int _confirmDuration: 3000
     readonly property int _ringSize: 36
     readonly property real _ringCenter: _ringSize / 2
     readonly property real _ringRadius: (_ringSize - _ringStroke) / 2
     readonly property real _ringStroke: 2.5
 
-    property int _holdingItem: -1
-    property real _holdProgress: 0
+    property int _confirmingItem: -1
+    property real _confirmProgress: 0
+    readonly property int _remainingSeconds: Math.ceil((1 - _confirmProgress) * (_confirmDuration / 1000))
 
     NumberAnimation {
-        id: _holdAnim
+        id: _confirmAnim
         target: root
-        property: "_holdProgress"
+        property: "_confirmProgress"
         from: 0; to: 1
-        duration: root._holdDuration
+        duration: root._confirmDuration
         easing.type: Easing.Linear
-        onFinished: root._executeHeldAction()
-    }
-
-    function _cancelHold() {
-        _holdAnim.stop();
-        _holdingItem = -1;
-        _holdProgress = 0;
-    }
-
-    function _runAction(actionIdx) {
-        switch (actionIdx) {
-        case 0: ShellActions.lock(); break;
-        case 1: ShellActions.logout(); break;
-        case 2: ShellActions.reboot(); break;
-        case 3: ShellActions.shutdown(); break;
+        onFinished: {
+            const action = root.actions[root._confirmingItem - 1];
+            root._cancelConfirm();
+            action.run();
         }
     }
 
-    function _executeHeldAction() {
-        const actionIdx = _holdingItem - 1;
-        _cancelHold();
-        _runAction(actionIdx);
+    function _cancelConfirm() {
+        _confirmAnim.stop();
+        _confirmingItem = -1;
+        _confirmProgress = 0;
     }
 
     function activateItem() {
         if (selectedItem === 0) return;
-        if (_holdingItem >= 0) return; // already holding, ignore auto-repeat
-        const actionIdx = selectedItem - 1;
-        const action = actions[actionIdx];
+        const action = actions[selectedItem - 1];
 
-        // Non-danger: fire immediately
         if (!action.danger) {
-            _runAction(actionIdx);
+            action.run();
             return;
         }
 
-        // Danger: start hold countdown
-        _holdingItem = selectedItem;
-        _holdAnim.start();
+        // Second press while arming cancels.
+        if (_confirmingItem === selectedItem) {
+            _cancelConfirm();
+            return;
+        }
+
+        _confirmingItem = selectedItem;
+        _confirmAnim.start();
     }
 
-    function deactivateItem() {
-        // Key released — cancel if still counting down
-        if (_holdingItem >= 0) _cancelHold();
-    }
+    function deactivateItem() {}
 
-    // Cancel hold when navigating away
     onSelectedItemChanged: {
-        if (_holdingItem >= 0 && selectedItem !== _holdingItem)
-            _cancelHold();
+        if (_confirmingItem >= 0 && selectedItem !== _confirmingItem)
+            _cancelConfirm();
     }
 
     // Power profile row
@@ -202,11 +194,11 @@ SettingsPanel {
             selected: root.active && root.selectedItem === (index + 1)
             selectedColor: modelData.danger ? Theme.redLight : Theme.overlay
 
-            readonly property bool _isHolding: root._holdingItem === (index + 1)
-            readonly property color _holdColor: Qt.rgba(
-                Theme.accent.r + (Theme.red.r - Theme.accent.r) * root._holdProgress,
-                Theme.accent.g + (Theme.red.g - Theme.accent.g) * root._holdProgress,
-                Theme.accent.b + (Theme.red.b - Theme.accent.b) * root._holdProgress,
+            readonly property bool _isConfirming: root._confirmingItem === (index + 1)
+            readonly property color _confirmColor: Qt.rgba(
+                Theme.accent.r + (Theme.red.r - Theme.accent.r) * root._confirmProgress,
+                Theme.accent.g + (Theme.red.g - Theme.accent.g) * root._confirmProgress,
+                Theme.accent.b + (Theme.red.b - Theme.accent.b) * root._confirmProgress,
                 1.0)
 
             Text {
@@ -253,25 +245,25 @@ SettingsPanel {
                         fillColor: "transparent"
                         strokeWidth: root._ringStroke
                         capStyle: ShapePath.RoundCap
-                        strokeColor: _isHolding ? _holdColor : "transparent"
+                        strokeColor: _isConfirming ? _confirmColor : "transparent"
                         PathAngleArc {
                             centerX: root._ringCenter
                             centerY: root._ringCenter
                             radiusX: root._ringRadius
                             radiusY: root._ringRadius
                             startAngle: -90
-                            sweepAngle: _isHolding ? root._holdProgress * 360 : 0
+                            sweepAngle: _isConfirming ? root._confirmProgress * 360 : 0
                         }
                     }
                 }
 
-                // "hold" text inside ring
+                // Seconds countdown inside the ring (static "3" when idle).
                 Text {
                     anchors.centerIn: parent
-                    text: "hold"
+                    text: root._remainingSeconds
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeMini
-                    color: _isHolding ? _holdColor : Theme.fgDim
+                    color: _isConfirming ? _confirmColor : Theme.fgDim
                 }
             }
         }
