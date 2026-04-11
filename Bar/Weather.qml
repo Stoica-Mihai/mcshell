@@ -143,26 +143,6 @@ Item {
         errorMsg = msg;
     }
 
-    // ── Weather code → icon + color ───────────────────────
-    function iconForCode(code) {
-        if (code === 0) return Theme.iconSun;
-        if (code >= 1 && code <= 3) return Theme.iconCloudSun;
-        if (code === 45 || code === 48) return Theme.iconSmog;
-        if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return Theme.iconCloudRain;
-        if ((code >= 71 && code <= 77) || code === 85 || code === 86) return Theme.iconSnowflake;
-        if (code >= 95) return Theme.iconBolt;
-        return Theme.iconCloud;
-    }
-
-    function colorForCode(code) {
-        if (code === 0 || (code >= 1 && code <= 3)) return Theme.yellow;
-        if (code === 45 || code === 48) return Theme.fgDim;
-        if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82)) return Theme.cyan;
-        if ((code >= 71 && code <= 77) || code === 85 || code === 86) return Theme.fg;
-        if (code >= 95) return Theme.red;
-        return Theme.fgDim;
-    }
-
     Timer {
         interval: 30 * 60 * 1000
         running: UserSettings.weatherConfigured
@@ -187,12 +167,12 @@ Item {
     readonly property string _displayIcon: {
         if (!UserSettings.weatherConfigured || _noData) return Theme.iconWeatherQuestion;
         if (fetchState === "error") return Theme.iconWeatherError;
-        return iconForCode(weatherCode);
+        return WeatherCodes.icon(weatherCode);
     }
     readonly property color _displayColor: {
         if (!UserSettings.weatherConfigured || _noData) return Theme.fgDim;
         if (fetchState === "error") return Theme.red;
-        return colorForCode(weatherCode);
+        return WeatherCodes.color(weatherCode);
     }
     readonly property string _displayLabel: {
         if (!UserSettings.weatherConfigured || fetchState === "error" || _noData) return "--°";

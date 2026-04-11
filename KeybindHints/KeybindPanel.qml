@@ -4,10 +4,12 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import qs.Config
+import qs.Core
 import qs.Widgets
 
-PanelWindow {
+OverlayWindow {
     id: panel
+    namespace: "mcshell-keybinds"
 
     // ── Public API ──────────────────────────────────────
     property bool isOpen: false
@@ -55,7 +57,6 @@ PanelWindow {
 
     // ── Window setup ────────────────────────────────────
     visible: false
-    color: "transparent"
 
     anchors {
         top: true
@@ -63,11 +64,6 @@ PanelWindow {
         left: true
         right: true
     }
-
-    WlrLayershell.namespace: "mcshell-keybinds"
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-    WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
     // ── Parser ──────────────────────────────────────────
     KeybindParser {

@@ -4,10 +4,12 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Niri
 import qs.Config
+import qs.Core
 import qs.Widgets
 
-PanelWindow {
+OverlayWindow {
     id: root
+    namespace: "mcshell-window-switcher"
 
     property bool isOpen: false
     property int selectedIndex: 0
@@ -85,13 +87,7 @@ PanelWindow {
 
     // ── Window setup ────────────────────────────────────
     visible: false
-    color: "transparent"
     anchors { top: true; bottom: true; left: true; right: true }
-
-    WlrLayershell.namespace: "mcshell-window-switcher"
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-    WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
     // Backdrop
     Rectangle {

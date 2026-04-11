@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Shapes
 import Quickshell
 import Quickshell.Wayland
 import Quickshell.Bluetooth
@@ -131,22 +130,9 @@ Scope {
                 height: parent.height
                 width: Theme.barSideWidth
 
-                Shape {
-                    id: leftBg
+                BarSegment {
                     anchors.fill: parent
-                    preferredRendererType: Shape.CurveRenderer
-                    ShapePath {
-                        fillColor: barRect._bgColor
-                        strokeColor: "transparent"
-                        startX: 0; startY: 0
-                        PathLine { x: leftSection.width; y: 0 }
-                        PathLine { x: leftSection.width - Theme.barDiagSlant; y: leftSection.height }
-                        PathLine { x: 0; y: leftSection.height }
-                        PathLine { x: 0; y: 0 }
-                    }
-                }
-                BarBorder {
-                    anchors.fill: parent
+                    fillColor: barRect._bgColor
                     pts: [[0,0], [width,0], [width-Theme.barDiagSlant,height], [0,height]]
                 }
 
@@ -188,23 +174,10 @@ Scope {
                 width: Math.max(centerContent.implicitWidth + Theme.barDiagSlant * 2 + Theme.barSegmentPadding, Theme.minCenterWidth)
 
 
-                Shape {
-                    id: centerBg
+                // Trapezoid — narrow top, wide bottom: /----\
+                BarSegment {
                     anchors.fill: parent
-                    preferredRendererType: Shape.CurveRenderer
-                    ShapePath {
-                        fillColor: barRect._bgColor
-                        strokeColor: "transparent"
-                        // Trapezoid — narrow top, wide bottom: /----\
-                        startX: Theme.barDiagSlant; startY: 0
-                        PathLine { x: centerSection.width - Theme.barDiagSlant; y: 0 }
-                        PathLine { x: centerSection.width; y: centerSection.height }
-                        PathLine { x: 0; y: centerSection.height }
-                        PathLine { x: Theme.barDiagSlant; y: 0 }
-                    }
-                }
-                BarBorder {
-                    anchors.fill: parent
+                    fillColor: barRect._bgColor
                     pts: [[Theme.barDiagSlant,0], [width-Theme.barDiagSlant,0], [width,height], [0,height]]
                 }
 
@@ -274,22 +247,9 @@ Scope {
                 height: parent.height
                 width: Theme.barSideWidth
 
-                Shape {
-                    id: rightBg
+                BarSegment {
                     anchors.fill: parent
-                    preferredRendererType: Shape.CurveRenderer
-                    ShapePath {
-                        fillColor: barRect._bgColor
-                        strokeColor: "transparent"
-                        startX: 0; startY: 0
-                        PathLine { x: rightSection.width; y: 0 }
-                        PathLine { x: rightSection.width; y: rightSection.height }
-                        PathLine { x: Theme.barDiagSlant; y: rightSection.height }
-                        PathLine { x: 0; y: 0 }
-                    }
-                }
-                BarBorder {
-                    anchors.fill: parent
+                    fillColor: barRect._bgColor
                     pts: [[0,0], [width,0], [width,height], [Theme.barDiagSlant,height]]
                 }
 

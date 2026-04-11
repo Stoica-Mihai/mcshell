@@ -3,10 +3,12 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 import qs.Config
+import qs.Core
 import qs.Widgets
 
-PanelWindow {
+OverlayWindow {
     id: launcher
+    namespace: "mcshell-launcher"
 
     // ── Public API ──────────────────────────────────────
     property bool isOpen: false
@@ -110,13 +112,7 @@ PanelWindow {
 
     // ── Window setup ────────────────────────────────────
     visible: false
-    color: "transparent"
     anchors { top: true; bottom: true; left: true; right: true }
-
-    WlrLayershell.namespace: "mcshell-launcher"
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-    WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
     // ── Categories ──────────────────────────────────────
     property list<LauncherCategory> categories: [

@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import qs.Config
+import qs.Core
 
 // Background-layer wallpaper renderer.
 // Creates one PanelWindow per screen at the Background layer, displaying
@@ -18,13 +19,15 @@ Item {
     Variants {
         model: Quickshell.screens
 
-        delegate: PanelWindow {
+        delegate: OverlayWindow {
             id: wallpaperWindow
+            namespace: "mcshell-wallpaper"
+            layer: WlrLayer.Background
+            focusMode: WlrKeyboardFocus.None
 
             required property var modelData
             screen: modelData
 
-            color: "transparent"
             visible: true
 
             anchors {
@@ -33,10 +36,6 @@ Item {
                 left: true
                 right: true
             }
-
-            WlrLayershell.layer: WlrLayer.Background
-            WlrLayershell.namespace: "mcshell-wallpaper"
-            WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
             // Track which image layer is "front" for crossfade
             property bool showingFirst: true

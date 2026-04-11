@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.Notifications
 import qs.Config
+import qs.Core
 
 // Notification popup module.
 // Instantiates a NotificationServer (DBus notification daemon) and shows
@@ -235,19 +236,13 @@ Item {
     Variants {
         model: Quickshell.screens
 
-        delegate: PanelWindow {
+        delegate: OverlayWindow {
             id: popup
+            namespace: "mcshell-notifications"
+            focusMode: WlrKeyboardFocus.OnDemand
 
             required property var modelData
             screen: modelData
-
-            // Layer-shell setup
-            WlrLayershell.namespace: "mcshell-notifications"
-            WlrLayershell.layer: WlrLayer.Overlay
-            WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
-            WlrLayershell.exclusionMode: ExclusionMode.Ignore
-
-            color: "transparent"
 
             // Anchor top-right
             anchors {

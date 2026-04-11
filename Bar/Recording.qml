@@ -30,10 +30,11 @@ Item {
     }
 
     // Ensure output directory exists, detect focused output, then start
-    Process {
+    SafeProcess {
         id: mkdirProc
         command: ["mkdir", "-p", Quickshell.env("HOME") + "/Videos"]
-        onExited: outputDetect.running = true
+        failMessage: "failed to create recordings directory"
+        onFinished: outputDetect.running = true
     }
 
     Process {
@@ -53,6 +54,14 @@ Item {
     Process {
         id: recorder
         onExited: (code, status) => {
+            // wf-recorder exits non-zero on setup failures (missing codec, portal denial, etc.)
+            // SIGINT stop returns 0, so only a non-zero code here means the recording failed.
+            if (code !== 0) {
+                console.warn("[mcshell] wf-recorder failed: exit code", code);
+                NotificationDispatcher.send("Recording failed", `wf-recorder exit code ${code}`, 5000);
+                root._currentPath = "";
+                return;
+            }
             ClipboardHistory.addText(root._currentPath);
             NotificationDispatcher.send("Recording saved", root._currentPath, 5000);
             root._currentPath = "";

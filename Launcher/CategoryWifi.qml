@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell.Networking
 import qs.Config
 import qs.Core
+import qs.Widgets
 
 LauncherCategory {
     id: root
@@ -219,55 +220,29 @@ LauncherCategory {
                 }
 
                 // Password input (inside the card)
-                Rectangle {
+                StyledTextField {
+                    id: wifiPwField
                     visible: wifiStrip.showingPassword
                     Layout.alignment: Qt.AlignHCenter
                     Layout.preferredWidth: parent.width * 0.8
                     implicitHeight: 36
-                    radius: Theme.radiusMedium
-                    color: Qt.rgba(1, 1, 1, 0.04)
-                    border.width: 1
-                    border.color: wifiPwInput.activeFocus ? Theme.accent : Theme.border
+                    color: Theme.overlay
+                    icon: Theme.iconLock
+                    echoMode: TextInput.Password
+                    passwordCharacter: "\u25CF"
 
-                    RowLayout {
-                        anchors.fill: parent
-                        anchors.leftMargin: Theme.spacingMedium
-                        anchors.rightMargin: Theme.spacingMedium
-                        spacing: Theme.spacingNormal
+                    onVisibleChanged: if (visible) field.forceActiveFocus()
 
-                        Text {
-                            text: Theme.iconLock
-                            font.family: Theme.iconFont
-                            font.pixelSize: 12
-                            color: Theme.fgDim
-                            Layout.alignment: Qt.AlignVCenter
+                    field.Keys.onReturnPressed: {
+                        if (text.length > 0) {
+                            root.connectWithPassword(modelData.name, text);
+                            text = "";
+                            root.launcher.refocusSearch();
                         }
-
-                        TextInput {
-                            id: wifiPwInput
-                            Layout.fillWidth: true
-                            Layout.alignment: Qt.AlignVCenter
-                            color: Theme.fg
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize
-                            echoMode: TextInput.Password
-                            passwordCharacter: "\u25CF"
-                            clip: true
-
-                            onVisibleChanged: if (visible) forceActiveFocus()
-
-                            Keys.onReturnPressed: {
-                                if (text.length > 0) {
-                                    root.connectWithPassword(modelData.name, text);
-                                    text = "";
-                                    root.launcher.refocusSearch();
-                                }
-                            }
-                            Keys.onEscapePressed: {
-                                root.wifiPasswordSsid = "";
-                                root.launcher.refocusSearch();
-                            }
-                        }
+                    }
+                    field.Keys.onEscapePressed: {
+                        root.wifiPasswordSsid = "";
+                        root.launcher.refocusSearch();
                     }
                 }
             }

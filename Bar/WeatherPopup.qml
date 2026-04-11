@@ -440,10 +440,10 @@ Item {
                 spacing: Theme.spacingLarge
 
                 Text {
-                    text: weather ? weather.iconForCode(weather.weatherCode) : Theme.iconCloud
+                    text: weather ? WeatherCodes.icon(weather.weatherCode) : Theme.iconCloud
                     font.family: Theme.iconFont
                     font.pixelSize: 40
-                    color: weather ? weather.colorForCode(weather.weatherCode) : Theme.fgDim
+                    color: weather ? WeatherCodes.color(weather.weatherCode) : Theme.fgDim
                     Layout.alignment: Qt.AlignVCenter
                 }
 
@@ -453,7 +453,7 @@ Item {
                     spacing: 2
 
                     Text {
-                        text: weather ? _conditionName(weather.weatherCode) : ""
+                        text: weather ? WeatherCodes.name(weather.weatherCode) : ""
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSize
                         color: Theme.fg
@@ -514,10 +514,10 @@ Item {
 
                             Text {
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                text: weather.iconForCode(modelData.code)
+                                text: WeatherCodes.icon(modelData.code)
                                 font.family: Theme.iconFont
                                 font.pixelSize: 13
-                                color: index === 0 ? Theme.bgSolid : weather.colorForCode(modelData.code)
+                                color: index === 0 ? Theme.bgSolid : WeatherCodes.color(modelData.code)
                             }
 
                             Text {
@@ -566,15 +566,15 @@ Item {
                             Text {
                                 Layout.preferredWidth: 20
                                 horizontalAlignment: Text.AlignHCenter
-                                text: weather.iconForCode(modelData.code)
+                                text: WeatherCodes.icon(modelData.code)
                                 font.family: Theme.iconFont
                                 font.pixelSize: 13
-                                color: weather.colorForCode(modelData.code)
+                                color: WeatherCodes.color(modelData.code)
                             }
 
                             Text {
                                 Layout.fillWidth: true
-                                text: _conditionName(modelData.code)
+                                text: WeatherCodes.name(modelData.code)
                                 font.family: Theme.fontFamily
                                 font.pixelSize: Theme.fontSizeSmall
                                 color: Theme.fg
@@ -616,18 +616,4 @@ Item {
         }
     }
 
-    function _conditionName(code) {
-        if (code === 0) return "Clear";
-        if (code === 1) return "Mainly clear";
-        if (code === 2) return "Partly cloudy";
-        if (code === 3) return "Overcast";
-        if (code === 45 || code === 48) return "Fog";
-        if (code >= 51 && code <= 57) return "Drizzle";
-        if (code >= 61 && code <= 67) return "Rain";
-        if (code >= 71 && code <= 77) return "Snow";
-        if (code >= 80 && code <= 82) return "Rain showers";
-        if (code === 85 || code === 86) return "Snow showers";
-        if (code >= 95 && code <= 99) return "Thunderstorm";
-        return "Unknown";
-    }
 }

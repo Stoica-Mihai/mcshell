@@ -6,20 +6,16 @@ import Quickshell.Wayland._DataControl
 import qs.Config
 import qs.Core
 
-PanelWindow {
+OverlayWindow {
     id: root
+    namespace: "mcshell-screenshot"
+    focusMode: WlrKeyboardFocus.None
     // Always visible — WlrLayershell destroys the QQuickWindow on hide
     // (deleteOnInvisible), invalidating scene graph state. Use mask for
     // click-through and opacity for content visibility instead.
     visible: true
-    color: "transparent"
     mask: Region {}
     anchors { top: true; bottom: true; left: true; right: true }
-
-    WlrLayershell.namespace: "mcshell-screenshot"
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-    WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
     property string mode: "" // "full" | "area"
     property string _savePath: ""

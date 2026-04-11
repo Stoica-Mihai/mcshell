@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.Polkit
 import qs.Config
+import qs.Core
 
 // Polkit authentication agent — themed overlay dialog.
 // Registers with D-Bus on creation. Shows when a privileged action
@@ -26,14 +27,15 @@ Item {
     Variants {
         model: Quickshell.screens
 
-        PanelWindow {
+        OverlayWindow {
             id: overlay
+            namespace: "mcshell-polkit"
+            focusMode: agent.isActive ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
             required property var modelData
             screen: modelData
 
             visible: agent.isActive
-            color: "transparent"
 
             anchors {
                 top: true
@@ -41,11 +43,6 @@ Item {
                 left: true
                 right: true
             }
-
-            WlrLayershell.namespace: "mcshell-polkit"
-            WlrLayershell.layer: WlrLayer.Overlay
-            WlrLayershell.keyboardFocus: agent.isActive ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-            WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
             Connections {
                 target: agent

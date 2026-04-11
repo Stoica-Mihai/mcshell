@@ -7,6 +7,8 @@ Rectangle {
 
     property alias text: field.text
     property alias field: field
+    property alias echoMode: field.echoMode
+    property alias passwordCharacter: field.passwordCharacter
     property string placeholder: ""
     property string icon: ""
 
