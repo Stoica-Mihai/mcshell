@@ -10,7 +10,10 @@ PanelWindow {
     id: root
 
     property string namespace: "mcshell"
-    property int layer: WlrLayer.Overlay
+    // Default Top so normal user overlays (launcher, keybinds, window
+    // switcher, polkit, notifications) stack below truly topmost surfaces
+    // like the screenshot tool — which upgrades to Overlay explicitly.
+    property int layer: WlrLayer.Top
     property int focusMode: WlrKeyboardFocus.Exclusive
 
     color: "transparent"

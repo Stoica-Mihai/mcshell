@@ -9,6 +9,9 @@ import qs.Core
 OverlayWindow {
     id: root
     namespace: "mcshell-screenshot"
+    // Must be on the absolute-top Overlay layer — the frozen selection UI
+    // has to sit above every other mcshell surface.
+    layer: WlrLayer.Overlay
     focusMode: WlrKeyboardFocus.None
     // Always visible — WlrLayershell destroys the QQuickWindow on hide
     // (deleteOnInvisible), invalidating scene graph state. Use mask for

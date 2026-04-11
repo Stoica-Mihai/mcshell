@@ -76,8 +76,9 @@ PanelWindow {
     anchors { top: true; bottom: true; left: true; right: true }
 
     WlrLayershell.namespace: root.layershellNamespace
-    // Top layer (not Overlay) so higher-priority overlays (Screenshot tool,
-    // launcher, etc.) sit above this dropdown and receive input first.
+    // Top layer so ScreenshotOverlay (on Overlay) sits above and receives
+    // input first. Other user overlays are also Top and stacked as siblings
+    // by map order.
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: (isOpen && wantsKeyboardFocus)
         ? WlrKeyboardFocus.Exclusive
