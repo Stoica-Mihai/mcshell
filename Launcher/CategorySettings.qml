@@ -33,7 +33,6 @@ LauncherCategory {
 
     // ── Search ──
     function onSearch(text) {
-        if (text === "") { setItems(settingsCategories); return; }
         setItems(filterByQuery(text, settingsCategories,
             (item, q) => item.id.toLowerCase().indexOf(q) >= 0));
     }

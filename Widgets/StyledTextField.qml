@@ -12,6 +12,11 @@ Rectangle {
     property string placeholder: ""
     property string icon: ""
 
+    function reset() {
+        field.text = "";
+        field.forceActiveFocus();
+    }
+
     implicitHeight: 40
     radius: Theme.radiusMedium
     color: Theme.bgSolid

@@ -5,6 +5,7 @@ import Quickshell.Wayland
 import Quickshell.Services.Polkit
 import qs.Config
 import qs.Core
+import qs.Widgets
 
 // Polkit authentication agent — themed overlay dialog.
 // Registers with D-Bus on creation. Shows when a privileged action
@@ -14,14 +15,6 @@ Item {
 
     PolkitAgent {
         id: agent
-    }
-
-    property bool shakeNow: false
-
-    Timer {
-        id: shakeReset
-        interval: 400
-        onTriggered: root.shakeNow = false
     }
 
     Variants {
@@ -59,8 +52,7 @@ Item {
                         passwordInput.forceActiveFocus();
                 }
                 function onAuthenticationFailed() {
-                    root.shakeNow = true;
-                    shakeReset.start();
+                    shakeAnim.shake();
                     passwordInput.forceActiveFocus();
                 }
             }
@@ -95,22 +87,9 @@ Item {
                 Behavior on scale { NumberAnimation { duration: Theme.animSmooth; easing.type: Easing.OutCubic } }
 
                 // Shake on failed auth
-                transform: Translate {
-                    x: root.shakeNow ? shakeAnim.value : 0
-                }
+                transform: Translate { x: shakeAnim.value }
 
-                NumberAnimation {
-                    id: shakeAnim
-                    target: shakeAnim
-                    property: "value"
-                    from: -12
-                    to: 0
-                    duration: Theme.animElastic
-                    easing.type: Easing.OutElastic
-                    easing.amplitude: 2
-                    property real value: 0
-                    running: root.shakeNow
-                }
+                ShakeAnimation { id: shakeAnim }
 
                 ColumnLayout {
                     id: content

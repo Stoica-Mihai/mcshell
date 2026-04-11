@@ -46,15 +46,16 @@ OverlayWindow {
         if (_allWindows.length === 0) return;
         isOpen = true;
         visible = true;
-        _searchText = "";
-        // Start on the previous window for quick alt+tab toggle
+        searchBar.reset();
+        // Always start at 0 so a stale index from the previous session can't
+        // outlive a window that's been closed in the meantime.
         selectedIndex = 0;
+        // Then prefer the previously focused window for quick alt+tab toggle.
         if (_previousId >= 0) {
             for (let i = 0; i < _filtered.length; i++) {
                 if (_filtered[i].id === _previousId) { selectedIndex = i; break; }
             }
         }
-        searchBar.field.forceActiveFocus();
     }
 
     function close() {

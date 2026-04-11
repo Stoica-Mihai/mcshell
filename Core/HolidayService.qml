@@ -2,7 +2,6 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import Quickshell.Networking
 import qs.Config
 
 // Public holidays for the weather location's country.
@@ -17,9 +16,6 @@ Singleton {
     // this as a binding dependency so stale-empty years get a retry when
     // the network comes back up.
     property int _retryTick: 0
-    // Plain property (not a binding) so the Connections handler compares
-    // against the value it last observed, not the live one.
-    property int _lastConnectivity: NetworkConnectivity.None
 
     function holidayFor(date) {
         if (!date) return "";
@@ -102,14 +98,7 @@ Singleton {
         }
     }
 
-    Connections {
-        target: Networking
-        function onConnectivityChanged() {
-            const curr = Networking.connectivity;
-            if (curr === NetworkConnectivity.Full
-                && root._lastConnectivity !== NetworkConnectivity.Full)
-                root._retryTick++;
-            root._lastConnectivity = curr;
-        }
+    ConnectivityRetry {
+        onTriggered: root._retryTick++
     }
 }

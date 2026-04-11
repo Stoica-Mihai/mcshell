@@ -72,19 +72,8 @@ Item {
     }
 
     // Retry when the network genuinely transitions from not-Full to Full.
-    // _lastConnectivity is a plain property (not a binding) so the handler
-    // compares against the value it last observed, not the live one.
-    property int _lastConnectivity: NetworkConnectivity.None
-    Connections {
-        target: Networking
-        function onConnectivityChanged() {
-            const curr = Networking.connectivity;
-            if (curr === NetworkConnectivity.Full
-                && root._lastConnectivity !== NetworkConnectivity.Full
-                && UserSettings.weatherConfigured)
-                root.fetch();
-            root._lastConnectivity = curr;
-        }
+    ConnectivityRetry {
+        onTriggered: if (UserSettings.weatherConfigured) root.fetch()
     }
 
     function _onFetchSuccess(data) {

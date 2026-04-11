@@ -33,14 +33,22 @@ Scope {
     property int panelToggleTrigger: 0
     property string panelToggleName: ""
     property string panelToggleMode: ""
+    // Dispatch table for bar-popup-window panels. Any panel name not in the
+    // table falls through to the shared right-segment dropdown.
+    readonly property var _barPanels: ({
+        calendar: calendarWindow,
+        weather: weatherWindow,
+        clockSettings: clockSettingsWindow
+    })
     onPanelToggleTriggerChanged: {
-        if (panelToggleName === "calendar") calendarWindow.toggle();
-        else if (panelToggleName === "weather") {
-            if (panelToggleMode === "edit") weatherWindow.toggleEdit();
-            else weatherWindow.toggle();
+        if (!panelToggleName) return;
+        const win = _barPanels[panelToggleName];
+        if (!win) {
+            sharedDropdown.togglePanel(panelToggleName);
+            return;
         }
-        else if (panelToggleName === "clockSettings") clockSettingsWindow.toggle();
-        else if (panelToggleName) sharedDropdown.togglePanel(panelToggleName);
+        if (panelToggleMode === "edit" && win.toggleEdit) win.toggleEdit();
+        else win.toggle();
     }
 
     function dismissPopups() {
@@ -191,7 +199,9 @@ Scope {
                     Rectangle {
                         visible: root.isRecording
                         anchors.verticalCenter: parent.verticalCenter
-                        width: 8; height: 8; radius: Theme.radiusTiny
+                        width: Theme.indicatorDotSize
+                        height: Theme.indicatorDotSize
+                        radius: Theme.radiusTiny
                         color: Theme.red
 
                         SequentialAnimation on opacity {
@@ -447,9 +457,9 @@ Scope {
                                     anchors.right: parent.right
                                     anchors.topMargin: -3
                                     anchors.rightMargin: -5
-                                    width: Math.max(14, badgeText.implicitWidth + 6)
-                                    height: 14
-                                    radius: 7
+                                    width: Math.max(Theme.notifBadgeSize, badgeText.implicitWidth + 6)
+                                    height: Theme.notifBadgeSize
+                                    radius: Theme.notifBadgeSize / 2
                                     color: Theme.yellow
                                     z: 10
 

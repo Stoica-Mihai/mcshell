@@ -19,9 +19,8 @@ OverlayWindow {
     function open() {
         isOpen = true;
         visible = true;
-        searchArea.text = "";
+        searchArea.reset();
         selectedIndex = -1;
-        searchArea.field.forceActiveFocus();
     }
 
     function close() {

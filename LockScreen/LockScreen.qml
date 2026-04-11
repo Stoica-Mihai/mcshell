@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.Pam
 import qs.Config
+import qs.Widgets
 
 // Lock screen module using the Wayland ext_session_lock_v1 protocol.
 //
@@ -33,7 +34,6 @@ Item {
     property string statusMessage: ""
     property bool statusIsError: false
     property bool waitingForResponse: false
-    property bool shakeNow: false
 
     // ── PAM authentication ──────────────────────────────
     PamContext {
@@ -73,8 +73,7 @@ Item {
                 root.statusMessage = "Authentication failed";
                 root.statusIsError = true;
                 root.waitingForResponse = false;
-                root.shakeNow = true;
-                shakeResetTimer.start();
+                shakeAnim.shake();
                 pam.start();
             }
         }
@@ -86,12 +85,6 @@ Item {
             root.statusMessage = (msg.toLowerCase().indexOf("password") >= 0) ? "Authentication error" : (msg || "Authentication error");
             root.statusIsError = true;
         }
-    }
-
-    Timer {
-        id: shakeResetTimer
-        interval: 500
-        onTriggered: root.shakeNow = false
     }
 
     function tryUnlock() {
@@ -214,7 +207,7 @@ Item {
                         id: clockText
                         Layout.alignment: Qt.AlignHCenter
                         font.family: Theme.fontFamily
-                        font.pixelSize: 72
+                        font.pixelSize: Theme.fontSizeDisplay
                         font.weight: Font.Bold
                         color: Theme.fg
                         text: Qt.formatTime(clockTimer.currentTime, "HH:mm")
@@ -266,22 +259,9 @@ Item {
                         visible: lockSession.secure && !root.gracePeriodActive
 
                         // Shake animation on auth failure
-                        transform: Translate {
-                            id: shakeTranslate
-                            x: 0
-                        }
+                        transform: Translate { x: shakeAnim.value }
 
-                        SequentialAnimation {
-                            id: shakeAnim
-                            running: root.shakeNow
-                            loops: 1
-                            NumberAnimation { target: shakeTranslate; property: "x"; to: -12; duration: Theme.animLockShake; easing.type: Easing.OutCubic }
-                            NumberAnimation { target: shakeTranslate; property: "x"; to: 12; duration: Theme.animLockShake; easing.type: Easing.OutCubic }
-                            NumberAnimation { target: shakeTranslate; property: "x"; to: -8; duration: Theme.animLockShake; easing.type: Easing.OutCubic }
-                            NumberAnimation { target: shakeTranslate; property: "x"; to: 8; duration: Theme.animLockShake; easing.type: Easing.OutCubic }
-                            NumberAnimation { target: shakeTranslate; property: "x"; to: -4; duration: Theme.animLockShake; easing.type: Easing.OutCubic }
-                            NumberAnimation { target: shakeTranslate; property: "x"; to: 0; duration: Theme.animLockShake; easing.type: Easing.OutCubic }
-                        }
+                        ShakeAnimation { id: shakeAnim }
 
                         Rectangle {
                             anchors.fill: parent

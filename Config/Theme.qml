@@ -486,6 +486,11 @@ Singleton {
     readonly property int fontSizeLarge: 18
     readonly property int fontSizeXLarge: 20
     readonly property int fontSizeHero: 44
+    readonly property int fontSizeDisplay: 72
+    // Recording/status indicator dot size
+    readonly property int indicatorDotSize: 8
+    // Notification bell count badge
+    readonly property int notifBadgeSize: 14
     readonly property int iconSize: 16
     readonly property int iconSizeSmall: 24
     readonly property int iconSizeMedium: 28

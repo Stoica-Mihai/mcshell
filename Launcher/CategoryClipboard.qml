@@ -27,10 +27,7 @@ LauncherCategory {
     }
 
     function _refreshClip() {
-        if (launcher.searchText !== "")
-            onSearch(launcher.searchText);
-        else
-            setItems(ClipboardHistory.entries.values);
+        onSearch(launcher.searchText || "");
     }
 
     // ── Lifecycle ──
@@ -38,7 +35,6 @@ LauncherCategory {
 
     // ── Search ──
     function onSearch(text) {
-        if (text === "") { setItems(ClipboardHistory.entries.values); return; }
         setItems(filterByQuery(text, ClipboardHistory.entries.values,
             (item, q) => item.content.toLowerCase().indexOf(q) >= 0));
     }
