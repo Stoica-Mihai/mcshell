@@ -9,6 +9,7 @@ Item {
 
     property string icon: ""
     property string label: ""
+    property int badge: 0
     property bool alert: false
     property bool connected: false
     property bool active: false
@@ -30,12 +31,41 @@ Item {
         anchors.centerIn: parent
         spacing: 5
 
-        Text {
-            font.family: Theme.iconFont
-            font.pixelSize: Theme.iconSize
-            color: root.activeColor
-            text: root.icon
-            Behavior on color { ColorAnimation { duration: Theme.animFast } }
+        Item {
+            width: Theme.iconSize
+            height: Theme.iconSize
+
+            Text {
+                anchors.centerIn: parent
+                font.family: Theme.iconFont
+                font.pixelSize: Theme.iconSize
+                color: root.activeColor
+                text: root.icon
+                Behavior on color { ColorAnimation { duration: Theme.animFast } }
+            }
+
+            Rectangle {
+                visible: root.badge > 0
+                anchors.top: parent.top
+                anchors.right: parent.right
+                anchors.topMargin: -2
+                anchors.rightMargin: -4
+                width: Math.max(12, badgeLabel.implicitWidth + 4)
+                height: 12
+                radius: 6
+                color: Theme.accent
+                z: 10
+
+                Text {
+                    id: badgeLabel
+                    anchors.centerIn: parent
+                    text: root.badge > 99 ? "99+" : root.badge
+                    color: Theme.accentFg
+                    font.family: Theme.fontFamily
+                    font.pixelSize: 9
+                    font.bold: true
+                }
+            }
         }
 
         Text {

@@ -352,7 +352,7 @@ Scope {
                             CapsuleItem {
                                 id: wifiCapsule
                                 icon: Networking.wifiEnabled ? Theme.iconWifi : Theme.iconWifiOff
-                                label: root._wifiConnected ? root._connectedNetwork.name : ""
+                                badge: root._connectedNetworks.length
                                 alert: !Networking.wifiEnabled
                                 connected: root._wifiConnected
                                 onClicked: event => {
@@ -366,9 +366,12 @@ Scope {
                                     showWhen: wifiCapsule.hovered
                                     text: {
                                         if (!Networking.wifiEnabled) return "WiFi Off";
-                                        if (!root._wifiConnected) return "WiFi On — Not connected";
-                                        const net = root._connectedNetwork;
-                                        return `Connected to ${net.name}\nSignal: ${Math.round(net.signalStrength * 100)}%`;
+                                        if (!root._wifiConnected) return "Not connected";
+                                        return root._connectedNetworks.map(n => {
+                                            const signal = Math.round(n.signalStrength * 100);
+                                            const sec = n.security === WifiSecurityType.Open ? "Open" : "Secured";
+                                            return `${n.name}\n${signal}% signal · ${sec}`;
+                                        }).join("\n\n");
                                     }
                                 }
                             }
@@ -377,7 +380,7 @@ Scope {
                             CapsuleItem {
                                 id: btCapsule
                                 icon: root._btAdapter?.enabled ? Theme.iconBluetooth : Theme.iconBluetoothOff
-                                label: root._btConnected ? (root._connectedBtDevice.name || "") : ""
+                                badge: root._connectedBtDevices.length
                                 alert: !(root._btAdapter?.enabled ?? false)
                                 connected: root._btConnected
                                 onClicked: event => {
@@ -391,11 +394,21 @@ Scope {
                                     showWhen: btCapsule.hovered
                                     text: {
                                         if (!(root._btAdapter?.enabled ?? false)) return "Bluetooth Off";
-                                        if (!root._btConnected) return "Bluetooth On — No device";
-                                        const dev = root._connectedBtDevice;
-                                        let t = `Connected to ${dev.name || "Unknown"}`;
-                                        if (dev.batteryAvailable) t += `\nBattery: ${Math.round(dev.battery * 100)}%`;
-                                        return t;
+                                        if (!root._btConnected) return "No device";
+                                        const types = {
+                                            "audio-headset": "Headset", "audio-headphones": "Headphones",
+                                            "audio-card": "Speaker", "input-gaming": "Controller",
+                                            "input-keyboard": "Keyboard", "input-mouse": "Mouse",
+                                            "input-tablet": "Tablet", "phone": "Phone", "computer": "Computer"
+                                        };
+                                        return root._connectedBtDevices.map(d => {
+                                            const name = d.name || d.deviceName || "Unknown";
+                                            const type = types[d.icon] ?? "";
+                                            let info = type;
+                                            if (d.batteryAvailable)
+                                                info += (info ? " · " : "") + Math.round(d.battery * 100) + "%";
+                                            return info ? `${name}\n${info}` : name;
+                                        }).join("\n\n");
                                     }
                                 }
                             }
@@ -881,23 +894,25 @@ Scope {
         }
         return null;
     }
-    readonly property var _connectedNetwork: {
+    readonly property var _connectedNetworks: {
         const nets = _wifiDevice?.networks?.values ?? [];
+        const result = [];
         for (let i = 0; i < nets.length; i++) {
-            if (nets[i].connected) return nets[i];
+            if (nets[i].connected) result.push(nets[i]);
         }
-        return null;
+        return result;
     }
-    readonly property bool _wifiConnected: _connectedNetwork !== null
+    readonly property bool _wifiConnected: _connectedNetworks.length > 0
 
     // ── Bluetooth state ──
     readonly property var _btAdapter: Bluetooth.defaultAdapter
-    readonly property var _connectedBtDevice: {
+    readonly property var _connectedBtDevices: {
         const devs = _btAdapter?.devices?.values ?? [];
+        const result = [];
         for (let i = 0; i < devs.length; i++) {
-            if (devs[i].connected) return devs[i];
+            if (devs[i].connected) result.push(devs[i]);
         }
-        return null;
+        return result;
     }
-    readonly property bool _btConnected: _connectedBtDevice !== null
+    readonly property bool _btConnected: _connectedBtDevices.length > 0
 }
