@@ -13,14 +13,14 @@ Singleton {
 
     // ── Public API ──────────────────────────────────────
     function send(title, body, timeout, urgency) {
-        var cmd = ["notify-send", "-t", String(timeout || Theme.notifNormal)];
+        var cmd = ["notify-send", "-a", "mcshell", "-t", String(timeout || Theme.notifNormal)];
         if (urgency) cmd.push("-u", urgency);
         cmd.push(title, body);
         Quickshell.execDetached({ command: cmd });
     }
 
     function sendWithImage(title, body, imagePath, timeout) {
-        Quickshell.execDetached({ command: ["notify-send", "-t", String(timeout || Theme.notifLong),
+        Quickshell.execDetached({ command: ["notify-send", "-a", "mcshell", "-t", String(timeout || Theme.notifLong),
             "-h", "string:image-path:" + imagePath, title, body] });
     }
 
