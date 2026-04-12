@@ -90,5 +90,8 @@ Item {
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
         onClicked: event => root.clicked(event)
         onWheel: event => root.wheel(event)
+        // Wayland layer-shell can cancel the first pointer grab after
+        // startup (input region settling). Re-emit as a left click.
+        onCanceled: root.clicked({ button: Qt.LeftButton })
     }
 }
