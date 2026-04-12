@@ -25,12 +25,18 @@ Singleton {
     }
 
     // ── Bluetooth watchers ──────────────────────────────
-    Connections {
-        target: Bluetooth.defaultAdapter
-        function onEnabledChanged() {
+    // Debounce — BlueZ bounces enabled during state transitions
+    Timer {
+        id: _btDebounce
+        interval: 500
+        onTriggered: {
             if (!Bluetooth.defaultAdapter) return;
             root.send("Bluetooth", Bluetooth.defaultAdapter.enabled ? "Enabled" : "Disabled", Theme.notifShort);
         }
+    }
+    Connections {
+        target: Bluetooth.defaultAdapter
+        function onEnabledChanged() { _btDebounce.restart(); }
     }
 
     Variants {
