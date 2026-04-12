@@ -41,7 +41,9 @@ PopupWindow {
             anchor.rect.x = anchorX;
             anchor.rect.y = anchorSection.height;
         }
-        open();
+        // Defer open by one frame so content layout settles and
+        // fullHeight reads the real implicitHeight, not a stale 0.
+        Qt.callLater(open);
     }
 
     function closePanel() {
