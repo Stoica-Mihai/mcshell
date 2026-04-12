@@ -331,6 +331,7 @@ Scope {
                         readonly property bool capsuleActive:
                             sharedDropdown.activePanel === "volume"
                             || sharedDropdown.activePanel === "notifications"
+                            || sharedDropdown.activePanel === "sysinfo"
 
                         // Capsule background
                         Rectangle {
@@ -434,6 +435,12 @@ Scope {
                                 }
                             }
 
+                            // System waveform
+                            SysWaveform {
+                                active: sharedDropdown.activePanel === "sysinfo"
+                                onClicked: sharedDropdown.togglePanel("sysinfo")
+                            }
+
                             // Battery
                             CapsuleItem {
                                 visible: battery.present
@@ -520,6 +527,7 @@ Scope {
                         case "volume": return volumeContent.implicitHeight + Theme.popupPadding * 2;
                         case "notifications": return notifContent.fullHeight;
                         case "media": return mediaContent.implicitHeight + Theme.popupPadding * 2;
+                        case "sysinfo": return sysInfoContent.implicitHeight + Theme.popupPadding * 2;
                         case "tray": return Math.min(Theme.trayMenuMaxHeight, trayMenuColumn.implicitHeight + Theme.trayMenuPadding);
                         default: return 100;
                         }
@@ -556,6 +564,17 @@ Scope {
                             id: appVolume
                             Layout.fillWidth: true
                         }
+                    }
+
+                    // ── SysInfo section ───────────────────
+                    SysInfoPanel {
+                        id: sysInfoContent
+                        visible: sharedDropdown.activePanel === "sysinfo"
+                        enabled: visible
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.margins: Theme.popupPadding
                     }
 
                     // ── Notifications section ─────────────

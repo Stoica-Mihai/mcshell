@@ -2,6 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Qs.VibrantColor
 
 Singleton {
     id: root
@@ -644,5 +645,37 @@ Singleton {
         if (pct >= 15) return iconBattery20;
         if (pct >= 5) return iconBattery10;
         return iconBatteryAlert;
+    }
+
+    // CPU load color — accent (idle), yellow (busy), red (critical)
+    function loadColor(pct) {
+        if (pct > 60) return red;
+        if (pct > 30) return yellow;
+        if (pct > 10) return accent;
+        return fgDim;
+    }
+
+    // Temperature color — green (cool), yellow (warm), red (hot)
+    function tempColor(celsius) {
+        if (celsius > 80) return red;
+        if (celsius > 40) return yellow;
+        return green;
+    }
+
+    // Format bytes as human-readable GB
+    function toGB(bytes) { return (bytes / 1073741824).toFixed(1); }
+
+    // Format bytes/sec as speed string
+    function formatSpeed(bps) {
+        if (bps >= 1048576) return (bps / 1048576).toFixed(1) + " MB/s";
+        if (bps >= 1024) return (bps / 1024).toFixed(0) + " KB/s";
+        return bps.toFixed(0) + " B/s";
+    }
+
+    // Format seconds as compact uptime
+    function formatUptime(secs) {
+        const h = Math.floor(secs / 3600);
+        const m = Math.floor((secs % 3600) / 60);
+        return h > 0 ? h + "h " + m + "m" : m + "m";
     }
 }
