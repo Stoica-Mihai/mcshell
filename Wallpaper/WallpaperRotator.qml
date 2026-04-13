@@ -1,9 +1,11 @@
 import QtQuick
+import Quickshell
 import qs.Config
 import qs.Core
 
-// Auto-rotates the wallpaper on a fixed interval, picking a random image
-// from WallpaperScanner.paths that isn't the one currently shown.
+// Auto-rotates the wallpaper on a fixed interval.
+// Each targeted screen gets its own random/sequential pick.
+// wallpaperRotateScreen controls which screen(s) rotate.
 Item {
     id: root
 
@@ -20,15 +22,18 @@ Item {
     }
     readonly property bool _enabled: root._intervalValue > 0
 
-    function _pickNext() {
+    function _pickNext(exclude) {
         const list = WallpaperScanner.paths;
         if (list.length === 0) return "";
         if (list.length === 1) return list[0];
-        const current = UserSettings.wallpaperPath;
+        if (UserSettings.wallpaperRotateMode === "sequential") {
+            const idx = list.indexOf(exclude);
+            return list[(idx + 1) % list.length];
+        }
         let pick;
         do {
             pick = list[Math.floor(Math.random() * list.length)];
-        } while (pick === current);
+        } while (pick === exclude && list.length > 1);
         return pick;
     }
 
@@ -55,8 +60,24 @@ Item {
               && !root.locked
               && WallpaperScanner.paths.length > 1
         onTriggered: {
-            const path = root._pickNext();
-            if (path) ShellActions.setWallpaper(path);
+            const target = UserSettings.wallpaperRotateScreen;
+            const screens = Quickshell.screens;
+            const folder = UserSettings.wallpaperFolder;
+            const map = UserSettings.perScreenMap;
+            const batch = {};
+
+            for (let i = 0; i < screens.length; i++) {
+                const name = screens[i].name;
+                if (target !== "" && target !== name) continue;
+                const current = map[name]
+                    ? folder + "/" + map[name]
+                    : UserSettings.wallpaperPath;
+                const next = root._pickNext(current);
+                if (next) batch[name] = next;
+            }
+
+            if (Object.keys(batch).length > 0)
+                UserSettings.setWallpapersForScreens(batch);
         }
     }
 }

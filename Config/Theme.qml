@@ -555,7 +555,7 @@ Singleton {
     readonly property string iconClipboard: "\uf0ea"
     readonly property string iconImage: "\uf03e"
     readonly property string iconApps: "\uf0e8"
-    readonly property string iconMonitor: "\uf080"
+    readonly property string iconMonitor: "\u{f0379}"
 
     // Toggles
     readonly property string iconDndOn: "\uf1f6"
@@ -602,6 +602,8 @@ Singleton {
     // Wallpaper
     readonly property string iconWallpaper: "\u{f00ab}"
     readonly property string iconFolder: "\uf07b"
+    readonly property string iconShuffle: "\uf074"
+    readonly property string iconExpand: "\uf065"
 
     // ── Legend hint building blocks ─────────────────────
     readonly property string hintUpDown: "\u2191 \u2193 Items"

@@ -25,6 +25,8 @@ Singleton {
     property alias nightLightSunrise: adapter.nightLightSunrise
     property alias nightLightSunset: adapter.nightLightSunset
     property alias wallpaperFolder: adapter.wallpaperFolder
+    property alias wallpaperFillMode: adapter.wallpaperFillMode
+    property alias wallpaperRotateMode: adapter.wallpaperRotateMode
     property alias wallpaperRotateInterval: adapter.wallpaperRotateInterval
     // Canonical list for both the settings UI (ids + labels) and the rotator
     // (ms). Adding or renaming an interval means editing exactly this array.
@@ -38,6 +40,12 @@ Singleton {
         { id: "3h",  label: "3 hours",  ms: 3 * 60 * 60 * 1000 },
         { id: "6h",  label: "6 hours",  ms: 6 * 60 * 60 * 1000 },
         { id: "12h", label: "12 hours", ms: 12 * 60 * 60 * 1000 }
+    ]
+    readonly property var wallpaperFillModes: [
+        { id: "crop",    label: "Crop" },
+        { id: "fit",     label: "Fit" },
+        { id: "stretch", label: "Stretch" },
+        { id: "tile",    label: "Tile" }
     ]
     property alias themeName: adapter.themeName
     property alias idleTimeout: adapter.idleTimeout       // auto-lock timeout in minutes (0 = disabled)
@@ -77,16 +85,58 @@ Singleton {
         return adapter.wallpaperFolder + "/" + adapter.wallpaper;
     }
 
-    function setWallpaper(fullPath) {
+    // Reactive caches — avoids JSON.parse on every read.
+    readonly property var perScreenMap: JSON.parse(adapter.wallpaperPerScreen || "{}")
+    // Which screen to rotate: "" = all, or a specific screen name
+    property alias wallpaperRotateScreen: adapter.wallpaperRotateScreen
+
+    // Screen names with "All Screens" prefix — shared by wallpaper picker and settings.
+    readonly property var screenNames: {
+        const names = ["All Screens"];
+        const screens = Quickshell.screens;
+        for (let i = 0; i < screens.length; i++)
+            names.push(screens[i].name);
+        return names;
+    }
+
+    function _splitPath(fullPath) {
         const idx = fullPath.lastIndexOf("/");
-        if (idx >= 0) {
-            adapter.wallpaper = fullPath.substring(idx + 1);
-            const folder = fullPath.substring(0, idx);
-            if (folder !== adapter.wallpaperFolder)
-                adapter.wallpaperFolder = folder;
-        } else {
-            adapter.wallpaper = fullPath;
+        return idx >= 0
+            ? { folder: fullPath.substring(0, idx), filename: fullPath.substring(idx + 1) }
+            : { folder: "", filename: fullPath };
+    }
+
+    function _applyFolder(folder) {
+        if (folder && folder !== adapter.wallpaperFolder)
+            adapter.wallpaperFolder = folder;
+    }
+
+    function setWallpaper(fullPath) {
+        const parts = _splitPath(fullPath);
+        _applyFolder(parts.folder);
+        adapter.wallpaper = parts.filename;
+        if (adapter.wallpaperPerScreen !== "{}")
+            adapter.wallpaperPerScreen = "{}";
+    }
+
+    function setWallpaperForScreen(screenName, fullPath) {
+        const parts = _splitPath(fullPath);
+        _applyFolder(parts.folder);
+        const map = JSON.parse(adapter.wallpaperPerScreen || "{}");
+        map[screenName] = parts.filename;
+        adapter.wallpaperPerScreen = JSON.stringify(map);
+    }
+
+    // Batch version — applies multiple {screenName: fullPath} at once,
+    // producing a single adapter write (avoids N parse/stringify cycles).
+    function setWallpapersForScreens(assignments) {
+        const map = JSON.parse(adapter.wallpaperPerScreen || "{}");
+        for (const name in assignments) {
+            const parts = _splitPath(assignments[name]);
+            _applyFolder(parts.folder);
+            map[name] = parts.filename;
         }
+        adapter.wallpaperPerScreen = JSON.stringify(map);
     }
 
     readonly property bool loaded: configFile.loaded
@@ -112,6 +162,10 @@ Singleton {
             property string nightLightSunset: "18:30"
             property string wallpaper: ""
             property string wallpaperFolder: ""
+            property string wallpaperPerScreen: "{}"
+            property string wallpaperRotateScreen: ""
+            property string wallpaperFillMode: "crop"
+            property string wallpaperRotateMode: "shuffle"
             property string wallpaperRotateInterval: "off"
             property string themeName: ""
             property int idleTimeout: 0

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import qs.Config
 import qs.Core
 import qs.Wallpaper
@@ -17,28 +18,82 @@ LauncherCategory {
     tabLabel: "Wall"
     tabIcon: Theme.iconImage
     searchPlaceholder: "Search wallpapers..."
-    legendHint: Theme.hintEnter + " apply"
+    legendHint: Theme.legend(
+        Theme.hintEnter + " apply to " + _screenNames[_selectedScreen],
+        "Tab screen"
+    )
     scanningState: !WallpaperScanner.loaded || WallpaperScanner.paths.length === 0
     scanningIcon: Theme.iconImage
     scanningHint: WallpaperScanner.loaded
         ? `No wallpapers found in ${UserSettings.wallpaperFolder}`
         : "Loading..."
 
-    property string activeWallpaper: UserSettings.wallpaperPath
+    // ── Screen state ──
+    readonly property var _screenList: Quickshell.screens
+    readonly property var _screenNames: UserSettings.screenNames
+    property int _selectedScreen: 0  // 0 = All, 1+ = specific screen
+
+    // Wallpaper path for a given screen name
+    function _wallpaperFor(screenName) {
+        const map = UserSettings.perScreenMap;
+        const folder = UserSettings.wallpaperFolder;
+        if (map[screenName]) return folder + "/" + map[screenName];
+        return UserSettings.wallpaperPath;
+    }
+
+    // Precomputed reverse map: wallpaper path → [screen names].
+    // Evaluated once when perScreenMap/wallpaperPath changes, not per-card.
+    readonly property var _screensByPath: {
+        const map = UserSettings.perScreenMap;
+        const folder = UserSettings.wallpaperFolder;
+        const global = UserSettings.wallpaperPath;
+        const result = {};
+        for (let i = 0; i < _screenList.length; i++) {
+            const name = _screenList[i].name;
+            const wp = map[name] ? folder + "/" + map[name] : global;
+            if (!result[wp]) result[wp] = [];
+            result[wp].push(name);
+        }
+        return result;
+    }
+
+    // ── Focused screen detection ──
+    Process {
+        id: _focusDetect
+        command: ["niri", "msg", "-j", "focused-output"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let focused = "";
+                try { focused = JSON.parse(this.text).name; } catch(e) {}
+                for (let i = 0; i < root._screenNames.length; i++) {
+                    if (root._screenNames[i] === focused) {
+                        root._selectedScreen = i;
+                        break;
+                    }
+                }
+                root._syncItems();
+            }
+        }
+    }
 
     // ── Lifecycle ──
     function onTabEnter() {
         if (!WallpaperScanner.loaded) WallpaperScanner.scan();
-        else _syncItems();
+        else _focusDetect.running = true;
     }
 
     function onTabLeave() {}
 
     function _syncItems() {
         const paths = WallpaperScanner.paths;
+        // Land on the selected screen's wallpaper
+        let target = UserSettings.wallpaperPath;
+        if (_selectedScreen > 0)
+            target = _wallpaperFor(_screenNames[_selectedScreen]);
+
         let startIdx = 0;
         for (let i = 0; i < paths.length; i++) {
-            if (paths[i] === activeWallpaper) { startIdx = i; break; }
+            if (paths[i] === target) { startIdx = i; break; }
         }
         setItems(paths, startIdx);
         launcher.selectedIndex = startIdx;
@@ -46,7 +101,7 @@ LauncherCategory {
 
     Connections {
         target: WallpaperScanner
-        function onScanned() { root._syncItems(); }
+        function onScanned() { _focusDetect.running = true; }
     }
 
     // ── Search ──
@@ -58,7 +113,98 @@ LauncherCategory {
     // ── Activate ──
     function onActivate(index) {
         if (!_validIndex(index)) return;
-        ShellActions.setWallpaper(_sourceData[index]);
+        const path = _sourceData[index];
+        if (_selectedScreen === 0)
+            ShellActions.setWallpaper(path);
+        else
+            UserSettings.setWallpaperForScreen(_screenNames[_selectedScreen], path);
+    }
+
+    // ── Tab key cycles monitors ──
+    function onKeyPressed(event) {
+        if (event.key === Qt.Key_Tab) {
+            _selectedScreen = (_selectedScreen + 1) % _screenNames.length;
+            return true;
+        }
+        if (event.key === Qt.Key_Backtab) {
+            _selectedScreen = (_selectedScreen - 1 + _screenNames.length) % _screenNames.length;
+            return true;
+        }
+        return false;
+    }
+
+    // ── Monitor strip header ──
+    headerDelegate: Component {
+        Row {
+            spacing: Theme.spacingLarge
+
+            Repeater {
+                model: root._screenList
+
+                Rectangle {
+                    id: monitorSlot
+                    required property var modelData
+                    required property int index
+
+                    readonly property bool isSelected: root._selectedScreen === 0 || (index + 1) === root._selectedScreen
+                    readonly property string screenWp: root._wallpaperFor(modelData.name)
+
+                    width: 180
+                    height: 100
+                    color: "transparent"
+                    border.width: isSelected ? 2 : 1
+                    border.color: isSelected ? Theme.accent : Theme.border
+
+                    Behavior on border.color { ColorAnimation { duration: Theme.animFast } }
+
+                    OptImage {
+                        anchors.fill: parent
+                        anchors.margins: parent.border.width
+                        source: monitorSlot.screenWp ? "file://" + monitorSlot.screenWp : ""
+                        sourceSize.height: 100
+                    }
+
+                    // Gradient + label at bottom
+                    Rectangle {
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: parent.bottom
+                        height: 28
+                        color: "transparent"
+
+                        Rectangle {
+                            anchors.fill: parent
+                            gradient: Gradient {
+                                GradientStop { position: 0.0; color: "transparent" }
+                                GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.8) }
+                            }
+                        }
+
+                        Text {
+                            anchors.left: parent.left
+                            anchors.bottom: parent.bottom
+                            anchors.margins: Theme.spacingSmall
+                            text: modelData.name
+                            font.family: Theme.fontFamily
+                            font.pixelSize: Theme.fontSizeMini
+                            font.bold: true
+                            color: monitorSlot.isSelected ? Theme.accent : Theme.fg
+                        }
+                    }
+
+                    // Selected indicator dot
+                    Rectangle {
+                        anchors.top: parent.top
+                        anchors.right: parent.right
+                        anchors.margins: Theme.spacingSmall
+                        width: 8; height: 8
+                        radius: 4
+                        color: Theme.accent
+                        visible: monitorSlot.isSelected
+                    }
+                }
+            }
+        }
     }
 
     // ── Card delegate ──
@@ -66,16 +212,16 @@ LauncherCategory {
         CarouselStrip {
             id: wallStrip
             launcher: root.launcher
-            showBorder: isCurrent || isActive
+            showBorder: isCurrent || _assignedScreens.length > 0
 
             readonly property string wallPath: typeof modelData === "string" ? modelData : ""
-            readonly property bool isActive: wallPath === root.activeWallpaper
+            readonly property var _assignedScreens: root._screensByPath[wallPath] || []
             readonly property string fileName: {
                 const parts = wallPath.split("/");
                 return parts[parts.length - 1];
             }
 
-            // Collapsed: thumbnail (small sourceSize for fast loading)
+            // Collapsed: thumbnail
             OptImage {
                 anchors.fill: parent
                 visible: !wallStrip.isCurrent
@@ -83,7 +229,7 @@ LauncherCategory {
                 sourceSize.height: root.launcher.carouselHeight
             }
 
-            // Expanded: full preview with filename
+            // Expanded: full preview with filename + screen badges
             Item {
                 anchors.fill: parent
                 visible: wallStrip.isCurrent
@@ -120,23 +266,35 @@ LauncherCategory {
                     }
                 }
 
-                // Active checkmark
-                Rectangle {
+                // Screen badges (top-right)
+                Flow {
                     anchors.top: parent.top
                     anchors.right: parent.right
                     anchors.margins: Theme.spacingNormal
-                    width: 28
-                    height: 28
-                    radius: Theme.radiusLarge
-                    color: Theme.accent
-                    visible: wallStrip.isActive
+                    spacing: Theme.spacingTiny
+                    layoutDirection: Qt.RightToLeft
+                    visible: wallStrip._assignedScreens.length > 0
 
-                    Text {
-                        anchors.centerIn: parent
-                        text: Theme.iconCheck
-                        font.family: Theme.iconFont
-                        font.pixelSize: Theme.fontSizeBody
-                        color: Theme.bgSolid
+                    Repeater {
+                        model: wallStrip._assignedScreens
+
+                        Rectangle {
+                            required property string modelData
+                            height: 20
+                            width: badgeText.implicitWidth + Theme.spacingMedium * 2
+                            radius: Theme.radiusMedium
+                            color: Theme.accent
+
+                            Text {
+                                id: badgeText
+                                anchors.centerIn: parent
+                                text: modelData
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeMini
+                                font.bold: true
+                                color: Theme.bgSolid
+                            }
+                        }
                     }
                 }
             }

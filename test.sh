@@ -61,27 +61,25 @@ sleep "$DELAY"
 echo "Shell running. Testing IPC commands..."
 
 # ── 2. Toggle commands (open then close) ────────────
-# Stock quickshell IPC requires all typed parameters — pass "" for optional args.
-ipc_test toggleLauncher;                    ipc_test toggleLauncher
-ipc_test launcherApps "" "";            ipc_test toggleLauncher
-ipc_test launcherClipboard "" "";       ipc_test toggleLauncher
-ipc_test launcherWifi "" "";            ipc_test toggleLauncher
-ipc_test launcherBluetooth "" "";       ipc_test toggleLauncher
-ipc_test launcherWallpaper "" "";       ipc_test toggleLauncher
-ipc_test launcherSettings "" "";        ipc_test toggleLauncher
+# Launcher commands take a single string: "mode" or "mode target".
+ipc_test toggleLauncher;                          ipc_test toggleLauncher
+ipc_test launcherApps "";                         ipc_test toggleLauncher
+ipc_test launcherClipboard "";                    ipc_test toggleLauncher
+ipc_test launcherWifi "";                         ipc_test toggleLauncher
+ipc_test launcherBluetooth "";                    ipc_test toggleLauncher
+ipc_test launcherWallpaper "";                    ipc_test toggleLauncher
+ipc_test launcherSettings "";                     ipc_test toggleLauncher
 
-# New mode variants (valid)
-ipc_test launcherApps list "";            ipc_test toggleLauncher
-ipc_test launcherSettings list "";        ipc_test toggleLauncher
+# Mode variants
+ipc_test launcherApps list;                       ipc_test toggleLauncher
+ipc_test launcherSettings list;                   ipc_test toggleLauncher
 
-# Settings card pre-selection via `target` arg — one card × three modes covers
-# the full mode × target matrix. The dispatcher is target-agnostic, so testing
-# every card id would just duplicate coverage of the same code path.
-ipc_test launcherSettings view power;       ipc_test toggleLauncher
-ipc_test launcherSettings list power;       ipc_test toggleLauncher
-ipc_test launcherSettings edit power;       ipc_test toggleLauncher
+# Settings card pre-selection — "mode target" as one string
+ipc_test "launcherSettings" "view power";         ipc_test toggleLauncher
+ipc_test "launcherSettings" "list power";         ipc_test toggleLauncher
+ipc_test "launcherSettings" "edit power";         ipc_test toggleLauncher
 # edit with no target — lands on first card (selectedIndex 0)
-ipc_test launcherSettings edit "";        ipc_test toggleLauncher
+ipc_test launcherSettings edit;                   ipc_test toggleLauncher
 
 # Bar panel toggles
 ipc_test toggleCalendar "";       ipc_test toggleCalendar ""
@@ -105,7 +103,7 @@ $IPC clipboardList >/dev/null 2>&1; sleep "$DELAY"
 # out of the aggregate WARN count at the bottom.
 echo "Testing validation warnings..."
 expect_warn 'toggleVolume edit'                  "panel 'volume' does not support mode 'edit'"
-expect_warn 'launcherApps edit ""'               "launcher tab 'apps' does not support mode 'edit'"
+expect_warn 'launcherApps edit'                  "launcher tab 'apps' does not support mode 'edit'"
 expect_warn 'toggleCalendar edit'                "panel 'calendar' does not support mode 'edit'"
 
 # ── 3. One-shot commands (skip destructive) ─────────
@@ -124,10 +122,13 @@ ERRORS=$(grep -c "ERROR" "$SHELL_LOG" 2>/dev/null) || ERRORS=0
 #   - intentional "mcshell IPC:" warnings asserted via expect_warn
 #   - benign Qt "Could not load icon" from desktop entries whose Icon field
 #     is a raw font glyph — environment-dependent, not a shell bug
+#   - transient BlueZ "Busy" errors from toggling adapter too fast
 WARNS=$(grep "WARN" "$SHELL_LOG" 2>/dev/null \
     | grep -v "qt.qpa.services.*portal" \
     | grep -v "mcshell IPC:" \
-    | grep -cv "Could not load icon" 2>/dev/null) || WARNS=0
+    | grep -v "Could not load icon" \
+    | grep -v "org.bluez.Error.Busy" \
+    | grep -cv "Error writing property org.bluez" 2>/dev/null) || WARNS=0
 
 echo ""
 echo "── Log Results ──"
@@ -141,6 +142,8 @@ if [ "$WARNS" -gt 0 ]; then
         | grep -v "qt.qpa.services.*portal" \
         | grep -v "mcshell IPC:" \
         | grep -v "Could not load icon" \
+        | grep -v "org.bluez.Error.Busy" \
+        | grep -v "Error writing property org.bluez" \
         | sort -u
     echo 1 > "$FAIL_FILE"
 fi

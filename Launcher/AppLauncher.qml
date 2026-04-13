@@ -228,7 +228,7 @@ OverlayWindow {
         scale: 0.85 + 0.15 * launcher._animProgress
         transformOrigin: Item.Center
 
-    // Search bar — fixed position above center
+    // Search bar — fixed position above carousel
     Item {
         id: searchBar
         anchors.horizontalCenter: parent.horizontalCenter
@@ -496,12 +496,14 @@ OverlayWindow {
             }
         }
 
-    // Carousel — centered on screen, fixed position
+    // Carousel — centered on screen, shifted down when header is visible
     Item {
             id: carouselArea
             anchors.centerIn: parent
             width: parent.width
-            height: launcher.carouselHeight
+            readonly property real _extraHeight: categoryHeader._show ? categoryHeader.height + Theme.spacingLarge : 0
+            height: launcher.carouselHeight + _extraHeight
+            Behavior on height { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
             clip: true
 
             // Empty state — text for search/generic
@@ -542,11 +544,28 @@ OverlayWindow {
                 hint: launcher.activeCategory.scanningHint
             }
 
-            // Sliding row — single generic Repeater
+            // Optional category header (e.g. monitor strip for wallpaper).
+            // Inside the clipped carousel area so it can't overlap the tab bar.
+            // Slides down from above the clip edge on enter.
+            Loader {
+                id: categoryHeader
+                z: 1
+                anchors.horizontalCenter: parent.horizontalCenter
+                active: launcher.activeCategory.headerDelegate !== null
+                sourceComponent: launcher.activeCategory.headerDelegate
+                readonly property bool _show: launcher.inList && active
+                y: _show ? 0 : -height
+                visible: y > -height
+                Behavior on y { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
+            }
+
+            // Sliding row — single generic Repeater, offset below header when visible
             Row {
                 id: slidingRow
                 x: launcher.calcRowX()
+                y: carouselArea._extraHeight
                 height: launcher.carouselHeight
+                Behavior on y { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
                 spacing: launcher.stripSpacing
                 visible: launcher.hasItems
 
@@ -585,7 +604,6 @@ OverlayWindow {
                 onClicked: launcher.navigate(1)
             }
         }
-
     // Footer — fixed position below carousel
     Text {
         anchors.horizontalCenter: parent.horizontalCenter

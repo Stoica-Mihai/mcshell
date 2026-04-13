@@ -14,7 +14,9 @@ A custom Wayland desktop shell built with [QuickShell](https://quickshell.outfox
 | ![Volume & per-app audio](screenshots/08-volume.png) | ![Notification history](screenshots/09-notifications.png) |
 | ![System tray](screenshots/10-tray.png) | ![System monitor](screenshots/11-sysinfo.png) |
 
-![Keybind hints](screenshots/12-keybinds.png)
+| ![Keybind hints](screenshots/12-keybinds.png) | |
+
+![Wallpaper picker — per-monitor support](screenshots/13-wallpaper-picker.png)
 
 ## Features
 
@@ -41,8 +43,8 @@ Horizontal filmstrip carousel with parallelogram cards, smooth sliding animation
 - **Clipboard** — native clipboard history via Wayland data control protocol, live-updating, text and image support
 - **WiFi** — scan and connect to networks, inline password input, signal strength and security display. Ctrl+W to toggle WiFi
 - **Bluetooth** — discover, pair, and connect devices with battery display. Ctrl+B to toggle Bluetooth
-- **Wallpaper** — browse and apply wallpapers from configured folder, lazy-loaded thumbnails, active wallpaper highlighted
-- **Settings** — audio (device selection, volume), display (brightness, night light + temperature), theme (8 palettes), power (lock/logout/reboot/shutdown)
+- **Wallpaper** — browse and apply wallpapers from configured folder, lazy-loaded thumbnails. Per-monitor support: monitor strip shows current wallpaper per screen, Tab to switch target, Enter to apply. Screen badges on cards show which monitors use each wallpaper. Fill mode (crop/fit/stretch/tile), auto-rotation with per-screen targeting, shuffle or sequential order, editable folder path
+- **Settings** — audio (device selection, volume), display (brightness, night light + temperature), theme (8 palettes), wallpaper (rotation interval/order/screen, fill mode, folder), power (lock/logout/reboot/shutdown)
 
 ### Notifications
 - Popup cards with circular donut countdown timer
@@ -62,9 +64,15 @@ Horizontal filmstrip carousel with parallelogram cards, smooth sliding animation
 
 ### Wallpaper
 - Native background rendering per screen via layer shell
-- Wallpaper picker integrated in the app launcher (Wall tab)
+- Wallpaper picker in the app launcher (Wall tab) with per-monitor support
+  - Monitor strip above carousel shows current wallpaper per screen
+  - Tab cycles target monitor (All Screens / individual), Enter applies
+  - Screen name badges on cards show which monitors use each wallpaper
+  - Auto-lands on the focused screen's wallpaper when opening
+- Fill mode: crop, fit, stretch, tile (configurable in Settings > Wallpaper)
+- Auto-rotation with per-screen targeting (rotate one monitor while another stays static)
+- Shuffle or sequential rotation order
 - Smooth crossfade transitions when changing wallpapers
-- Auto-rotation at configurable intervals (off, 5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h)
 - All settings persist to `~/.config/mcshell/settings.json`
 
 ### Screenshots
@@ -183,7 +191,7 @@ binds {
     Mod+L { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "lock"; }
     Mod+N { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "launcherWifi"; }
     Mod+B { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "launcherBluetooth"; }
-    Ctrl+Alt+Q { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "launcherSettings" "edit" "power"; }
+    Ctrl+Alt+Q { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "launcherSettings" "edit power"; }
     Alt+Tab { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "toggleWindows"; }
     Print { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotArea"; }
     Shift+Print { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotFull"; }

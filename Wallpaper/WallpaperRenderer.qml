@@ -10,7 +10,14 @@ import qs.Core
 Item {
     id: root
 
-    property string currentWallpaper: UserSettings.wallpaperPath
+    readonly property int _fillMode: {
+        switch (UserSettings.wallpaperFillMode) {
+            case "fit": return Image.PreserveAspectFit;
+            case "stretch": return Image.Stretch;
+            case "tile": return Image.Tile;
+            default: return Image.PreserveAspectCrop;
+        }
+    }
 
     function setWallpaper(path) {
         UserSettings.setWallpaper(path);
@@ -37,15 +44,24 @@ Item {
                 right: true
             }
 
+            // Per-screen wallpaper — inline binding with explicit deps for
+            // reliable QML property tracking (avoids opaque function call).
+            readonly property string _screenWallpaper: {
+                const filename = UserSettings.perScreenMap[modelData.name];
+                if (filename)
+                    return UserSettings.wallpaperFolder + "/" + filename;
+                return UserSettings.wallpaperPath;
+            }
+
             // Track which image layer is "front" for crossfade
             property bool showingFirst: true
-            property string pendingPath: ""
+            property string _lastApplied: ""
 
             // Two image layers for crossfade
             Image {
                 id: imageA
                 anchors.fill: parent
-                fillMode: Image.PreserveAspectCrop
+                fillMode: root._fillMode
                 asynchronous: true
                 cache: true
                 smooth: true
@@ -63,7 +79,7 @@ Item {
             Image {
                 id: imageB
                 anchors.fill: parent
-                fillMode: Image.PreserveAspectCrop
+                fillMode: root._fillMode
                 asynchronous: true
                 cache: true
                 smooth: true
@@ -78,29 +94,29 @@ Item {
                 }
             }
 
-            // React to wallpaper changes from root
-            Connections {
-                target: root
-                function onCurrentWallpaperChanged() {
-                    if (root.currentWallpaper === "") return;
-                    const fileUrl = "file://" + root.currentWallpaper;
-                    if (wallpaperWindow.showingFirst) {
-                        // Load into B, then flip
-                        imageB.source = fileUrl;
-                        wallpaperWindow.showingFirst = false;
-                    } else {
-                        // Load into A, then flip
-                        imageA.source = fileUrl;
-                        wallpaperWindow.showingFirst = true;
-                    }
+            function _applyWallpaper() {
+                const wp = wallpaperWindow._screenWallpaper;
+                if (wp === "" || wp === wallpaperWindow._lastApplied) return;
+                wallpaperWindow._lastApplied = wp;
+                const fileUrl = "file://" + wp;
+                if (wallpaperWindow.showingFirst) {
+                    imageB.source = fileUrl;
+                    wallpaperWindow.showingFirst = false;
+                } else {
+                    imageA.source = fileUrl;
+                    wallpaperWindow.showingFirst = true;
                 }
             }
 
+            on_ScreenWallpaperChanged: _applyWallpaper()
+
             // Set initial wallpaper
             Component.onCompleted: {
-                if (root.currentWallpaper !== "") {
-                    imageA.source = "file://" + root.currentWallpaper;
+                const wp = wallpaperWindow._screenWallpaper;
+                if (wp !== "") {
+                    imageA.source = "file://" + wp;
                     wallpaperWindow.showingFirst = true;
+                    wallpaperWindow._lastApplied = wp;
                 }
             }
         }
