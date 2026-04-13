@@ -1,3 +1,4 @@
+//@ pragma IconTheme Papirus
 //@ pragma Env QML_IMPORT_PATH=/home/mcs/.local/share/quickshell/plugins
 
 import QtQuick
