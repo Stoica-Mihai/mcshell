@@ -430,10 +430,10 @@ Scope {
                             }
 
                             // Volume
-                            CapsuleItem {
-                                icon: Theme.volumeIcon(volume.rawVolume, volume.muted)
-                                label: volume.volume + "%"
-                                alert: volume.muted
+                            VolumeWaveform {
+                                rawVolume: volume.rawVolume
+                                volume: volume.volume
+                                muted: volume.muted
                                 active: sharedDropdown.activePanel === "volume"
                                 onClicked: event => {
                                     if (event.button === Qt.MiddleButton)
