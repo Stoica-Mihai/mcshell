@@ -11,6 +11,7 @@ Item {
     property string label: ""
     property int badge: 0
     property bool alert: false
+    property bool enabled_: false
     property bool connected: false
     property bool active: false
 
@@ -22,7 +23,8 @@ Item {
 
     readonly property bool hovered: mouse.containsMouse
     readonly property color activeColor: alert ? Theme.red
-                                       : connected ? Theme.green
+                                       : connected ? Theme.cyan
+                                       : enabled_ ? Theme.green
                                        : hovered ? Theme.accent
                                        : Theme.fg
 

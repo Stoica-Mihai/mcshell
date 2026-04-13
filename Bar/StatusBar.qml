@@ -312,7 +312,7 @@ Scope {
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.right: parent.right
                     anchors.rightMargin: Theme.itemSpacing
-                    spacing: Theme.itemSpacing
+                    spacing: Theme.spacingNormal
 
                     SysTray {
                         id: sysTray
@@ -321,11 +321,28 @@ Scope {
                         onShowTrayMenu: item => rightSection.showTrayDropdown(item)
                     }
 
+                    // Separator between tray and capsule — matches barBorderStyle
+                    Rectangle {
+                        Layout.alignment: Qt.AlignVCenter
+                        implicitWidth: 1
+                        Layout.preferredHeight: capsule.implicitHeight
+                        visible: sysTray.implicitWidth > 0
+                        color: UserSettings.barBorderStyle === "gradient" ? "transparent" : Theme.accent
+                        gradient: UserSettings.barBorderStyle === "gradient" ? _sepGrad : null
+
+                        Gradient {
+                            id: _sepGrad
+                            GradientStop { position: 0.0; color: Theme.accent }
+                            GradientStop { position: 0.5; color: Theme.secondary }
+                            GradientStop { position: 1.0; color: Theme.tertiary }
+                        }
+                    }
+
                     // ── System capsule ─────────────────────
                     Item {
                         id: capsule
                         Layout.alignment: Qt.AlignVCenter
-                        implicitWidth: capsuleRow.implicitWidth + 16
+                        implicitWidth: capsuleRow.implicitWidth + 10
                         implicitHeight: Theme.barHeight - 10
 
                         readonly property bool capsuleActive:
@@ -355,6 +372,7 @@ Scope {
                                 icon: Networking.wifiEnabled ? Theme.iconWifi : Theme.iconWifiOff
                                 badge: root._connectedNetworks.length
                                 alert: !Networking.wifiEnabled
+                                enabled_: Networking.wifiEnabled && !root._wifiConnected
                                 connected: root._wifiConnected
                                 onClicked: event => {
                                     if (event.button === Qt.MiddleButton)
@@ -364,10 +382,8 @@ Scope {
                                 }
 
                                 ThemedTooltip {
-                                    showWhen: wifiCapsule.hovered
+                                    showWhen: wifiCapsule.hovered && root._wifiConnected
                                     text: {
-                                        if (!Networking.wifiEnabled) return "WiFi Off";
-                                        if (!root._wifiConnected) return "Not connected";
                                         return root._connectedNetworks.map(n => {
                                             const signal = Math.round(n.signalStrength * 100);
                                             const sec = n.security === WifiSecurityType.Open ? "Open" : "Secured";
@@ -383,6 +399,7 @@ Scope {
                                 icon: root._btAdapter?.enabled ? Theme.iconBluetooth : Theme.iconBluetoothOff
                                 badge: root._connectedBtDevices.length
                                 alert: !(root._btAdapter?.enabled ?? false)
+                                enabled_: (root._btAdapter?.enabled ?? false) && !root._btConnected
                                 connected: root._btConnected
                                 onClicked: event => {
                                     if (event.button === Qt.MiddleButton && root._btAdapter)
@@ -392,10 +409,8 @@ Scope {
                                 }
 
                                 ThemedTooltip {
-                                    showWhen: btCapsule.hovered
+                                    showWhen: btCapsule.hovered && root._btConnected
                                     text: {
-                                        if (!(root._btAdapter?.enabled ?? false)) return "Bluetooth Off";
-                                        if (!root._btConnected) return "No device";
                                         const types = {
                                             "audio-headset": "Headset", "audio-headphones": "Headphones",
                                             "audio-card": "Speaker", "input-gaming": "Controller",
@@ -433,13 +448,6 @@ Scope {
                                     else
                                         volume.setVolume(volume.rawVolume - step);
                                 }
-                            }
-
-                            // System waveform
-                            SysWaveform {
-                                visible: UserSettings.sysInfoEnabled
-                                active: sharedDropdown.activePanel === "sysinfo"
-                                onClicked: sharedDropdown.togglePanel("sysinfo")
                             }
 
                             // Battery
@@ -507,7 +515,15 @@ Scope {
                                         else
                                             sharedDropdown.togglePanel("notifications");
                                     }
+                                    onCanceled: sharedDropdown.togglePanel("notifications")
                                 }
+                            }
+
+                            // System waveform
+                            SysWaveform {
+                                visible: UserSettings.sysInfoEnabled
+                                active: sharedDropdown.activePanel === "sysinfo"
+                                onClicked: sharedDropdown.togglePanel("sysinfo")
                             }
                         }
                     }
