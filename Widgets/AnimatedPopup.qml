@@ -19,7 +19,14 @@ PopupWindow {
 
     visible: false
     color: "transparent"
-    implicitHeight: animating ? Math.max(1, fullHeight * openFraction) : (isOpen ? Math.max(1, fullHeight) : 1)
+    implicitHeight: animating ? Math.max(1, fullHeight * openFraction) : (isOpen ? Math.max(1, _smoothHeight) : 1)
+
+    // Smooth height transitions when content resizes while open
+    property real _smoothHeight: fullHeight
+    Behavior on _smoothHeight {
+        enabled: root.isOpen && !root.animating
+        NumberAnimation { duration: Theme.animSmooth; easing.type: Easing.OutCubic }
+    }
 
     property bool autoPosition: true
 

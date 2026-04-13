@@ -1,154 +1,146 @@
 import QtQuick
-import QtQuick.Layouts
-import QtQuick.Effects
-import Quickshell
-import Quickshell.Widgets
+import QtQuick.Shapes
 import Quickshell.Services.SystemTray
 import qs.Config
+import qs.Widgets
 
+// Collapsed tray indicator — segmented ring with item count, matching workspace style.
+// Each tray icon gets a ring segment. Click opens the tray icons panel.
 Item {
     id: root
 
-    implicitWidth: trayRow.implicitWidth
-    implicitHeight: trayRow.implicitHeight
-
     property bool menuVisible: false
+    property bool expanded: false
 
     signal showTrayMenu(var item)
-    signal dismissMenu()
+    signal toggleExpand()
 
-    // Shared tooltip popup (reused for all tray items)
-    PopupWindow {
-        id: tooltip
+    readonly property int itemCount: SystemTray.items.values.length
+    readonly property bool hovered: mouse.containsMouse
 
-        property string text: ""
-        property var anchorItem: null
+    readonly property int _ringSize: 22
+    readonly property real _ringCenter: _ringSize / 2
+    readonly property real _ringRadius: (_ringSize - _strokeWidth) / 2
+    readonly property int _strokeWidth: 2
+    readonly property real _gapDeg: 20
+    readonly property int _maxSegments: Theme.ringColors.length
 
-        visible: false
-        color: "transparent"
+    function _sweepForCount(n) {
+        return n > 0 ? (360 - _gapDeg * n) / n : 0;
+    }
 
-        implicitWidth: tipText.implicitWidth + 14
-        implicitHeight: tipText.implicitHeight + 8
+    // Animated segment transition
+    property int _fromCount: 0
+    property int _toCount: 0
+    property real _t: 1.0
 
-        anchor.item: anchorItem
-        anchor.rect.x: anchorItem ? Theme.centerAnchorX(implicitWidth, anchorItem.width) : 0
-        anchor.rect.y: anchorItem ? anchorItem.height + 6 : 0
+    onItemCountChanged: {
+        _fromCount = _toCount;
+        _toCount = Math.min(itemCount, _maxSegments);
+        _t = 0;
+        _anim.restart();
+    }
 
-        Rectangle {
+    NumberAnimation {
+        id: _anim
+        target: root
+        property: "_t"
+        from: 0; to: 1
+        duration: 600
+        easing.type: Easing.InOutCubic
+    }
+
+    Component.onCompleted: {
+        _toCount = Math.min(itemCount, _maxSegments);
+        _t = 1.0;
+    }
+
+    implicitWidth: _ringSize
+    implicitHeight: _ringSize
+
+    // Segmented ring
+    Repeater {
+        model: root._maxSegments
+
+        Shape {
+            id: seg
+            required property int index
             anchors.fill: parent
-            radius: Theme.radiusTiny
-            color: Theme.bgSolid
-            border.width: 1
-            border.color: Theme.border
+            preferredRendererType: Shape.CurveRenderer
 
-            Text {
-                id: tipText
-                anchors.centerIn: parent
-                text: tooltip.text
-                color: Theme.fg
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeSmall
+            readonly property real _oldSweep: index < root._fromCount ? root._sweepForCount(root._fromCount) : 0
+            readonly property real _newSweep: index < root._toCount ? root._sweepForCount(root._toCount) : 0
+            readonly property real _sweep: _oldSweep + (_newSweep - _oldSweep) * root._t
+
+            readonly property real _start: {
+                let angle = -90;
+                for (let i = 0; i < index; i++) {
+                    const oldSw = i < root._fromCount ? root._sweepForCount(root._fromCount) : 0;
+                    const newSw = i < root._toCount ? root._sweepForCount(root._toCount) : 0;
+                    angle += oldSw + (newSw - oldSw) * root._t + root._gapDeg;
+                }
+                return angle;
+            }
+
+            readonly property bool _visible: _sweep > 0.5
+            readonly property color _segColor: Theme.ringColors[index]
+
+            ShapePath {
+                fillColor: "transparent"
+                strokeWidth: root._strokeWidth
+                capStyle: ShapePath.RoundCap
+                strokeColor: seg._visible
+                    ? Qt.rgba(seg._segColor.r, seg._segColor.g, seg._segColor.b,
+                              root.expanded || root.hovered ? 1.0 : Theme.opacityDim)
+                    : "transparent"
+                Behavior on strokeColor { ColorAnimation { duration: Theme.animSmooth } }
+
+                PathAngleArc {
+                    centerX: root._ringCenter
+                    centerY: root._ringCenter
+                    radiusX: root._ringRadius
+                    radiusY: root._ringRadius
+                    startAngle: seg._start
+                    sweepAngle: seg._sweep
+                }
             }
         }
     }
 
-    RowLayout {
-        id: trayRow
-        spacing: Theme.spacingNormal
+    // Count
+    Text {
+        anchors.centerIn: parent
+        text: root.itemCount
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSizeMini
+        font.bold: true
+        color: root.expanded || root.hovered ? Theme.accent
+             : root.itemCount > 0 ? Theme.fgDim
+             : Theme.overlayHover
 
-        Repeater {
-            model: SystemTray.items
+        Behavior on color { ColorAnimation { duration: Theme.animNormal } }
+    }
 
-            Item {
-                id: trayIcon
-                required property SystemTrayItem modelData
+    ActiveUnderline { visible: root.expanded }
 
-                implicitWidth: Theme.iconSize
-                implicitHeight: Theme.iconSize
-                Layout.alignment: Qt.AlignVCenter
-
-                opacity: trayMouse.containsMouse ? 1.0 : 0.8
-
-                Behavior on opacity {
-                    NumberAnimation { duration: Theme.animFast }
-                }
-
-                IconImage {
-                    id: trayImg
-                    width: Theme.iconSize
-                    height: Theme.iconSize
-                    anchors.centerIn: parent
-                    asynchronous: true
-                    backer.fillMode: Image.PreserveAspectFit
-                    visible: false
-                    source: {
-                        const icon = modelData?.icon || "";
-                        if (!icon) return "";
-                        if (icon.includes("?path=")) {
-                            const chunks = icon.split("?path=");
-                            const path = chunks[1];
-                            const name = chunks[0];
-                            const fileName = name.substring(name.lastIndexOf("/") + 1);
-                            return "file://" + path + "/" + fileName;
-                        }
-                        return icon;
-                    }
-                }
-
-                // Colorize tray icons to match theme
-                MultiEffect {
-                    anchors.fill: trayImg
-                    source: trayImg
-                    colorization: 1.0
-                    colorizationColor: Theme.fg
-                }
-
-                MouseArea {
-                    id: trayMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-
-                    onContainsMouseChanged: {
-                        if (containsMouse && !root.menuVisible) {
-                            tooltip.text = trayIcon.modelData.tooltipTitle
-                                        || trayIcon.modelData.name
-                                        || trayIcon.modelData.id
-                                        || "";
-                            tooltip.anchorItem = trayIcon;
-                            tooltip.visible = true;
-                        } else {
-                            tooltip.visible = false;
-                        }
-                    }
-
-                    onClicked: event => {
-                        tooltip.visible = false;
-                        if (event.button === Qt.RightButton) {
-                            if (trayIcon.modelData.hasMenu) {
-                                root.showTrayMenu(trayIcon.modelData);
-                            } else {
-                                trayIcon.modelData.secondaryActivate();
-                            }
-                        } else if (event.button === Qt.MiddleButton) {
-                            trayIcon.modelData.secondaryActivate();
-                        } else {
-                            if (trayIcon.modelData.onlyMenu && trayIcon.modelData.hasMenu) {
-                                root.showTrayMenu(trayIcon.modelData);
-                            } else {
-                                trayIcon.modelData.activate();
-                            }
-                        }
-                    }
-                    onCanceled: {
-                        tooltip.visible = false;
-                        if (trayIcon.modelData.onlyMenu && trayIcon.modelData.hasMenu)
-                            root.showTrayMenu(trayIcon.modelData);
-                        else
-                            trayIcon.modelData.activate();
-                    }
-                }
-            }
+    ThemedTooltip {
+        showWhen: root.hovered && !root.expanded && root.itemCount > 0
+        text: {
+            if (!root.hovered) return "";
+            const items = SystemTray.items.values;
+            const names = [];
+            for (let i = 0; i < items.length; i++)
+                names.push(items[i].tooltipTitle || items[i].name || items[i].id || "Unknown");
+            return names.join("\n");
         }
+    }
+
+    MouseArea {
+        id: mouse
+        anchors.fill: parent
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
+        onClicked: root.toggleExpand()
+        onCanceled: root.toggleExpand()
     }
 }

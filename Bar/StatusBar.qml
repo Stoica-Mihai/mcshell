@@ -263,28 +263,6 @@ Scope {
                     pts: [[0,0], [width,0], [width,height], [Theme.barDiagSlant,height]]
                 }
 
-                // ── Tray-specific state ───────────────────
-                property var activeTrayItem: null
-
-                function showTrayDropdown(trayItem) {
-                    if (sharedDropdown.activePanel === "tray" && activeTrayItem === trayItem) {
-                        sharedDropdown.closePanel();
-                        return;
-                    }
-                    sharedDropdown.close();
-                    activeTrayItem = trayItem;
-                    sharedDropdown.activePanel = "tray";
-                    sharedDropdown.anchor.item = rightSection;
-                    sharedDropdown.anchor.rect.x = sharedDropdown.anchorX;
-                    sharedDropdown.anchor.rect.y = rightSection.height;
-                    trayOpenDelay.restart();
-                }
-
-                Timer {
-                    id: trayOpenDelay
-                    interval: Theme.menuRebuildDelay
-                    onTriggered: sharedDropdown.open()
-                }
 
                 // Media zone — left side of right segment, clipped to available space
                 Item {
@@ -318,7 +296,8 @@ Scope {
                         id: sysTray
                         Layout.alignment: Qt.AlignVCenter
                         menuVisible: sharedDropdown.activePanel === "tray"
-                        onShowTrayMenu: item => rightSection.showTrayDropdown(item)
+                        expanded: sharedDropdown.activePanel === "trayicons"
+                        onToggleExpand: sharedDropdown.togglePanel("trayicons")
                     }
 
                     // Separator between tray and capsule — matches barBorderStyle
@@ -545,7 +524,7 @@ Scope {
                         case "notifications": return notifContent.fullHeight;
                         case "media": return mediaContent.implicitHeight + Theme.popupPadding * 2;
                         case "sysinfo": return sysInfoContent.implicitHeight + Theme.popupPadding * 2;
-                        case "tray": return Math.min(Theme.trayMenuMaxHeight, trayMenuColumn.implicitHeight + Theme.trayMenuPadding);
+                        case "trayicons": return trayIconsContent.implicitHeight + Theme.popupPadding * 2;
                         default: return 100;
                         }
                     }
@@ -553,8 +532,7 @@ Scope {
                     onVisibleChanged: {
                         if (!visible) {
                             sharedDropdown.activePanel = "";
-                            rightSection.activeTrayItem = null;
-                            traySubMenu.visible = false;
+                            trayIconsContent.closeMenu();
                         }
                     }
 
@@ -581,6 +559,17 @@ Scope {
                             id: appVolume
                             Layout.fillWidth: true
                         }
+                    }
+
+                    // ── Tray icons section ────────────────
+                    SysTrayPanel {
+                        id: trayIconsContent
+                        visible: sharedDropdown.activePanel === "trayicons"
+                        enabled: visible
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.margins: Theme.popupPadding
                     }
 
                     // ── SysInfo section ───────────────────
@@ -771,111 +760,6 @@ Scope {
                         }
                     }
 
-                    // ── Tray menu section ─────────────────
-                    Item {
-                        id: trayContent
-                        visible: sharedDropdown.activePanel === "tray"
-                        enabled: visible
-                        anchors.fill: parent
-
-                        QsMenuOpener {
-                            id: trayOpener
-                            menu: rightSection.activeTrayItem ? rightSection.activeTrayItem.menu : null
-                        }
-
-                        Flickable {
-                            anchors.fill: parent
-                            anchors.margins: 6
-                            contentHeight: trayMenuColumn.implicitHeight
-                            clip: true
-
-                            ColumnLayout {
-                                id: trayMenuColumn
-                                width: parent.width
-                                spacing: 0
-
-                                Repeater {
-                                    model: trayOpener.children ? [...trayOpener.children.values] : []
-
-                                    MenuItem {
-                                        id: trayEntry
-                                        Layout.fillWidth: true
-                                        Layout.preferredHeight: implicitHeight
-
-                                        onTriggered: {
-                                            if (!modelData) return;
-                                            if (modelData.hasChildren) {
-                                                traySubMenu.menuSource = modelData;
-                                                traySubMenu.anchorItem = trayEntry;
-                                                traySubMenu.visible = !traySubMenu.visible;
-                                            } else {
-                                                modelData.triggered();
-                                                sharedDropdown.closePanel();
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // Submenu popup
-                        PopupWindow {
-                            id: traySubMenu
-                            property var menuSource: null
-                            property var anchorItem: null
-
-                            visible: false
-                            color: "transparent"
-                            implicitWidth: 200
-                            implicitHeight: Math.min(Theme.trayMenuMaxHeight, subColumn.implicitHeight + Theme.trayMenuPadding)
-
-                            anchor.item: anchorItem
-                            anchor.rect.x: anchorItem ? anchorItem.width + 4 : 0
-                            anchor.rect.y: 0
-
-                            QsMenuOpener {
-                                id: subOpener
-                                menu: traySubMenu.menuSource
-                            }
-
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: Theme.radiusMedium
-                                color: Theme.bgSolid
-                                border.width: 1
-                                border.color: Theme.border
-
-                                Flickable {
-                                    anchors.fill: parent
-                                    anchors.margins: 6
-                                    contentHeight: subColumn.implicitHeight
-                                    clip: true
-
-                                    ColumnLayout {
-                                        id: subColumn
-                                        width: parent.width
-                                        spacing: 0
-
-                                        Repeater {
-                                            model: subOpener.children ? [...subOpener.children.values] : []
-
-                                            MenuItem {
-                                                Layout.fillWidth: true
-                                                Layout.preferredHeight: implicitHeight
-
-                                                onTriggered: {
-                                                    if (!modelData) return;
-                                                    modelData.triggered();
-                                                    traySubMenu.visible = false;
-                                                    sharedDropdown.closePanel();
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }
