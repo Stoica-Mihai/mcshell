@@ -13,10 +13,7 @@ A custom Wayland desktop shell built with [QuickShell](https://quickshell.outfox
 | ![Calendar with holidays](screenshots/06-calendar.png) | ![Weather forecast](screenshots/07-weather.png) |
 | ![Volume & per-app audio](screenshots/08-volume.png) | ![Notification history](screenshots/09-notifications.png) |
 | ![System tray](screenshots/10-tray.png) | ![System monitor](screenshots/11-sysinfo.png) |
-
-| ![Keybind hints](screenshots/12-keybinds.png) | |
-
-![Wallpaper picker — per-monitor support](screenshots/13-wallpaper-picker.png)
+| ![Keybind hints](screenshots/12-keybinds.png) | ![Wallpaper picker](screenshots/13-wallpaper-picker.png) |
 
 ## Features
 
