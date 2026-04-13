@@ -140,6 +140,13 @@ Item {
                             }
                         }
                     }
+                    onCanceled: {
+                        tooltip.visible = false;
+                        if (trayIcon.modelData.onlyMenu && trayIcon.modelData.hasMenu)
+                            root.showTrayMenu(trayIcon.modelData);
+                        else
+                            trayIcon.modelData.activate();
+                    }
                 }
             }
         }

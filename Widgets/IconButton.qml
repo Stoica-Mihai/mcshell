@@ -33,5 +33,6 @@ Item {
         hoverEnabled: root.hasHover
         cursorShape: Qt.PointingHandCursor
         onClicked: root.clicked()
+        onCanceled: root.clicked()
     }
 }

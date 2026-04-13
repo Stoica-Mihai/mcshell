@@ -175,6 +175,7 @@ Item {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: Niri.dispatch(["focus-workspace", wsItem.modelData.idx.toString()])
+                    onCanceled: Niri.dispatch(["focus-workspace", wsItem.modelData.idx.toString()])
                 }
 
                 ThemedTooltip {

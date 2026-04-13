@@ -209,5 +209,6 @@ Item {
             if (event.button === Qt.RightButton) root.toggleEditPopup();
             else root.togglePopup();
         }
+        onCanceled: { root.fetch(); root.togglePopup(); }
     }
 }

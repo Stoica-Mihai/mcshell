@@ -38,5 +38,6 @@ Item {
             if (event.button === Qt.RightButton) root.toggleConfigPopup();
             else root.togglePopup();
         }
+        onCanceled: root.togglePopup()
     }
 }
