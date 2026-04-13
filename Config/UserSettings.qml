@@ -3,7 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland._GammaControl
+import Qs.NightLight
 import qs.Core
 
 // Persistent user settings.
@@ -51,6 +51,7 @@ Singleton {
     property alias clockShowSeconds: adapter.clockShowSeconds    // bool
     property alias clockDateFormat: adapter.clockDateFormat      // Qt format pattern, e.g. "ddd d MMM yyyy"
     property alias weekStartsOnMonday: adapter.weekStartsOnMonday // bool
+    property alias sysInfoEnabled: adapter.sysInfoEnabled        // bool — show waveform + dropdown in bar
 
     readonly property bool weatherConfigured: adapter.weatherLocation !== ""
 
@@ -124,6 +125,7 @@ Singleton {
             property bool clockShowSeconds: true
             property string clockDateFormat: "ddd d MMM yyyy"
             property bool weekStartsOnMonday: true
+            property bool sysInfoEnabled: true
         }
 
         onAdapterUpdated: root._save()

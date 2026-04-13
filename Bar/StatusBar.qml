@@ -437,6 +437,7 @@ Scope {
 
                             // System waveform
                             SysWaveform {
+                                visible: UserSettings.sysInfoEnabled
                                 active: sharedDropdown.activePanel === "sysinfo"
                                 onClicked: sharedDropdown.togglePanel("sysinfo")
                             }

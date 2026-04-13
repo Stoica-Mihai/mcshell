@@ -550,6 +550,7 @@ Singleton {
     readonly property string iconClipboard: "\uf0ea"
     readonly property string iconImage: "\uf03e"
     readonly property string iconApps: "\uf0e8"
+    readonly property string iconMonitor: "\uf080"
 
     // Toggles
     readonly property string iconDndOn: "\uf1f6"

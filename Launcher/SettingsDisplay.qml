@@ -40,7 +40,8 @@ SettingsPanel {
         return 3;
     }
     readonly property int _cleanItem: _idleItem + 1
-    itemCount: _cleanItem + 1
+    readonly property int _sysInfoItem: _cleanItem + 1
+    itemCount: _sysInfoItem + 1
     function adjustLeft() {
         if (selectedItem === 0) {
             Brightness.set(Math.max(0, Brightness.percent - 5));
@@ -61,6 +62,7 @@ SettingsPanel {
         if (selectedItem === 4 && UserSettings.nightLightMode === UserSettings.modeAuto) { adjustTime("sunset", -30); return true; }
         if (selectedItem === _idleItem) { UserSettings.idleTimeout = Math.max(0, UserSettings.idleTimeout - 5); return true; }
         if (selectedItem === _cleanItem) { UserSettings.notifAutoClean = _cleanValues[Math.max(0, _cleanIndex - 1)]; return true; }
+        if (selectedItem === _sysInfoItem) { UserSettings.sysInfoEnabled = !UserSettings.sysInfoEnabled; return true; }
         return false;
     }
     function adjustRight() {
@@ -83,6 +85,7 @@ SettingsPanel {
         if (selectedItem === 4 && UserSettings.nightLightMode === UserSettings.modeAuto) { adjustTime("sunset", 30); return true; }
         if (selectedItem === _idleItem) { UserSettings.idleTimeout = Math.min(60, UserSettings.idleTimeout + 5); return true; }
         if (selectedItem === _cleanItem) { UserSettings.notifAutoClean = _cleanValues[Math.min(_cleanValues.length - 1, _cleanIndex + 1)]; return true; }
+        if (selectedItem === _sysInfoItem) { UserSettings.sysInfoEnabled = !UserSettings.sysInfoEnabled; return true; }
         return false;
     }
 
@@ -324,6 +327,34 @@ SettingsPanel {
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeTiny
             color: root._cleanIndex > 0 ? Theme.accent : Theme.fgDim
+        }
+    }
+
+    Separator {}
+
+    // System monitor
+    SettingsRow {
+        selected: root.active && root.selectedItem === root._sysInfoItem
+        Layout.preferredHeight: Theme.settingsRowHeight
+
+        Text {
+            text: Theme.iconMonitor
+            font.family: Theme.iconFont
+            font.pixelSize: Theme.fontSizeMedium
+            color: UserSettings.sysInfoEnabled ? Theme.accent : Theme.fgDim
+        }
+        Text {
+            text: "System Monitor"
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeSmall
+            color: Theme.fg
+            Layout.fillWidth: true
+        }
+        Text {
+            text: UserSettings.sysInfoEnabled ? "On" : "Off"
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeTiny
+            color: UserSettings.sysInfoEnabled ? Theme.accent : Theme.fgDim
         }
     }
 }
