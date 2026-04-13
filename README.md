@@ -130,6 +130,7 @@ Bar panel IPCs also accept an optional `<mode>` argument (`view` default). Only 
 | `toggleNotifications [mode]` | Open/close the notification history |
 | `toggleWeather [mode]` | Open/close the weather dropdown. `toggleWeather edit` opens the location editor directly. |
 | `toggleClockSettings [mode]` | Open/close the clock settings dropdown (time format, date format, week start) |
+| `toggleSysInfo [mode]` | Open/close the system monitor panel (CPU, RAM, temps, disk, network) |
 | `toggleKeybinds` | Open/close the keybind hints overlay |
 
 ### Session
@@ -190,7 +191,7 @@ binds {
 | Volume (capsule) | Toggle volume panel | Toggle mute | — | Adjust volume |
 | Battery (capsule) | — | — | — | — |
 | Bell (capsule) | Toggle notification history | Toggle DND | — | — |
-| System Monitor (capsule) | Toggle system info panel | — | — | — |
+| System Monitor (capsule) | Toggle system info panel (`toggleSysInfo`) | — | — | — |
 | Tray Icon | Activate | Secondary activate | Context menu | — |
 
 ## Launcher Keyboard Shortcuts

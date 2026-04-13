@@ -36,7 +36,8 @@ ShellRoot {
         volume:        ["view"],
         notifications: ["view"],
         media:         ["view"],
-        tray:          ["view"]
+        tray:          ["view"],
+        sysinfo:       ["view"]
     })
 
     // Validate a mode against a panel/tab's supported modes. Returns the
@@ -180,6 +181,7 @@ ShellRoot {
         function toggleNotifications(mode: string): void { shell._dispatchPanel("notifications", mode); }
         function toggleWeather(mode: string): void { shell._dispatchPanel("weather", mode); }
         function toggleClockSettings(mode: string): void { shell._dispatchPanel("clockSettings", mode); }
+        function toggleSysInfo(mode: string): void { shell._dispatchPanel("sysinfo", mode); }
         function toggleRecording(): void { screenRecording.toggleRecording(); }
         function clipboardList(): string {
             const entries = ClipboardHistory.entries.values;

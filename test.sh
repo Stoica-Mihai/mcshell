@@ -63,16 +63,16 @@ echo "Shell running. Testing IPC commands..."
 # ── 2. Toggle commands (open then close) ────────────
 # Stock quickshell IPC requires all typed parameters — pass "" for optional args.
 ipc_test toggleLauncher;                    ipc_test toggleLauncher
-ipc_test launcherApps '""' '""';            ipc_test toggleLauncher
-ipc_test launcherClipboard '""' '""';       ipc_test toggleLauncher
-ipc_test launcherWifi '""' '""';            ipc_test toggleLauncher
-ipc_test launcherBluetooth '""' '""';       ipc_test toggleLauncher
-ipc_test launcherWallpaper '""' '""';       ipc_test toggleLauncher
-ipc_test launcherSettings '""' '""';        ipc_test toggleLauncher
+ipc_test launcherApps "" "";            ipc_test toggleLauncher
+ipc_test launcherClipboard "" "";       ipc_test toggleLauncher
+ipc_test launcherWifi "" "";            ipc_test toggleLauncher
+ipc_test launcherBluetooth "" "";       ipc_test toggleLauncher
+ipc_test launcherWallpaper "" "";       ipc_test toggleLauncher
+ipc_test launcherSettings "" "";        ipc_test toggleLauncher
 
 # New mode variants (valid)
-ipc_test launcherApps list '""';            ipc_test toggleLauncher
-ipc_test launcherSettings list '""';        ipc_test toggleLauncher
+ipc_test launcherApps list "";            ipc_test toggleLauncher
+ipc_test launcherSettings list "";        ipc_test toggleLauncher
 
 # Settings card pre-selection via `target` arg — one card × three modes covers
 # the full mode × target matrix. The dispatcher is target-agnostic, so testing
@@ -81,16 +81,16 @@ ipc_test launcherSettings view power;       ipc_test toggleLauncher
 ipc_test launcherSettings list power;       ipc_test toggleLauncher
 ipc_test launcherSettings edit power;       ipc_test toggleLauncher
 # edit with no target — lands on first card (selectedIndex 0)
-ipc_test launcherSettings edit '""';        ipc_test toggleLauncher
+ipc_test launcherSettings edit "";        ipc_test toggleLauncher
 
 # Bar panel toggles
-ipc_test toggleCalendar '""';       ipc_test toggleCalendar '""'
-ipc_test toggleVolume '""';         ipc_test toggleVolume '""'
-ipc_test toggleNotifications '""';  ipc_test toggleNotifications '""'
-ipc_test toggleWeather '""';        ipc_test toggleWeather '""'
-ipc_test toggleWeather view;        ipc_test toggleWeather '""'
-ipc_test toggleWeather edit;        ipc_test toggleWeather '""'
-ipc_test toggleClockSettings '""';  ipc_test toggleClockSettings '""'
+ipc_test toggleCalendar "";       ipc_test toggleCalendar ""
+ipc_test toggleVolume "";         ipc_test toggleVolume ""
+ipc_test toggleNotifications "";  ipc_test toggleNotifications ""
+ipc_test toggleWeather "";        ipc_test toggleWeather ""
+ipc_test toggleWeather view;        ipc_test toggleWeather ""
+ipc_test toggleWeather edit;        ipc_test toggleWeather ""
+ipc_test toggleClockSettings "";  ipc_test toggleClockSettings ""
 ipc_test toggleKeybinds;       ipc_test toggleKeybinds
 ipc_test toggleWindows;        ipc_test toggleWindows
 ipc_test toggleDnd;            ipc_test toggleDnd
