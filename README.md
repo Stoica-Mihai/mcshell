@@ -1,4 +1,4 @@
-# mcshell (WIP)
+# mcshell
 
 A custom Wayland desktop shell built with [QuickShell](https://quickshell.outfoxxed.me/) for the [niri](https://github.com/YaLTeR/niri) compositor. Pure QML, no build step.
 
