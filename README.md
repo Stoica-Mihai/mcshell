@@ -15,10 +15,11 @@ Three parallelogram segments (left/center/right) with glass effect and animated 
 - **System Capsule** — WiFi, Bluetooth, Volume, Battery, and the notification bell sharing a single dropdown panel with accent underline on the active icon
   - **WiFi** — native `Quickshell.Networking`, shows connected SSID, left-click opens launcher WiFi tab, middle-click toggles radio
   - **Bluetooth** — native `Quickshell.Bluetooth`, shows connected device + battery, left-click opens launcher Bluetooth tab, middle-click toggles radio
-  - **Volume** — PipeWire native, scroll to adjust, middle-click mute, per-app sliders
+  - **Volume** — PipeWire native, waveform bars visualization, scroll to adjust, middle-click mute, per-app sliders
   - **Battery** — UPower native, icon + percentage, red below 20%, hidden on desktops
   - **Notifications** — unread badge, history list, middle-click for Do Not Disturb, action buttons
-- **System Tray** — colorized icons, right-click context menus, hover tooltips
+- **System Monitor** — CPU core-load waveform bars in the capsule, click to expand dashboard with CPU, RAM, temperatures, disk, network stats (toggleable via Settings > Display)
+- **System Tray** — collapsed segmented ring indicator, expand to icon grid with colorized icons, right-click context menus, hover tooltips
 
 ### App Launcher
 Horizontal filmstrip carousel with parallelogram cards, smooth sliding animation, and animated border on focus (4 styles: midpoint, clockwise, corners, fade — configurable). Three-level keyboard navigation — `view` (search/browse categories), `list` (scroll cards in a tab), `edit` (drill into a selected card, Settings only today) — with each level entered via arrow-Down and exited via Escape. Six tabs:
@@ -49,6 +50,7 @@ Horizontal filmstrip carousel with parallelogram cards, smooth sliding animation
 - Native background rendering per screen via layer shell
 - Wallpaper picker integrated in the app launcher (Wall tab)
 - Smooth crossfade transitions when changing wallpapers
+- Auto-rotation at configurable intervals (off, 5m, 15m, 30m, 1h, 3h, 6h, 12h, 24h)
 - All settings persist to `~/.config/mcshell/settings.json`
 
 ### Screenshots
@@ -87,14 +89,14 @@ make test        # smoke test: start, run all IPC commands, check for errors/war
 Or manually:
 ```sh
 ln -s /path/to/mcshell ~/.config/quickshell/mcshell
-mcs-qs -c mcshell
+quickshell -c mcshell
 ```
 
 ## IPC Commands
 
 All commands use the format:
 ```sh
-mcs-qs -c mcshell ipc call mcshell <command>
+quickshell -c mcshell ipc call mcshell <command>
 ```
 
 ### Launcher
@@ -160,17 +162,17 @@ Bar panel IPCs also accept an optional `<mode>` argument (`view` default). Only 
 
 ```kdl
 binds {
-    Mod+Q { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "toggleLauncher"; }
-    Mod+K { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "toggleKeybinds"; }
-    Mod+W { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "launcherWallpaper" "list"; }
-    Mod+L { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "lock"; }
-    Mod+N { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "launcherWifi"; }
-    Mod+B { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "launcherBluetooth"; }
-    Ctrl+Alt+Q { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "launcherSettings" "edit" "power"; }
-    Alt+Tab { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "toggleWindows"; }
-    Print { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotArea"; }
-    Shift+Print { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotFull"; }
-    Ctrl+Print { spawn "mcs-qs" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotWindow"; }
+    Mod+Q { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "toggleLauncher"; }
+    Mod+K { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "toggleKeybinds"; }
+    Mod+W { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "launcherWallpaper" "list"; }
+    Mod+L { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "lock"; }
+    Mod+N { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "launcherWifi"; }
+    Mod+B { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "launcherBluetooth"; }
+    Ctrl+Alt+Q { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "launcherSettings" "edit" "power"; }
+    Alt+Tab { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "toggleWindows"; }
+    Print { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotArea"; }
+    Shift+Print { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotFull"; }
+    Ctrl+Print { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotWindow"; }
 }
 ```
 
@@ -188,6 +190,7 @@ binds {
 | Volume (capsule) | Toggle volume panel | Toggle mute | — | Adjust volume |
 | Battery (capsule) | — | — | — | — |
 | Bell (capsule) | Toggle notification history | Toggle DND | — | — |
+| System Monitor (capsule) | Toggle system info panel | — | — | — |
 | Tray Icon | Activate | Secondary activate | Context menu | — |
 
 ## Launcher Keyboard Shortcuts
@@ -226,7 +229,8 @@ binds {
 ### Required
 | Package | Purpose |
 |---|---|
-| [mcs-qs](https://github.com/Stoica-Mihai/mcs-qs) | Quickshell fork with Niri IPC, clipboard history, night light, VibrantColor (`mcs-qs` binary) |
+| [Quickshell](https://quickshell.outfoxxed.me/) | 0.2.1+ shell toolkit (`quickshell` binary) |
+| [quickshell-plugins](https://github.com/Stoica-Mihai/quickshell-plugins) | Required plugins: qs-niri-ipc, qs-data-control, qs-nightlight, qs-vibrant-color, qs-bt-helper, qs-sysinfo, qs-networking, qs-polkit |
 | [niri](https://github.com/YaLTeR/niri) | Wayland compositor |
 | PipeWire + WirePlumber | Audio (native API) |
 | NetworkManager | Network status (native API) + `nmcli` for WiFi password connections |
@@ -250,18 +254,18 @@ Pure QML — no C++, no build system. QuickShell interprets QML directly. Each s
 | Module | Purpose |
 |---|---|
 | `Config/` | `Theme` singleton (8 palettes + auto wallpaper theming), `UserSettings` singleton (persistent preferences via `JsonAdapter`, live-reload on external changes) |
-| `Core/` | Shared non-visual singletons — `SafeProcess`, `ShellActions` (lock/logout/reboot/shutdown/wallpaper), `Brightness`, `HolidayService` (Nager.Date), `NotificationDispatcher` |
-| `Bar/` | Status bar — three parallelogram segments with shared dropdown panels. Left: launcher + workspaces, active window. Center: clock + calendar/clock-settings, weather + forecast/edit (via shared `BarPopupWindow`). Right: media (MPRIS), system tray, WiFi/BT/volume/battery/notifications capsule sharing one dropdown. Also `Recording` (wf-recorder driver) |
+| `Core/` | Shared non-visual singletons — `SafeProcess`, `ShellActions` (lock/logout/reboot/shutdown/wallpaper), `Brightness`, `HolidayService` (Nager.Date), `NotificationDispatcher`, `WeatherCodes`, `JsonFetcher`, `ConnectivityRetry`, `OverlayWindow` |
+| `Bar/` | Status bar — three parallelogram segments with shared dropdown panels. Left: launcher + workspaces, active window. Center: clock + calendar/clock-settings, weather + forecast/edit (via shared `BarPopupWindow`). Right: media (MPRIS), system tray (collapsed ring + expanded grid), WiFi/BT/volume-waveform/battery/notifications/system-monitor capsule sharing one dropdown. Also `Recording` (wf-recorder driver), `SysInfoPanel` (CPU/RAM/temp/disk/network dashboard) |
 | `Launcher/` | App launcher carousel — apps, clipboard, WiFi, Bluetooth, wallpaper, settings tabs with 3-level keyboard navigation (view/list/edit) and lazy-loaded progressive model growth |
 | `Notifications/` | DBus notification daemon + popup cards with action buttons |
 | `NotificationHistory/` | Notification history dropdown |
 | `LockScreen/` | Wayland session lock with PAM auth |
 | `Polkit/` | Polkit authentication agent dialog |
-| `Wallpaper/` | Background renderer with crossfade transitions |
+| `Wallpaper/` | Background renderer with crossfade transitions, auto-rotation, filesystem scanner |
 | `KeybindHints/` | Keybind parser + hints overlay |
 | `Screenshot/` | Native screencopy overlay — fullscreen + interactive area selection with crop |
 | `WindowSwitcher/` | Window switcher overlay with carousel cards, Alt+Tab behavior, parallelogram search bar |
-| `Widgets/` | Shared UI components — `AnimatedPopup`, `AnimatedBorder`, `ParallelogramCard`, `StyledTextField`, `MediaControls`, `ActiveUnderline`, `IconButton`, `SliderTrack`, `ControlSlider`, `CyclePicker`, `HoverText`, `InfiniteText`, `OptImage`, `Separator`, `SmoothWheelHandler`, `ThemedScrollBar`, `ThemedTooltip`, `TriToggle` |
+| `Widgets/` | Shared UI components — `AnimatedPopup`, `AnimatedBorder`, `ParallelogramCard`, `StyledTextField`, `MediaControls`, `ActiveUnderline`, `IconButton`, `TextButton`, `SliderTrack`, `ControlSlider`, `CyclePicker`, `HoverText`, `InfiniteText`, `OptImage`, `Separator`, `ShakeAnimation`, `SmoothWheelHandler`, `ThemedScrollBar`, `ThemedTooltip`, `TriToggle` |
 
 ## Acknowledgements
 

@@ -71,8 +71,19 @@ ShellRoot {
         appLauncher.openTab(tab, resolved, target);
     }
 
-    // Force singleton initialization so connection watchers start immediately
-    Component.onCompleted: NotificationDispatcher
+    // Force singleton initialization so connection watchers start immediately.
+    // Also create IdleMonitor dynamically (ext-idle-notify-v1 — not in stock quickshell).
+    Component.onCompleted: {
+        NotificationDispatcher;
+        try {
+            Qt.createQmlObject(
+                'import Quickshell; IdleMonitor {'
+                + ' enabled: UserSettings.loaded && UserSettings.idleTimeout > 0;'
+                + ' timeout: Math.max(UserSettings.idleTimeout, 1) * 60;'
+                + ' onIsIdleChanged: if (isIdle && !lockScreen.isLocked) lockScreen.lock();'
+                + '}', root, "IdleMonitor");
+        } catch (e) {}
+    }
     Variants {
         model: Quickshell.screens
 
@@ -115,13 +126,7 @@ ShellRoot {
     WindowSwitcher { id: windowSwitcher }
     Recording { id: screenRecording }
 
-    // ── Idle management ──────────────────────────────────
-    // enabled deferred until settings load to avoid timeout=0 race
-    IdleMonitor {
-        enabled: UserSettings.loaded && UserSettings.idleTimeout > 0
-        timeout: Math.max(UserSettings.idleTimeout, 1) * 60
-        onIsIdleChanged: if (isIdle && !lockScreen.isLocked) lockScreen.lock()
-    }
+    // IdleMonitor created dynamically in Component.onCompleted above
 
     // Media inhibitor: true when any MPRIS player is actively playing
     readonly property bool _mediaPlaying: {

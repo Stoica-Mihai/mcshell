@@ -74,10 +74,16 @@ Scope {
         implicitHeight: Theme.barHeight + Theme.barMargin * 2
         exclusiveZone: Theme.barHeight + Theme.barMargin * 2
 
-        // Prevent auto-lock during media playback
-        IdleInhibitor {
-            window: exclusionZone
-            enabled: root.mediaPlaying
+        // Prevent auto-lock during media playback.
+        // IdleInhibitor requires idle-inhibit-unstable-v1 (not in stock quickshell).
+        // Created dynamically to avoid hard dep on non-stock type.
+        Component.onCompleted: {
+            try {
+                Qt.createQmlObject(
+                    'import Quickshell; import Quickshell.Wayland;'
+                    + ' IdleInhibitor { window: exclusionZone; enabled: root.mediaPlaying }',
+                    exclusionZone, "IdleInhibitor");
+            } catch (e) {}
         }
 
         WlrLayershell.namespace: "mcshell-zone"

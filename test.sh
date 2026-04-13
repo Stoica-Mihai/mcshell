@@ -3,7 +3,7 @@
 # Usage: ./test.sh
 # Exit code: 0 = pass, 1 = fail
 
-IPC="mcs-qs -c mcshell ipc call mcshell"
+IPC="quickshell -c mcshell ipc call mcshell"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DELAY=0.5
 FAIL_FILE=$(mktemp)
@@ -45,7 +45,7 @@ if [ ! -e "$LINK" ]; then
     ln -s "$SCRIPT_DIR" "$LINK"
 fi
 
-mcs-qs -c mcshell >"$SHELL_LOG" 2>&1 &
+quickshell -c mcshell >"$SHELL_LOG" 2>&1 &
 SHELL_PID=$!
 sleep 4
 
@@ -61,35 +61,36 @@ sleep "$DELAY"
 echo "Shell running. Testing IPC commands..."
 
 # ── 2. Toggle commands (open then close) ────────────
-ipc_test toggleLauncher;       ipc_test toggleLauncher
-ipc_test launcherApps;         ipc_test toggleLauncher
-ipc_test launcherClipboard;    ipc_test toggleLauncher
-ipc_test launcherWifi;         ipc_test toggleLauncher
-ipc_test launcherBluetooth;    ipc_test toggleLauncher
-ipc_test launcherWallpaper;    ipc_test toggleLauncher
-ipc_test launcherSettings;     ipc_test toggleLauncher
+# Stock quickshell IPC requires all typed parameters — pass "" for optional args.
+ipc_test toggleLauncher;                    ipc_test toggleLauncher
+ipc_test launcherApps '""' '""';            ipc_test toggleLauncher
+ipc_test launcherClipboard '""' '""';       ipc_test toggleLauncher
+ipc_test launcherWifi '""' '""';            ipc_test toggleLauncher
+ipc_test launcherBluetooth '""' '""';       ipc_test toggleLauncher
+ipc_test launcherWallpaper '""' '""';       ipc_test toggleLauncher
+ipc_test launcherSettings '""' '""';        ipc_test toggleLauncher
 
 # New mode variants (valid)
-ipc_test launcherApps list;       ipc_test toggleLauncher
-ipc_test launcherSettings list;   ipc_test toggleLauncher
+ipc_test launcherApps list '""';            ipc_test toggleLauncher
+ipc_test launcherSettings list '""';        ipc_test toggleLauncher
 
 # Settings card pre-selection via `target` arg — one card × three modes covers
 # the full mode × target matrix. The dispatcher is target-agnostic, so testing
 # every card id would just duplicate coverage of the same code path.
-ipc_test launcherSettings view power;    ipc_test toggleLauncher
-ipc_test launcherSettings list power;    ipc_test toggleLauncher
-ipc_test launcherSettings edit power;    ipc_test toggleLauncher
+ipc_test launcherSettings view power;       ipc_test toggleLauncher
+ipc_test launcherSettings list power;       ipc_test toggleLauncher
+ipc_test launcherSettings edit power;       ipc_test toggleLauncher
 # edit with no target — lands on first card (selectedIndex 0)
-ipc_test launcherSettings edit;          ipc_test toggleLauncher
+ipc_test launcherSettings edit '""';        ipc_test toggleLauncher
 
 # Bar panel toggles
-ipc_test toggleCalendar;       ipc_test toggleCalendar
-ipc_test toggleVolume;         ipc_test toggleVolume
-ipc_test toggleNotifications;  ipc_test toggleNotifications
-ipc_test toggleWeather;        ipc_test toggleWeather
-ipc_test toggleWeather view;   ipc_test toggleWeather
-ipc_test toggleWeather edit;   ipc_test toggleWeather
-ipc_test toggleClockSettings;  ipc_test toggleClockSettings
+ipc_test toggleCalendar '""';       ipc_test toggleCalendar '""'
+ipc_test toggleVolume '""';         ipc_test toggleVolume '""'
+ipc_test toggleNotifications '""';  ipc_test toggleNotifications '""'
+ipc_test toggleWeather '""';        ipc_test toggleWeather '""'
+ipc_test toggleWeather view;        ipc_test toggleWeather '""'
+ipc_test toggleWeather edit;        ipc_test toggleWeather '""'
+ipc_test toggleClockSettings '""';  ipc_test toggleClockSettings '""'
 ipc_test toggleKeybinds;       ipc_test toggleKeybinds
 ipc_test toggleWindows;        ipc_test toggleWindows
 ipc_test toggleDnd;            ipc_test toggleDnd
@@ -103,9 +104,9 @@ $IPC clipboardList >/dev/null 2>&1; sleep "$DELAY"
 # if the expected warning is absent. All "mcshell IPC:" warnings are filtered
 # out of the aggregate WARN count at the bottom.
 echo "Testing validation warnings..."
-expect_warn "toggleVolume edit"         "panel 'volume' does not support mode 'edit'"
-expect_warn "launcherApps edit"         "launcher tab 'apps' does not support mode 'edit'"
-expect_warn "toggleCalendar edit"       "panel 'calendar' does not support mode 'edit'"
+expect_warn 'toggleVolume edit'                  "panel 'volume' does not support mode 'edit'"
+expect_warn 'launcherApps edit ""'               "launcher tab 'apps' does not support mode 'edit'"
+expect_warn 'toggleCalendar edit'                "panel 'calendar' does not support mode 'edit'"
 
 # ── 3. One-shot commands (skip destructive) ─────────
 ipc_test screenshotFull

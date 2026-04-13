@@ -5,6 +5,7 @@ import qs.Config
 // Read-only progress bar for settings panels (brightness, volume, temperature).
 // For interactive sliders with knob/drag, use Widgets/ControlSlider instead.
 Rectangle {
+    id: root
     property real value: 0        // 0.0 to 1.0
     property color barColor: Theme.accent
 
