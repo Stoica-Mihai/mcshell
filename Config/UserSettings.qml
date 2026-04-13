@@ -30,6 +30,9 @@ Singleton {
     // (ms). Adding or renaming an interval means editing exactly this array.
     readonly property var wallpaperRotateOptions: [
         { id: "off", label: "Off",      ms: 0 },
+        { id: "1m",  label: "1 min",    ms: 60 * 1000 },
+        { id: "5m",  label: "5 min",    ms: 5 * 60 * 1000 },
+        { id: "15m", label: "15 min",   ms: 15 * 60 * 1000 },
         { id: "30m", label: "30 min",   ms: 30 * 60 * 1000 },
         { id: "1h",  label: "1 hour",   ms: 60 * 60 * 1000 },
         { id: "3h",  label: "3 hours",  ms: 3 * 60 * 60 * 1000 },

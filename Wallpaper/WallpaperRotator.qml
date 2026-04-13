@@ -35,6 +35,10 @@ Item {
     // Prime the scanner if rotation is enabled before the Wall tab has
     // ever been opened — otherwise paths would stay empty and the timer
     // would idle forever.
+    Component.onCompleted: {
+        if (_enabled && !WallpaperScanner.loaded)
+            WallpaperScanner.scan();
+    }
     Connections {
         target: UserSettings
         function onWallpaperRotateIntervalChanged() {

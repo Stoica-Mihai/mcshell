@@ -2,6 +2,20 @@
 
 A custom Wayland desktop shell built with [QuickShell](https://quickshell.outfoxxed.me/) for the [niri](https://github.com/YaLTeR/niri) compositor. Pure QML, no build step.
 
+## Screenshots
+
+![Status bar](screenshots/01-bar-hero.png)
+
+| | |
+|---|---|
+| ![App launcher](screenshots/02-launcher-apps.png) | ![Settings — Theme](screenshots/03-settings-theme.png) |
+| ![WiFi networks](screenshots/04-launcher-wifi.png) | ![Bluetooth devices](screenshots/05-launcher-bluetooth.png) |
+| ![Calendar with holidays](screenshots/06-calendar.png) | ![Weather forecast](screenshots/07-weather.png) |
+| ![Volume & per-app audio](screenshots/08-volume.png) | ![Notification history](screenshots/09-notifications.png) |
+| ![System tray](screenshots/10-tray.png) | ![System monitor](screenshots/11-sysinfo.png) |
+
+![Keybind hints](screenshots/12-keybinds.png)
+
 ## Features
 
 ### Status Bar

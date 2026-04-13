@@ -37,6 +37,7 @@ ShellRoot {
         notifications: ["view"],
         media:         ["view"],
         tray:          ["view"],
+        trayicons:     ["view"],
         sysinfo:       ["view"]
     })
 
@@ -182,6 +183,7 @@ ShellRoot {
         function toggleWeather(mode: string): void { shell._dispatchPanel("weather", mode); }
         function toggleClockSettings(mode: string): void { shell._dispatchPanel("clockSettings", mode); }
         function toggleSysInfo(mode: string): void { shell._dispatchPanel("sysinfo", mode); }
+        function toggleTray(mode: string): void { shell._dispatchPanel("trayicons", mode); }
         function toggleRecording(): void { screenRecording.toggleRecording(); }
         function clipboardList(): string {
             const entries = ClipboardHistory.entries.values;
