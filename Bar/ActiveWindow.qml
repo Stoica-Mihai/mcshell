@@ -1,5 +1,5 @@
 import QtQuick
-import Quickshell.Niri
+import Qs.NiriIpc
 import qs.Config
 import qs.Widgets
 

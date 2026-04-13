@@ -1,10 +1,10 @@
 .PHONY: start stop test restart
 
 start:
-	@mcs-qs -c mcshell &
+	@quickshell -c mcshell &
 
 stop:
-	@kill $$(pgrep -x qs) 2>/dev/null || true
+	@quickshell kill -c mcshell 2>/dev/null || true
 
 restart: stop
 	@sleep 1

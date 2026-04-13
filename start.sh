@@ -15,5 +15,4 @@ elif [ "$(readlink -f "$LINK")" != "$SHELL_DIR" ]; then
     echo "Updated link $LINK -> $SHELL_DIR"
 fi
 
-export QT_LOGGING_RULES="qt.qpa.services.warning=false"
-exec mcs-qs -c mcshell "$@"
+exec quickshell -c mcshell "$@"

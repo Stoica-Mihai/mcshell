@@ -1,7 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Quickshell.Wayland._DataControl
+import Qs.DataControl
 import qs.Config
 import qs.Core
 

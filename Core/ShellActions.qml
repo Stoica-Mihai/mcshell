@@ -2,7 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import Quickshell.Niri
+import Qs.NiriIpc
 import qs.Core
 
 Singleton {

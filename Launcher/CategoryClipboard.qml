@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Wayland._DataControl
+import Qs.DataControl
 import qs.Config
 
 LauncherCategory {

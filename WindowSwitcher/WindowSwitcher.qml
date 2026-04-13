@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Niri
+import Qs.NiriIpc
 import qs.Config
 import qs.Core
 import qs.Widgets

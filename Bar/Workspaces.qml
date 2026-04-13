@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Shapes
-import Quickshell.Niri
+import Qs.NiriIpc
 import qs.Config
 import qs.Widgets
 

@@ -1,4 +1,4 @@
-//@ pragma Env QT_QPA_PLATFORMTHEME=gtk3
+//@ pragma Env QML_IMPORT_PATH=/home/mcs/.local/share/quickshell/plugins
 
 import QtQuick
 import Quickshell
@@ -14,7 +14,7 @@ import qs.LockScreen
 import qs.Polkit
 import qs.Wallpaper
 import qs.Screenshot
-import Quickshell.Wayland._DataControl
+import Qs.DataControl
 import qs.WindowSwitcher
 import qs.Core
 import Quickshell.Bluetooth

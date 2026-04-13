@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Bluetooth
+import Qs.BtHelper
 import qs.Config
 import qs.Core
 
@@ -46,7 +47,7 @@ LauncherCategory {
 
     // ── Lifecycle ──
     Connections {
-        target: root.btAdapter
+        target: BtHelper
         function onPropertiesRefreshed() {
             if (!root.active) return;
             if (root.btReady) {
@@ -61,7 +62,7 @@ LauncherCategory {
     function onTabEnter() {
         active = true;
         // Force D-Bus property re-read — bindings may be stale while launcher was hidden
-        if (btAdapter) btAdapter.refreshProperties();
+        if (btAdapter) BtHelper.refreshAdapter(btAdapter);
     }
 
     function onTabLeave() {
