@@ -87,17 +87,9 @@ SettingsPanel {
             font.pixelSize: Theme.fontSizeMedium
             color: (root.defaultSink?.audio?.muted ?? false) ? Theme.red : Theme.accent
         }
-        Rectangle {
-            Layout.fillWidth: true
-            height: 4
-            radius: 2
-            color: Theme.overlay
-            Rectangle {
-                width: parent.width * (root.volume / 100)
-                height: parent.height
-                radius: parent.radius
-                color: (root.defaultSink?.audio?.muted ?? false) ? Theme.red : Theme.accent
-            }
+        SettingsProgressBar {
+            value: root.volume / 100
+            barColor: (root.defaultSink?.audio?.muted ?? false) ? Theme.red : Theme.accent
         }
         Text {
             text: root.volume + "%"

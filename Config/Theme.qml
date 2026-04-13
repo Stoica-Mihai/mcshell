@@ -468,6 +468,11 @@ Singleton {
     readonly property int trayMenuPadding: 12        // tray menu content padding
     readonly property int menuRebuildDelay: 16       // ms delay for menu rebuild
 
+    // Dialog/overlay
+    readonly property int dialogWidth: 380              // narrow dialogs (polkit, lock)
+    readonly property int dialogRadius: 14              // dialog card corner radius
+    readonly property int dialogPadding: 24             // inner padding for dialog cards
+
     // Settings panel rows
     readonly property int settingsRowHeight: 40
     readonly property int settingsRowCompact: 36

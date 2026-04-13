@@ -122,17 +122,9 @@ SettingsPanel {
             color: Theme.fg
             Layout.preferredWidth: tempLabel.implicitWidth
         }
-        Rectangle {
-            Layout.fillWidth: true
-            height: 4
-            radius: 2
-            color: Theme.overlay
-            Rectangle {
-                width: parent.width * (Brightness.percent / 100)
-                height: parent.height
-                radius: parent.radius
-                color: Theme.yellow
-            }
+        SettingsProgressBar {
+            value: Brightness.percent / 100
+            barColor: Theme.yellow
         }
         Text {
             text: Brightness.percent + "%"
@@ -200,17 +192,9 @@ SettingsPanel {
             font.pixelSize: Theme.fontSizeSmall
             color: Theme.fg
         }
-        Rectangle {
-            Layout.fillWidth: true
-            height: 4
-            radius: 2
-            color: Theme.overlay
-            Rectangle {
-                width: parent.width * ((UserSettings.activeTemp - UserSettings.tempMin) / (UserSettings.tempMax - UserSettings.tempMin))
-                height: parent.height
-                radius: parent.radius
-                color: Theme.yellow
-            }
+        SettingsProgressBar {
+            value: (UserSettings.activeTemp - UserSettings.tempMin) / (UserSettings.tempMax - UserSettings.tempMin)
+            barColor: Theme.yellow
         }
         Text {
             text: UserSettings.activeTemp + "K"

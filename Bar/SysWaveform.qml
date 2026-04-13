@@ -17,34 +17,25 @@ Item {
     implicitWidth: wave.implicitWidth
     implicitHeight: Theme.iconSize
 
-    Row {
+    WaveformBars {
         id: wave
         anchors.centerIn: parent
-        spacing: 1.5
 
-        Repeater {
-            model: 8
-
-            Rectangle {
-                width: 2.5
-                radius: 1
-                anchors.bottom: parent.bottom
-
-                readonly property real _avg: {
-                    const cores = SysInfo.cpuCores;
-                    const i0 = index * 2;
-                    const i1 = i0 + 1;
-                    const a = i0 < cores.length ? cores[i0] : 0;
-                    const b = i1 < cores.length ? cores[i1] : 0;
-                    return (a + b) / 2;
-                }
-
-                height: Math.max(2, _avg / 100 * 14)
-                color: Theme.loadColor(_avg)
-
-                Behavior on height { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
-                Behavior on color  { ColorAnimation  { duration: Theme.animCarousel } }
-            }
+        barHeight: function(i) {
+            const cores = SysInfo.cpuCores;
+            const i0 = i * 2;
+            const i1 = i0 + 1;
+            const a = i0 < cores.length ? cores[i0] : 0;
+            const b = i1 < cores.length ? cores[i1] : 0;
+            return (a + b) / 200 * 14;
+        }
+        barColor: function(i) {
+            const cores = SysInfo.cpuCores;
+            const i0 = i * 2;
+            const i1 = i0 + 1;
+            const a = i0 < cores.length ? cores[i0] : 0;
+            const b = i1 < cores.length ? cores[i1] : 0;
+            return Theme.loadColor((a + b) / 2);
         }
     }
 

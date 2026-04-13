@@ -90,7 +90,7 @@ OverlayWindow {
         width: Math.min(700, parent.width * 0.85)
         height: parent.height * 0.82
         anchors.centerIn: parent
-        radius: 12
+        radius: Theme.dialogRadius
         color: Theme.bg
         border.width: 1
         border.color: Theme.border

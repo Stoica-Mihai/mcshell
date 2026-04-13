@@ -74,9 +74,9 @@ Item {
             Rectangle {
                 id: dialog
                 anchors.centerIn: parent
-                width: 380
-                implicitHeight: content.implicitHeight + 48
-                radius: 16
+                width: Theme.dialogWidth
+                implicitHeight: content.implicitHeight + Theme.dialogPadding * 2
+                radius: Theme.dialogRadius
                 color: Theme.bg
                 border.width: 1
                 border.color: Theme.border
@@ -94,7 +94,7 @@ Item {
                 ColumnLayout {
                     id: content
                     anchors.fill: parent
-                    anchors.margins: 24
+                    anchors.margins: Theme.dialogPadding
                     spacing: Theme.spacingLarge
 
                     // Lock icon
@@ -211,63 +211,26 @@ Item {
                         Layout.alignment: Qt.AlignRight
                         spacing: Theme.spacingNormal
 
-                        // Cancel
-                        Rectangle {
-                            width: cancelText.implicitWidth + 24
-                            height: 30
-                            radius: Theme.radiusSmall
-                            color: cancelMouse.containsMouse ? Theme.overlayHover : Theme.overlay
-
-                            Text {
-                                id: cancelText
-                                anchors.centerIn: parent
-                                text: "Cancel"
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSizeSmall
-                                color: Theme.fgDim
-                            }
-
-                            MouseArea {
-                                id: cancelMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (agent.flow) {
-                                        agent.flow.cancelAuthenticationRequest();
-                                        passwordInput.text = "";
-                                    }
+                        TextButton {
+                            label: "Cancel"
+                            onClicked: {
+                                if (agent.flow) {
+                                    agent.flow.cancelAuthenticationRequest();
+                                    passwordInput.text = "";
                                 }
                             }
                         }
 
-                        // Authenticate
-                        Rectangle {
-                            width: authText.implicitWidth + 24
-                            height: 30
-                            radius: Theme.radiusSmall
-                            color: authMouse.containsMouse ? Qt.darker(Theme.accent, 1.2) : Theme.accent
-
-                            Text {
-                                id: authText
-                                anchors.centerIn: parent
-                                text: "Authenticate"
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSizeSmall
-                                color: Theme.bgSolid
-                                font.bold: true
-                            }
-
-                            MouseArea {
-                                id: authMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    if (passwordInput.text !== "" && agent.flow) {
-                                        agent.flow.submit(passwordInput.text);
-                                        passwordInput.text = "";
-                                    }
+                        TextButton {
+                            label: "Authenticate"
+                            baseColor: Theme.accent
+                            hoverColor: Qt.darker(Theme.accent, 1.2)
+                            textColor: Theme.bgSolid
+                            bold: true
+                            onClicked: {
+                                if (passwordInput.text !== "" && agent.flow) {
+                                    agent.flow.submit(passwordInput.text);
+                                    passwordInput.text = "";
                                 }
                             }
                         }

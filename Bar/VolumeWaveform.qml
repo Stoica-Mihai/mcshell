@@ -20,31 +20,18 @@ Item {
     implicitWidth: bars.implicitWidth
     implicitHeight: Theme.iconSize
 
-    Row {
+    WaveformBars {
         id: bars
         anchors.centerIn: parent
-        spacing: 1.5
 
-        Repeater {
-            model: 8
-
-            Rectangle {
-                width: 2.5
-                radius: 1
-                anchors.bottom: parent.bottom
-
-                // Each bar maps to a volume segment. Bar 0 fills at 0-12.5%,
-                // bar 1 at 12.5-25%, etc. Within its segment, height ramps 2→14.
-                readonly property real _threshold: index / 8
-                readonly property real _fill: Math.max(0, Math.min(1, (root.rawVolume - _threshold) * 8))
-
-                height: Math.max(2, _fill * 10)
-                color: root.muted ? Theme.fgDim : Theme.accent
-
-                Behavior on height { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
-                Behavior on color  { ColorAnimation  { duration: Theme.animFast } }
-            }
+        // Each bar maps to a volume segment. Bar 0 fills at 0-12.5%,
+        // bar 1 at 12.5-25%, etc. Within its segment, height ramps 2→14.
+        barHeight: function(i) {
+            const threshold = i / 8;
+            const fill = Math.max(0, Math.min(1, (root.rawVolume - threshold) * 8));
+            return fill * 10;
         }
+        barColor: function() { return root.muted ? Theme.fgDim : Theme.accent; }
     }
 
     // Mute slash — diagonal line through the bars
