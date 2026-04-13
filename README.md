@@ -251,7 +251,7 @@ binds {
 | Package | Purpose |
 |---|---|
 | [Quickshell](https://quickshell.outfoxxed.me/) | 0.2.1+ shell toolkit (`quickshell` binary) |
-| [quickshell-plugins](https://github.com/Stoica-Mihai/quickshell-plugins) | Required plugins: qs-niri-ipc, qs-data-control, qs-nightlight, qs-vibrant-color, qs-bt-helper, qs-sysinfo, qs-networking, qs-polkit |
+| [quickshell-plugins](https://github.com/Stoica-Mihai/quickshell-plugins) | Native C++ plugins for Quickshell — see repo for build instructions. Required: `qs-niri-ipc`, `qs-data-control`, `qs-nightlight`, `qs-vibrant-color`, `qs-bt-helper`, `qs-sysinfo`, `qs-networking`, `qs-polkit` |
 | [niri](https://github.com/YaLTeR/niri) | Wayland compositor |
 | PipeWire + WirePlumber | Audio (native API) |
 | NetworkManager | Network status (native API) + `nmcli` for WiFi password connections |
