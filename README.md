@@ -32,7 +32,7 @@ Three parallelogram segments (left/center/right) with glass effect and animated 
   - **Volume** — PipeWire native, waveform bars visualization, scroll to adjust, middle-click mute, per-app sliders
   - **Battery** — UPower native, icon + percentage, red below 20%, hidden on desktops
   - **Notifications** — unread badge, history list, middle-click for Do Not Disturb, action buttons
-- **System Monitor** — CPU core-load waveform bars in the capsule, click to expand dashboard with CPU, RAM, temperatures, disk, network stats (toggleable via Settings > Display)
+- **System Monitor** — CPU core-load waveform bars in the capsule, click to expand dashboard with CPU, RAM, temperatures, disk, network, and per-GPU stats (utilization / VRAM / power / clock for AMD via sysfs and NVIDIA via NVML; zero subprocess). Toggleable via Settings > Display.
 - **System Tray** — collapsed segmented ring indicator, expand to icon grid with colorized icons, right-click context menus, hover tooltips
 
 ### App Launcher
@@ -150,7 +150,7 @@ Bar panel IPCs also accept an optional `<mode>` argument (`view` default). Only 
 | `toggleNotifications [mode]` | Open/close the notification history |
 | `toggleWeather [mode]` | Open/close the weather dropdown. `toggleWeather edit` opens the location editor directly. |
 | `toggleClockSettings [mode]` | Open/close the clock settings dropdown (time format, date format, week start) |
-| `toggleSysInfo [mode]` | Open/close the system monitor panel (CPU, RAM, temps, disk, network) |
+| `toggleSysInfo [mode]` | Open/close the system monitor panel (CPU, RAM, temps, disk, network, GPU) |
 | `toggleKeybinds` | Open/close the keybind hints overlay |
 
 ### Session
@@ -275,7 +275,7 @@ Pure QML — no C++, no build system. QuickShell interprets QML directly. Each s
 |---|---|
 | `Config/` | `Theme` singleton (8 palettes + auto wallpaper theming), `UserSettings` singleton (persistent preferences via `JsonAdapter`, live-reload on external changes) |
 | `Core/` | Shared non-visual singletons — `SafeProcess`, `ShellActions` (lock/logout/reboot/shutdown/wallpaper), `Brightness`, `HolidayService` (Nager.Date), `NotificationDispatcher`, `WeatherCodes`, `JsonFetcher`, `ConnectivityRetry`, `OverlayWindow` |
-| `Bar/` | Status bar — three parallelogram segments with shared dropdown panels. Left: launcher + workspaces, active window. Center: clock + calendar/clock-settings, weather + forecast/edit (via shared `BarPopupWindow`). Right: media (MPRIS), system tray (collapsed ring + expanded grid), WiFi/BT/volume-waveform/battery/notifications/system-monitor capsule sharing one dropdown. Also `Recording` (wf-recorder driver), `SysInfoPanel` (CPU/RAM/temp/disk/network dashboard) |
+| `Bar/` | Status bar — three parallelogram segments with shared dropdown panels. Left: launcher + workspaces, active window. Center: clock + calendar/clock-settings, weather + forecast/edit (via shared `BarPopupWindow`). Right: media (MPRIS), system tray (collapsed ring + expanded grid), WiFi/BT/volume-waveform/battery/notifications/system-monitor capsule sharing one dropdown. Also `Recording` (wf-recorder driver), `SysInfoPanel` (CPU/RAM/temp/disk/network/GPU dashboard) |
 | `Launcher/` | App launcher carousel — apps, clipboard, WiFi, Bluetooth, wallpaper, settings tabs with 3-level keyboard navigation (view/list/edit) and lazy-loaded progressive model growth |
 | `Notifications/` | DBus notification daemon + popup cards with action buttons |
 | `NotificationHistory/` | Notification history dropdown |
