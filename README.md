@@ -1,6 +1,6 @@
 # mcshell
 
-A custom Wayland desktop shell built with [QuickShell](https://quickshell.outfoxxed.me/) for the [niri](https://github.com/YaLTeR/niri) compositor. Pure QML, no build step.
+A custom Wayland desktop shell built with [mcs-qs](https://github.com/Stoica-Mihai/mcs-qs) — our fork of [QuickShell](https://quickshell.outfoxxed.me/) — for the [niri](https://github.com/YaLTeR/niri) compositor. Pure QML, no build step.
 
 ## Screenshots
 
@@ -109,14 +109,14 @@ make test        # smoke test: start, run all IPC commands, check for errors/war
 Or manually:
 ```sh
 ln -s /path/to/mcshell ~/.config/quickshell/mcshell
-quickshell -c mcshell
+mcs-qs -c mcshell
 ```
 
 ## IPC Commands
 
 All commands use the format:
 ```sh
-quickshell -c mcshell ipc call mcshell <command>
+mcs-qs -c mcshell ipc call mcshell <command>
 ```
 
 ### Launcher
@@ -183,17 +183,17 @@ Bar panel IPCs also accept an optional `<mode>` argument (`view` default). Only 
 
 ```kdl
 binds {
-    Mod+Q { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "toggleLauncher"; }
-    Mod+K { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "toggleKeybinds"; }
-    Mod+W { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "launcherWallpaper" "list"; }
-    Mod+L { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "lock"; }
-    Mod+N { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "launcherWifi"; }
-    Mod+B { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "launcherBluetooth"; }
-    Ctrl+Alt+Q { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "launcherSettings" "edit power"; }
-    Alt+Tab { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "toggleWindows"; }
-    Print { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotArea"; }
-    Shift+Print { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotFull"; }
-    Ctrl+Print { spawn "quickshell" "-c" "mcshell" "ipc" "call" "mcshell" "screenshotWindow"; }
+    Mod+Q       { spawn-sh "mcs-qs -c mcshell ipc call mcshell toggleLauncher"; }
+    Mod+K       { spawn-sh "mcs-qs -c mcshell ipc call mcshell toggleKeybinds"; }
+    Mod+W       { spawn-sh "mcs-qs -c mcshell ipc call mcshell launcherWallpaper list"; }
+    Mod+L       { spawn-sh "mcs-qs -c mcshell ipc call mcshell lock"; }
+    Mod+N       { spawn-sh "mcs-qs -c mcshell ipc call mcshell launcherWifi"; }
+    Mod+B       { spawn-sh "mcs-qs -c mcshell ipc call mcshell launcherBluetooth"; }
+    Ctrl+Alt+Q  { spawn-sh "mcs-qs -c mcshell ipc call mcshell launcherSettings edit power"; }
+    Alt+Tab     { spawn-sh "mcs-qs -c mcshell ipc call mcshell toggleWindows"; }
+    Print       { spawn-sh "mcs-qs -c mcshell ipc call mcshell screenshotArea"; }
+    Shift+Print { spawn-sh "mcs-qs -c mcshell ipc call mcshell screenshotFull"; }
+    Ctrl+Print  { spawn-sh "mcs-qs -c mcshell ipc call mcshell screenshotWindow"; }
 }
 ```
 
@@ -250,8 +250,7 @@ binds {
 ### Required
 | Package | Purpose |
 |---|---|
-| [Quickshell](https://quickshell.outfoxxed.me/) | 0.2.1+ shell toolkit (`quickshell` binary) |
-| [quickshell-plugins](https://github.com/Stoica-Mihai/quickshell-plugins) | Native C++ plugins for Quickshell — see repo for build instructions. Required: `qs-niri-ipc`, `qs-data-control`, `qs-nightlight`, `qs-vibrant-color`, `qs-bt-helper`, `qs-sysinfo`, `qs-networking`, `qs-polkit` |
+| [mcs-qs](https://github.com/Stoica-Mihai/mcs-qs) | Our in-house fork of [Quickshell](https://quickshell.outfoxxed.me/) (`mcs-qs` binary). Carries an IPC ergonomics patch (optional args) plus extra native modules used by this shell. See repo for build instructions. |
 | [niri](https://github.com/YaLTeR/niri) | Wayland compositor |
 | PipeWire + WirePlumber | Audio (native API) |
 | NetworkManager | Network status (native API) + `nmcli` for WiFi password connections |

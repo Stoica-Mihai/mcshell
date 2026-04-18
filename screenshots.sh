@@ -8,7 +8,7 @@
 
 set -e
 
-IPC="quickshell -c mcshell ipc call mcshell"
+IPC="mcs-qs -c mcshell ipc call mcshell"
 OUT="$(cd "$(dirname "$0")" && pwd)/screenshots"
 DELAY=1.2    # seconds to wait for animations before capture
 CLOSE_DELAY=0.5
@@ -53,7 +53,7 @@ shot "01-bar-hero"
 
 # ── 2. Launcher: Apps tab ──
 echo "[2/12] Launcher: Apps"
-$IPC launcherApps list "" >/dev/null 2>&1
+$IPC launcherApps list >/dev/null 2>&1
 shot "02-launcher-apps"
 close_launcher
 
@@ -65,13 +65,13 @@ close_launcher
 
 # ── 4. Launcher: WiFi tab ──
 echo "[4/12] Launcher: WiFi"
-$IPC launcherWifi list "" >/dev/null 2>&1
+$IPC launcherWifi list >/dev/null 2>&1
 shot "04-launcher-wifi"
 close_launcher
 
 # ── 5. Launcher: Bluetooth tab ──
 echo "[5/12] Launcher: Bluetooth"
-$IPC launcherBluetooth list "" >/dev/null 2>&1
+$IPC launcherBluetooth list >/dev/null 2>&1
 shot "05-launcher-bluetooth"
 close_launcher
 

@@ -15,4 +15,4 @@ elif [ "$(readlink -f "$LINK")" != "$SHELL_DIR" ]; then
     echo "Updated link $LINK -> $SHELL_DIR"
 fi
 
-exec quickshell -c mcshell "$@"
+exec mcs-qs -c mcshell "$@"

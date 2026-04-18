@@ -67,12 +67,10 @@ ShellRoot {
         shell._toggleCounter++;
     }
 
-    // args is a single string: "mode" or "mode target" (space-separated).
-    function _dispatchLauncher(tab, args) {
-        const p = (args || "").split(" ");
-        const resolved = _resolveMode("launcher tab", tab, appLauncher.supportedModesFor(tab), p[0] || "");
+    function _dispatchLauncher(tab, mode, target) {
+        const resolved = _resolveMode("launcher tab", tab, appLauncher.supportedModesFor(tab), mode || "");
         if (resolved === null) return;
-        appLauncher.openTab(tab, resolved, p[1] || "");
+        appLauncher.openTab(tab, resolved, target || "");
     }
 
     // Force singleton initialization so connection watchers start immediately.
@@ -166,14 +164,13 @@ ShellRoot {
         target: "mcshell"
 
         function toggleLauncher(): void { appLauncher.toggle(); }
-        // Single string arg — "mode" or "mode target" (space-separated).
-        // Parsed in _dispatchLauncher so IPC callers don't need empty "" for unused target.
-        function launcherApps(args: string): void { shell._dispatchLauncher("apps", args); }
-        function launcherClipboard(args: string): void { shell._dispatchLauncher("clipboard", args); }
-        function launcherWifi(args: string): void { shell._dispatchLauncher("wifi", args); }
-        function launcherBluetooth(args: string): void { shell._dispatchLauncher("bluetooth", args); }
-        function launcherWallpaper(args: string): void { shell._dispatchLauncher("wallpaper", args); }
-        function launcherSettings(args: string): void { shell._dispatchLauncher("settings", args); }
+        // Two positional args: <mode> <target>. Both optional (mcs-qs allows fewer args than declared).
+        function launcherApps(mode: string, target: string): void { shell._dispatchLauncher("apps", mode, target); }
+        function launcherClipboard(mode: string, target: string): void { shell._dispatchLauncher("clipboard", mode, target); }
+        function launcherWifi(mode: string, target: string): void { shell._dispatchLauncher("wifi", mode, target); }
+        function launcherBluetooth(mode: string, target: string): void { shell._dispatchLauncher("bluetooth", mode, target); }
+        function launcherWallpaper(mode: string, target: string): void { shell._dispatchLauncher("wallpaper", mode, target); }
+        function launcherSettings(mode: string, target: string): void { shell._dispatchLauncher("settings", mode, target); }
 
         function toggleKeybinds(): void { keybindPanel.toggle(); }
         function toggleWindows(): void { windowSwitcher.toggle(); }

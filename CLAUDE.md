@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-mcshell is a Wayland desktop shell (status bar, notifications, app launcher, quick settings) built entirely in QML using [Quickshell](https://quickshell.outfoxxed.me/) — a Qt6/QML-based shell toolkit for Wayland compositors. It targets the **niri** compositor specifically via the native `Quickshell.Niri` IPC module.
+mcshell is a Wayland desktop shell (status bar, notifications, app launcher, quick settings) built entirely in QML using [mcs-qs](https://github.com/Stoica-Mihai/mcs-qs) — our in-house fork of [Quickshell](https://quickshell.outfoxxed.me/), a Qt6/QML-based shell toolkit for Wayland compositors. It targets the **niri** compositor specifically via the native `Quickshell.Niri` IPC module. The fork carries a small IPC ergonomics patch (optional positional args — stock Quickshell rejects any arg-count mismatch) plus the native modules this shell relies on (`Quickshell.Networking`, `Quickshell.Services.Polkit`, `Quickshell.Wayland._DataControl`, `Quickshell.Wayland._GammaControl`, `VibrantColor`, etc.).
 
 ## Running
 
@@ -15,9 +15,9 @@ make restart     # stop + start
 make test        # smoke test: start shell, run all IPC commands, check for errors/warnings
 ```
 
-Or directly: `./start.sh` / `quickshell -c mcshell`
+Or directly: `./start.sh` / `mcs-qs -c mcshell`
 
-The shell requires a running Wayland session with wlr-layer-shell support (niri, Hyprland, Sway, etc.). There is no build step — Quickshell interprets QML directly.
+The shell requires a running Wayland session with wlr-layer-shell support (niri, Hyprland, Sway, etc.). There is no build step for mcshell itself — mcs-qs interprets QML directly.
 
 ## Architecture
 
@@ -48,12 +48,11 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 - **Layer shell windows:** All top-level windows use `WlrLayershell` with namespaces prefixed by `mcshell` — e.g. `mcshell` (bar main surface), `mcshell-zone` (exclusion reservation), `mcshell-notifications`, `mcshell-launcher`, `mcshell-screenshot`, `mcshell-wallpaper`, `mcshell-keybinds`, `mcshell-window-switcher`, `mcshell-polkit`, `mcshell-bar-popup` (shared by `BarPopupWindow` subclasses — `mcshell-calendar`, `mcshell-weather`, `mcshell-clock-settings`).
 - **Popup dismissal:** The `StatusBar` uses a single fullscreen `PanelWindow` (`mainSurface`) with input masking (`mask: Region {}`) — bar-only input when no popup is open, fullscreen when a popup is open. A `MouseArea` behind all content catches outside clicks to dismiss. No separate clickCatcher window.
 - **Icons:** Uses "Symbols Nerd Font" for all icons (Unicode codepoints, not icon names).
-- **No build system:** Pure QML — no C++, no CMake, no npm. Files are loaded by Quickshell at runtime.
+- **No build system:** Pure QML — no C++, no CMake, no npm. Files are loaded by mcs-qs at runtime.
 
 ## System Dependencies
 
-- **[Quickshell](https://quickshell.outfoxxed.me/)** 0.2.1+ (`quickshell` binary)
-- **[quickshell-plugins](https://github.com/Stoica-Mihai/quickshell-plugins)** — required plugins: `qs-niri-ipc`, `qs-data-control`, `qs-nightlight`, `qs-vibrant-color`, `qs-bt-helper`, `qs-sysinfo`, `qs-networking`, `qs-polkit`
+- **[mcs-qs](https://github.com/Stoica-Mihai/mcs-qs)** — our Quickshell fork (`mcs-qs` binary). Ships all native modules mcshell needs (no separate plugin install required).
 - **niri** compositor
 - **PipeWire + WirePlumber** — audio (native API)
 - **NetworkManager** — network status (native API) + `nmcli` for WiFi connect with password
@@ -76,4 +75,4 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
   - **Key examples:** `CarouselStrip.qml` is the single card implementation for all launcher tabs. `LauncherCategory.qml` is the base interface for all tab categories (includes `_validIndex()` bounds check helper). `DisabledCard.qml` is shared across WiFi-off, BT-off, and scanning states. `CapsuleItem.qml` is the shared icon+label pattern in the bar capsule. `SettingsRow.qml` is the shared row for all settings panels. `SettingsProgressBar.qml` is the shared read-only progress bar for settings sliders. `SafeProcess.qml` wraps all subprocess calls. `AnimatedPopup` provides the shared dropdown API (`togglePanel`/`openPanel`/`closePanel`) used by both center and right bar segments. `MediaControls.qml` is the shared MPRIS transport (prev/play/next) used in both the bar and the media dropdown. `StyledTextField.qml` is the shared search field used by KeybindPanel and WindowSwitcher. `ActiveUnderline.qml` is the shared accent indicator for active items. `WaveformBars.qml` is the shared 8-bar waveform skeleton used by both `VolumeWaveform` and `SysWaveform`. `TextButton.qml` is the shared text-label button used by `PolkitDialog`.
 - **Disabled/muted state convention:** When a feature is disabled (volume muted, DND active), its icon must be red (`Theme.red`) with a slashed variant. Red takes priority over hover color — never let hover override the disabled state.
 - **Keyboard-first design.** mcshell targets niri's keyboard-driven paradigm. Interactive features should be controllable via keybinds, not require mouse clicks. Buttons are a last resort — prefer keybind hints in the UI.
-- **Verify before handing off.** Before presenting changes for testing, always run `quickshell -c mcshell` (or reload the shell) and verify that the code at minimum loads without errors. Check QML console output for warnings. If the shell doesn't load, fix it — don't hand broken code to the user. When refactoring, verify that existing functionality still works: tabs switch, cards render, keyboard shortcuts respond.
+- **Verify before handing off.** Before presenting changes for testing, always run `mcs-qs -c mcshell` (or reload the shell) and verify that the code at minimum loads without errors. Check QML console output for warnings. If the shell doesn't load, fix it — don't hand broken code to the user. When refactoring, verify that existing functionality still works: tabs switch, cards render, keyboard shortcuts respond.

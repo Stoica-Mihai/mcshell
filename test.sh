@@ -3,7 +3,7 @@
 # Usage: ./test.sh
 # Exit code: 0 = pass, 1 = fail
 
-IPC="quickshell -c mcshell ipc call mcshell"
+IPC="mcs-qs -c mcshell ipc call mcshell"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 DELAY=0.5
 FAIL_FILE=$(mktemp)
@@ -45,7 +45,7 @@ if [ ! -e "$LINK" ]; then
     ln -s "$SCRIPT_DIR" "$LINK"
 fi
 
-quickshell -c mcshell >"$SHELL_LOG" 2>&1 &
+mcs-qs -c mcshell >"$SHELL_LOG" 2>&1 &
 SHELL_PID=$!
 sleep 4
 
@@ -61,23 +61,23 @@ sleep "$DELAY"
 echo "Shell running. Testing IPC commands..."
 
 # ── 2. Toggle commands (open then close) ────────────
-# Launcher commands take a single string: "mode" or "mode target".
+# Launcher commands take optional args: "", "mode", or "mode target".
 ipc_test toggleLauncher;                          ipc_test toggleLauncher
-ipc_test launcherApps "";                         ipc_test toggleLauncher
-ipc_test launcherClipboard "";                    ipc_test toggleLauncher
-ipc_test launcherWifi "";                         ipc_test toggleLauncher
-ipc_test launcherBluetooth "";                    ipc_test toggleLauncher
-ipc_test launcherWallpaper "";                    ipc_test toggleLauncher
-ipc_test launcherSettings "";                     ipc_test toggleLauncher
+ipc_test launcherApps;                            ipc_test toggleLauncher
+ipc_test launcherClipboard;                       ipc_test toggleLauncher
+ipc_test launcherWifi;                            ipc_test toggleLauncher
+ipc_test launcherBluetooth;                       ipc_test toggleLauncher
+ipc_test launcherWallpaper;                       ipc_test toggleLauncher
+ipc_test launcherSettings;                        ipc_test toggleLauncher
 
 # Mode variants
 ipc_test launcherApps list;                       ipc_test toggleLauncher
 ipc_test launcherSettings list;                   ipc_test toggleLauncher
 
-# Settings card pre-selection — "mode target" as one string
-ipc_test "launcherSettings" "view power";         ipc_test toggleLauncher
-ipc_test "launcherSettings" "list power";         ipc_test toggleLauncher
-ipc_test "launcherSettings" "edit power";         ipc_test toggleLauncher
+# Settings card pre-selection — mode + target as separate positional args
+ipc_test launcherSettings view power;             ipc_test toggleLauncher
+ipc_test launcherSettings list power;             ipc_test toggleLauncher
+ipc_test launcherSettings edit power;             ipc_test toggleLauncher
 # edit with no target — lands on first card (selectedIndex 0)
 ipc_test launcherSettings edit;                   ipc_test toggleLauncher
 
