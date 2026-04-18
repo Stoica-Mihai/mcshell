@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
-import Qs.SysInfo
+import Quickshell.Services.SysInfo
 import qs.Config
 import qs.Widgets
 
@@ -224,6 +224,87 @@ ColumnLayout {
                 color: Theme.tempColor(modelData.value)
 
                 Behavior on color { ColorAnimation { duration: Theme.animCarousel } }
+            }
+        }
+    }
+
+    // ── GPU section ──────────────────────────────────────
+    Separator { Layout.topMargin: 8; visible: SysInfo.gpus.length > 0 }
+    SectionLabel { text: "GPU"; visible: SysInfo.gpus.length > 0 }
+
+    Repeater {
+        model: SysInfo.gpus
+
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 0
+
+            readonly property real _util: modelData.utilization >= 0 ? modelData.utilization : 0
+            readonly property bool _hasVram: modelData.vramTotal > 0
+
+            // Primary row: dot + vendor + name + util%
+            RowLayout {
+                Layout.fillWidth: true
+                Layout.preferredHeight: 20
+
+                Rectangle {
+                    width: 6; height: 6; radius: 3
+                    color: Theme.loadColor(parent.parent._util)
+
+                    Behavior on color { ColorAnimation { duration: Theme.animCarousel } }
+                }
+
+                Text {
+                    text: modelData.vendor
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeMini
+                    font.bold: true
+                    color: Theme.fgDim
+                }
+
+                Text {
+                    // Strip redundant vendor prefix from device name
+                    // (NVML's "NVIDIA GeForce ..." and our AMD fallback both duplicate it).
+                    text: modelData.name.replace(/^(NVIDIA|AMD|Intel)\s+/i, "")
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeMini
+                    color: Theme.fgDim
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                }
+
+                Text {
+                    text: modelData.utilization >= 0 ? modelData.utilization.toFixed(0) + "%" : "—"
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeTiny
+                    font.bold: true
+                    color: Theme.loadColor(parent.parent._util)
+
+                    Behavior on color { ColorAnimation { duration: Theme.animCarousel } }
+                }
+            }
+
+            // Secondary row: VRAM · power · clock
+            Text {
+                Layout.fillWidth: true
+                Layout.leftMargin: 12
+                Layout.bottomMargin: 2
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeTiny
+                color: Theme.fgDim
+                elide: Text.ElideRight
+
+                text: {
+                    const parts = [];
+                    if (parent._hasVram)
+                        parts.push(Theme.toGB(modelData.vramUsed) + " / " + Theme.toGB(modelData.vramTotal) + " GB VRAM");
+                    if (modelData.power > 0)
+                        parts.push(modelData.power.toFixed(0) + " W");
+                    if (modelData.clock > 0)
+                        parts.push(modelData.clock + " MHz");
+                    return parts.join(" \u00B7 ");
+                }
+                visible: text.length > 0
             }
         }
     }

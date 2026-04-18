@@ -1,5 +1,5 @@
 import QtQuick
-import Qs.SysInfo
+import Quickshell.Services.SysInfo
 import qs.Config
 import qs.Widgets
 
