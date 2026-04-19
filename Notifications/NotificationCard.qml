@@ -135,7 +135,7 @@ Item {
                     ctx.beginPath();
                     ctx.arc(cx, cy, r, 0, 2 * Math.PI);
                     ctx.lineWidth = lineWidth;
-                    ctx.strokeStyle = Qt.rgba(1, 1, 1, 0.1);
+                    ctx.strokeStyle = Theme.withAlpha(Theme.fg, 0.1);
                     ctx.stroke();
 
                     if (fraction > 0) {

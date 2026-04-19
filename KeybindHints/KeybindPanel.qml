@@ -33,26 +33,18 @@ OverlayWindow {
         if (isOpen) close(); else open();
     }
 
-    function navigateDown() {
+    function navigate(dir) {
         const groups = parser.filteredGroups;
-        let next = selectedIndex + 1;
+        let i = selectedIndex + dir;
         // Skip section headers
-        while (next < groups.length && groups[next].isHeader) next++;
-        if (next < groups.length) {
-            selectedIndex = next;
-            bindList.positionViewAtIndex(next, ListView.Contain);
-        }
+        while (i >= 0 && i < groups.length && groups[i].isHeader) i += dir;
+        if (i < 0 || i >= groups.length) return;
+        selectedIndex = i;
+        bindList.positionViewAtIndex(i, ListView.Contain);
     }
 
-    function navigateUp() {
-        const groups = parser.filteredGroups;
-        let prev = selectedIndex - 1;
-        while (prev >= 0 && groups[prev].isHeader) prev--;
-        if (prev >= 0) {
-            selectedIndex = prev;
-            bindList.positionViewAtIndex(prev, ListView.Contain);
-        }
-    }
+    function navigateDown() { navigate(1); }
+    function navigateUp() { navigate(-1); }
 
     // ── Window setup ────────────────────────────────────
     visible: false

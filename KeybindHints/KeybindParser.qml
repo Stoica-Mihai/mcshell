@@ -90,13 +90,7 @@ QtObject {
                 if (oneLiner) {
                     const key = oneLiner[1];
                     const body = oneLiner[2].trim().replace(/;\s*$/, "").trim();
-                    if (body) {
-                        bindings.push({
-                            key: formatKeyCombo(key),
-                            action: humanizeAction(body),
-                            rawAction: body
-                        });
-                    }
+                    if (body) bindings.push(_makeBinding(key, body));
                     // braceDepth unchanged (opened and closed on same line)
                     continue;
                 }
@@ -132,13 +126,7 @@ QtObject {
                 // Returned to depth 1 means we closed this keybind
                 if (braceDepth === 1 && currentKey) {
                     const body = actionLines.join("; ");
-                    if (body) {
-                        bindings.push({
-                            key: formatKeyCombo(currentKey),
-                            action: humanizeAction(body),
-                            rawAction: body
-                        });
-                    }
+                    if (body) bindings.push(_makeBinding(currentKey, body));
                     currentKey = "";
                     actionLines = [];
                 }
@@ -152,6 +140,15 @@ QtObject {
 
         allBindings = bindings;
         applyFilter();
+    }
+
+    function _makeBinding(key, body) {
+        return {
+            key: formatKeyCombo(key),
+            action: humanizeAction(body),
+            rawAction: body,
+            category: categorizeBinding(body)
+        };
     }
 
     function stripComment(line) {
@@ -216,8 +213,8 @@ QtObject {
         return s;
     }
 
-    function categorizeBinding(binding) {
-        const raw = (binding.rawAction || "").toLowerCase();
+    function categorizeBinding(rawAction) {
+        const raw = (rawAction || "").toLowerCase();
         for (let i = 0; i < categories.length - 1; i++) {
             const cat = categories[i];
             for (let j = 0; j < cat.patterns.length; j++) {
@@ -240,9 +237,8 @@ QtObject {
                 if (!keyHit && !actHit) continue;
             }
 
-            const cat = categorizeBinding(b);
-            if (!grouped[cat]) grouped[cat] = [];
-            grouped[cat].push(b);
+            if (!grouped[b.category]) grouped[b.category] = [];
+            grouped[b.category].push(b);
         }
 
         // Build flat list with section headers, preserving category order
