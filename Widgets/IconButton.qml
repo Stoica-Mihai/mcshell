@@ -33,6 +33,8 @@ Item {
         hoverEnabled: root.hasHover
         cursorShape: Qt.PointingHandCursor
         onClicked: root.clicked()
+        // First-click grab workaround: on bar startup the initial press gets
+        // canceled before release. Firing click on cancel preserves the action.
         onCanceled: root.clicked()
     }
 }

@@ -206,7 +206,7 @@ Singleton {
         // MD3 extended — use palette values or derive from existing colors
         secondary          = p.secondary          ?? Qt.lighter(p.fgDim, 1.3);
         tertiary           = p.tertiary           ?? p.cyan;
-        primaryContainer   = p.primaryContainer   ?? Qt.rgba(p.accent.r, p.accent.g, p.accent.b, 0.12);
+        primaryContainer   = p.primaryContainer   ?? withAlpha(p.accent, 0.12);
         secondaryContainer = p.secondaryContainer ?? Qt.darker(p.bgSolid, 0.9);
         surfaceContainer   = p.surfaceContainer   ?? Qt.lighter(p.bgSolid, 1.15);
         surfaceBright      = p.surfaceBright      ?? Qt.lighter(p.bgSolid, 1.30);
@@ -380,10 +380,12 @@ Singleton {
     Behavior on outline { ColorAnimation { duration: root.animSmooth } }
     Behavior on outlineVariant { ColorAnimation { duration: root.animSmooth } }
 
+    function withAlpha(c, a) { return Qt.rgba(c.r, c.g, c.b, a); }
+
     // Accent tints (derived — adapt automatically to palette changes)
-    readonly property color accentLight: Qt.rgba(accent.r, accent.g, accent.b, 0.12)
-    readonly property color accentBorder: Qt.rgba(accent.r, accent.g, accent.b, 0.25)
-    readonly property color redLight: Qt.rgba(red.r, red.g, red.b, 0.08)
+    readonly property color accentLight: withAlpha(accent, 0.12)
+    readonly property color accentBorder: withAlpha(accent, 0.25)
+    readonly property color redLight: withAlpha(red, 0.08)
 
     // Surface (adapts for light/dark themes)
     property color bgHover: Qt.rgba(1, 1, 1, 0.08)
@@ -436,13 +438,6 @@ Singleton {
     readonly property int barRadius: 10
     readonly property real barDiagSlant: 20
     readonly property int itemSpacing: 14
-
-    // Bar border gradient stops — all wallpaper-derived colors
-    readonly property var barBorderGradient: [
-        { position: 0.0, color: accent },
-        { position: 0.5, color: secondary },
-        { position: 1.0, color: tertiary }
-    ]
 
     // Spacing scale
     readonly property int spacingTiny: 4

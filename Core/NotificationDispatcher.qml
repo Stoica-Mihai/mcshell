@@ -12,16 +12,21 @@ Singleton {
     id: root
 
     // ── Public API ──────────────────────────────────────
+    function _baseCmd(timeout) {
+        return ["notify-send", "-a", "mcshell", "-t", String(timeout)];
+    }
+
     function send(title, body, timeout, urgency) {
-        var cmd = ["notify-send", "-a", "mcshell", "-t", String(timeout || Theme.notifNormal)];
+        var cmd = _baseCmd(timeout || Theme.notifNormal);
         if (urgency) cmd.push("-u", urgency);
         cmd.push(title, body);
         Quickshell.execDetached({ command: cmd });
     }
 
     function sendWithImage(title, body, imagePath, timeout) {
-        Quickshell.execDetached({ command: ["notify-send", "-a", "mcshell", "-t", String(timeout || Theme.notifLong),
-            "-h", "string:image-path:" + imagePath, title, body] });
+        var cmd = _baseCmd(timeout || Theme.notifLong);
+        cmd.push("-h", "string:image-path:" + imagePath, title, body);
+        Quickshell.execDetached({ command: cmd });
     }
 
     // ── Bluetooth watchers ──────────────────────────────
