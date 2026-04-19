@@ -10,6 +10,16 @@ OverlayWindow {
     id: launcher
     namespace: "mcshell-launcher"
 
+    // Always-visible layer-shell surface. Hiding (visible=false) destroys
+    // the QQuickWindow and races with Qt 6.11 Wayland handleScreensChanged
+    // (segfaults inside calculateScreenFromSurfaceEvents). Instead toggle
+    // click-through via the mask and keyboard focus grab via focusMode.
+    visible: true
+    mask: isOpen ? null : _emptyRegion
+    focusMode: isOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+
+    Region { id: _emptyRegion }
+
     // ── Public API ──────────────────────────────────────
     property bool isOpen: false
     property bool _suppressCarouselAnim: false
@@ -23,7 +33,6 @@ OverlayWindow {
     function _initLauncher(tab, initialLevel) {
         _suppressCarouselAnim = true;
         isOpen = true;
-        visible = true;
         _openTransition();
         activeTab = tab;
         level = initialLevel;
@@ -107,11 +116,9 @@ OverlayWindow {
         from: launcher._animProgress; to: 0
         duration: Theme.animSmooth
         easing.type: Easing.InCubic
-        onFinished: launcher.visible = false
     }
 
     // ── Window setup ────────────────────────────────────
-    visible: false
     anchors { top: true; bottom: true; left: true; right: true }
 
     // ── Categories ──────────────────────────────────────
