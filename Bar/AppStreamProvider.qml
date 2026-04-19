@@ -1,18 +1,12 @@
 import QtQuick
 import Quickshell.Services.Pipewire
 
-// Data-only: discovers and filters PipeWire audio streams.
+// Data-only: discovers PipeWire app-playback audio streams.
 // UI components bind to `streams` and `hasStreams`.
-// Filtering logic lives here — changing it cannot affect layout.
 Item {
     id: root
 
-    // Output: filtered list of streams for the UI to consume
-    readonly property var streams: filteredStreams
-    readonly property bool hasStreams: filteredStreams.length > 0
-
-    // ── Raw stream collection (reactive via PipeWire) ───
-    readonly property var rawStreams: {
+    readonly property var streams: {
         if (!Pipewire.ready) return [];
         const result = [];
         const nodes = Pipewire.nodes.values;
@@ -24,24 +18,9 @@ Item {
         }
         return result;
     }
+    readonly property bool hasStreams: streams.length > 0
 
-    // ── Filtering (add rules here without touching UI) ──
-    readonly property var filteredStreams: {
-        const result = [];
-        for (let i = 0; i < rawStreams.length; i++) {
-            const node = rawStreams[i];
-            if (shouldShow(node))
-                result.push(node);
-        }
-        return result;
-    }
-
-    function shouldShow(node) {
-        return true;
-    }
-
-    // Keep PipeWire bindings alive
     PwObjectTracker {
-        objects: root.rawStreams
+        objects: root.streams
     }
 }

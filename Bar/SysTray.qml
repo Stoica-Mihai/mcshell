@@ -90,8 +90,7 @@ Item {
                 strokeWidth: root._strokeWidth
                 capStyle: ShapePath.RoundCap
                 strokeColor: seg._visible
-                    ? Qt.rgba(seg._segColor.r, seg._segColor.g, seg._segColor.b,
-                              root.expanded || root.hovered ? 1.0 : Theme.opacityDim)
+                    ? Theme.withAlpha(seg._segColor, root.expanded || root.hovered ? 1.0 : Theme.opacityDim)
                     : "transparent"
                 Behavior on strokeColor { ColorAnimation { duration: Theme.animSmooth } }
 

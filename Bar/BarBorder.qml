@@ -13,25 +13,6 @@ Item {
 
     readonly property bool useGradient: UserSettings.barBorderStyle === "gradient"
 
-    function _buildStops() {
-        var stops = Theme.barBorderGradient;
-        var newStops = [];
-        for (var i = 0; i < stops.length; i++) {
-            var s = Qt.createQmlObject(
-                'import QtQuick; GradientStop { position: ' + stops[i].position +
-                '; color: "' + stops[i].color + '" }', grad);
-            newStops.push(s);
-        }
-        grad.stops = newStops;
-    }
-
-    Connections {
-        target: Theme
-        function onAccentChanged() { root._buildStops(); }
-        function onSecondaryChanged() { root._buildStops(); }
-        function onTertiaryChanged() { root._buildStops(); }
-    }
-
     // Solid border (simple stroke)
     Shape {
         anchors.fill: parent
@@ -67,7 +48,9 @@ Item {
                 x1: 0; y1: root.height / 2
                 x2: root.width; y2: root.height / 2
 
-                Component.onCompleted: root._buildStops()
+                GradientStop { position: 0.0; color: Theme.accent }
+                GradientStop { position: 0.5; color: Theme.secondary }
+                GradientStop { position: 1.0; color: Theme.tertiary }
             }
 
             // Outer polygon

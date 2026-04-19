@@ -17,7 +17,7 @@ Item {
 
     SystemClock {
         id: clock
-        precision: SystemClock.Seconds
+        precision: UserSettings.clockShowSeconds ? SystemClock.Seconds : SystemClock.Minutes
     }
 
     Text {

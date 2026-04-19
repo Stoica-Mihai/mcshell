@@ -547,7 +547,7 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 26
                         radius: Theme.radiusTiny
-                        color: index === 0 ? Qt.rgba(Theme.accent.r, Theme.accent.g, Theme.accent.b, 0.08) : "transparent"
+                        color: index === 0 ? Theme.withAlpha(Theme.accent, 0.08) : "transparent"
 
                         RowLayout {
                             anchors.fill: parent

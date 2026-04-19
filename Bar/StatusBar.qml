@@ -122,6 +122,7 @@ Scope {
         MouseArea {
             anchors.fill: parent
             visible: root.hasPopup
+            enabled: root.hasPopup
             onClicked: root.dismissPopups()
         }
 
@@ -135,7 +136,7 @@ Scope {
 
 
             readonly property real _glassAlpha: 0.88
-            readonly property color _bgColor: Qt.rgba(Theme.surfaceContainer.r, Theme.surfaceContainer.g, Theme.surfaceContainer.b, _glassAlpha)
+            readonly property color _bgColor: Theme.withAlpha(Theme.surfaceContainer, _glassAlpha)
 
             // ── Left segment ────────────────────────────
             Item {
