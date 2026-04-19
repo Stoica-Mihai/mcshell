@@ -165,19 +165,8 @@ SettingsPanel {
         opacity: root._profileAvailable ? 1.0 : Theme.opacityDim
         Layout.preferredHeight: Theme.settingsRowCompact
 
-        Text {
-            text: Theme.iconTune
-            font.family: Theme.iconFont
-            font.pixelSize: Theme.fontSizeMedium
-            color: Theme.accent
-        }
-        Text {
-            text: "Profile"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.fg
-            Layout.fillWidth: true
-        }
+        SettingsRow.Icon { text: Theme.iconTune; color: Theme.accent }
+        SettingsRow.Label { text: "Profile"; Layout.fillWidth: true }
         CyclePicker {
             model: root.profileNames
             currentIndex: profileCycler.currentIndex
@@ -201,17 +190,14 @@ SettingsPanel {
                 Theme.accent.b + (Theme.red.b - Theme.accent.b) * root._confirmProgress,
                 1.0)
 
-            Text {
+            SettingsRow.Icon {
                 text: modelData.icon
-                font.family: Theme.iconFont
                 font.pixelSize: Theme.fontSizeLarge
                 color: modelData.danger ? Theme.red : Theme.fg
             }
-            Text {
+            SettingsRow.Label {
                 text: modelData.name
-                font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSize
-                color: Theme.fg
                 Layout.fillWidth: true
             }
 

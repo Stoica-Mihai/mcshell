@@ -81,24 +81,15 @@ SettingsPanel {
         id: volumeRow
         selected: root.active && root.volumeSelected
 
-        Text {
+        SettingsRow.Icon {
             text: Theme.volumeIcon(root.volume / 100, root.defaultSink?.audio?.muted ?? false)
-            font.family: Theme.iconFont
-            font.pixelSize: Theme.fontSizeMedium
             color: (root.defaultSink?.audio?.muted ?? false) ? Theme.red : Theme.accent
         }
         SettingsProgressBar {
             value: root.volume / 100
             barColor: (root.defaultSink?.audio?.muted ?? false) ? Theme.red : Theme.accent
         }
-        Text {
-            text: root.volume + "%"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeTiny
-            color: Theme.fgDim
-            Layout.preferredWidth: 30
-            horizontalAlignment: Text.AlignRight
-        }
+        SettingsRow.Value { text: root.volume + "%"; Layout.preferredWidth: 30 }
     }
 
     Separator { topMargin: 4 }

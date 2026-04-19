@@ -86,23 +86,13 @@ SettingsPanel {
         selected: root.active && root.selectedItem === 0
         Layout.preferredHeight: Theme.settingsRowHeight
 
-        Text {
+        SettingsRow.Icon {
             text: Theme.iconImage
-            font.family: Theme.iconFont
-            font.pixelSize: Theme.fontSizeMedium
             color: root._enabled ? Theme.accent : Theme.fgDim
         }
-        Text {
-            text: "Auto Rotate"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.fg
-            Layout.fillWidth: true
-        }
-        Text {
+        SettingsRow.Label { text: "Auto Rotate"; Layout.fillWidth: true }
+        SettingsRow.Value {
             text: root._options[root._intervalIndex].label
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeTiny
             color: root._enabled ? Theme.accent : Theme.fgDim
         }
     }
@@ -112,19 +102,11 @@ SettingsPanel {
         selected: root.active && root.selectedItem === 1
         Layout.preferredHeight: Theme.settingsRowHeight
 
-        Text {
+        SettingsRow.Icon {
             text: Theme.iconShuffle
-            font.family: Theme.iconFont
-            font.pixelSize: Theme.fontSizeMedium
             color: root._enabled ? Theme.accent : Theme.fgDim
         }
-        Text {
-            text: "Order"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.fg
-            Layout.fillWidth: true
-        }
+        SettingsRow.Label { text: "Order"; Layout.fillWidth: true }
         CyclePicker {
             id: orderPicker
             model: ["Shuffle", "Sequential"]
@@ -140,19 +122,11 @@ SettingsPanel {
         selected: root.active && root.selectedItem === 2
         Layout.preferredHeight: Theme.settingsRowHeight
 
-        Text {
+        SettingsRow.Icon {
             text: Theme.iconMonitor
-            font.family: Theme.iconFont
-            font.pixelSize: Theme.fontSizeMedium
             color: root._enabled ? Theme.accent : Theme.fgDim
         }
-        Text {
-            text: "Screen"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.fg
-            Layout.fillWidth: true
-        }
+        SettingsRow.Label { text: "Screen"; Layout.fillWidth: true }
         CyclePicker {
             id: rotateScreenPicker
             model: root._rotateScreenNames
@@ -170,19 +144,8 @@ SettingsPanel {
         selected: root.active && root.selectedItem === 3
         Layout.preferredHeight: Theme.settingsRowHeight
 
-        Text {
-            text: Theme.iconExpand
-            font.family: Theme.iconFont
-            font.pixelSize: Theme.fontSizeMedium
-            color: Theme.accent
-        }
-        Text {
-            text: "Fill Mode"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.fg
-            Layout.fillWidth: true
-        }
+        SettingsRow.Icon { text: Theme.iconExpand; color: Theme.accent }
+        SettingsRow.Label { text: "Fill Mode"; Layout.fillWidth: true }
         CyclePicker {
             id: fillPicker
             model: root._fillModes.map(m => m.label)
@@ -200,21 +163,14 @@ SettingsPanel {
         selected: root.active && root.selectedItem === 4
         Layout.preferredHeight: Theme.settingsRowHeight
 
-        Text {
-            text: Theme.iconFolder
-            font.family: Theme.iconFont
-            font.pixelSize: Theme.fontSizeMedium
-            color: Theme.accent
-        }
+        SettingsRow.Icon { text: Theme.iconFolder; color: Theme.accent }
 
         // Normal view: show path
-        Text {
+        SettingsRow.Value {
             visible: !root._editingFolder
             text: UserSettings.wallpaperFolder || "Not set"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeTiny
-            color: Theme.fgDim
             elide: Text.ElideMiddle
+            horizontalAlignment: Text.AlignLeft
             Layout.fillWidth: true
         }
 

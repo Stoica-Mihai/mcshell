@@ -109,31 +109,13 @@ SettingsPanel {
         selected: root.active && root.selectedItem === 0
         Layout.preferredHeight: Theme.settingsRowHeight
 
-        Text {
-            text: Theme.iconBrightness
-            font.family: Theme.iconFont
-            font.pixelSize: Theme.fontSizeMedium
-            color: Theme.yellow
-        }
-        Text {
-            text: "Brightness"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.fg
-            Layout.preferredWidth: tempLabel.implicitWidth
-        }
+        SettingsRow.Icon { text: Theme.iconBrightness; color: Theme.yellow }
+        SettingsRow.Label { text: "Brightness"; Layout.preferredWidth: tempLabel.implicitWidth }
         SettingsProgressBar {
             value: Brightness.percent / 100
             barColor: Theme.yellow
         }
-        Text {
-            text: Brightness.percent + "%"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeTiny
-            color: Theme.fgDim
-            Layout.preferredWidth: 30
-            horizontalAlignment: Text.AlignRight
-        }
+        SettingsRow.Value { text: Brightness.percent + "%"; Layout.preferredWidth: 30 }
     }
 
     Separator {}
@@ -143,23 +125,13 @@ SettingsPanel {
         selected: root.active && root.selectedItem === 1
         Layout.preferredHeight: Theme.settingsRowHeight
 
-        Text {
+        SettingsRow.Icon {
             text: Theme.iconNightLight
-            font.family: Theme.iconFont
-            font.pixelSize: Theme.fontSizeMedium
             color: root.nightOn ? Theme.yellow : Theme.fgDim
         }
-        Text {
-            text: "Night Light"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.fg
-            Layout.fillWidth: true
-        }
-        Text {
+        SettingsRow.Label { text: "Night Light"; Layout.fillWidth: true }
+        SettingsRow.Value {
             text: root.modes[root.modeIndex].charAt(0).toUpperCase() + root.modes[root.modeIndex].slice(1)
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeTiny
             color: root.nightOn ? Theme.yellow : Theme.fgDim
             Layout.rightMargin: 4
         }
@@ -179,31 +151,13 @@ SettingsPanel {
         selected: root.active && root.selectedItem === 2
         Layout.preferredHeight: Theme.settingsRowHeight
 
-        Text {
-            text: Theme.iconThermometer
-            font.family: Theme.iconFont
-            font.pixelSize: Theme.fontSizeMedium
-            color: Theme.yellow
-        }
-        Text {
-            id: tempLabel
-            text: "Temperature"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.fg
-        }
+        SettingsRow.Icon { text: Theme.iconThermometer; color: Theme.yellow }
+        SettingsRow.Label { id: tempLabel; text: "Temperature" }
         SettingsProgressBar {
             value: (UserSettings.activeTemp - UserSettings.tempMin) / (UserSettings.tempMax - UserSettings.tempMin)
             barColor: Theme.yellow
         }
-        Text {
-            text: UserSettings.activeTemp + "K"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeTiny
-            color: Theme.fgDim
-            Layout.preferredWidth: 36
-            horizontalAlignment: Text.AlignRight
-        }
+        SettingsRow.Value { text: UserSettings.activeTemp + "K"; Layout.preferredWidth: 36 }
     }
 
     // Sunrise (auto mode only)
@@ -212,25 +166,13 @@ SettingsPanel {
         selected: root.active && root.selectedItem === 3
         Layout.preferredHeight: Theme.settingsRowCompact
 
-        Text {
+        SettingsRow.Icon {
             text: Theme.iconSunrise
-            font.family: Theme.iconFont
             font.pixelSize: Theme.fontSizeSmall
             color: Theme.yellow
         }
-        Text {
-            text: "Sunrise"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.fg
-            Layout.fillWidth: true
-        }
-        Text {
-            text: UserSettings.nightLightSunrise
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.accent
-        }
+        SettingsRow.Label { text: "Sunrise"; Layout.fillWidth: true }
+        SettingsRow.Label { text: UserSettings.nightLightSunrise; color: Theme.accent }
     }
 
     // Sunset (auto mode only)
@@ -239,23 +181,14 @@ SettingsPanel {
         selected: root.active && root.selectedItem === 4
         Layout.preferredHeight: Theme.settingsRowCompact
 
-        Text {
+        SettingsRow.Icon {
             text: Theme.iconSunset
-            font.family: Theme.iconFont
             font.pixelSize: Theme.fontSizeSmall
             color: Theme.accent
         }
-        Text {
-            text: "Sunset"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.fg
-            Layout.fillWidth: true
-        }
-        Text {
+        SettingsRow.Label { text: "Sunset"; Layout.fillWidth: true }
+        SettingsRow.Label {
             text: UserSettings.nightLightSunset
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
             color: Theme.accent
         }
     }
@@ -267,23 +200,13 @@ SettingsPanel {
         selected: root.active && root.selectedItem === root._idleItem
         Layout.preferredHeight: Theme.settingsRowHeight
 
-        Text {
+        SettingsRow.Icon {
             text: Theme.iconLock
-            font.family: Theme.iconFont
-            font.pixelSize: Theme.fontSizeMedium
             color: UserSettings.idleTimeout > 0 ? Theme.accent : Theme.fgDim
         }
-        Text {
-            text: "Auto Lock"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.fg
-            Layout.fillWidth: true
-        }
-        Text {
+        SettingsRow.Label { text: "Auto Lock"; Layout.fillWidth: true }
+        SettingsRow.Value {
             text: UserSettings.idleTimeout > 0 ? UserSettings.idleTimeout + " min" : "Off"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeTiny
             color: UserSettings.idleTimeout > 0 ? Theme.accent : Theme.fgDim
         }
     }
@@ -293,23 +216,13 @@ SettingsPanel {
         selected: root.active && root.selectedItem === root._cleanItem
         Layout.preferredHeight: Theme.settingsRowHeight
 
-        Text {
+        SettingsRow.Icon {
             text: Theme.iconBell
-            font.family: Theme.iconFont
-            font.pixelSize: Theme.fontSizeMedium
             color: root._cleanIndex > 0 ? Theme.accent : Theme.fgDim
         }
-        Text {
-            text: "Auto Clean"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.fg
-            Layout.fillWidth: true
-        }
-        Text {
+        SettingsRow.Label { text: "Auto Clean"; Layout.fillWidth: true }
+        SettingsRow.Value {
             text: root._cleanLabels[root._cleanIndex]
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeTiny
             color: root._cleanIndex > 0 ? Theme.accent : Theme.fgDim
         }
     }
@@ -321,23 +234,13 @@ SettingsPanel {
         selected: root.active && root.selectedItem === root._sysInfoItem
         Layout.preferredHeight: Theme.settingsRowHeight
 
-        Text {
+        SettingsRow.Icon {
             text: Theme.iconMonitor
-            font.family: Theme.iconFont
-            font.pixelSize: Theme.fontSizeMedium
             color: UserSettings.sysInfoEnabled ? Theme.accent : Theme.fgDim
         }
-        Text {
-            text: "System Monitor"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.fg
-            Layout.fillWidth: true
-        }
-        Text {
+        SettingsRow.Label { text: "System Monitor"; Layout.fillWidth: true }
+        SettingsRow.Value {
             text: UserSettings.sysInfoEnabled ? "On" : "Off"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeTiny
             color: UserSettings.sysInfoEnabled ? Theme.accent : Theme.fgDim
         }
     }
