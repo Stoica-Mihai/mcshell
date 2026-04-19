@@ -28,7 +28,12 @@ Item {
             required property var modelData
             screen: modelData
 
-            visible: agent.isActive
+            // Always-visible layer-shell surface — destroying it on hide
+            // races with Qt 6.11 Wayland handleScreensChanged.
+            visible: true
+            mask: agent.isActive ? null : _emptyRegion
+
+            Region { id: _emptyRegion }
 
             anchors {
                 top: true

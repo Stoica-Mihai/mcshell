@@ -36,7 +36,6 @@ PanelWindow {
 
     function open() {
         isOpen = true;
-        visible = true;
         closeAnim.stop();
         openAnim.start();
     }
@@ -67,13 +66,16 @@ PanelWindow {
         from: root._openFraction; to: 0
         duration: Theme.animSmooth
         easing.type: Easing.InCubic
-        onFinished: root.visible = false
     }
 
     // ── Window setup ────────────────────────────────────
-    visible: false
+    // Always-visible layer-shell surface — see AppLauncher for why.
+    visible: true
+    mask: isOpen ? null : _emptyRegion
     color: "transparent"
     anchors { top: true; bottom: true; left: true; right: true }
+
+    Region { id: _emptyRegion }
 
     WlrLayershell.namespace: root.layershellNamespace
     // Top layer so ScreenshotOverlay (on Overlay) sits above and receives

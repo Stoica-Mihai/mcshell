@@ -11,6 +11,13 @@ OverlayWindow {
     id: panel
     namespace: "mcshell-keybinds"
 
+    // Always-visible layer-shell surface — see AppLauncher for why.
+    visible: true
+    mask: isOpen ? null : _emptyRegion
+    focusMode: isOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+
+    Region { id: _emptyRegion }
+
     // ── Public API ──────────────────────────────────────
     property bool isOpen: false
 
@@ -18,14 +25,12 @@ OverlayWindow {
 
     function open() {
         isOpen = true;
-        visible = true;
         searchArea.reset();
         selectedIndex = -1;
     }
 
     function close() {
         isOpen = false;
-        visible = false;
         searchArea.text = "";
     }
 
@@ -47,8 +52,6 @@ OverlayWindow {
     function navigateUp() { navigate(-1); }
 
     // ── Window setup ────────────────────────────────────
-    visible: false
-
     anchors {
         top: true
         bottom: true

@@ -11,6 +11,13 @@ OverlayWindow {
     id: root
     namespace: "mcshell-window-switcher"
 
+    // Always-visible layer-shell surface — see AppLauncher for why.
+    visible: true
+    mask: isOpen ? null : _emptyRegion
+    focusMode: isOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+
+    Region { id: _emptyRegion }
+
     property bool isOpen: false
     property int selectedIndex: 0
     property string _searchText: ""
@@ -46,7 +53,6 @@ OverlayWindow {
     function open() {
         if (_allWindows.length === 0) return;
         isOpen = true;
-        visible = true;
         searchBar.reset();
         // Always start at 0 so a stale index from the previous session can't
         // outlive a window that's been closed in the meantime.
@@ -61,7 +67,6 @@ OverlayWindow {
 
     function close() {
         isOpen = false;
-        visible = false;
         _searchText = "";
     }
 
@@ -88,7 +93,6 @@ OverlayWindow {
     }
 
     // ── Window setup ────────────────────────────────────
-    visible: false
     anchors { top: true; bottom: true; left: true; right: true }
 
     // Backdrop
