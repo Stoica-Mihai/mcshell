@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import qs.Config
 import qs.Core
@@ -47,7 +48,7 @@ OverlayWindow {
         _animEnableTimer.restart();
     }
 
-    function open() { _initLauncher(0, "view"); }
+    function open() { _requestOpen(0, "view", ""); }
 
     function close() {
         _closeTransition();
@@ -66,14 +67,51 @@ OverlayWindow {
         if (idx < 0) return;
         const resolved = mode || "view";
         if (!isOpen) {
-            _initLauncher(idx, resolved);
+            _requestOpen(idx, resolved, target || "");
         } else if (activeTab !== idx) {
             switchTab(idx);
             level = resolved;
+            if (target) activeCategory.onOpenTarget(target);
         } else {
             level = resolved;
+            if (target) activeCategory.onOpenTarget(target);
         }
-        if (target) activeCategory.onOpenTarget(target);
+    }
+
+    // ── Focused-output-aware open ───────────────────────
+    // The layer-shell surface is always-alive (pinned to whichever screen
+    // it started on), so open requests first detect niri's focused output
+    // and reassign `screen` before running the open transition.
+    property int _pendingTab: 0
+    property string _pendingLevel: "view"
+    property string _pendingTarget: ""
+
+    function _requestOpen(tab, lvl, target) {
+        _pendingTab = tab;
+        _pendingLevel = lvl;
+        _pendingTarget = target || "";
+        _outputDetect.running = true;
+    }
+
+    Process {
+        id: _outputDetect
+        command: ["niri", "msg", "-j", "focused-output"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const name = JSON.parse(this.text).name;
+                    for (const s of Quickshell.screens) {
+                        if (s.name === name && launcher.screen !== s) {
+                            launcher.screen = s;
+                            break;
+                        }
+                    }
+                } catch (e) {}
+                launcher._initLauncher(launcher._pendingTab, launcher._pendingLevel);
+                if (launcher._pendingTarget && launcher.activeCategory)
+                    launcher.activeCategory.onOpenTarget(launcher._pendingTarget);
+            }
+        }
     }
 
     function supportedModesFor(tabName) {
