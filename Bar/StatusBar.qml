@@ -445,63 +445,18 @@ Scope {
                             }
 
                             // Notification bell
-                            Item {
-                                id: bellIcon
-                                implicitWidth: Theme.iconSize
-                                implicitHeight: Theme.iconSize
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    font.family: Theme.iconFont
-                                    font.pixelSize: Theme.iconSize
-                                    color: UserSettings.doNotDisturb ? Theme.red
-                                         : bellMouse2.containsMouse ? Theme.accent
-                                         : root.unreadNotifications > 0 ? Theme.accent
-                                         : Theme.fg
-                                    text: UserSettings.doNotDisturb ? Theme.iconDndOn : Theme.iconBell
-                                    Behavior on color { ColorAnimation { duration: Theme.animFast } }
-                                }
-
-                                // Underline
-                                ActiveUnderline { visible: sharedDropdown.activePanel === "notifications" }
-
-                                // Unread badge
-                                Rectangle {
-                                    visible: root.unreadNotifications > 0 && !UserSettings.doNotDisturb
-                                    anchors.top: parent.top
-                                    anchors.right: parent.right
-                                    anchors.topMargin: -3
-                                    anchors.rightMargin: -5
-                                    width: Math.max(Theme.notifBadgeSize, badgeText.implicitWidth + 6)
-                                    height: Theme.notifBadgeSize
-                                    radius: Theme.notifBadgeSize / 2
-                                    color: Theme.yellow
-                                    z: 10
-
-                                    Text {
-                                        id: badgeText
-                                        anchors.centerIn: parent
-                                        text: root.unreadNotifications > 99 ? "99+" : root.unreadNotifications
-                                        color: Theme.accentFg
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSizeMini
-                                        font.bold: true
-                                    }
-                                }
-
-                                MouseArea {
-                                    id: bellMouse2
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-                                    onClicked: event => {
-                                        if (event.button === Qt.MiddleButton)
-                                            UserSettings.doNotDisturb = !UserSettings.doNotDisturb;
-                                        else
-                                            sharedDropdown.togglePanel("notifications");
-                                    }
-                                    onCanceled: sharedDropdown.togglePanel("notifications")
+                            CapsuleItem {
+                                icon: UserSettings.doNotDisturb ? Theme.iconDndOn : Theme.iconBell
+                                alert: UserSettings.doNotDisturb
+                                highlight: root.unreadNotifications > 0 && !UserSettings.doNotDisturb
+                                badge: UserSettings.doNotDisturb ? 0 : root.unreadNotifications
+                                badgeColor: Theme.yellow
+                                active: sharedDropdown.activePanel === "notifications"
+                                onClicked: event => {
+                                    if (event.button === Qt.MiddleButton)
+                                        UserSettings.doNotDisturb = !UserSettings.doNotDisturb;
+                                    else
+                                        sharedDropdown.togglePanel("notifications");
                                 }
                             }
 

@@ -10,9 +10,11 @@ Item {
     property string icon: ""
     property string label: ""
     property int badge: 0
+    property color badgeColor: Theme.accent
     property bool alert: false
     property bool enabled_: false
     property bool connected: false
+    property bool highlight: false
     property bool active: false
 
     signal clicked(var event)
@@ -25,7 +27,7 @@ Item {
     readonly property color activeColor: alert ? Theme.red
                                        : connected ? Theme.cyan
                                        : enabled_ ? Theme.green
-                                       : hovered ? Theme.accent
+                                       : (hovered || highlight) ? Theme.accent
                                        : Theme.fg
 
     Row {
@@ -50,12 +52,12 @@ Item {
                 visible: root.badge > 0
                 anchors.top: parent.top
                 anchors.right: parent.right
-                anchors.topMargin: -2
-                anchors.rightMargin: -4
-                width: Math.max(12, badgeLabel.implicitWidth + 4)
-                height: 12
-                radius: 6
-                color: Theme.accent
+                anchors.topMargin: -3
+                anchors.rightMargin: -5
+                width: Math.max(Theme.notifBadgeSize, badgeLabel.implicitWidth + 6)
+                height: Theme.notifBadgeSize
+                radius: Theme.notifBadgeSize / 2
+                color: root.badgeColor
                 z: 10
 
                 Text {
@@ -64,7 +66,7 @@ Item {
                     text: root.badge > 99 ? "99+" : root.badge
                     color: Theme.accentFg
                     font.family: Theme.fontFamily
-                    font.pixelSize: 9
+                    font.pixelSize: Theme.fontSizeMini
                     font.bold: true
                 }
             }
