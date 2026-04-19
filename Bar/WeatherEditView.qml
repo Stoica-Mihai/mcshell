@@ -1,0 +1,215 @@
+import QtQuick
+import QtQuick.Layouts
+import qs.Config
+import qs.Widgets
+
+// Weather popup "edit" view: city search + geocoding results list.
+// Selection state (geoResults, geoError, geoLoading, selectedIndex) lives
+// on the parent popup so it survives view reloads; this view just renders.
+ColumnLayout {
+    id: root
+
+    required property var popup
+
+    Layout.fillWidth: true
+    spacing: Theme.spacingSmall
+
+    // Delay focus grab until the popup open animation + FocusScope setup settle.
+    Timer {
+        id: focusTimer
+        interval: Theme.animSmooth + 50
+        running: true
+        onTriggered: if (searchField.visible) searchField.forceActiveFocus()
+    }
+
+    // Header — "Set location" with cancel if already configured
+    Item {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 28
+
+        Text {
+            anchors.centerIn: parent
+            text: UserSettings.weatherConfigured ? "Change location" : "Set your location"
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSize
+            font.weight: Font.Medium
+            color: Theme.fg
+        }
+
+        IconButton {
+            visible: UserSettings.weatherConfigured
+            anchors.right: parent.right
+            anchors.verticalCenter: parent.verticalCenter
+            icon: Theme.iconClose
+            size: 12
+            implicitWidth: 24
+            implicitHeight: 24
+            normalColor: Theme.fgDim
+            onClicked: root.popup.cancelEdit()
+        }
+    }
+
+    // Search input
+    Rectangle {
+        Layout.fillWidth: true
+        Layout.preferredHeight: 36
+        radius: Theme.radiusMedium
+        color: Theme.withAlpha(Theme.fg, 0.04)
+        border.width: 1
+        border.color: searchField.activeFocus ? Theme.accent : Theme.border
+
+        RowLayout {
+            anchors.fill: parent
+            anchors.leftMargin: Theme.spacingMedium
+            anchors.rightMargin: Theme.spacingMedium
+            spacing: Theme.spacingNormal
+
+            Text {
+                text: Theme.iconSearch
+                font.family: Theme.iconFont
+                font.pixelSize: 12
+                color: Theme.fgDim
+                Layout.alignment: Qt.AlignVCenter
+            }
+
+            TextInput {
+                id: searchField
+                Layout.fillWidth: true
+                Layout.alignment: Qt.AlignVCenter
+                color: Theme.fg
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize
+                clip: true
+                selectByMouse: true
+
+                onTextChanged: root.popup.queueGeocode(text)
+
+                Keys.onReturnPressed: {
+                    const results = root.popup.geoResults;
+                    const idx = root.popup.selectedIndex;
+                    if (results.length > 0 && idx >= 0 && idx < results.length)
+                        root.popup.selectLocation(results[idx]);
+                }
+                Keys.onDownPressed: {
+                    const n = root.popup.geoResults.length;
+                    if (n === 0) return;
+                    root.popup.selectedIndex = (root.popup.selectedIndex + 1) % n;
+                }
+                Keys.onUpPressed: {
+                    const n = root.popup.geoResults.length;
+                    if (n === 0) return;
+                    root.popup.selectedIndex = (root.popup.selectedIndex - 1 + n) % n;
+                }
+                Keys.onEscapePressed: {
+                    if (UserSettings.weatherConfigured) root.popup.cancelEdit();
+                }
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Search city..."
+                    color: Theme.fgDim
+                    font: parent.font
+                    visible: !parent.text && !parent.activeFocus
+                }
+            }
+        }
+    }
+
+    // Empty hint / error / results
+    Item {
+        Layout.fillWidth: true
+        Layout.preferredHeight: Math.max(60, Math.min(root.popup.geoResults.length * 40, 240))
+
+        Text {
+            anchors.centerIn: parent
+            visible: !root.popup.geoLoading
+                && root.popup.geoResults.length === 0
+                && root.popup.geoError === ""
+                && searchField.text.trim().length < 2
+            text: "Start typing to search cities"
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeSmall
+            color: Theme.fgDim
+        }
+
+        Text {
+            anchors.centerIn: parent
+            visible: root.popup.geoLoading
+            text: "Searching..."
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeSmall
+            color: Theme.fgDim
+        }
+
+        Text {
+            anchors.centerIn: parent
+            visible: !root.popup.geoLoading && root.popup.geoError !== ""
+            text: root.popup.geoError
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeSmall
+            color: Theme.red
+        }
+
+        ListView {
+            id: resultsList
+            anchors.fill: parent
+            visible: !root.popup.geoLoading && root.popup.geoResults.length > 0
+            clip: true
+            model: root.popup.geoResults
+            spacing: 2
+            interactive: contentHeight > height
+            currentIndex: root.popup.selectedIndex
+            highlightFollowsCurrentItem: true
+            onCurrentIndexChanged: positionViewAtIndex(currentIndex, ListView.Contain)
+
+            delegate: Rectangle {
+                id: resultRow
+                required property var modelData
+                required property int index
+
+                readonly property bool _isSelected: root.popup.selectedIndex === index
+
+                width: ListView.view.width
+                height: 36
+                radius: Theme.radiusSmall
+                color: _isSelected ? Theme.accentLight
+                     : mouse.containsMouse ? Theme.bgHover
+                     : "transparent"
+                border.width: _isSelected ? 1 : 0
+                border.color: Theme.accent
+
+                RowLayout {
+                    anchors.fill: parent
+                    anchors.leftMargin: Theme.spacingMedium
+                    anchors.rightMargin: Theme.spacingMedium
+                    spacing: Theme.spacingMedium
+
+                    Text {
+                        text: Theme.iconLocationPin
+                        font.family: Theme.iconFont
+                        font.pixelSize: 13
+                        color: resultRow._isSelected ? Theme.accent : Theme.fgDim
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        text: modelData.displayName
+                        font.family: Theme.fontFamily
+                        font.pixelSize: Theme.fontSizeSmall
+                        color: Theme.fg
+                        elide: Text.ElideRight
+                    }
+                }
+
+                MouseArea {
+                    id: mouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.popup.selectLocation(modelData)
+                }
+            }
+        }
+    }
+}
