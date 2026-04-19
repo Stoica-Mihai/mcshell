@@ -129,7 +129,6 @@ OverlayWindow {
     onActiveTabChanged: tabHighlight.animateTo(activeTab)
     readonly property int tabCount: categories.length
     readonly property var activeCategory: categories[activeTab]
-    readonly property var currentList: activeCategory.model
     readonly property int currentCount: carouselRepeater.count
     readonly property bool hasItems: currentCount > 0
     onHasItemsChanged: if (!hasItems && inCarousel) level = "view"
@@ -254,7 +253,7 @@ OverlayWindow {
                     ctx.lineTo(width - s, height);
                     ctx.lineTo(0, height);
                     ctx.closePath();
-                    ctx.fillStyle = Qt.rgba(Theme.surfaceContainer.r, Theme.surfaceContainer.g, Theme.surfaceContainer.b, 0.92);
+                    ctx.fillStyle = Theme.withAlpha(Theme.surfaceContainer, 0.92);
                     ctx.fill();
                     ctx.strokeStyle = Theme.outlineVariant;
                     ctx.lineWidth = 1;

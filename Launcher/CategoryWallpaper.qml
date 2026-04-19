@@ -101,7 +101,9 @@ LauncherCategory {
 
     Connections {
         target: WallpaperScanner
-        function onScanned() { _focusDetect.running = true; }
+        function onScanned() {
+            if (launcher.isOpen) _focusDetect.running = true;
+        }
     }
 
     // ── Search ──

@@ -75,9 +75,10 @@ Item {
     // Shared substring filter — normalizes query, returns new array of matching items.
     function filterByQuery(text, items, matchFn) {
         const query = (text || "").toLowerCase().trim();
+        if (query === "") return items;
         const results = [];
         for (let i = 0; i < items.length; i++) {
-            if (query === "" || matchFn(items[i], query))
+            if (matchFn(items[i], query))
                 results.push(items[i]);
         }
         return results;
