@@ -89,6 +89,7 @@ ipc_test toggleWeather "";        ipc_test toggleWeather ""
 ipc_test toggleWeather view;        ipc_test toggleWeather ""
 ipc_test toggleWeather edit;        ipc_test toggleWeather ""
 ipc_test toggleClockSettings "";  ipc_test toggleClockSettings ""
+ipc_test toggleSysInfo "";        ipc_test toggleSysInfo ""
 ipc_test toggleKeybinds;       ipc_test toggleKeybinds
 ipc_test toggleWindows;        ipc_test toggleWindows
 ipc_test toggleDnd;            ipc_test toggleDnd
