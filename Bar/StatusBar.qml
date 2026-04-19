@@ -580,14 +580,17 @@ Scope {
                     }
 
                     // ── SysInfo section ───────────────────
-                    SysInfoPanel {
+                    // Loader-gated so the sysinfo bindings don't churn
+                    // on every SysInfo poll while the dropdown is closed.
+                    Loader {
                         id: sysInfoContent
-                        visible: sharedDropdown.activePanel === "sysinfo"
-                        enabled: visible
+                        active: sharedDropdown.activePanel === "sysinfo"
+                        visible: active
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: parent.top
                         anchors.margins: Theme.popupPadding
+                        sourceComponent: SysInfoPanel {}
                     }
 
                     // ── Notifications section ─────────────
