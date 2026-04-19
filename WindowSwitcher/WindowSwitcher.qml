@@ -95,10 +95,16 @@ OverlayWindow {
     // ── Window setup ────────────────────────────────────
     anchors { top: true; bottom: true; left: true; right: true }
 
+    // Nothing renders while closed — the surface stays alive (see comment
+    // at the top) but the visible content fades out.
+    readonly property real _contentOpacity: isOpen ? 1.0 : 0.0
+
     // Backdrop
     Rectangle {
         anchors.fill: parent
         color: Theme.backdrop
+        opacity: root._contentOpacity
+        Behavior on opacity { NumberAnimation { duration: Theme.animNormal } }
         MouseArea { anchors.fill: parent; onClicked: root.close() }
     }
 
@@ -114,6 +120,8 @@ OverlayWindow {
         showBorder: true
         borderColor: searchBar.field.activeFocus ? Theme.accent : Theme.border
         _skew: Theme.cardSkew * cardArea.height / height
+        opacity: root._contentOpacity
+        Behavior on opacity { NumberAnimation { duration: Theme.animNormal } }
 
         StyledTextField {
             id: searchBar
@@ -166,6 +174,8 @@ OverlayWindow {
         id: cardArea
         anchors.centerIn: parent
         width: parent.width
+        opacity: root._contentOpacity
+        Behavior on opacity { NumberAnimation { duration: Theme.animNormal } }
         height: 400
         clip: true
 
@@ -296,6 +306,8 @@ OverlayWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: cardArea.bottom
         anchors.topMargin: 16
+        opacity: root._contentOpacity
+        Behavior on opacity { NumberAnimation { duration: Theme.animNormal } }
         text: {
             if (root._filtered.length === 0) return "";
             return Theme.legend(

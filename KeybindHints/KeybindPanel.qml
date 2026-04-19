@@ -68,10 +68,16 @@ OverlayWindow {
 
     // ── UI ──────────────────────────────────────────────
 
+    // Visible only while the panel is "open" — the surface itself stays
+    // alive (see the comment up top) but nothing renders when closed.
+    readonly property real _contentOpacity: panel.isOpen ? 1.0 : 0.0
+
     // Semi-transparent dimmer -- click to close
     Rectangle {
         anchors.fill: parent
         color: Theme.backdrop
+        opacity: panel._contentOpacity
+        Behavior on opacity { NumberAnimation { duration: Theme.animNormal } }
 
         MouseArea {
             anchors.fill: parent
@@ -90,6 +96,8 @@ OverlayWindow {
         border.width: 1
         border.color: Theme.border
         clip: true
+        opacity: panel._contentOpacity
+        Behavior on opacity { NumberAnimation { duration: Theme.animNormal } }
 
         ColumnLayout {
             id: cardColumn
