@@ -25,7 +25,6 @@ OverlayWindow {
     property string _tmpPath: ""
     property bool _captured: false
     property bool _captureActive: false // true after first capture, never reset
-    property var _emptyRegion: null
 
     // Area selection state
     property real _startX: 0
@@ -37,9 +36,7 @@ OverlayWindow {
     property bool _selecting: false
     readonly property bool _selectionReady: _selW > 2 && _selH > 2
 
-    Component.onCompleted: {
-        _emptyRegion = Qt.createQmlObject('import Quickshell; Region {}', root);
-    }
+    Region { id: _emptyRegion }
 
     property string _pendingMode: ""
 

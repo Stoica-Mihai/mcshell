@@ -34,6 +34,7 @@ OverlayWindow {
 
     readonly property var _allWindows: Niri.windows ? Niri.windows.values : []
     readonly property var _filtered: {
+        if (!isOpen) return [];
         if (_searchText === "") return _allWindows;
         const q = _searchText.toLowerCase();
         return _allWindows.filter(w =>

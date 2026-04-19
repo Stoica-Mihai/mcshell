@@ -215,11 +215,14 @@ Item {
                         Timer {
                             id: clockTimer
                             property date currentTime: new Date()
-                            interval: 1000
+                            interval: 60000 - (Date.now() % 60000)
                             running: lockSession.locked
                             repeat: true
                             triggeredOnStart: true
-                            onTriggered: currentTime = new Date()
+                            onTriggered: {
+                                currentTime = new Date();
+                                interval = 60000;
+                            }
                         }
                     }
 
