@@ -92,8 +92,8 @@ ipc_test toggleClockSettings "";  ipc_test toggleClockSettings ""
 ipc_test toggleKeybinds;       ipc_test toggleKeybinds
 ipc_test toggleWindows;        ipc_test toggleWindows
 ipc_test toggleDnd;            ipc_test toggleDnd
-ipc_test toggleWifi;           ipc_test toggleWifi
-ipc_test toggleBluetooth;      ipc_test toggleBluetooth
+# toggleWifi / toggleBluetooth actually flip the radios — skipped so the test
+# doesn't knock the user off wifi or disconnect bluetooth input devices.
 # clipboardList returns a string on stdout — fire-and-forget, not via ipc_test
 $IPC clipboardList >/dev/null 2>&1; sleep "$DELAY"
 
