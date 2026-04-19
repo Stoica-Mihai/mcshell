@@ -158,51 +158,23 @@ LauncherCategory {
             }
 
             // Expanded: network details
-            ColumnLayout {
+            DeviceCardBody {
                 anchors.centerIn: parent
                 visible: wifiStrip.isCurrent
-                spacing: Theme.spacingMedium
                 width: parent.width - 40
 
-                // WiFi icon — size reflects signal
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: Theme.iconWifi
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.launcherIconExpanded
-                    color: modelData.connected ? Theme.accent : Theme.fg
-                    opacity: Theme.opacityDim + modelData.signalStrength * Theme.opacitySubtle
+                iconText: Theme.iconWifi
+                iconColor: modelData.connected ? Theme.accent : Theme.fg
+                iconOpacity: Theme.opacityDim + modelData.signalStrength * Theme.opacitySubtle
+                nameText: modelData.name || "Hidden Network"
+                nameColor: modelData.connected ? Theme.accent : Theme.fg
+                infoText: {
+                    const signal = Math.round(modelData.signalStrength * 100) + "%";
+                    const sec = modelData.security === WifiSecurityType.Open ? "Open" : "Secured";
+                    const status = modelData.connected ? "Connected" : "";
+                    return [signal, sec, status].filter(s => s).join(Theme.separator);
                 }
 
-                // SSID
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: modelData.name || "Hidden Network"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeXLarge
-                    font.bold: true
-                    color: modelData.connected ? Theme.accent : Theme.fg
-                    elide: Text.ElideRight
-                    Layout.maximumWidth: parent.width
-                }
-
-                // Info row: signal + security + status
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.maximumWidth: parent.width
-                    horizontalAlignment: Text.AlignHCenter
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    color: Theme.fgDim
-                    text: {
-                        const signal = Math.round(modelData.signalStrength * 100) + "%";
-                        const sec = modelData.security === WifiSecurityType.Open ? "Open" : "Secured";
-                        const status = modelData.connected ? "Connected" : "";
-                        return [signal, sec, status].filter(s => s).join(Theme.separator);
-                    }
-                }
-
-                // Status / action hint
                 StatusHintText {
                     visible: !wifiStrip.showingPassword
                     tracker: wifiTracker

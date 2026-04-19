@@ -179,52 +179,25 @@ LauncherCategory {
             }
 
             // Expanded: device details
-            ColumnLayout {
+            DeviceCardBody {
                 anchors.centerIn: parent
                 visible: parent.isCurrent
-                spacing: Theme.spacingMedium
                 width: parent.width - 40
 
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: root.btDeviceIcon(modelData.icon)
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.launcherIconExpanded
-                    color: modelData.connected ? Theme.accent : Theme.fg
-                }
-
-                // Device name
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: modelData.name || modelData.deviceName || "Unknown"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeXLarge
-                    font.bold: true
-                    color: modelData.connected ? Theme.accent : Theme.fg
-                    elide: Text.ElideRight
-                    Layout.maximumWidth: parent.width
-                }
-
-                // Info: type + status + battery
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    Layout.maximumWidth: parent.width
-                    horizontalAlignment: Text.AlignHCenter
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    color: Theme.fgDim
-                    text: {
-                        const parts = [];
-                        // Device type from icon property
-                        const devType = (root.btDeviceTypes[modelData.icon]?.label) ?? "";
-                        if (devType) parts.push(devType);
-                        if (modelData.connected) parts.push("Connected");
-                        else if (modelData.paired) parts.push("Paired");
-                        else parts.push("Available");
-                        if (modelData.batteryAvailable)
-                            parts.push(Math.round(modelData.battery * 100) + "%");
-                        return parts.join(Theme.separator);
-                    }
+                iconText: root.btDeviceIcon(modelData.icon)
+                iconColor: modelData.connected ? Theme.accent : Theme.fg
+                nameText: modelData.name || modelData.deviceName || "Unknown"
+                nameColor: modelData.connected ? Theme.accent : Theme.fg
+                infoText: {
+                    const parts = [];
+                    const devType = (root.btDeviceTypes[modelData.icon]?.label) ?? "";
+                    if (devType) parts.push(devType);
+                    if (modelData.connected) parts.push("Connected");
+                    else if (modelData.paired) parts.push("Paired");
+                    else parts.push("Available");
+                    if (modelData.batteryAvailable)
+                        parts.push(Math.round(modelData.battery * 100) + "%");
+                    return parts.join(Theme.separator);
                 }
 
                 // MAC address
@@ -237,7 +210,6 @@ LauncherCategory {
                     text: modelData.address || ""
                 }
 
-                // Action hint / status
                 StatusHintText {
                     tracker: btTracker
                     targetId: modelData.address || ""
