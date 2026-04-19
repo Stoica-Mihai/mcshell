@@ -242,80 +242,77 @@ Singleton {
         }
     }
 
-    // ── Wallpaper strategy definitions ──────────────────
-    readonly property var wallpaperStrategies: [
-        { name: "Tonal",   fn: _strategyTonal },
-        { name: "Vibrant", fn: _strategyVibrant },
-        { name: "Neutral", fn: _strategyNeutral },
-        { name: "Muted",   fn: _strategyMuted }
-    ]
+    // ── Wallpaper strategies ────────────────────────────
+    // Each strategy is a parameter table of [hueKey, saturation, value] tuples.
+    // hueKey is "h" (seed), "h2" (h + h2Offset), "h3" (h + h3Offset), or a
+    // literal number (fixed hue; use 0 with sat 0 for neutral gray).
+    readonly property var _strategyParams: ({
+        // Tonal: tinted surfaces, balanced chroma (like Material TonalSpot)
+        "Tonal": { h2Offset: 0.17, h3Offset: 0.33, bg: [0.10, 0.10, 0.14, 0.85], colors: {
+            bgSolid: ["h", 0.15, 0.12],
+            fg: ["h", 0.05, 0.90], fgDim: ["h", 0.08, 0.45],
+            accent: ["h", 0.60, 0.85],
+            red: [0.98, 0.65, 0.90], green: [0.35, 0.55, 0.75],
+            yellow: [0.11, 0.60, 0.88], cyan: [0.52, 0.55, 0.85],
+            secondary: ["h2", 0.35, 0.80], tertiary: ["h3", 0.45, 0.80],
+            primaryContainer: ["h", 0.20, 0.16], secondaryContainer: ["h2", 0.12, 0.14],
+            surfaceContainer: ["h", 0.08, 0.14], surfaceBright: ["h", 0.08, 0.20],
+            accentFg: ["h", 0.15, 0.12],
+            outline: ["h", 0.10, 0.35], outlineVariant: ["h", 0.08, 0.22]
+        }},
+        // Vibrant: high chroma, bold tinted surfaces, hue-rotated accent
+        "Vibrant": { h2Offset: 0.86, h3Offset: 0.33, bg: [0.10, 0.10, 0.14, 0.85], colors: {
+            bgSolid: ["h", 0.25, 0.13],
+            fg: ["h", 0.08, 0.92], fgDim: ["h", 0.12, 0.50],
+            accent: ["h2", 0.75, 0.90],
+            red: [0.98, 0.75, 0.92], green: [0.35, 0.65, 0.80],
+            yellow: [0.11, 0.70, 0.92], cyan: [0.52, 0.65, 0.88],
+            secondary: ["h", 0.45, 0.85], tertiary: ["h3", 0.55, 0.85],
+            primaryContainer: ["h2", 0.30, 0.18], secondaryContainer: ["h", 0.18, 0.15],
+            surfaceContainer: ["h", 0.12, 0.15], surfaceBright: ["h", 0.15, 0.22],
+            accentFg: ["h2", 0.25, 0.13],
+            outline: ["h", 0.15, 0.40], outlineVariant: ["h", 0.10, 0.25]
+        }},
+        // Neutral: accent from seed, pure gray surfaces
+        "Neutral": { h2Offset: 0.17, h3Offset: 0.33, bg: [0.10, 0.10, 0.12, 0.85], colors: {
+            bgSolid: [0, 0, 0.11],
+            fg: [0, 0, 0.88], fgDim: [0, 0, 0.42],
+            accent: ["h", 0.60, 0.85],
+            red: [0.98, 0.65, 0.90], green: [0.35, 0.55, 0.75],
+            yellow: [0.11, 0.60, 0.88], cyan: [0.52, 0.55, 0.85],
+            secondary: ["h2", 0.30, 0.75], tertiary: ["h3", 0.40, 0.75],
+            primaryContainer: ["h", 0.15, 0.15], secondaryContainer: [0, 0, 0.13],
+            surfaceContainer: [0, 0, 0.13], surfaceBright: [0, 0, 0.18],
+            accentFg: [0, 0, 0.11],
+            outline: [0, 0, 0.35], outlineVariant: [0, 0, 0.22]
+        }},
+        // Muted: low chroma tinted surfaces, softer accent
+        "Muted": { h2Offset: 0.17, h3Offset: 0.33, bg: [0.10, 0.10, 0.14, 0.85], colors: {
+            bgSolid: ["h", 0.10, 0.12],
+            fg: ["h", 0.03, 0.85], fgDim: ["h", 0.05, 0.42],
+            accent: ["h", 0.35, 0.75],
+            red: [0.98, 0.50, 0.80], green: [0.35, 0.40, 0.70],
+            yellow: [0.11, 0.45, 0.80], cyan: [0.52, 0.40, 0.75],
+            secondary: ["h2", 0.20, 0.65], tertiary: ["h3", 0.25, 0.65],
+            primaryContainer: ["h", 0.12, 0.15], secondaryContainer: ["h2", 0.08, 0.13],
+            surfaceContainer: ["h", 0.06, 0.14], surfaceBright: ["h", 0.06, 0.19],
+            accentFg: ["h", 0.10, 0.12],
+            outline: ["h", 0.06, 0.32], outlineVariant: ["h", 0.04, 0.20]
+        }}
+    })
 
-    // Tonal: tinted surfaces, balanced chroma (like Material TonalSpot)
-    function _strategyTonal(h) {
-        var h2 = (h + 0.17) % 1.0, h3 = (h + 0.33) % 1.0;
-        return {
-            bg: Qt.rgba(0.10, 0.10, 0.14, 0.85), bgSolid: Qt.hsva(h, 0.15, 0.12, 1),
-            fg: Qt.hsva(h, 0.05, 0.90, 1), fgDim: Qt.hsva(h, 0.08, 0.45, 1),
-            accent: Qt.hsva(h, 0.60, 0.85, 1),
-            red: Qt.hsva(0.98, 0.65, 0.90, 1), green: Qt.hsva(0.35, 0.55, 0.75, 1),
-            yellow: Qt.hsva(0.11, 0.60, 0.88, 1), cyan: Qt.hsva(0.52, 0.55, 0.85, 1),
-            secondary: Qt.hsva(h2, 0.35, 0.80, 1), tertiary: Qt.hsva(h3, 0.45, 0.80, 1),
-            primaryContainer: Qt.hsva(h, 0.20, 0.16, 1), secondaryContainer: Qt.hsva(h2, 0.12, 0.14, 1),
-            surfaceContainer: Qt.hsva(h, 0.08, 0.14, 1), surfaceBright: Qt.hsva(h, 0.08, 0.20, 1),
-            accentFg: Qt.hsva(h, 0.15, 0.12, 1),
-            outline: Qt.hsva(h, 0.10, 0.35, 1), outlineVariant: Qt.hsva(h, 0.08, 0.22, 1)
-        };
-    }
+    readonly property var wallpaperStrategies: Object.keys(_strategyParams).map(n => ({ name: n }))
 
-    // Vibrant: high chroma, bold tinted surfaces, hue-rotated accent
-    function _strategyVibrant(h) {
-        var h2 = (h + 0.86) % 1.0, h3 = (h + 0.33) % 1.0;
-        return {
-            bg: Qt.rgba(0.10, 0.10, 0.14, 0.85), bgSolid: Qt.hsva(h, 0.25, 0.13, 1),
-            fg: Qt.hsva(h, 0.08, 0.92, 1), fgDim: Qt.hsva(h, 0.12, 0.50, 1),
-            accent: Qt.hsva(h2, 0.75, 0.90, 1),
-            red: Qt.hsva(0.98, 0.75, 0.92, 1), green: Qt.hsva(0.35, 0.65, 0.80, 1),
-            yellow: Qt.hsva(0.11, 0.70, 0.92, 1), cyan: Qt.hsva(0.52, 0.65, 0.88, 1),
-            secondary: Qt.hsva(h, 0.45, 0.85, 1), tertiary: Qt.hsva(h3, 0.55, 0.85, 1),
-            primaryContainer: Qt.hsva(h2, 0.30, 0.18, 1), secondaryContainer: Qt.hsva(h, 0.18, 0.15, 1),
-            surfaceContainer: Qt.hsva(h, 0.12, 0.15, 1), surfaceBright: Qt.hsva(h, 0.15, 0.22, 1),
-            accentFg: Qt.hsva(h2, 0.25, 0.13, 1),
-            outline: Qt.hsva(h, 0.15, 0.40, 1), outlineVariant: Qt.hsva(h, 0.10, 0.25, 1)
-        };
-    }
-
-    // Neutral: accent from seed, pure gray surfaces
-    function _strategyNeutral(h) {
-        var h2 = (h + 0.17) % 1.0, h3 = (h + 0.33) % 1.0;
-        return {
-            bg: Qt.rgba(0.10, 0.10, 0.12, 0.85), bgSolid: Qt.hsva(0, 0, 0.11, 1),
-            fg: Qt.hsva(0, 0, 0.88, 1), fgDim: Qt.hsva(0, 0, 0.42, 1),
-            accent: Qt.hsva(h, 0.60, 0.85, 1),
-            red: Qt.hsva(0.98, 0.65, 0.90, 1), green: Qt.hsva(0.35, 0.55, 0.75, 1),
-            yellow: Qt.hsva(0.11, 0.60, 0.88, 1), cyan: Qt.hsva(0.52, 0.55, 0.85, 1),
-            secondary: Qt.hsva(h2, 0.30, 0.75, 1), tertiary: Qt.hsva(h3, 0.40, 0.75, 1),
-            primaryContainer: Qt.hsva(h, 0.15, 0.15, 1), secondaryContainer: Qt.hsva(0, 0, 0.13, 1),
-            surfaceContainer: Qt.hsva(0, 0, 0.13, 1), surfaceBright: Qt.hsva(0, 0, 0.18, 1),
-            accentFg: Qt.hsva(0, 0, 0.11, 1),
-            outline: Qt.hsva(0, 0, 0.35, 1), outlineVariant: Qt.hsva(0, 0, 0.22, 1)
-        };
-    }
-
-    // Muted: low chroma tinted surfaces, softer accent
-    function _strategyMuted(h) {
-        var h2 = (h + 0.17) % 1.0, h3 = (h + 0.33) % 1.0;
-        return {
-            bg: Qt.rgba(0.10, 0.10, 0.14, 0.85), bgSolid: Qt.hsva(h, 0.10, 0.12, 1),
-            fg: Qt.hsva(h, 0.03, 0.85, 1), fgDim: Qt.hsva(h, 0.05, 0.42, 1),
-            accent: Qt.hsva(h, 0.35, 0.75, 1),
-            red: Qt.hsva(0.98, 0.50, 0.80, 1), green: Qt.hsva(0.35, 0.40, 0.70, 1),
-            yellow: Qt.hsva(0.11, 0.45, 0.80, 1), cyan: Qt.hsva(0.52, 0.40, 0.75, 1),
-            secondary: Qt.hsva(h2, 0.20, 0.65, 1), tertiary: Qt.hsva(h3, 0.25, 0.65, 1),
-            primaryContainer: Qt.hsva(h, 0.12, 0.15, 1), secondaryContainer: Qt.hsva(h2, 0.08, 0.13, 1),
-            surfaceContainer: Qt.hsva(h, 0.06, 0.14, 1), surfaceBright: Qt.hsva(h, 0.06, 0.19, 1),
-            accentFg: Qt.hsva(h, 0.10, 0.12, 1),
-            outline: Qt.hsva(h, 0.06, 0.32, 1), outlineVariant: Qt.hsva(h, 0.04, 0.20, 1)
-        };
+    function _buildStrategy(name, h) {
+        const p = _strategyParams[name] || _strategyParams["Tonal"];
+        const hues = { h: h, h2: (h + p.h2Offset) % 1.0, h3: (h + p.h3Offset) % 1.0 };
+        const palette = { bg: Qt.rgba(p.bg[0], p.bg[1], p.bg[2], p.bg[3]) };
+        for (const key in p.colors) {
+            const [hk, s, v] = p.colors[key];
+            const hue = typeof hk === "string" ? hues[hk] : hk;
+            palette[key] = Qt.hsva(hue, s, v, 1);
+        }
+        return palette;
     }
 
     function _strategyIndex() {
@@ -326,8 +323,7 @@ Singleton {
 
     function _applyWallpaperHue(hue) {
         if (hue < 0) hue = 0.6; // fallback blue
-        const p = wallpaperStrategies[_strategyIndex()].fn(hue);
-        _applyColors(p);
+        _applyColors(_buildStrategy(UserSettings.wallpaperStrategy, hue));
     }
 
     // Apply persisted theme once settings load

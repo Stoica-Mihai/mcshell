@@ -72,10 +72,12 @@ Item {
     // ── Search callback ──
     function onSearch(text) {}
 
-    // Shared substring filter — normalizes query, returns new array of matching items.
+    // Shared substring filter — normalizes query, returns a new array of matching items.
+    // Always returns a fresh array so callers can sort in place without mutating
+    // the source (Quickshell service collections are readonly).
     function filterByQuery(text, items, matchFn) {
         const query = (text || "").toLowerCase().trim();
-        if (query === "") return items;
+        if (query === "") return items.slice();
         const results = [];
         for (let i = 0; i < items.length; i++) {
             if (matchFn(items[i], query))
