@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import Qs.NiriIpc
 import qs.Config
@@ -52,6 +53,10 @@ OverlayWindow {
 
     function open() {
         if (_allWindows.length === 0) return;
+        _outputDetect.running = true;
+    }
+
+    function _afterOutputDetect() {
         isOpen = true;
         searchBar.reset();
         // Always start at 0 so a stale index from the previous session can't
@@ -61,6 +66,27 @@ OverlayWindow {
         if (_previousId >= 0) {
             for (let i = 0; i < _filtered.length; i++) {
                 if (_filtered[i].id === _previousId) { selectedIndex = i; break; }
+            }
+        }
+    }
+
+    // Surface is always-alive — detect niri's focused output and reassign
+    // `screen` before opening so the overlay follows focus on multi-monitor.
+    Process {
+        id: _outputDetect
+        command: ["niri", "msg", "-j", "focused-output"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const name = JSON.parse(this.text).name;
+                    for (const s of Quickshell.screens) {
+                        if (s.name === name && root.screen !== s) {
+                            root.screen = s;
+                            break;
+                        }
+                    }
+                } catch (e) {}
+                root._afterOutputDetect();
             }
         }
     }
