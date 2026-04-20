@@ -96,11 +96,14 @@ FocusScope {
         anchors.margins: Theme.spacingNormal
         spacing: Theme.spacingSmall
 
-        // Live preview tile — parallelogram card with accent stripe
-        ParallelogramCard {
+        // Live preview tile — straight rectangle so it reads as a flat
+        // header inside the straight dropdown. Accent stripe stays skewed
+        // for a small design accent.
+        Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: previewGrid.implicitHeight + Theme.spacingMedium * 2
-            backgroundColor: Theme.withAlpha(Theme.accent, 0.08)
+            color: Theme.withAlpha(Theme.accent, 0.08)
+            radius: Theme.radiusSmall
 
             SkewRect {
                 x: Theme.spacingSmall
