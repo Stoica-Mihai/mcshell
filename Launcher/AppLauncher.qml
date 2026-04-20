@@ -600,7 +600,10 @@ OverlayWindow {
                 readonly property bool _show: launcher.inList && active
                 y: _show ? 0 : -height
                 visible: y > -height
-                Behavior on y { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
+                Behavior on y {
+                    enabled: launcher.isOpen && !launcher._suppressCarouselAnim
+                    NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic }
+                }
             }
 
             // Sliding row — single generic Repeater, offset below header when visible

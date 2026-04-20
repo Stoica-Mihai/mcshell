@@ -159,10 +159,14 @@ LauncherCategory {
 
                     Behavior on border.color { ColorAnimation { duration: Theme.animFast } }
 
-                    OptImage {
+                    Image {
                         anchors.fill: parent
                         anchors.margins: parent.border.width
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: false
+                        cache: true
                         source: monitorSlot.screenWp ? "file://" + monitorSlot.screenWp : ""
+                        sourceSize.width: 180
                         sourceSize.height: 100
                     }
 
