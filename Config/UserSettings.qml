@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.SysInfo
 import Qs.NightLight
 import qs.Core
 
@@ -88,6 +89,17 @@ Singleton {
         if (hidden && i < 0) cur.push(name);
         else if (!hidden && i >= 0) cur.splice(i, 1);
         adapter.sysInfoHiddenGpusJson = JSON.stringify(cur);
+    }
+
+    // First GPU not in sysInfoHiddenGpus — treated as the "primary" GPU for
+    // bar-capsule metrics and preview readouts. Falls back to gpus[0] when
+    // everything is hidden. Reused wherever one-GPU-of-many has to be picked.
+    function primaryGpu() {
+        const gpus = SysInfo.gpus;
+        for (let i = 0; i < gpus.length; i++) {
+            if (sysInfoGpuVisible(gpus[i].name)) return gpus[i];
+        }
+        return gpus.length > 0 ? gpus[0] : null;
     }
 
     readonly property bool weatherConfigured: adapter.weatherLocation !== ""

@@ -152,15 +152,15 @@ FocusScope {
                 }
                 Key { text: "GPU" }
                 Val {
+                    readonly property var _gpu: UserSettings.primaryGpu()
                     text: {
-                        if (SysInfo.gpus.length === 0) return "—";
-                        const g = SysInfo.gpus[0];
+                        if (!_gpu) return "—";
                         const parts = [];
-                        if (g.utilization >= 0) parts.push(g.utilization.toFixed(0) + "%");
-                        if (g.power > 0) parts.push(g.power.toFixed(0) + " W");
+                        if (_gpu.utilization >= 0) parts.push(_gpu.utilization.toFixed(0) + "%");
+                        if (_gpu.power > 0) parts.push(_gpu.power.toFixed(0) + " W");
                         return parts.join(" \u00B7 ");
                     }
-                    color: SysInfo.gpus.length > 0 && SysInfo.gpus[0].utilization > 50 ? Theme.yellow : Theme.fg
+                    color: _gpu && _gpu.utilization > 50 ? Theme.yellow : Theme.fg
                 }
             }
         }

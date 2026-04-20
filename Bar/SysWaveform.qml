@@ -31,7 +31,7 @@ Item {
     // "cpu" when no GPU is detected so we never render an empty waveform.
     readonly property string _metric: {
         const m = UserSettings.sysInfoBarMetric;
-        if (m === "gpu" && SysInfo.gpus.length === 0) return "cpu";
+        if (m === "gpu" && !UserSettings.primaryGpu()) return "cpu";
         return m || "cpu";
     }
 
@@ -58,7 +58,7 @@ Item {
             if (root._metric === "cpu")    return root._cpuLoad(i) / 100 * 14;
             if (root._metric === "memory") return root._thresholdFill(SysInfo.memPercent, i) * 14;
             if (root._metric === "gpu") {
-                const g = SysInfo.gpus[0];
+                const g = UserSettings.primaryGpu();
                 const util = g && g.utilization >= 0 ? g.utilization : 0;
                 return root._thresholdFill(util, i) * 14;
             }
@@ -68,7 +68,7 @@ Item {
             if (root._metric === "cpu") return Theme.loadColor(root._cpuLoad(i));
             if (root._metric === "memory") return Theme.loadColor(SysInfo.memPercent);
             if (root._metric === "gpu") {
-                const g = SysInfo.gpus[0];
+                const g = UserSettings.primaryGpu();
                 return Theme.loadColor(g && g.utilization >= 0 ? g.utilization : 0);
             }
             return Theme.accent;
