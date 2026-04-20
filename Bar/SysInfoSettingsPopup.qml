@@ -233,12 +233,6 @@ FocusScope {
                     implicitHeight: childrenRect.height
                 }
             }
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: root.selectedRow = rowBase.rowIndex
-                cursorShape: Qt.PointingHandCursor
-            }
         }
 
         // ── General section ────────────────────────────
@@ -288,7 +282,6 @@ FocusScope {
             label: "Show in bar"
             BoolToggle {
                 checked: UserSettings.sysInfoEnabled
-                onToggled: UserSettings.sysInfoEnabled = !UserSettings.sysInfoEnabled
             }
         }
 
@@ -339,7 +332,6 @@ FocusScope {
 
                     SkewCheck {
                         checked: UserSettings[parent.parent.setting]
-                        onToggled: UserSettings[parent.parent.setting] = !UserSettings[parent.parent.setting]
                     }
                     Text {
                         text: parent.parent.label
@@ -348,13 +340,6 @@ FocusScope {
                         color: Theme.fg
                         Layout.fillWidth: true
                     }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: root.selectedRow = parent.rowIndex
-                    cursorShape: Qt.PointingHandCursor
-                    z: -1
                 }
             }
 
@@ -433,17 +418,7 @@ FocusScope {
 
                     BoolToggle {
                         checked: UserSettings.sysInfoGpuVisible(modelData.name)
-                        onToggled: UserSettings.setSysInfoGpuHidden(
-                            modelData.name,
-                            UserSettings.sysInfoGpuVisible(modelData.name))
                     }
-                }
-
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: root.selectedRow = gpuRow.rowIndex
-                    cursorShape: Qt.PointingHandCursor
-                    z: -1
                 }
 
                 function _vendorColor(vendor) {

@@ -1,8 +1,10 @@
 import QtQuick
 import qs.Config
 
-// Parallelogram two-state toggle. Display-only — state is owned by the
-// parent binding. Emits `toggled(bool newState)` on click.
+// Parallelogram two-state toggle. Purely visual — state is owned by the
+// parent binding. mcshell's config popups are keyboard-driven, so this
+// widget intentionally has no mouse handling; parents flip `checked`
+// from their own key handlers.
 Item {
     id: root
 
@@ -11,8 +13,6 @@ Item {
     property int trackHeight: 16
     property int thumbMargin: 2
     readonly property int thumbWidth: trackHeight - thumbMargin
-
-    signal toggled(bool newState)
 
     implicitWidth: trackWidth
     implicitHeight: trackHeight
@@ -40,11 +40,5 @@ Item {
 
         Behavior on x { NumberAnimation { duration: Theme.animNormal; easing.type: Easing.OutCubic } }
         Behavior on fillColor { ColorAnimation { duration: Theme.animNormal } }
-    }
-
-    MouseArea {
-        anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        onClicked: root.toggled(!root.checked)
     }
 }

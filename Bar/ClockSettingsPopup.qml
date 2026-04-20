@@ -189,10 +189,6 @@ FocusScope {
                         checked: rowItem.modelData.kind === "toggle"
                             ? UserSettings[rowItem.modelData.setting]
                             : false
-                        onToggled: {
-                            if (rowItem.modelData.kind === "toggle")
-                                UserSettings[rowItem.modelData.setting] = !UserSettings[rowItem.modelData.setting];
-                        }
                     }
                 }
             }

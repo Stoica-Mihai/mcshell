@@ -1,15 +1,14 @@
 import QtQuick
 import qs.Config
 
-// Diamond-rotated checkbox. Display-only — parent owns `checked`.
-// Emits `toggled(bool newState)` on click.
+// Diamond-rotated checkbox. Purely visual — parent owns `checked` and
+// flips it from its own key handlers. No mouse handling on purpose;
+// mcshell's config popups are keyboard-driven.
 Item {
     id: root
 
     property bool checked: false
     property int size: 12
-
-    signal toggled(bool newState)
 
     implicitWidth: size
     implicitHeight: size
@@ -25,11 +24,5 @@ Item {
 
         Behavior on color { ColorAnimation { duration: Theme.animNormal } }
         Behavior on border.color { ColorAnimation { duration: Theme.animNormal } }
-    }
-
-    MouseArea {
-        anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        onClicked: root.toggled(!root.checked)
     }
 }
