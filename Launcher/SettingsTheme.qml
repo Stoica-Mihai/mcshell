@@ -69,6 +69,7 @@ SettingsPanel {
 
                 CyclePicker {
                     anchors.centerIn: parent
+                    pillValue: true
                     visible: isWallpaper
                     model: root._strategyNames
                     currentIndex: Theme._strategyIndex()

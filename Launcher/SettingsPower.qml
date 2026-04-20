@@ -168,6 +168,7 @@ SettingsPanel {
         SettingsRow.Icon { text: Theme.iconTune; color: Theme.accent }
         SettingsRow.Label { text: "Profile"; Layout.fillWidth: true }
         CyclePicker {
+            pillValue: true
             model: root.profileNames
             currentIndex: profileCycler.currentIndex
             enabled: root._profileAvailable

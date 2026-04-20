@@ -109,6 +109,7 @@ SettingsPanel {
         SettingsRow.Label { text: "Order"; Layout.fillWidth: true }
         CyclePicker {
             id: orderPicker
+            pillValue: true
             model: ["Shuffle", "Sequential"]
             currentIndex: UserSettings.wallpaperRotateMode === "sequential" ? 1 : 0
             onIndexChanged: idx => {
@@ -129,6 +130,7 @@ SettingsPanel {
         SettingsRow.Label { text: "Screen"; Layout.fillWidth: true }
         CyclePicker {
             id: rotateScreenPicker
+            pillValue: true
             model: root._rotateScreenNames
             currentIndex: root._rotateScreenIndex
             onIndexChanged: idx => {
@@ -148,6 +150,7 @@ SettingsPanel {
         SettingsRow.Label { text: "Fill Mode"; Layout.fillWidth: true }
         CyclePicker {
             id: fillPicker
+            pillValue: true
             model: root._fillModes.map(m => m.label)
             currentIndex: root._fillIndex
             onIndexChanged: idx => {
