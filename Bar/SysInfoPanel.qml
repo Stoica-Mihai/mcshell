@@ -386,6 +386,33 @@ ColumnLayout {
         }
     }
 
+    // ── Disk I/O section ─────────────────────────────────
+    // Per whole-disk read/write throughput from /proc/diskstats. Uses the
+    // same ↓/↑ SpeedLabel shape as network for visual rhythm.
+    Separator { Layout.topMargin: 8; visible: UserSettings.sysInfoShowDisk && SysInfo.diskDevices.length > 0 }
+    SectionLabel { text: "DISK I/O"; visible: UserSettings.sysInfoShowDisk && SysInfo.diskDevices.length > 0 }
+
+    Repeater {
+        model: UserSettings.sysInfoShowDisk ? SysInfo.diskDevices : []
+
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 20
+            spacing: Theme.spacingMedium
+
+            Text {
+                text: modelData.name
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeMini
+                color: Theme.fgDim
+                Layout.fillWidth: true
+            }
+
+            SpeedLabel { arrow: "\u2193"; arrowColor: Theme.cyan;  value: Theme.formatSpeed(modelData.readBytesPerSec) }
+            SpeedLabel { arrow: "\u2191"; arrowColor: Theme.green; value: Theme.formatSpeed(modelData.writeBytesPerSec) }
+        }
+    }
+
     // ── Footer ───────────────────────────────────────────
     Separator { Layout.topMargin: 8 }
 
