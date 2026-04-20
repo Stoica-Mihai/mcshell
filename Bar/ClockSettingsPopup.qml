@@ -37,6 +37,7 @@ FocusScope {
     // `values[i]` is persisted; `model[i]` is shown. The indices match.
     readonly property var _rows: [
         {
+            kind: "cycle",
             section: "Time",
             label: "Time format",
             setting: "clockTimeFormat",
@@ -44,13 +45,13 @@ FocusScope {
             model:  ["24 hour", "12 hour"]
         },
         {
+            kind: "toggle",
             section: "",
             label: "Show seconds",
-            setting: "clockShowSeconds",
-            values: [false, true],
-            model:  ["Off", "On"]
+            setting: "clockShowSeconds"
         },
         {
+            kind: "cycle",
             section: "",
             label: "Date format",
             setting: "clockDateFormat",
@@ -58,6 +59,7 @@ FocusScope {
             model:  _dateFormatLabels
         },
         {
+            kind: "cycle",
             section: "Calendar",
             label: "Week starts on",
             setting: "weekStartsOnMonday",
@@ -81,13 +83,29 @@ FocusScope {
 
     Keys.onUpPressed: selectedRow = (selectedRow - 1 + rowCount) % rowCount
     Keys.onDownPressed: selectedRow = (selectedRow + 1) % rowCount
-    Keys.onLeftPressed: {
+    Keys.onLeftPressed:  _adjustRow(-1)
+    Keys.onRightPressed: _adjustRow(+1)
+    Keys.onReturnPressed: _activateRow()
+    Keys.onSpacePressed:  _activateRow()
+
+    function _adjustRow(dir) {
+        const row = _rows[selectedRow];
+        if (!row) return;
+        if (row.kind === "toggle") {
+            UserSettings[row.setting] = !UserSettings[row.setting];
+            return;
+        }
         const d = rowRepeater.itemAt(selectedRow);
-        if (d) d.cycler.cycleLeft();
+        if (d && d.cycler) {
+            if (dir < 0) d.cycler.cycleLeft();
+            else d.cycler.cycleRight();
+        }
     }
-    Keys.onRightPressed: {
-        const d = rowRepeater.itemAt(selectedRow);
-        if (d) d.cycler.cycleRight();
+
+    function _activateRow() {
+        const row = _rows[selectedRow];
+        if (row && row.kind === "toggle")
+            UserSettings[row.setting] = !UserSettings[row.setting];
     }
 
     ColumnLayout {
@@ -155,11 +173,25 @@ FocusScope {
 
                     CyclePicker {
                         id: rowCycler
-                        model: rowItem.modelData.model
-                        currentIndex: Math.max(0,
-                            rowItem.modelData.values.indexOf(UserSettings[rowItem.modelData.setting]))
+                        visible: rowItem.modelData.kind === "cycle"
+                        model: rowItem.modelData.kind === "cycle" ? rowItem.modelData.model : []
+                        currentIndex: rowItem.modelData.kind === "cycle"
+                            ? Math.max(0, rowItem.modelData.values.indexOf(UserSettings[rowItem.modelData.setting]))
+                            : 0
                         onIndexChanged: idx => {
-                            UserSettings[rowItem.modelData.setting] = rowItem.modelData.values[idx];
+                            if (rowItem.modelData.kind === "cycle")
+                                UserSettings[rowItem.modelData.setting] = rowItem.modelData.values[idx];
+                        }
+                    }
+
+                    BoolToggle {
+                        visible: rowItem.modelData.kind === "toggle"
+                        checked: rowItem.modelData.kind === "toggle"
+                            ? UserSettings[rowItem.modelData.setting]
+                            : false
+                        onToggled: {
+                            if (rowItem.modelData.kind === "toggle")
+                                UserSettings[rowItem.modelData.setting] = !UserSettings[rowItem.modelData.setting];
                         }
                     }
                 }
