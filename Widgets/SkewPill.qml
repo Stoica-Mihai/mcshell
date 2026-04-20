@@ -9,7 +9,7 @@ Item {
     property string text: ""
     property color fillColor: Theme.withAlpha(Theme.accent, 0.12)
     property color strokeColor: Theme.withAlpha(Theme.accent, 0.25)
-    property color textColor: Theme.accent
+    property color textColor: Theme.fg
     property int fontSize: Theme.fontSizeMini
     property bool bold: false
     property int hPadding: 10

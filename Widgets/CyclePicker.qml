@@ -109,7 +109,7 @@ Item {
         SkewPill {
             id: pill
             text: root._currentLabel
-            textColor: root.enabled ? root.textColor : Theme.fgDim
+            textColor: root.enabled ? Theme.fg : Theme.fgDim
             skewAmount: root._pillSkew
             hPadding: 12
             fixedWidth: Math.ceil(root._maxLabelWidth) + hPadding * 2
