@@ -217,7 +217,21 @@ LauncherCategory {
             showBorder: isCurrent || _assignedScreens.length > 0
 
             readonly property string wallPath: typeof modelData === "string" ? modelData : ""
-            readonly property var _assignedScreens: root._screensByPath[wallPath] || []
+            // Stable array reference: only reassign when the content actually
+            // changes, otherwise rapid wallpaper swaps rebuild a fresh array
+            // every UserSettings.wallpaper* tick and the badge Repeater's
+            // regenerate races with teardown → QmlModels SIGSEGV.
+            property var _assignedScreens: []
+            readonly property var _nextAssignedScreens: root._screensByPath[wallPath] || []
+            on_NextAssignedScreensChanged: {
+                const cur = _assignedScreens;
+                const next = _nextAssignedScreens;
+                if (cur.length !== next.length) { _assignedScreens = next; return; }
+                for (let i = 0; i < next.length; i++) {
+                    if (cur[i] !== next[i]) { _assignedScreens = next; return; }
+                }
+            }
+            Component.onCompleted: _assignedScreens = _nextAssignedScreens
             readonly property string fileName: {
                 const parts = wallPath.split("/");
                 return parts[parts.length - 1];
