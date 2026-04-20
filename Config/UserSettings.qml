@@ -91,15 +91,30 @@ Singleton {
         adapter.sysInfoHiddenGpusJson = JSON.stringify(cur);
     }
 
-    // First GPU not in sysInfoHiddenGpus — treated as the "primary" GPU for
-    // bar-capsule metrics and preview readouts. Falls back to gpus[0] when
-    // everything is hidden. Reused wherever one-GPU-of-many has to be picked.
+    // The "primary" GPU for bar-capsule metrics and preview readouts.
+    // Prefers the GPU that's currently driving a connected display output
+    // (detected by Core.ActiveGpu via /sys/class/drm/card*-*/status) so
+    // hybrid iGPU + dGPU rigs surface whichever card the monitor is
+    // actually plugged into, regardless of the sysinfo-config hidden list.
+    // Falls through to first-visible then gpus[0] if detection hasn't
+    // landed yet or no vendor match is found.
     function primaryGpu() {
         const gpus = SysInfo.gpus;
+        if (gpus.length === 0) return null;
+
+        const active = ActiveGpu.activeVendor;
+        if (active) {
+            const needle = active.toUpperCase();
+            for (let i = 0; i < gpus.length; i++) {
+                if ((gpus[i].vendor || "").toUpperCase().indexOf(needle) >= 0)
+                    return gpus[i];
+            }
+        }
+
         for (let i = 0; i < gpus.length; i++) {
             if (sysInfoGpuVisible(gpus[i].name)) return gpus[i];
         }
-        return gpus.length > 0 ? gpus[0] : null;
+        return gpus[0];
     }
 
     readonly property bool weatherConfigured: adapter.weatherLocation !== ""
