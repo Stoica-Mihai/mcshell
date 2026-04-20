@@ -247,6 +247,8 @@ LauncherCategory {
                 visible: !wallStrip.isCurrent
                 source: wallStrip.isVisible && wallStrip.wallPath ? "file://" + wallStrip.wallPath : ""
                 sourceSize.height: root.launcher.carouselHeight
+                opacity: status === Image.Ready ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: Theme.animSmooth } }
             }
 
             // Expanded: full preview with filename + screen badges
@@ -259,6 +261,8 @@ LauncherCategory {
                     source: wallStrip.wallPath ? "file://" + wallStrip.wallPath : ""
                     smooth: true
                     sourceSize.height: root.launcher.carouselHeight
+                    opacity: status === Image.Ready ? 1 : 0
+                    Behavior on opacity { NumberAnimation { duration: Theme.animSmooth } }
                 }
 
                 // Filename gradient
