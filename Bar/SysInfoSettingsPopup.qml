@@ -375,23 +375,43 @@ FocusScope {
         Repeater {
             model: SysInfo.gpus
 
-            SettingRowBase {
+            // Custom row — vendor stripe + vendor tag + name + toggle.
+            // Can't use SettingRowBase because that reserves a single
+            // fillWidth label slot; GPU rows need their own layout.
+            Item {
+                id: gpuRow
                 required property var modelData
                 required property int index
-                rowIndex: root._idxGpusStart + index
+                readonly property int rowIndex: root._idxGpusStart + index
+                readonly property bool isSelected: root.selectedRow === rowIndex
+
+                Layout.fillWidth: true
+                Layout.preferredHeight: 26
+
+                SkewRect {
+                    anchors.fill: parent
+                    fillColor: gpuRow.isSelected ? Theme.withAlpha(Theme.accent, 0.08) : "transparent"
+                    visible: gpuRow.isSelected
+                }
+                SkewRect {
+                    x: 2; y: 4
+                    width: 2
+                    height: parent.height - 8
+                    fillColor: Theme.accent
+                    visible: gpuRow.isSelected
+                }
 
                 RowLayout {
                     anchors.fill: parent
                     anchors.leftMargin: Theme.spacingLarge
                     anchors.rightMargin: Theme.spacingMedium
-                    spacing: 4
+                    spacing: Theme.spacingSmall
 
-                    // Vendor accent stripe
                     SkewRect {
-                        implicitWidth: 3
-                        implicitHeight: 14
-                        fillColor: _vendorColor(modelData.vendor)
+                        Layout.preferredWidth: 3
+                        Layout.preferredHeight: 14
                         Layout.alignment: Qt.AlignVCenter
+                        fillColor: gpuRow._vendorColor(modelData.vendor)
                     }
 
                     Text {
@@ -413,12 +433,17 @@ FocusScope {
 
                     BoolToggle {
                         checked: UserSettings.sysInfoGpuVisible(modelData.name)
-                        onToggled: {
-                            UserSettings.setSysInfoGpuHidden(
-                                modelData.name,
-                                UserSettings.sysInfoGpuVisible(modelData.name));
-                        }
+                        onToggled: UserSettings.setSysInfoGpuHidden(
+                            modelData.name,
+                            UserSettings.sysInfoGpuVisible(modelData.name))
                     }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: root.selectedRow = gpuRow.rowIndex
+                    cursorShape: Qt.PointingHandCursor
+                    z: -1
                 }
 
                 function _vendorColor(vendor) {
