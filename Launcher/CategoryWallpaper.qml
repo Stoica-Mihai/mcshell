@@ -106,6 +106,25 @@ LauncherCategory {
         }
     }
 
+    // Hidden cache-keeper. Pins one OptImage reference per wallpaper path so
+    // Qt's pixmap cache entries stay alive across tab switches and carousel
+    // window changes. MUST use the same OptImage type + sourceSize as the
+    // carousel delegates — cache lookups only hit when both ends match on
+    // type/options (a plain Image here still decodes but produces a separate
+    // cache entry the carousel's OptImage won't find).
+    Item {
+        visible: false
+        Repeater {
+            model: WallpaperScanner.paths
+            delegate: OptImage {
+                required property string modelData
+                source: "file://" + modelData
+                sourceSize.height: root.launcher.carouselHeight
+                cache: true
+            }
+        }
+    }
+
     // ── Search ──
     function onSearch(text) {
         setItems(filterByQuery(text, WallpaperScanner.paths,
@@ -258,7 +277,7 @@ LauncherCategory {
 
                 OptImage {
                     anchors.fill: parent
-                    source: wallStrip.wallPath ? "file://" + wallStrip.wallPath : ""
+                    source: wallStrip.isCurrent && wallStrip.wallPath ? "file://" + wallStrip.wallPath : ""
                     smooth: true
                     sourceSize.height: root.launcher.carouselHeight
                     opacity: status === Image.Ready ? 1 : 0
