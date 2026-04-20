@@ -135,12 +135,9 @@ SettingsPanel {
             color: root.nightOn ? Theme.yellow : Theme.fgDim
             Layout.rightMargin: 4
         }
-        TriToggle {
+        SkewToggle {
+            stateCount: 3
             state: root.modeIndex
-            onChanged: newState => {
-                UserSettings.nightLightMode = root.modes[newState];
-                UserSettings.applyNightLight();
-            }
         }
     }
 
@@ -239,9 +236,8 @@ SettingsPanel {
             color: UserSettings.sysInfoEnabled ? Theme.accent : Theme.fgDim
         }
         SettingsRow.Label { text: "System Monitor"; Layout.fillWidth: true }
-        SettingsRow.Value {
-            text: UserSettings.sysInfoEnabled ? "On" : "Off"
-            color: UserSettings.sysInfoEnabled ? Theme.accent : Theme.fgDim
+        SkewToggle {
+            state: UserSettings.sysInfoEnabled ? 1 : 0
         }
     }
 }

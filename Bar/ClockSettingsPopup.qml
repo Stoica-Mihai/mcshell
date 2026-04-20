@@ -173,6 +173,7 @@ FocusScope {
 
                     CyclePicker {
                         id: rowCycler
+                        pillValue: true
                         visible: rowItem.modelData.kind === "cycle"
                         model: rowItem.modelData.kind === "cycle" ? rowItem.modelData.model : []
                         currentIndex: rowItem.modelData.kind === "cycle"
@@ -184,11 +185,11 @@ FocusScope {
                         }
                     }
 
-                    BoolToggle {
+                    SkewToggle {
                         visible: rowItem.modelData.kind === "toggle"
-                        checked: rowItem.modelData.kind === "toggle"
-                            ? UserSettings[rowItem.modelData.setting]
-                            : false
+                        state: rowItem.modelData.kind === "toggle"
+                            && UserSettings[rowItem.modelData.setting]
+                            ? 1 : 0
                     }
                 }
             }

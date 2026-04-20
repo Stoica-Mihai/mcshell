@@ -3,7 +3,7 @@ import QtQuick.Shapes
 import qs.Config
 
 // Lightweight parallelogram shape primitive. Used as a building block by
-// SkewPill, BoolToggle, SkewCheck and anywhere the skewed-morphism style
+// SkewPill, SkewToggle, SkewCheck and anywhere the skewed-morphism style
 // needs a filled quadrilateral (accent stripes, section-label ticks, etc.).
 //
 // `skewAmount` defaults to Theme.cardSkew so it matches the bar/card

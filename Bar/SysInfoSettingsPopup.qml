@@ -285,8 +285,8 @@ FocusScope {
         SettingRowBase {
             rowIndex: root._idxShowInBar
             label: "Show in bar"
-            BoolToggle {
-                checked: UserSettings.sysInfoEnabled
+            SkewToggle {
+                state: UserSettings.sysInfoEnabled ? 1 : 0
             }
         }
 
@@ -421,8 +421,8 @@ FocusScope {
                         elide: Text.ElideRight
                     }
 
-                    BoolToggle {
-                        checked: UserSettings.sysInfoGpuVisible(modelData.name)
+                    SkewToggle {
+                        state: UserSettings.sysInfoGpuVisible(modelData.name) ? 1 : 0
                     }
                 }
 
