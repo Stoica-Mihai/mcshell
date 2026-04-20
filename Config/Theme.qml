@@ -664,15 +664,21 @@ Singleton {
     // Format bytes as human-readable GB
     function toGB(bytes) { return (bytes / 1073741824).toFixed(1); }
 
-    // Format bytes/sec as speed string. Respects UserSettings.sysInfoNetUnit:
-    // "bytes" (default) uses B/KB/MB, "bits" uses b/Kb/Mb (×8).
+    // Format bytes/sec as a speed string. Respects UserSettings.sysInfoNetUnit:
+    //   "bytes" — auto-scale B/KB/MB (default)
+    //   "kbytes" / "mbytes" — force fixed scale in kilobytes / megabytes
+    //   "bits" — auto-scale b/Kb/Mb (×8)
     function formatSpeed(bps) {
-        if (UserSettings.sysInfoNetUnit === "bits") {
+        const unit = UserSettings.sysInfoNetUnit;
+        if (unit === "bits") {
             const bits = bps * 8;
             if (bits >= 1000000) return (bits / 1000000).toFixed(1) + " Mb/s";
             if (bits >= 1000) return (bits / 1000).toFixed(0) + " Kb/s";
             return bits.toFixed(0) + " b/s";
         }
+        if (unit === "kbytes") return (bps / 1024).toFixed(1) + " KB/s";
+        if (unit === "mbytes") return (bps / 1048576).toFixed(2) + " MB/s";
+        // default: auto-scale bytes
         if (bps >= 1048576) return (bps / 1048576).toFixed(1) + " MB/s";
         if (bps >= 1024) return (bps / 1024).toFixed(0) + " KB/s";
         return bps.toFixed(0) + " B/s";

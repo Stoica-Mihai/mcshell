@@ -22,7 +22,7 @@ FocusScope {
         const base = [
             { kind: "cycle",  setting: "sysInfoInterval",    values: [1000, 2000, 5000, 10000], model: ["1 s", "2 s", "5 s", "10 s"] },
             { kind: "cycle",  setting: "sysInfoTempUnit",    values: ["C", "F"],                 model: ["\u00B0C", "\u00B0F"] },
-            { kind: "cycle",  setting: "sysInfoNetUnit",     values: ["bytes", "bits"],           model: ["bytes", "bits"] },
+            { kind: "cycle",  setting: "sysInfoNetUnit",     values: ["bytes", "kbytes", "mbytes", "bits"], model: ["bytes", "KB", "MB", "bits"] },
             { kind: "toggle", setting: "sysInfoEnabled" },
             { kind: "cycle",  setting: "sysInfoBarMetric",   values: _barMetricValues,            model: _barMetricLabels },
             { kind: "check",  setting: "sysInfoShowCpu" },
@@ -97,20 +97,22 @@ FocusScope {
         spacing: Theme.spacingSmall
 
         // Live preview tile — straight rectangle so it reads as a flat
-        // header inside the straight dropdown. Accent stripe stays skewed
-        // for a small design accent.
+        // header inside the straight dropdown, with a solid accent bar
+        // flush against the left edge.
         Rectangle {
+            id: previewTile
             Layout.fillWidth: true
             Layout.preferredHeight: previewGrid.implicitHeight + Theme.spacingMedium * 2
             color: Theme.withAlpha(Theme.accent, 0.08)
             radius: Theme.radiusSmall
+            clip: true
 
-            SkewRect {
-                x: Theme.spacingSmall
-                y: 4
+            Rectangle {
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
                 width: 3
-                height: parent.height - 8
-                fillColor: Theme.accent
+                color: Theme.accent
             }
 
             GridLayout {
@@ -270,8 +272,8 @@ FocusScope {
             label: "Network units"
             CyclePicker {
                 pillValue: true
-                model: ["bytes", "bits"]
-                readonly property var _values: ["bytes", "bits"]
+                model: ["bytes", "KB", "MB", "bits"]
+                readonly property var _values: ["bytes", "kbytes", "mbytes", "bits"]
                 currentIndex: Math.max(0, _values.indexOf(UserSettings.sysInfoNetUnit))
                 onIndexChanged: idx => UserSettings.sysInfoNetUnit = _values[idx]
             }
