@@ -238,6 +238,10 @@ ColumnLayout {
         ColumnLayout {
             id: gpuCol
             Layout.fillWidth: true
+            // Separate stacked GPU blocks — without this the next header
+            // sits closer to the previous block's waveform than to its
+            // own sub-line, making it look like it belongs to the GPU above.
+            Layout.topMargin: index > 0 ? 8 : 0
             spacing: 2
 
             readonly property real _util: modelData.utilization >= 0 ? modelData.utilization : 0
