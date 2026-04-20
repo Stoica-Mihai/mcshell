@@ -66,21 +66,30 @@ Item {
     readonly property real _pillSkew: -0.3
 
     // Pin the pill to the widest label in the current model so it stays
-    // the same size as the value cycles. Measured via a hidden TextMetrics.
+    // the same size as the value cycles. Measured imperatively on model
+    // changes — a readonly block binding would register a dependency on
+    // TextMetrics.advanceWidth and then re-fire every time this function
+    // itself mutates the shared metrics, causing a binding loop.
     TextMetrics {
         id: _pillMetrics
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeMini
     }
 
-    readonly property real _maxLabelWidth: {
+    property real _maxLabelWidth: 0
+
+    function _recomputeMaxLabelWidth() {
+        if (!root.pillValue) return;
         let max = 0;
         for (let i = 0; i < model.length; i++) {
             _pillMetrics.text = String(model[i]);
             if (_pillMetrics.advanceWidth > max) max = _pillMetrics.advanceWidth;
         }
-        return max;
+        _maxLabelWidth = max;
     }
+
+    onModelChanged: _recomputeMaxLabelWidth()
+    Component.onCompleted: _recomputeMaxLabelWidth()
 
     Row {
         id: pillRow
