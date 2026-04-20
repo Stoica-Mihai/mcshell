@@ -769,6 +769,7 @@ Scope {
         id: sysInfoSettingsWindow
         screen: root.screen
         cardWidth: rightSection.width - Theme.barDiagSlant
+        cardAlignment: "right"
     }
 
     // Recording state (passed from shell.qml)

@@ -28,6 +28,9 @@ PanelWindow {
     property real cardHeight: 200
     property bool wantsKeyboardFocus: false
     property string layershellNamespace: "mcshell-bar-popup"
+    // Horizontal placement under the bar: "left", "center" (default), "right".
+    // Pick the one that lines up with the bar segment that owns the trigger.
+    property string cardAlignment: "center"
 
     property real _openFraction: 0
     property bool _animating: openAnim.running || closeAnim.running
@@ -107,7 +110,11 @@ PanelWindow {
             id: card
             anchors.top: parent.top
             anchors.topMargin: Theme.barMargin + Theme.barHeight
-            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.horizontalCenter: root.cardAlignment === "center" ? parent.horizontalCenter : undefined
+            anchors.left: root.cardAlignment === "left" ? parent.left : undefined
+            anchors.right: root.cardAlignment === "right" ? parent.right : undefined
+            anchors.leftMargin: root.cardAlignment === "left" ? Theme.barMargin + 1 : 0
+            anchors.rightMargin: root.cardAlignment === "right" ? Theme.barMargin + 1 : 0
             width: root.cardWidth
             // Animated height — slide-down from 0 to cardHeight
             height: root._animating
