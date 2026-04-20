@@ -33,6 +33,7 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.preferredHeight: cpuCol.implicitHeight + 16
         backgroundColor: Theme.primaryContainer
+        visible: UserSettings.sysInfoShowCpu
 
         ColumnLayout {
             id: cpuCol
@@ -112,13 +113,14 @@ ColumnLayout {
         }
     }
 
-    Item { Layout.preferredHeight: 6 }
+    Item { Layout.preferredHeight: 6; visible: UserSettings.sysInfoShowCpu && UserSettings.sysInfoShowMemory }
 
     // ── Memory card ──────────────────────────────────────
     ParallelogramCard {
         Layout.fillWidth: true
         Layout.preferredHeight: memCol.implicitHeight + 16
         backgroundColor: Theme.primaryContainer
+        visible: UserSettings.sysInfoShowMemory
 
         ColumnLayout {
             id: memCol
@@ -190,11 +192,11 @@ ColumnLayout {
     }
 
     // ── Thermal section ──────────────────────────────────
-    Separator { Layout.topMargin: 8 }
-    SectionLabel { text: "THERMAL" }
+    Separator { Layout.topMargin: 8; visible: UserSettings.sysInfoShowThermal }
+    SectionLabel { text: "THERMAL"; visible: UserSettings.sysInfoShowThermal }
 
     Repeater {
-        model: SysInfo.temperatures
+        model: UserSettings.sysInfoShowThermal ? SysInfo.temperatures : []
 
         RowLayout {
             Layout.fillWidth: true
@@ -217,7 +219,7 @@ ColumnLayout {
             }
 
             Text {
-                text: modelData.value.toFixed(1) + "\u00B0"
+                text: Theme.formatTemp(modelData.value)
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeTiny
                 font.bold: true
@@ -229,11 +231,19 @@ ColumnLayout {
     }
 
     // ── GPU section ──────────────────────────────────────
-    Separator { Layout.topMargin: 8; visible: SysInfo.gpus.length > 0 }
-    SectionLabel { text: "GPU"; visible: SysInfo.gpus.length > 0 }
+    readonly property var _visibleGpus: {
+        const src = SysInfo.gpus;
+        const out = [];
+        for (let i = 0; i < src.length; i++) {
+            if (UserSettings.sysInfoGpuVisible(src[i].name)) out.push(src[i]);
+        }
+        return out;
+    }
+    Separator { Layout.topMargin: 8; visible: UserSettings.sysInfoShowGpu && root._visibleGpus.length > 0 }
+    SectionLabel { text: "GPU"; visible: UserSettings.sysInfoShowGpu && root._visibleGpus.length > 0 }
 
     Repeater {
-        model: SysInfo.gpus
+        model: UserSettings.sysInfoShowGpu ? root._visibleGpus : []
 
         ColumnLayout {
             id: gpuCol
@@ -352,11 +362,11 @@ ColumnLayout {
     }
 
     // ── Network section ──────────────────────────────────
-    Separator { Layout.topMargin: 8; visible: SysInfo.netInterfaces.length > 0 }
-    SectionLabel { text: "NETWORK"; visible: SysInfo.netInterfaces.length > 0 }
+    Separator { Layout.topMargin: 8; visible: UserSettings.sysInfoShowNetwork && SysInfo.netInterfaces.length > 0 }
+    SectionLabel { text: "NETWORK"; visible: UserSettings.sysInfoShowNetwork && SysInfo.netInterfaces.length > 0 }
 
     Repeater {
-        model: SysInfo.netInterfaces
+        model: UserSettings.sysInfoShowNetwork ? SysInfo.netInterfaces : []
 
         RowLayout {
             Layout.fillWidth: true

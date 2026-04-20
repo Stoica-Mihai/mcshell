@@ -18,6 +18,7 @@ Scope {
         || calendarWindow.isOpen
         || weatherWindow.isOpen
         || clockSettingsWindow.isOpen
+        || sysInfoSettingsWindow.isOpen
 
     property int unreadNotifications: 0
     property var notifHistoryModel: null
@@ -38,7 +39,8 @@ Scope {
     readonly property var _barPanels: ({
         calendar: calendarWindow,
         weather: weatherWindow,
-        clockSettings: clockSettingsWindow
+        clockSettings: clockSettingsWindow,
+        sysInfoSettings: sysInfoSettingsWindow
     })
     onPanelToggleTriggerChanged: {
         if (!panelToggleName) return;
@@ -56,6 +58,7 @@ Scope {
         calendarWindow.close();
         weatherWindow.close();
         clockSettingsWindow.close();
+        sysInfoSettingsWindow.close();
     }
 
     // ── Exclusive zone — reserves bar space, no content ────
@@ -464,7 +467,14 @@ Scope {
                             SysWaveform {
                                 visible: UserSettings.sysInfoEnabled
                                 active: sharedDropdown.activePanel === "sysinfo"
-                                onClicked: sharedDropdown.togglePanel("sysinfo")
+                                onClicked: {
+                                    sysInfoSettingsWindow.close();
+                                    sharedDropdown.togglePanel("sysinfo");
+                                }
+                                onToggleConfigPopup: {
+                                    sharedDropdown.closePanel();
+                                    sysInfoSettingsWindow.toggle();
+                                }
                             }
                         }
                     }
@@ -753,6 +763,12 @@ Scope {
         id: clockSettingsWindow
         screen: root.screen
         cardWidth: centerSection.width
+    }
+
+    SysInfoSettingsWindow {
+        id: sysInfoSettingsWindow
+        screen: root.screen
+        cardWidth: rightSection.width - Theme.barDiagSlant
     }
 
     // Recording state (passed from shell.qml)

@@ -664,11 +664,25 @@ Singleton {
     // Format bytes as human-readable GB
     function toGB(bytes) { return (bytes / 1073741824).toFixed(1); }
 
-    // Format bytes/sec as speed string
+    // Format bytes/sec as speed string. Respects UserSettings.sysInfoNetUnit:
+    // "bytes" (default) uses B/KB/MB, "bits" uses b/Kb/Mb (×8).
     function formatSpeed(bps) {
+        if (UserSettings.sysInfoNetUnit === "bits") {
+            const bits = bps * 8;
+            if (bits >= 1000000) return (bits / 1000000).toFixed(1) + " Mb/s";
+            if (bits >= 1000) return (bits / 1000).toFixed(0) + " Kb/s";
+            return bits.toFixed(0) + " b/s";
+        }
         if (bps >= 1048576) return (bps / 1048576).toFixed(1) + " MB/s";
         if (bps >= 1024) return (bps / 1024).toFixed(0) + " KB/s";
         return bps.toFixed(0) + " B/s";
+    }
+
+    // Format celsius as a temperature string. Respects UserSettings.sysInfoTempUnit.
+    function formatTemp(celsius) {
+        if (UserSettings.sysInfoTempUnit === "F")
+            return (celsius * 9 / 5 + 32).toFixed(0) + "\u00B0F";
+        return celsius.toFixed(0) + "\u00B0";
     }
 
     // Format seconds as compact uptime

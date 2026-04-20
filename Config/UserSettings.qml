@@ -63,6 +63,32 @@ Singleton {
     property alias clockDateFormat: adapter.clockDateFormat      // Qt format pattern, e.g. "ddd d MMM yyyy"
     property alias weekStartsOnMonday: adapter.weekStartsOnMonday // bool
     property alias sysInfoEnabled: adapter.sysInfoEnabled        // bool — show waveform + dropdown in bar
+    property alias sysInfoInterval: adapter.sysInfoInterval      // ms between polls (1000/2000/5000/10000)
+    property alias sysInfoTempUnit: adapter.sysInfoTempUnit      // "C" or "F"
+    property alias sysInfoNetUnit: adapter.sysInfoNetUnit        // "bytes" or "bits"
+    property alias sysInfoBarMetric: adapter.sysInfoBarMetric    // "cpu", "memory", "gpu" (gpu falls back to cpu if no GPU)
+    property alias sysInfoShowCpu: adapter.sysInfoShowCpu          // bool — per-section dropdown visibility
+    property alias sysInfoShowMemory: adapter.sysInfoShowMemory    // bool
+    property alias sysInfoShowThermal: adapter.sysInfoShowThermal  // bool
+    property alias sysInfoShowGpu: adapter.sysInfoShowGpu          // bool
+    property alias sysInfoShowNetwork: adapter.sysInfoShowNetwork  // bool
+    property alias sysInfoShowDisk: adapter.sysInfoShowDisk        // bool
+    // Hidden GPUs: absence from the list == visible, so new GPUs auto-appear.
+    // Stored as JSON-serialized string[] (same pattern as wallpaperPerScreen).
+    property alias sysInfoHiddenGpusJson: adapter.sysInfoHiddenGpusJson
+    readonly property var sysInfoHiddenGpus: JSON.parse(adapter.sysInfoHiddenGpusJson || "[]")
+
+    function sysInfoGpuVisible(name) {
+        return sysInfoHiddenGpus.indexOf(name) < 0;
+    }
+
+    function setSysInfoGpuHidden(name, hidden) {
+        const cur = sysInfoHiddenGpus.slice();
+        const i = cur.indexOf(name);
+        if (hidden && i < 0) cur.push(name);
+        else if (!hidden && i >= 0) cur.splice(i, 1);
+        adapter.sysInfoHiddenGpusJson = JSON.stringify(cur);
+    }
 
     readonly property bool weatherConfigured: adapter.weatherLocation !== ""
 
@@ -183,6 +209,17 @@ Singleton {
             property string clockDateFormat: "ddd d MMM yyyy"
             property bool weekStartsOnMonday: true
             property bool sysInfoEnabled: true
+            property int sysInfoInterval: 2000
+            property string sysInfoTempUnit: "C"
+            property string sysInfoNetUnit: "bytes"
+            property string sysInfoBarMetric: "cpu"
+            property bool sysInfoShowCpu: true
+            property bool sysInfoShowMemory: true
+            property bool sysInfoShowThermal: true
+            property bool sysInfoShowGpu: true
+            property bool sysInfoShowNetwork: true
+            property bool sysInfoShowDisk: false
+            property string sysInfoHiddenGpusJson: "[]"
         }
 
         onAdapterUpdated: root._save()

@@ -10,32 +10,68 @@ Item {
     id: root
 
     signal clicked()
+    signal toggleConfigPopup()
 
     readonly property bool hovered: mouse.containsMouse
     property bool active: false
 
+    // Apply the user-configured poll interval to the SysInfo singleton.
+    // Kept here because this file is the bar's always-instantiated SysInfo
+    // consumer — the SysInfoPanel is Loader-gated on its dropdown.
+    Binding {
+        target: SysInfo
+        property: "interval"
+        value: UserSettings.sysInfoInterval
+    }
+
     implicitWidth: wave.implicitWidth
     implicitHeight: Theme.iconSize
+
+    // Metric chosen by UserSettings.sysInfoBarMetric. "gpu" falls back to
+    // "cpu" when no GPU is detected so we never render an empty waveform.
+    readonly property string _metric: {
+        const m = UserSettings.sysInfoBarMetric;
+        if (m === "gpu" && SysInfo.gpus.length === 0) return "cpu";
+        return m || "cpu";
+    }
+
+    // CPU: per-bar average of two cores, height scales with load.
+    // Memory / GPU: threshold style — bar i fills at i*12.5% (VolumeWaveform).
+    function _cpuLoad(i) {
+        const cores = SysInfo.cpuCores;
+        const i0 = i * 2;
+        const i1 = i0 + 1;
+        const a = i0 < cores.length ? cores[i0] : 0;
+        const b = i1 < cores.length ? cores[i1] : 0;
+        return (a + b) / 2;
+    }
+    function _thresholdFill(pct, i) {
+        const threshold = i / 8;
+        return Math.max(0, Math.min(1, (pct / 100 - threshold) * 8));
+    }
 
     WaveformBars {
         id: wave
         anchors.centerIn: parent
 
         barHeight: function(i) {
-            const cores = SysInfo.cpuCores;
-            const i0 = i * 2;
-            const i1 = i0 + 1;
-            const a = i0 < cores.length ? cores[i0] : 0;
-            const b = i1 < cores.length ? cores[i1] : 0;
-            return (a + b) / 200 * 14;
+            if (root._metric === "cpu")    return root._cpuLoad(i) / 100 * 14;
+            if (root._metric === "memory") return root._thresholdFill(SysInfo.memPercent, i) * 14;
+            if (root._metric === "gpu") {
+                const g = SysInfo.gpus[0];
+                const util = g && g.utilization >= 0 ? g.utilization : 0;
+                return root._thresholdFill(util, i) * 14;
+            }
+            return 0;
         }
         barColor: function(i) {
-            const cores = SysInfo.cpuCores;
-            const i0 = i * 2;
-            const i1 = i0 + 1;
-            const a = i0 < cores.length ? cores[i0] : 0;
-            const b = i1 < cores.length ? cores[i1] : 0;
-            return Theme.loadColor((a + b) / 2);
+            if (root._metric === "cpu") return Theme.loadColor(root._cpuLoad(i));
+            if (root._metric === "memory") return Theme.loadColor(SysInfo.memPercent);
+            if (root._metric === "gpu") {
+                const g = SysInfo.gpus[0];
+                return Theme.loadColor(g && g.utilization >= 0 ? g.utilization : 0);
+            }
+            return Theme.accent;
         }
     }
 
@@ -46,7 +82,11 @@ Item {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.clicked()
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        onClicked: event => {
+            if (event.button === Qt.RightButton) root.toggleConfigPopup();
+            else root.clicked();
+        }
         // Wayland layer-shell surfaces can cancel the first pointer grab
         // after startup (input region settling). Fall back to press if
         // the click is lost.
@@ -65,12 +105,12 @@ Item {
         for (let i = 0; i < temps.length; i++) {
             const lbl = temps[i].label;
             if (lbl === "Tctl" || lbl === "Package id 0") {
-                cpuTemp = temps[i].value.toFixed(0) + "\u00B0";
+                cpuTemp = Theme.formatTemp(temps[i].value);
                 break;
             }
         }
         if (!cpuTemp && temps.length > 0)
-            cpuTemp = temps[0].value.toFixed(0) + "\u00B0";
+            cpuTemp = Theme.formatTemp(temps[0].value);
         const mem = SysInfo.memPercent.toFixed(0);
         return `CPU ${cpu}%` + (cpuTemp ? ` \u00B7 ${cpuTemp}` : "") + ` \u00B7 ${mem}% RAM`;
     }
