@@ -93,24 +93,16 @@ Singleton {
 
     // The "primary" GPU for bar-capsule metrics and preview readouts.
     // Prefers the GPU that's currently driving a connected display output
-    // (detected by Core.ActiveGpu via /sys/class/drm/card*-*/status) so
-    // hybrid iGPU + dGPU rigs surface whichever card the monitor is
-    // actually plugged into, regardless of the sysinfo-config hidden list.
-    // Falls through to first-visible then gpus[0] if detection hasn't
-    // landed yet or no vendor match is found.
+    // (SysInfo.gpus[i].connectedDisplay, computed in mcs-qs by scanning
+    // /sys/class/drm/card*-*/status). Falls through to first-visible
+    // then gpus[0] when no GPU reports a connected output.
     function primaryGpu() {
         const gpus = SysInfo.gpus;
         if (gpus.length === 0) return null;
 
-        const active = ActiveGpu.activeVendor;
-        if (active) {
-            const needle = active.toUpperCase();
-            for (let i = 0; i < gpus.length; i++) {
-                if ((gpus[i].vendor || "").toUpperCase().indexOf(needle) >= 0)
-                    return gpus[i];
-            }
+        for (let i = 0; i < gpus.length; i++) {
+            if (gpus[i].connectedDisplay) return gpus[i];
         }
-
         for (let i = 0; i < gpus.length; i++) {
             if (sysInfoGpuVisible(gpus[i].name)) return gpus[i];
         }
