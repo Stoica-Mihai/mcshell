@@ -236,11 +236,13 @@ ColumnLayout {
         model: SysInfo.gpus
 
         ColumnLayout {
+            id: gpuCol
             Layout.fillWidth: true
-            spacing: 0
+            spacing: 2
 
             readonly property real _util: modelData.utilization >= 0 ? modelData.utilization : 0
             readonly property bool _hasVram: modelData.vramTotal > 0
+            readonly property color _loadColor: Theme.loadColor(_util)
 
             // Primary row: dot + vendor + name + util%
             RowLayout {
@@ -249,7 +251,7 @@ ColumnLayout {
 
                 Rectangle {
                     width: 6; height: 6; radius: 3
-                    color: Theme.loadColor(parent.parent._util)
+                    color: gpuCol._loadColor
 
                     Behavior on color { ColorAnimation { duration: Theme.animCarousel } }
                 }
@@ -278,9 +280,45 @@ ColumnLayout {
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeTiny
                     font.bold: true
-                    color: Theme.loadColor(parent.parent._util)
+                    color: gpuCol._loadColor
 
                     Behavior on color { ColorAnimation { duration: Theme.animCarousel } }
+                }
+            }
+
+            // Ascending skewed waveform — bar i lights once util crosses
+            // its 12.5% threshold, heights ramp up left→right.
+            Row {
+                id: gpuWave
+                Layout.fillWidth: true
+                Layout.leftMargin: 12
+                Layout.preferredHeight: 18
+                spacing: 2
+
+                readonly property real _barW: Math.max(2, (width - 7 * spacing) / 8)
+
+                Repeater {
+                    model: 8
+
+                    Rectangle {
+                        anchors.bottom: parent.bottom
+                        width: gpuWave._barW
+                        height: Math.max(2, (index + 1) / 8 * parent.height)
+                        radius: 1.5
+
+                        color: gpuCol._util > (index + 1) * 12.5 - 12.5
+                            ? gpuCol._loadColor
+                            : Theme.outlineVariant
+
+                        transform: Matrix4x4 {
+                            matrix: Qt.matrix4x4(
+                                1, Theme.cardSkew, 0, -Theme.cardSkew * parent.height / 2,
+                                0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1
+                            )
+                        }
+
+                        Behavior on color { ColorAnimation { duration: Theme.animCarousel } }
+                    }
                 }
             }
 
@@ -296,7 +334,7 @@ ColumnLayout {
 
                 text: {
                     const parts = [];
-                    if (parent._hasVram)
+                    if (gpuCol._hasVram)
                         parts.push(Theme.toGB(modelData.vramUsed) + " / " + Theme.toGB(modelData.vramTotal) + " GB VRAM");
                     if (modelData.power > 0)
                         parts.push(modelData.power.toFixed(0) + " W");
