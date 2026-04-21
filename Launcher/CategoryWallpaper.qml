@@ -70,8 +70,12 @@ LauncherCategory {
 
     // ── Lifecycle ──
     function onTabEnter() {
-        if (!WallpaperScanner.loaded) WallpaperScanner.scan();
-        else _landOnFocusedScreen();
+        if (!WallpaperScanner.loaded) {
+            WallpaperScanner.scan();
+        } else {
+            ThumbnailCache.ensureBatch(WallpaperScanner.paths);
+            _landOnFocusedScreen();
+        }
     }
 
     function onTabLeave() {}
@@ -94,58 +98,15 @@ LauncherCategory {
     Connections {
         target: WallpaperScanner
         function onScanned() {
+            ThumbnailCache.ensureBatch(WallpaperScanner.paths);
             if (launcher.isOpen) root._landOnFocusedScreen();
         }
     }
 
-    // Working-set cache-keeper. Instead of pinning every wallpaper (~350MB
-    // at carouselHeight, ~90MB at wallpaperThumbHeight), only pin the current
-    // per-screen wallpapers plus a rolling list of recent activations. Other
-    // thumbnails decode on scroll and live in Qt's LRU cache for the session.
-    // Same OptImage type + sourceSize required for cache hits against the
-    // collapsed delegates.
-    readonly property int _maxPinned: 20
-    property var _recentPins: []
-
-    readonly property var _pinnedPaths: {
-        const seen = {};
-        const result = [];
-        const folder = UserSettings.wallpaperFolder;
-        const global = UserSettings.wallpaperPath;
-        if (global) { seen[global] = 1; result.push(global); }
-        const map = UserSettings.perScreenMap;
-        for (const k in map) {
-            const p = folder + "/" + map[k];
-            if (!seen[p]) { seen[p] = 1; result.push(p); }
-        }
-        for (let i = 0; i < _recentPins.length && result.length < _maxPinned; i++) {
-            const p = _recentPins[i];
-            if (!seen[p]) { seen[p] = 1; result.push(p); }
-        }
-        return result;
-    }
-
-    function _pin(path) {
-        if (!path) return;
-        const list = _recentPins.slice();
-        const idx = list.indexOf(path);
-        if (idx >= 0) list.splice(idx, 1);
-        list.unshift(path);
-        _recentPins = list.slice(0, _maxPinned);
-    }
-
-    Item {
-        visible: false
-        Repeater {
-            model: root._pinnedPaths
-            delegate: OptImage {
-                required property string modelData
-                source: "file://" + modelData
-                sourceSize.height: root.launcher.wallpaperThumbHeight
-                cache: true
-            }
-        }
-    }
+    // Thumbs are generated to disk by ThumbnailCache (~40 KB JPEG each), so Qt
+    // decodes tiny files on demand and its own LRU cache handles eviction. No
+    // cache-keeper needed. First tab-open triggers the batch; subsequent opens
+    // find thumbs already on disk.
 
     // ── Search ──
     function onSearch(text) {
@@ -157,7 +118,6 @@ LauncherCategory {
     function onActivate(index) {
         if (!_validIndex(index)) return;
         const path = _sourceData[index];
-        _pin(path);
         if (_selectedScreen === 0)
             ShellActions.setWallpaper(path);
         else
@@ -283,12 +243,13 @@ LauncherCategory {
                 return parts[parts.length - 1];
             }
 
-            // Collapsed: thumbnail (decoded at wallpaperThumbHeight so cache
-            // hits the pinned keeper — same sourceSize required for cache hit)
+            // Collapsed: thumbnail from disk cache (tiny JPEG, cheap to decode)
             OptImage {
                 anchors.fill: parent
                 visible: !wallStrip.isCurrent
-                source: wallStrip.isVisible && wallStrip.wallPath ? "file://" + wallStrip.wallPath : ""
+                source: wallStrip.isVisible && wallStrip.wallPath
+                    ? ThumbnailCache.sourceFor(wallStrip.wallPath)
+                    : ""
                 sourceSize.height: root.launcher.wallpaperThumbHeight
                 opacity: status === Image.Ready ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: Theme.animSmooth } }
