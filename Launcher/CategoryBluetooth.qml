@@ -84,9 +84,10 @@ LauncherCategory {
     }
 
     // ── Polling timer (BT devices don't rebind Connections target) ──
+    // Gated on launcher.isOpen so we don't poll D-Bus while the UI is hidden.
     Timer {
         interval: 2000
-        running: root.active && root.btReady
+        running: root.launcher.isOpen && root.active && root.btReady
         repeat: true
         onTriggered: root.refreshBt(root.launcher.searchText)
     }

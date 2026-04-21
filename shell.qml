@@ -20,6 +20,7 @@ import qs.WindowSwitcher
 import qs.Core
 import Quickshell.Bluetooth
 import Quickshell.Networking
+import Quickshell.Services.SysInfo
 
 ShellRoot {
     id: shell
@@ -29,6 +30,14 @@ ShellRoot {
 
     // First entry in each list is the default when the caller passes an empty mode.
     // Launcher tabs are not listed here — they declare modes on each LauncherCategory.
+    // Authoritative SysInfo poll interval. Previously bound per-screen in
+    // SysWaveform, which caused N bars to race on the same singleton property.
+    Binding {
+        target: SysInfo
+        property: "interval"
+        value: UserSettings.sysInfoInterval
+    }
+
     readonly property var _panelModes: ({
         weather:       ["view", "edit"],
         calendar:      ["view"],

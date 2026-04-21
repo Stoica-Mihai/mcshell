@@ -73,7 +73,6 @@ Singleton {
 
     FileView {
         path: root._maxPath
-        watchChanges: path !== ""
         onLoaded: {
             const val = parseInt(text().trim(), 10);
             if (!isNaN(val) && val > 0) root.max = val;

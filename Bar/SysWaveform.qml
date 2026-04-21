@@ -15,14 +15,7 @@ Item {
     readonly property bool hovered: mouse.containsMouse
     property bool active: false
 
-    // Apply the user-configured poll interval to the SysInfo singleton.
-    // Kept here because this file is the bar's always-instantiated SysInfo
-    // consumer — the SysInfoPanel is Loader-gated on its dropdown.
-    Binding {
-        target: SysInfo
-        property: "interval"
-        value: UserSettings.sysInfoInterval
-    }
+    // SysInfo.interval is bound once in shell.qml — not per-screen.
 
     implicitWidth: wave.implicitWidth
     implicitHeight: Theme.iconSize
