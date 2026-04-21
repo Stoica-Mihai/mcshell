@@ -61,7 +61,11 @@ The shell requires a running Wayland session with wlr-layer-shell support (niri,
 
 ## Conventions
 
-- **Native APIs first, CLI fallback only.** Always use QuickShell's built-in service APIs (`Quickshell.Niri`, `Quickshell.Services.Pipewire`, `Quickshell.Services.Mpris`, `Quickshell.Services.SystemTray`, `Quickshell.Services.Notifications`, `Quickshell.Services.UPower`, `Quickshell.Bluetooth`, `Quickshell.Networking`, etc.) before resorting to CLI tools. Native APIs are reactive and instant; CLI polling is laggy. Only use `SafeProcess` + CLI tools when no native QuickShell API exists. When unsure, check noctalia's implementation at `/etc/xdg/quickshell/noctalia-shell/Services/` for reference.
+- **Native APIs first, CLI fallback only.** Always use QuickShell's built-in service APIs (`Quickshell.Niri`, `Quickshell.Services.Pipewire`, `Quickshell.Services.Mpris`, `Quickshell.Services.SystemTray`, `Quickshell.Services.Notifications`, `Quickshell.Services.UPower`, `Quickshell.Bluetooth`, `Quickshell.Networking`, etc.) before resorting to CLI tools. Native APIs are reactive and instant; CLI polling is laggy. Only use `SafeProcess` + CLI tools when no native QuickShell API exists.
+- **Documentation references.**
+  - Qt6 / QML: `https://doc.qt.io/qt-6/` (start page) and `https://doc.qt.io/qt-6/qtquick-index.html` for QML specifics. Per-type pages live at `https://doc.qt.io/qt-6/qml-qtquick-<type>.html` (e.g. `qml-qtquick-image.html`).
+  - Qt source (when docs are vague on behavior — cache keys, eviction, internal state machines): `https://code.qt.io/cgit/qt/qtdeclarative.git/tree/` — reading the C++ is often faster than guessing.
+  - Quickshell types (layer shell, Niri IPC, Services.*, native Wayland modules): `https://quickshell.org/docs/`.
 - All colors and layout constants are centralized in `Config/Theme.qml` — reference `Theme.bg`, `Theme.accent`, `Theme.overlay`, `Theme.backdrop`, etc. rather than hardcoding `Qt.rgba()` values.
 - Subprocess calls that don't need stdout capture must use `SafeProcess` from `Core/` so failures are logged uniformly. Calls that need stdout via `StdioCollector` (curl/JSON fetch, `wf-recorder`, `niri msg -j`) use raw `Process` and must handle their own error paths via `onExited` / `onStreamFinished` — never raw `Process` that silently swallows failures.
 - Animation durations use Theme constants: `Theme.animFast` (100ms, hover), `Theme.animNormal` (150ms, state changes), `Theme.animSmooth` (200ms, transitions), `Theme.animCarousel` (350ms, carousel). Never hardcode duration values.
