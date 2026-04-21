@@ -77,20 +77,12 @@ Item {
 
     ActiveUnderline { visible: root.active }
 
-    MouseArea {
+    BarClickArea {
         id: mouse
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: event => {
-            if (event.button === Qt.RightButton) root.toggleConfigPopup();
-            else root.clicked();
-        }
-        // Wayland layer-shell surfaces can cancel the first pointer grab
-        // after startup (input region settling). Fall back to press if
-        // the click is lost.
-        onCanceled: root.clicked()
+        onLeftClicked:  root.clicked()
+        onRightClicked: root.toggleConfigPopup()
     }
 
     ThemedTooltip {

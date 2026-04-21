@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import qs.Config
+import qs.Widgets
 
 Item {
     id: root
@@ -30,14 +31,9 @@ Item {
         text: clock.date.toLocaleString(Qt.locale(), UserSettings.clockFormatString)
     }
 
-    MouseArea {
+    BarClickArea {
         anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: event => {
-            if (event.button === Qt.RightButton) root.toggleConfigPopup();
-            else root.togglePopup();
-        }
-        onCanceled: root.togglePopup()
+        onLeftClicked:  root.togglePopup()
+        onRightClicked: root.toggleConfigPopup()
     }
 }

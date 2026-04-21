@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Networking
 import qs.Config
 import qs.Core
+import qs.Widgets
 
 // Weather indicator — icon + temperature, click to toggle popup.
 // Fetches from Open-Meteo (free, no API key) via Core/JsonFetcher.
@@ -200,15 +201,9 @@ Item {
         }
     }
 
-    MouseArea {
+    BarClickArea {
         anchors.fill: parent
-        cursorShape: Qt.PointingHandCursor
-        acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onClicked: event => {
-            root.fetch();  // always refresh on open
-            if (event.button === Qt.RightButton) root.toggleEditPopup();
-            else root.togglePopup();
-        }
-        onCanceled: { root.fetch(); root.togglePopup(); }
+        onLeftClicked:  { root.fetch(); root.togglePopup(); }
+        onRightClicked: { root.fetch(); root.toggleEditPopup(); }
     }
 }
