@@ -27,11 +27,22 @@ MouseArea {
     cursorShape: Qt.PointingHandCursor
     acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
 
+    property int _lastPressedButton: Qt.LeftButton
+
+    onPressed: event => root._lastPressedButton = event.button
+
     onClicked: event => {
         if (event.button === Qt.RightButton)       root.rightClicked();
         else if (event.button === Qt.MiddleButton) root.middleClicked();
         else                                       root.leftClicked();
     }
 
-    onCanceled: if (root.handleCanceled) root.leftClicked()
+    // Route canceled-press fallback to the actual button that was pressed,
+    // so a first-click right-click doesn't get collapsed to leftClicked.
+    onCanceled: {
+        if (!root.handleCanceled) return;
+        if (root._lastPressedButton === Qt.RightButton)       root.rightClicked();
+        else if (root._lastPressedButton === Qt.MiddleButton) root.middleClicked();
+        else                                                  root.leftClicked();
+    }
 }
