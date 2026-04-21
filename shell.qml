@@ -16,7 +16,6 @@ import qs.Polkit
 import qs.Wallpaper
 import qs.Screenshot
 import Qs.DataControl
-import qs.WindowSwitcher
 import qs.Core
 import Quickshell.Bluetooth
 import Quickshell.Networking
@@ -145,15 +144,12 @@ ShellRoot {
     // Lazy-loaded transient overlays — parsed on first use, kept after.
     Component { id: _appLauncherComponent; AppLauncher {} }
     Component { id: _keybindPanelComponent; KeybindPanel {} }
-    Component { id: _windowSwitcherComponent; WindowSwitcher {} }
     Component { id: _recordingComponent; Recording {} }
     Loader { id: appLauncherLoader; active: false; sourceComponent: _appLauncherComponent }
     Loader { id: keybindPanelLoader; active: false; sourceComponent: _keybindPanelComponent }
-    Loader { id: windowSwitcherLoader; active: false; sourceComponent: _windowSwitcherComponent }
     Loader { id: recordingLoader; active: false; sourceComponent: _recordingComponent }
 
     function _toggleKeybinds() { keybindPanelLoader.active = true; keybindPanelLoader.item.toggle(); }
-    function _toggleWindows() { windowSwitcherLoader.active = true; windowSwitcherLoader.item.toggle(); }
     function _toggleRecording() { recordingLoader.active = true; recordingLoader.item.toggleRecording(); }
 
     // IdleMonitor created dynamically in Component.onCompleted above
@@ -201,7 +197,6 @@ ShellRoot {
         function launcherSettings(mode: string, target: string): void { shell._dispatchLauncher("settings", mode, target); }
 
         function toggleKeybinds(): void { shell._toggleKeybinds(); }
-        function toggleWindows(): void { shell._toggleWindows(); }
         function lock(): void { ShellActions.lock(); }
         function toggleDnd(): void { UserSettings.doNotDisturb = !UserSettings.doNotDisturb; }
         function setWallpaper(path: string): void { ShellActions.setWallpaper(path); }

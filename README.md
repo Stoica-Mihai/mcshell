@@ -91,14 +91,6 @@ Horizontal filmstrip carousel with parallelogram cards, smooth sliding animation
 - Saves to `~/Videos/`, path added to clipboard history
 - Requires `wf-recorder`
 
-### Window Switcher
-- Fullscreen overlay with carousel cards (icon + title)
-- **Alt+Tab behavior**: niri keybind opens/cycles, release Alt to focus selected window, starts on previous window for quick two-window toggle
-- Arrow keys to navigate, Enter to focus, type to filter
-- Search bar with parallelogram skew matching card design
-- Wrap-around navigation at list boundaries
-- Triggered via `toggleWindows` IPC command or Alt+Tab keybind
-
 ### Keybind Hints
 - Parses `~/.config/niri/config.kdl` for keybindings with live file watching
 - Searchable, categorized display with keyboard navigation (apps, workspaces, windows, etc.)
@@ -182,7 +174,6 @@ Bar panel IPCs also accept an optional `<mode>` argument (`view` default). Only 
 | `screenshotArea` | Interactive area selection overlay, Space to confirm |
 | `screenshotWindow` | Capture focused window to clipboard (niri) |
 | `toggleRecording` | Start/stop screen recording (wf-recorder) |
-| `toggleWindows` | Open/close window switcher overlay |
 | `clipboardList` | Print clipboard history to stdout |
 
 ### Example niri keybinds
@@ -196,7 +187,6 @@ binds {
     Mod+N       { spawn-sh "mcs-qs -c mcshell ipc call mcshell launcherWifi"; }
     Mod+B       { spawn-sh "mcs-qs -c mcshell ipc call mcshell launcherBluetooth"; }
     Ctrl+Alt+Q  { spawn-sh "mcs-qs -c mcshell ipc call mcshell launcherSettings edit power"; }
-    Alt+Tab     { spawn-sh "mcs-qs -c mcshell ipc call mcshell toggleWindows"; }
     Print       { spawn-sh "mcs-qs -c mcshell ipc call mcshell screenshotArea"; }
     Shift+Print { spawn-sh "mcs-qs -c mcshell ipc call mcshell screenshotFull"; }
     Ctrl+Print  { spawn-sh "mcs-qs -c mcshell ipc call mcshell screenshotWindow"; }
@@ -290,7 +280,6 @@ Pure QML — no C++, no build system. QuickShell interprets QML directly. Each s
 | `Wallpaper/` | Background renderer with crossfade transitions, auto-rotation, filesystem scanner |
 | `KeybindHints/` | Keybind parser + hints overlay |
 | `Screenshot/` | Native screencopy overlay — fullscreen + interactive area selection with crop |
-| `WindowSwitcher/` | Window switcher overlay with carousel cards, Alt+Tab behavior, parallelogram search bar |
 | `Widgets/` | Shared UI components — `AnimatedPopup`, `AnimatedBorder`, `ParallelogramCard`, `StyledTextField`, `MediaControls`, `ActiveUnderline`, `IconButton`, `TextButton`, `SliderTrack`, `ControlSlider`, `CyclePicker`, `HoverText`, `InfiniteText`, `OptImage`, `Separator`, `ShakeAnimation`, `SmoothWheelHandler`, `ThemedScrollBar`, `ThemedTooltip`, `TriToggle` |
 
 ## Acknowledgements

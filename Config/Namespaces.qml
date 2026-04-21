@@ -18,7 +18,6 @@ Singleton {
     readonly property string sysInfoSettings:  _prefix + "-sysinfo-settings"
     readonly property string launcher:         _prefix + "-launcher"
     readonly property string keybinds:         _prefix + "-keybinds"
-    readonly property string windowSwitcher:   _prefix + "-window-switcher"
     readonly property string polkit:           _prefix + "-polkit"
     readonly property string screenshot:       _prefix + "-screenshot"
     readonly property string wallpaper:        _prefix + "-wallpaper"

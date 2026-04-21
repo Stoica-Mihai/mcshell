@@ -92,7 +92,6 @@ ipc_test toggleClockSettings "";  ipc_test toggleClockSettings ""
 ipc_test toggleSysInfo "";        ipc_test toggleSysInfo ""
 ipc_test toggleSysInfoSettings ""; ipc_test toggleSysInfoSettings ""
 ipc_test toggleKeybinds;       ipc_test toggleKeybinds
-ipc_test toggleWindows;        ipc_test toggleWindows
 ipc_test toggleDnd;            ipc_test toggleDnd
 # toggleWifi / toggleBluetooth actually flip the radios — skipped so the test
 # doesn't knock the user off wifi or disconnect bluetooth input devices.
