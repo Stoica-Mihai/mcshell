@@ -48,75 +48,81 @@ echo "Starting captures."
 echo ""
 
 # ── 1. Hero — clean desktop with bar visible ──
-echo "[1/12] Hero shot (clean bar)"
+echo "[1/13] Hero shot (clean bar)"
 shot "01-bar-hero"
 
 # ── 2. Launcher: Apps tab ──
-echo "[2/12] Launcher: Apps"
+echo "[2/13] Launcher: Apps"
 $IPC launcherApps list >/dev/null 2>&1
 shot "02-launcher-apps"
 close_launcher
 
 # ── 3. Launcher: Settings > Theme ──
-echo "[3/12] Launcher: Settings > Theme"
+echo "[3/13] Launcher: Settings > Theme"
 $IPC launcherSettings edit theme >/dev/null 2>&1
 shot "03-settings-theme"
 close_launcher
 
 # ── 4. Launcher: WiFi tab ──
-echo "[4/12] Launcher: WiFi"
+echo "[4/13] Launcher: WiFi"
 $IPC launcherWifi list >/dev/null 2>&1
 shot "04-launcher-wifi"
 close_launcher
 
 # ── 5. Launcher: Bluetooth tab ──
-echo "[5/12] Launcher: Bluetooth"
+echo "[5/13] Launcher: Bluetooth"
 $IPC launcherBluetooth list >/dev/null 2>&1
 shot "05-launcher-bluetooth"
 close_launcher
 
 # ── 6. Calendar popup ──
-echo "[6/12] Calendar popup"
+echo "[6/13] Calendar popup"
 $IPC toggleCalendar "" >/dev/null 2>&1
 shot "06-calendar"
 close_panel toggleCalendar
 
 # ── 6. Weather popup ──
-echo "[7/12] Weather popup"
+echo "[7/13] Weather popup"
 $IPC toggleWeather "" >/dev/null 2>&1
 shot "07-weather"
 close_panel toggleWeather
 
 # ── 7. Volume panel with per-app sliders ──
-echo "[8/12] Volume panel"
+echo "[8/13] Volume panel"
 $IPC toggleVolume "" >/dev/null 2>&1
 shot "08-volume"
 close_panel toggleVolume
 
 # ── 8. Notification history ──
-echo "[9/12] Notification history"
+echo "[9/13] Notification history"
 $IPC toggleNotifications "" >/dev/null 2>&1
 shot "09-notifications"
 close_panel toggleNotifications
 
 # ── 10. System tray ──
-echo "[10/12] System tray — right-click an icon for context menu"
+echo "[10/13] System tray — right-click an icon for context menu"
 $IPC toggleTray "" >/dev/null 2>&1
 sleep 5
 shot "10-tray"
 close_panel toggleTray
 
 # ── 10. System monitor panel ──
-echo "[11/12] System monitor"
+echo "[11/13] System monitor"
 $IPC toggleSysInfo "" >/dev/null 2>&1
 shot "11-sysinfo"
 close_panel toggleSysInfo
 
 # ── 11. Keybind hints ──
-echo "[12/12] Keybind hints"
+echo "[12/13] Keybind hints"
 $IPC toggleKeybinds >/dev/null 2>&1
 shot "12-keybinds"
 $IPC toggleKeybinds >/dev/null 2>&1
+
+# ── 12. Launcher: Wallpaper picker ──
+echo "[13/13] Launcher: Wallpaper"
+$IPC launcherWallpaper list >/dev/null 2>&1
+shot "13-wallpaper-picker"
+close_launcher
 
 echo ""
 echo "=== Done: $(ls "$OUT"/*.png 2>/dev/null | wc -l) screenshots ==="
