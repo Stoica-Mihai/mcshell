@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="header.svg" alt="mcshell" width="720">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="header-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="header-light.svg">
+    <img src="header-dark.svg" alt="mcshell" width="720">
+  </picture>
 </p>
 
 A custom Wayland desktop shell built with [mcs-qs](https://github.com/Stoica-Mihai/mcs-qs) — our fork of [QuickShell](https://quickshell.outfoxxed.me/) — for the [niri](https://github.com/YaLTeR/niri) compositor. Pure QML, no build step.

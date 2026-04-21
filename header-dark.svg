@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" role="img" aria-label="mcshell — a wayland desktop shell for niri">
+  <rect width="1200" height="300" fill="#0d1117"/>
+
+  <!-- three-bar logo (same motif as the launcher icon) -->
+  <g transform="translate(110,150) scale(6)">
+    <g transform="rotate(18) translate(-1.25 -5)">
+      <rect x="-5.25" y="2.5"  width="2.5" height="10" fill="#7aa2f7"/>
+      <rect x="0"     y="0"    width="2.5" height="10" fill="#bb9af7"/>
+      <rect x="5.25"  y="-2.5" width="2.5" height="10" fill="#f7768e"/>
+    </g>
+  </g>
+
+  <!-- prompt + command -->
+  <text x="210" y="170" fill="#9ece6a"
+        font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+        font-size="56" font-weight="600">~$</text>
+  <text x="310" y="170" fill="#c0caf5"
+        font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+        font-size="56" font-weight="600">mcshell</text>
+
+  <!-- blinking cursor -->
+  <rect x="650" y="125" width="22" height="56" fill="#c0caf5">
+    <animate attributeName="opacity" values="1;1;0;0" dur="1s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- tagline / comment line -->
+  <text x="210" y="220" fill="#6e7681"
+        font-family="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+        font-size="18" font-weight="400" letter-spacing="1"># a wayland desktop shell for niri</text>
+</svg>
