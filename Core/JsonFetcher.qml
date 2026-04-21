@@ -10,13 +10,20 @@ Item {
     id: root
 
     property int timeoutSeconds: 10
+    // After a network failure (curl timeout / non-zero exit), silently drop
+    // further fetches for this many seconds so flapping connectivity can't
+    // spawn a train of overlapping curl processes.
+    property int cooldownSeconds: 5
     readonly property bool loading: _proc.running
+
+    property real _nextAllowedAt: 0
 
     signal success(var data)
     signal error(string reason)
 
     function fetch(url) {
         if (_proc.running || !url) return;
+        if (Date.now() < _nextAllowedAt) return;
         if (Networking.connectivity !== NetworkConnectivity.Full) {
             root.error("offline");
             return;
@@ -51,6 +58,7 @@ Item {
         onExited: code => {
             if (_proc._handled) return;
             _proc._handled = true;
+            if (code !== 0) root._nextAllowedAt = Date.now() + root.cooldownSeconds * 1000;
             root.error(code !== 0 ? "network" : "parse");
         }
     }
