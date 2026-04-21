@@ -62,15 +62,16 @@ LauncherCategory {
     // per selection change → CPU pegs at 100%. Instead, the expanded card
     // shows the cached thumbnail during scroll and only loads the full-res
     // source once selection has been idle for _settleTimer.interval ms.
-    readonly property int _selectedIndex: launcher ? launcher.selectedIndex : 0
-    property int _settledIndex: -1
+    property int _settledIndex: launcher.selectedIndex
     Timer {
         id: _settleTimer
         interval: 160
-        onTriggered: root._settledIndex = root._selectedIndex
+        onTriggered: root._settledIndex = launcher.selectedIndex
     }
-    on_SelectedIndexChanged: _settleTimer.restart()
-    Component.onCompleted: _settledIndex = _selectedIndex
+    Connections {
+        target: launcher
+        function onSelectedIndexChanged() { _settleTimer.restart(); }
+    }
 
     // ── Focused screen detection ──
     function _landOnFocusedScreen() {
@@ -94,7 +95,7 @@ LauncherCategory {
         }
     }
 
-    function onTabLeave() {}
+    function onTabLeave() { _settleTimer.stop(); }
 
     function _syncItems() {
         const paths = WallpaperScanner.paths;
@@ -259,6 +260,11 @@ LauncherCategory {
                 return parts[parts.length - 1];
             }
 
+            // See _settledIndex on CategoryWallpaper: false while scrolling,
+            // flips true once selection has been idle long enough to warrant
+            // a full-resolution decode.
+            readonly property bool _settled: index === root._settledIndex
+
             // Collapsed: thumbnail from disk cache (tiny JPEG, cheap to decode)
             OptImage {
                 anchors.fill: parent
@@ -276,22 +282,15 @@ LauncherCategory {
                 anchors.fill: parent
                 visible: wallStrip.isCurrent
 
-                // While scrolling, show the cached thumbnail (already decoded
-                // for the collapsed strip — effectively free). Only load the
-                // full-resolution source once selection has settled; otherwise
-                // a fast scroll triggers one 4K decode per index and pegs CPU.
-                readonly property bool _settled: wallStrip.isCurrent
-                    && wallStrip.index === root._settledIndex
-
                 OptImage {
                     anchors.fill: parent
                     source: wallStrip.isCurrent && wallStrip.wallPath
-                        ? (parent._settled
+                        ? (wallStrip._settled
                             ? "file://" + wallStrip.wallPath
                             : ThumbnailCache.sourceFor(wallStrip.wallPath))
                         : ""
                     smooth: true
-                    sourceSize.height: parent._settled
+                    sourceSize.height: wallStrip._settled
                         ? root.launcher.carouselHeight
                         : root.launcher.wallpaperThumbHeight
                     opacity: status === Image.Ready ? 1 : 0
