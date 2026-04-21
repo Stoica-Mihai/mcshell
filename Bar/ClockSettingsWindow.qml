@@ -6,7 +6,7 @@ BarPopupWindow {
 
     cardHeight: configContent.fullHeight
     wantsKeyboardFocus: true
-    namespace: "mcshell-clock-settings"
+    namespace: Namespaces.clockSettings
 
     ClockSettingsPopup {
         id: configContent

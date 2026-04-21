@@ -28,14 +28,12 @@ Item {
 
         delegate: OverlayWindow {
             id: wallpaperWindow
-            namespace: "mcshell-wallpaper"
+            namespace: Namespaces.wallpaper
             layer: WlrLayer.Background
             focusMode: WlrKeyboardFocus.None
 
             required property var modelData
             screen: modelData
-
-            visible: true
 
             anchors {
                 top: true

@@ -9,7 +9,7 @@ BarPopupWindow {
 
     cardHeight: weatherContent.fullHeight
     wantsKeyboardFocus: true
-    namespace: "mcshell-weather"
+    namespace: Namespaces.weather
 
     function toggleEdit() {
         if (isOpen) {

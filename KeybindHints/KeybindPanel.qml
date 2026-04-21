@@ -9,7 +9,7 @@ import qs.Widgets
 
 OverlayWindow {
     id: panel
-    namespace: "mcshell-keybinds"
+    namespace: Namespaces.keybinds
     active: isOpen
 
     // ── Public API ──────────────────────────────────────

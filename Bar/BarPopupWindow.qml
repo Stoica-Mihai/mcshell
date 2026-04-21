@@ -22,7 +22,7 @@ import qs.Core
 //   }
 OverlayWindow {
     id: root
-    namespace: "mcshell-bar-popup"
+    namespace: Namespaces.barPopup
     active: isOpen
     focusMode: wantsKeyboardFocus ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
@@ -77,6 +77,8 @@ OverlayWindow {
 
     // FocusScope so child inputs can take active focus via forceActiveFocus()
     // without being blocked, and Escape falls through to here if not handled.
+    // Requires `wantsKeyboardFocus: true` for Escape to arrive — the
+    // compositor doesn't route keys to surfaces with keyboardFocus: None.
     FocusScope {
         anchors.fill: parent
         focus: root.isOpen

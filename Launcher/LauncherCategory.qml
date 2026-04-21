@@ -86,6 +86,18 @@ Item {
         return results;
     }
 
+    // Shared device-list sort — connected items first, ties broken by `cmp`.
+    // Callers pass `getConnected` (item → bool); `cmp(a, b)` is optional.
+    // Sorts in place and returns the same array so it's chainable.
+    function sortByConnected(items, getConnected, cmp) {
+        items.sort((a, b) => {
+            const ac = getConnected(a), bc = getConnected(b);
+            if (ac !== bc) return ac ? -1 : 1;
+            return cmp ? cmp(a, b) : 0;
+        });
+        return items;
+    }
+
     // ── Bounds check helper ──
     function _validIndex(index) {
         return index >= 0 && index < _sourceData.length;

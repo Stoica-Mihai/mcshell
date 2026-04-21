@@ -9,7 +9,7 @@ import qs.Widgets
 
 OverlayWindow {
     id: root
-    namespace: "mcshell-window-switcher"
+    namespace: Namespaces.windowSwitcher
     active: isOpen
 
     property bool isOpen: false

@@ -238,7 +238,7 @@ Item {
 
         delegate: OverlayWindow {
             id: popup
-            namespace: "mcshell-notifications"
+            namespace: Namespaces.notifications
             focusMode: WlrKeyboardFocus.OnDemand
 
             required property var modelData

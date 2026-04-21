@@ -11,7 +11,7 @@ import qs.Core
 // used to race with Qt's Wayland handleScreensChanged and segfault.
 OverlayWindow {
     id: root
-    namespace: "mcshell-screenshot"
+    namespace: Namespaces.screenshot
     // Must be on the absolute-top Overlay layer — the frozen selection UI
     // has to sit above every other mcshell surface.
     layer: WlrLayer.Overlay

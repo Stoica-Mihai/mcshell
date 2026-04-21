@@ -90,7 +90,7 @@ Scope {
             } catch (e) {}
         }
 
-        WlrLayershell.namespace: "mcshell-zone"
+        WlrLayershell.namespace: Namespaces.barZone
         WlrLayershell.layer: WlrLayer.Top
     }
 
@@ -111,9 +111,15 @@ Scope {
             right: true
         }
 
-        WlrLayershell.namespace: "mcshell"
+        WlrLayershell.namespace: Namespaces.root
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.exclusionMode: ExclusionMode.Ignore
+        // Grab keyboard focus while a sharedDropdown panel is open so Escape
+        // reaches us. BarPopupWindow popups have their own layer-shell
+        // surface with keyboardFocus Exclusive and handle Escape themselves.
+        WlrLayershell.keyboardFocus: sharedDropdown.activePanel !== ""
+            ? WlrKeyboardFocus.Exclusive
+            : WlrKeyboardFocus.None
 
         // Input mask: bar only when no popup, fullscreen when popup is open.
         // Without this, the fullscreen transparent window blocks all input below.
@@ -128,6 +134,15 @@ Scope {
             visible: root.hasPopup
             enabled: root.hasPopup
             onClicked: root.dismissPopups()
+        }
+
+        // Escape dismisses the active sharedDropdown panel. Only grabs focus
+        // while one is open (via keyboardFocus above); BarPopupWindow popups
+        // handle Escape on their own surface.
+        FocusScope {
+            anchors.fill: parent
+            focus: sharedDropdown.activePanel !== ""
+            Keys.onEscapePressed: sharedDropdown.closePanel()
         }
 
         // ── Bar content — positioned at top ──────────────────

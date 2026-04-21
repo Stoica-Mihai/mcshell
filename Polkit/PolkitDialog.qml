@@ -22,7 +22,7 @@ Item {
 
         OverlayWindow {
             id: overlay
-            namespace: "mcshell-polkit"
+            namespace: Namespaces.polkit
             active: agent.isActive
 
             required property var modelData

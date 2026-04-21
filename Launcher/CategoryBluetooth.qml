@@ -77,12 +77,10 @@ LauncherCategory {
         if (!btAdapter || !btAdapter.devices) { setItems([]); return; }
         const devs = filterByQuery(searchText, btAdapter.devices.values,
             (d, q) => (d.name || d.deviceName || "").toLowerCase().indexOf(q) >= 0);
-        devs.sort((a, b) => {
-            if (a.connected !== b.connected) return a.connected ? -1 : 1;
+        setItems(sortByConnected(devs, d => d.connected, (a, b) => {
             if (a.paired !== b.paired) return a.paired ? -1 : 1;
             return (a.name || "").localeCompare(b.name || "");
-        });
-        setItems(devs);
+        }));
     }
 
     // ── Polling timer (BT devices don't rebind Connections target) ──

@@ -8,7 +8,7 @@ import qs.Widgets
 
 OverlayWindow {
     id: launcher
-    namespace: "mcshell-launcher"
+    namespace: Namespaces.launcher
     active: isOpen
 
     // ── Public API ──────────────────────────────────────

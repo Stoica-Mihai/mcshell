@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import qs.Config
 
 // Shared base for mcshell's Wayland layer-shell overlays.
 //
@@ -16,7 +17,7 @@ import Quickshell.Wayland
 PanelWindow {
     id: root
 
-    property string namespace: "mcshell"
+    property string namespace: Namespaces.root
     // Default Top so normal user overlays (launcher, keybinds, window
     // switcher, polkit, notifications) stack below truly topmost surfaces
     // like the screenshot tool — which upgrades to Overlay explicitly.
