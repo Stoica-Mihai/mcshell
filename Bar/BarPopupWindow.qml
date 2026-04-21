@@ -23,7 +23,6 @@ PanelWindow {
     id: root
 
     property bool isOpen: false
-    property var screen: null
     property real cardWidth: 320
     property real cardHeight: 200
     property bool wantsKeyboardFocus: false
