@@ -161,6 +161,10 @@ OverlayWindow {
     readonly property real stripWidth: 100
     readonly property real expandedWidth: 700
     readonly property real carouselHeight: 480
+    // Decoded height for wallpaper thumbnails in the collapsed strip. Smaller
+    // than carouselHeight so 220+ pinned thumbnails don't eat hundreds of MB.
+    // Expanded (selected) wallpaper uses full carouselHeight for a sharp preview.
+    readonly property real wallpaperThumbHeight: 240
     readonly property real stripSpacing: 6
 
     function navigate(delta) {

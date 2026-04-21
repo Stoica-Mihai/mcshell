@@ -98,20 +98,50 @@ LauncherCategory {
         }
     }
 
-    // Hidden cache-keeper. Pins one OptImage reference per wallpaper path so
-    // Qt's pixmap cache entries stay alive across tab switches and carousel
-    // window changes. MUST use the same OptImage type + sourceSize as the
-    // carousel delegates — cache lookups only hit when both ends match on
-    // type/options (a plain Image here still decodes but produces a separate
-    // cache entry the carousel's OptImage won't find).
+    // Working-set cache-keeper. Instead of pinning every wallpaper (~350MB
+    // at carouselHeight, ~90MB at wallpaperThumbHeight), only pin the current
+    // per-screen wallpapers plus a rolling list of recent activations. Other
+    // thumbnails decode on scroll and live in Qt's LRU cache for the session.
+    // Same OptImage type + sourceSize required for cache hits against the
+    // collapsed delegates.
+    readonly property int _maxPinned: 20
+    property var _recentPins: []
+
+    readonly property var _pinnedPaths: {
+        const seen = {};
+        const result = [];
+        const folder = UserSettings.wallpaperFolder;
+        const global = UserSettings.wallpaperPath;
+        if (global) { seen[global] = 1; result.push(global); }
+        const map = UserSettings.perScreenMap;
+        for (const k in map) {
+            const p = folder + "/" + map[k];
+            if (!seen[p]) { seen[p] = 1; result.push(p); }
+        }
+        for (let i = 0; i < _recentPins.length && result.length < _maxPinned; i++) {
+            const p = _recentPins[i];
+            if (!seen[p]) { seen[p] = 1; result.push(p); }
+        }
+        return result;
+    }
+
+    function _pin(path) {
+        if (!path) return;
+        const list = _recentPins.slice();
+        const idx = list.indexOf(path);
+        if (idx >= 0) list.splice(idx, 1);
+        list.unshift(path);
+        _recentPins = list.slice(0, _maxPinned);
+    }
+
     Item {
         visible: false
         Repeater {
-            model: WallpaperScanner.paths
+            model: root._pinnedPaths
             delegate: OptImage {
                 required property string modelData
                 source: "file://" + modelData
-                sourceSize.height: root.launcher.carouselHeight
+                sourceSize.height: root.launcher.wallpaperThumbHeight
                 cache: true
             }
         }
@@ -127,6 +157,7 @@ LauncherCategory {
     function onActivate(index) {
         if (!_validIndex(index)) return;
         const path = _sourceData[index];
+        _pin(path);
         if (_selectedScreen === 0)
             ShellActions.setWallpaper(path);
         else
@@ -252,12 +283,13 @@ LauncherCategory {
                 return parts[parts.length - 1];
             }
 
-            // Collapsed: thumbnail
+            // Collapsed: thumbnail (decoded at wallpaperThumbHeight so cache
+            // hits the pinned keeper — same sourceSize required for cache hit)
             OptImage {
                 anchors.fill: parent
                 visible: !wallStrip.isCurrent
                 source: wallStrip.isVisible && wallStrip.wallPath ? "file://" + wallStrip.wallPath : ""
-                sourceSize.height: root.launcher.carouselHeight
+                sourceSize.height: root.launcher.wallpaperThumbHeight
                 opacity: status === Image.Ready ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: Theme.animSmooth } }
             }
