@@ -178,8 +178,7 @@ Scope {
                     anchors.leftMargin: Theme.itemSpacing
                     spacing: 0
 
-                    IconButton {
-                        icon: Theme.iconSearch
+                    LauncherIcon {
                         Layout.alignment: Qt.AlignVCenter
                         Layout.rightMargin: Theme.spacingMedium
                         onClicked: root.launcherRequested()
