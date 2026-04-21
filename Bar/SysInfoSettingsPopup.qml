@@ -16,8 +16,9 @@ FocusScope {
 
     // ── Row dispatch table ──────────────────────────────
     // Each entry describes one focusable row. `kind` drives what keyboard
-    // input does to the row. `model` (when present) is the display labels;
-    // `values` is what's persisted in UserSettings.
+    // input does via KeyboardRowNav. Per-GPU rows use the `onActivate`
+    // escape hatch since their toggle semantics don't fit the default
+    // boolean-setting flip.
     readonly property var _rows: {
         const base = [
             { kind: "cycle",  setting: "sysInfoInterval",    values: [1000, 2000, 5000, 10000], model: ["1 s", "2 s", "5 s", "10 s"] },
@@ -33,12 +34,16 @@ FocusScope {
             { kind: "check",  setting: "sysInfoShowDisk" }
         ];
         for (let i = 0; i < SysInfo.gpus.length; i++) {
-            const g = SysInfo.gpus[i];
-            base.push({ kind: "gpu", gpuName: g.name });
+            const name = SysInfo.gpus[i].name;
+            base.push({
+                kind: "gpu",
+                gpuName: name,
+                onActivate: () => UserSettings.setSysInfoGpuHidden(name, UserSettings.sysInfoGpuVisible(name))
+            });
         }
         return base;
     }
-    readonly property int rowCount: _rows.length
+    readonly property alias rowCount: nav.rowCount
 
     // Bar metric values — GPU option only offered if at least one GPU is detected.
     readonly property var _barMetricValues: SysInfo.gpus.length > 0
@@ -55,39 +60,25 @@ FocusScope {
     readonly property int _idxSectionsStart: 5
     readonly property int _idxGpusStart:     11
 
-    property int selectedRow: 0
+    readonly property alias selectedRow: nav.selectedRow
+
+    KeyboardRowNav {
+        id: nav
+        rows: root._rows
+    }
 
     // ── Keyboard handlers ──────────────────────────────
     anchors.fill: parent
     focus: true
 
-    onWindowOpenChanged: if (windowOpen) { selectedRow = 0; forceActiveFocus(); }
+    onWindowOpenChanged: if (windowOpen) { nav.reset(); forceActiveFocus(); }
 
-    Keys.onUpPressed:    selectedRow = (selectedRow - 1 + rowCount) % rowCount
-    Keys.onDownPressed:  selectedRow = (selectedRow + 1) % rowCount
-    Keys.onLeftPressed:  _adjust(-1)
-    Keys.onRightPressed: _adjust(+1)
-    Keys.onReturnPressed: _activate()
-    Keys.onSpacePressed:  _activate()
-
-    function _adjust(dir) {
-        const r = _rows[selectedRow];
-        if (!r || r.kind !== "cycle") return;
-        const values = r.values;
-        const cur = Math.max(0, values.indexOf(UserSettings[r.setting]));
-        const next = (cur + dir + values.length) % values.length;
-        UserSettings[r.setting] = values[next];
-    }
-
-    function _activate() {
-        const r = _rows[selectedRow];
-        if (!r) return;
-        if (r.kind === "toggle" || r.kind === "check") {
-            UserSettings[r.setting] = !UserSettings[r.setting];
-        } else if (r.kind === "gpu") {
-            UserSettings.setSysInfoGpuHidden(r.gpuName, UserSettings.sysInfoGpuVisible(r.gpuName));
-        }
-    }
+    Keys.onUpPressed:     nav.navigate(-1)
+    Keys.onDownPressed:   nav.navigate(1)
+    Keys.onLeftPressed:   nav.adjust(-1)
+    Keys.onRightPressed:  nav.adjust(1)
+    Keys.onReturnPressed: nav.activate()
+    Keys.onSpacePressed:  nav.activate()
 
     // ── UI ─────────────────────────────────────────────
     ColumnLayout {

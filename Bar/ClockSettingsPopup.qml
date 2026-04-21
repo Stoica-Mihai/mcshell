@@ -14,7 +14,8 @@ FocusScope {
 
     readonly property real fullHeight: content.implicitHeight + Theme.spacingNormal * 2
 
-    property int selectedRow: 0
+    readonly property alias selectedRow: nav.selectedRow
+    readonly property alias rowCount: nav.rowCount
 
     readonly property date _exampleDate: new Date(2024, 0, 15)
 
@@ -67,7 +68,11 @@ FocusScope {
             model:  ["Monday", "Sunday"]
         }
     ]
-    readonly property int rowCount: _rows.length
+
+    KeyboardRowNav {
+        id: nav
+        rows: root._rows
+    }
 
     // Preview ticker — gated on window visibility so it doesn't run perpetually.
     SystemClock {
@@ -79,34 +84,14 @@ FocusScope {
     anchors.fill: parent
     focus: true
 
-    onWindowOpenChanged: if (windowOpen) { selectedRow = 0; forceActiveFocus(); }
+    onWindowOpenChanged: if (windowOpen) { nav.reset(); forceActiveFocus(); }
 
-    Keys.onUpPressed: selectedRow = (selectedRow - 1 + rowCount) % rowCount
-    Keys.onDownPressed: selectedRow = (selectedRow + 1) % rowCount
-    Keys.onLeftPressed:  _adjustRow(-1)
-    Keys.onRightPressed: _adjustRow(+1)
-    Keys.onReturnPressed: _activateRow()
-    Keys.onSpacePressed:  _activateRow()
-
-    function _adjustRow(dir) {
-        const row = _rows[selectedRow];
-        if (!row) return;
-        if (row.kind === "toggle") {
-            UserSettings[row.setting] = !UserSettings[row.setting];
-            return;
-        }
-        const d = rowRepeater.itemAt(selectedRow);
-        if (d && d.cycler) {
-            if (dir < 0) d.cycler.cycleLeft();
-            else d.cycler.cycleRight();
-        }
-    }
-
-    function _activateRow() {
-        const row = _rows[selectedRow];
-        if (row && row.kind === "toggle")
-            UserSettings[row.setting] = !UserSettings[row.setting];
-    }
+    Keys.onUpPressed:     nav.navigate(-1)
+    Keys.onDownPressed:   nav.navigate(1)
+    Keys.onLeftPressed:   nav.adjust(-1)
+    Keys.onRightPressed:  nav.adjust(1)
+    Keys.onReturnPressed: nav.activate()
+    Keys.onSpacePressed:  nav.activate()
 
     ColumnLayout {
         id: content
