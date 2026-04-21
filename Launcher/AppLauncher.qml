@@ -209,7 +209,13 @@ OverlayWindow {
         const visibleLeftCount = Math.min(selectedIndex, sideCount);
         const leftWidth = visibleLeftCount * (stripWidth + stripSpacing);
         const centerOffset = expandedWidth / 2;
-        return carouselArea.width / 2 - leftWidth - centerOffset;
+        // Align the expanded card's top-edge visual centre with the search
+        // bar's bottom-edge visual centre. Both are parallelograms with
+        // opposing skew conventions, so centring the Item bounding rects
+        // alone leaves their adjacent edges offset by a Z-shape.
+        const skewPx = Theme.cardSkew * carouselHeight / 2;
+        const alignShift = skewPx - Theme.barDiagSlant / 2;
+        return carouselArea.width / 2 - leftWidth - centerOffset + alignShift;
     }
 
     // ── Tab switching ───────────────────────────────────
