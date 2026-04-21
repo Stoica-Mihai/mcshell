@@ -76,10 +76,19 @@ ShellRoot {
         shell._toggleCounter++;
     }
 
+    function _ensureLauncher() { appLauncherLoader.active = true; }
+
+    function _toggleLauncher() {
+        _ensureLauncher();
+        appLauncherLoader.item.toggle();
+    }
+
     function _dispatchLauncher(tab, mode, target) {
-        const resolved = _resolveMode("launcher tab", tab, appLauncher.supportedModesFor(tab), mode || "");
+        _ensureLauncher();
+        const al = appLauncherLoader.item;
+        const resolved = _resolveMode("launcher tab", tab, al.supportedModesFor(tab), mode || "");
         if (resolved === null) return;
-        appLauncher.openTab(tab, resolved, target || "");
+        al.openTab(tab, resolved, target || "");
     }
 
     // Force singleton initialization so connection watchers start immediately.
@@ -106,9 +115,9 @@ ShellRoot {
             notifHistoryModel: notifPopup.historyModel
             mediaPlaying: shell._mediaPlaying
             isRecording: recordingLoader.item?.active ?? false
-            onLauncherRequested: appLauncher.toggle()
-            onWifiRequested: appLauncher.openTab("wifi")
-            onBluetoothRequested: appLauncher.openTab("bluetooth")
+            onLauncherRequested: shell._toggleLauncher()
+            onWifiRequested: shell._dispatchLauncher("wifi", "", "")
+            onBluetoothRequested: shell._dispatchLauncher("bluetooth", "", "")
             onNotifRemoved: nid => notifPopup.removeHistoryById(nid)
             onNotifCleared: notifPopup.clearHistory()
             onNotifPanelOpened: notifPopup.markAllRead()
@@ -119,7 +128,6 @@ ShellRoot {
     }
 
     NotificationPopup { id: notifPopup }
-    AppLauncher { id: appLauncher }
     LockScreen {
         id: lockScreen
         Component.onCompleted: ShellActions.lockScreen = lockScreen
@@ -135,9 +143,11 @@ ShellRoot {
     ScreenshotOverlay { id: screenshot }
 
     // Lazy-loaded transient overlays — parsed on first use, kept after.
+    Component { id: _appLauncherComponent; AppLauncher {} }
     Component { id: _keybindPanelComponent; KeybindPanel {} }
     Component { id: _windowSwitcherComponent; WindowSwitcher {} }
     Component { id: _recordingComponent; Recording {} }
+    Loader { id: appLauncherLoader; active: false; sourceComponent: _appLauncherComponent }
     Loader { id: keybindPanelLoader; active: false; sourceComponent: _keybindPanelComponent }
     Loader { id: windowSwitcherLoader; active: false; sourceComponent: _windowSwitcherComponent }
     Loader { id: recordingLoader; active: false; sourceComponent: _recordingComponent }
@@ -181,7 +191,7 @@ ShellRoot {
     IpcHandler {
         target: "mcshell"
 
-        function toggleLauncher(): void { appLauncher.toggle(); }
+        function toggleLauncher(): void { shell._toggleLauncher(); }
         // Two positional args: <mode> <target>. Both optional (mcs-qs allows fewer args than declared).
         function launcherApps(mode: string, target: string): void { shell._dispatchLauncher("apps", mode, target); }
         function launcherClipboard(mode: string, target: string): void { shell._dispatchLauncher("clipboard", mode, target); }
