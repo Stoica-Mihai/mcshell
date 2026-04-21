@@ -1,4 +1,6 @@
-# mcshell
+<p align="center">
+  <img src="header.svg" alt="mcshell" width="720">
+</p>
 
 A custom Wayland desktop shell built with [mcs-qs](https://github.com/Stoica-Mihai/mcs-qs) — our fork of [QuickShell](https://quickshell.outfoxxed.me/) — for the [niri](https://github.com/YaLTeR/niri) compositor. Pure QML, no build step.
 
