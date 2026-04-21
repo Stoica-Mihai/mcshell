@@ -25,7 +25,7 @@ Item {
         // MSAA so the rotated bar edges don't stair-step.
         layer.enabled: true
         layer.smooth: true
-        layer.samples: 8
+        layer.samples: 4
 
         Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
         Behavior on scale   { NumberAnimation { duration: Theme.animFast } }
@@ -34,35 +34,23 @@ Item {
         readonly property real barH: root.size * 0.6
         readonly property real stepX: 3.5
         readonly property real stepY: 2.5
-
         readonly property real barTilt: 18
 
-        Rectangle {
-            width: stack.barW
-            height: stack.barH
-            color: Theme.accent
-            antialiasing: true
-            rotation: stack.barTilt
-            x: stack.width / 2 - stack.stepX * 1.5 - width / 2
-            y: stack.height / 2 - height / 2 + stack.stepY
-        }
-        Rectangle {
-            width: stack.barW
-            height: stack.barH
-            color: Theme.tertiary
-            antialiasing: true
-            rotation: stack.barTilt
-            x: stack.width / 2 - width / 2
-            y: stack.height / 2 - height / 2
-        }
-        Rectangle {
-            width: stack.barW
-            height: stack.barH
-            color: Theme.red
-            antialiasing: true
-            rotation: stack.barTilt
-            x: stack.width / 2 + stack.stepX * 1.5 - width / 2
-            y: stack.height / 2 - height / 2 - stack.stepY
+        Repeater {
+            model: [
+                { color: Theme.accent,    step: -1 },
+                { color: Theme.tertiary,  step:  0 },
+                { color: Theme.red,       step:  1 }
+            ]
+            Rectangle {
+                width: stack.barW
+                height: stack.barH
+                color: modelData.color
+                antialiasing: true
+                rotation: stack.barTilt
+                x: stack.width  / 2 + stack.stepX * 1.5 * modelData.step - width  / 2
+                y: stack.height / 2 - stack.stepY       * modelData.step - height / 2
+            }
         }
     }
 
