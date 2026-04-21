@@ -22,7 +22,7 @@ ColumnLayout {
         onTriggered: if (searchField.visible) searchField.forceActiveFocus()
     }
 
-    // Header — "Set location" with cancel if already configured
+    // Header — "Set location" / "Change location" (click outside to dismiss)
     Item {
         Layout.fillWidth: true
         Layout.preferredHeight: 28
@@ -35,33 +35,27 @@ ColumnLayout {
             font.weight: Font.Medium
             color: Theme.fg
         }
-
-        IconButton {
-            visible: UserSettings.weatherConfigured
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            icon: Theme.iconClose
-            size: 12
-            implicitWidth: 24
-            implicitHeight: 24
-            normalColor: Theme.fgDim
-            onClicked: root.popup.cancelEdit()
-        }
     }
 
-    // Search input
-    Rectangle {
+    // Search input — parallelogram-skewed to match the bar aesthetic
+    Item {
         Layout.fillWidth: true
-        Layout.preferredHeight: 36
-        radius: Theme.radiusMedium
-        color: Theme.withAlpha(Theme.fg, 0.04)
-        border.width: 1
-        border.color: searchField.activeFocus ? Theme.accent : Theme.border
+        Layout.leftMargin: Theme.spacingLarge
+        Layout.rightMargin: Theme.spacingLarge
+        Layout.preferredHeight: 28
+
+        SkewRect {
+            anchors.fill: parent
+            fillColor: Theme.withAlpha(Theme.fg, 0.04)
+            strokeColor: searchField.activeFocus ? Theme.accent : Theme.border
+            strokeWidth: 1
+            skewAmount: -0.3
+        }
 
         RowLayout {
             anchors.fill: parent
-            anchors.leftMargin: Theme.spacingMedium
-            anchors.rightMargin: Theme.spacingMedium
+            anchors.leftMargin: Theme.spacingMedium + 4
+            anchors.rightMargin: Theme.spacingMedium + 4
             spacing: Theme.spacingNormal
 
             Text {
@@ -106,10 +100,10 @@ ColumnLayout {
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "Search city..."
+                    text: "Start typing to search cities"
                     color: Theme.fgDim
                     font: parent.font
-                    visible: !parent.text && !parent.activeFocus
+                    visible: !parent.text
                 }
             }
         }
@@ -119,18 +113,6 @@ ColumnLayout {
     Item {
         Layout.fillWidth: true
         Layout.preferredHeight: Math.max(60, Math.min(root.popup.geoResults.length * 40, 240))
-
-        Text {
-            anchors.centerIn: parent
-            visible: !root.popup.geoLoading
-                && root.popup.geoResults.length === 0
-                && root.popup.geoError === ""
-                && searchField.text.trim().length < 2
-            text: "Start typing to search cities"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.fgDim
-        }
 
         Text {
             anchors.centerIn: parent

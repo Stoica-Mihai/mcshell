@@ -12,6 +12,10 @@ Item {
     id: root
 
     property var weather: null  // Bar/Weather.qml instance
+    // Mirrors the parent WeatherWindow's isOpen. The layer-shell surface is
+    // always-visible, so QML `visible` never toggles — we need an explicit
+    // window-open signal to reset editMode between opens.
+    property bool windowOpen: false
 
     // Default: edit mode if no location is configured (onboarding), view mode otherwise.
     property bool editMode: !UserSettings.weatherConfigured
@@ -25,14 +29,12 @@ Item {
 
     anchors.fill: parent
 
-    onVisibleChanged: {
-        if (visible) {
-            // Only reset to default if not already explicitly set to edit (e.g. via WeatherWindow.toggleEdit)
-            if (!editMode) editMode = !UserSettings.weatherConfigured;
+    onWindowOpenChanged: {
+        if (windowOpen) {
+            // toggleEdit/togglePreview set editMode before opening; leave it
+            // alone here so the close animation doesn't briefly render the
+            // loaded view over an edit-mode popup (and vice versa).
             _resetGeocode();
-        } else {
-            // Reset to default state on hide so next open picks the right mode
-            editMode = !UserSettings.weatherConfigured;
         }
     }
 

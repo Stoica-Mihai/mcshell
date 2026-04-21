@@ -50,6 +50,7 @@ Scope {
             return;
         }
         if (panelToggleMode === "edit" && win.toggleEdit) win.toggleEdit();
+        else if (win.togglePreview) win.togglePreview();
         else win.toggle();
     }
 
@@ -252,7 +253,7 @@ Scope {
                         id: weather
                         anchors.verticalCenter: parent.verticalCenter
                         popupVisible: weatherWindow.isOpen
-                        onTogglePopup: weatherWindow.toggle()
+                        onTogglePopup: weatherWindow.togglePreview()
                         onToggleEditPopup: weatherWindow.toggleEdit()
                         onDismissPopup: weatherWindow.close()
                     }
