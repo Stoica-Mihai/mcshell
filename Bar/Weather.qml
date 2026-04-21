@@ -144,10 +144,19 @@ Item {
         if (UserSettings.weatherConfigured) fetch();
     }
 
+    // Debounce coord edits so dragging a settings slider or editing both
+    // fields back-to-back doesn't spawn overlapping curl processes.
+    Timer {
+        id: coordRefetch
+        interval: 500
+        repeat: false
+        onTriggered: if (UserSettings.weatherConfigured) root.fetch()
+    }
+
     Connections {
         target: UserSettings
-        function onWeatherLatChanged() { if (UserSettings.weatherConfigured) root.fetch(); }
-        function onWeatherLonChanged() { if (UserSettings.weatherConfigured) root.fetch(); }
+        function onWeatherLatChanged() { coordRefetch.restart(); }
+        function onWeatherLonChanged() { coordRefetch.restart(); }
     }
 
     // ── Display ───────────────────────────────────────────

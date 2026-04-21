@@ -105,7 +105,7 @@ ShellRoot {
             unreadNotifications: notifPopup.unreadCount
             notifHistoryModel: notifPopup.historyModel
             mediaPlaying: shell._mediaPlaying
-            isRecording: screenRecording.active
+            isRecording: recordingLoader.item?.active ?? false
             onLauncherRequested: appLauncher.toggle()
             onWifiRequested: appLauncher.openTab("wifi")
             onBluetoothRequested: appLauncher.openTab("bluetooth")
@@ -120,7 +120,6 @@ ShellRoot {
 
     NotificationPopup { id: notifPopup }
     AppLauncher { id: appLauncher }
-    KeybindPanel { id: keybindPanel }
     LockScreen {
         id: lockScreen
         Component.onCompleted: ShellActions.lockScreen = lockScreen
@@ -134,8 +133,18 @@ ShellRoot {
         locked: lockScreen.isLocked
     }
     ScreenshotOverlay { id: screenshot }
-    WindowSwitcher { id: windowSwitcher }
-    Recording { id: screenRecording }
+
+    // Lazy-loaded transient overlays — parsed on first use, kept after.
+    Component { id: _keybindPanelComponent; KeybindPanel {} }
+    Component { id: _windowSwitcherComponent; WindowSwitcher {} }
+    Component { id: _recordingComponent; Recording {} }
+    Loader { id: keybindPanelLoader; active: false; sourceComponent: _keybindPanelComponent }
+    Loader { id: windowSwitcherLoader; active: false; sourceComponent: _windowSwitcherComponent }
+    Loader { id: recordingLoader; active: false; sourceComponent: _recordingComponent }
+
+    function _toggleKeybinds() { keybindPanelLoader.active = true; keybindPanelLoader.item.toggle(); }
+    function _toggleWindows() { windowSwitcherLoader.active = true; windowSwitcherLoader.item.toggle(); }
+    function _toggleRecording() { recordingLoader.active = true; recordingLoader.item.toggleRecording(); }
 
     // IdleMonitor created dynamically in Component.onCompleted above
 
@@ -181,8 +190,8 @@ ShellRoot {
         function launcherWallpaper(mode: string, target: string): void { shell._dispatchLauncher("wallpaper", mode, target); }
         function launcherSettings(mode: string, target: string): void { shell._dispatchLauncher("settings", mode, target); }
 
-        function toggleKeybinds(): void { keybindPanel.toggle(); }
-        function toggleWindows(): void { windowSwitcher.toggle(); }
+        function toggleKeybinds(): void { shell._toggleKeybinds(); }
+        function toggleWindows(): void { shell._toggleWindows(); }
         function lock(): void { ShellActions.lock(); }
         function toggleDnd(): void { UserSettings.doNotDisturb = !UserSettings.doNotDisturb; }
         function setWallpaper(path: string): void { ShellActions.setWallpaper(path); }
@@ -195,7 +204,7 @@ ShellRoot {
         function toggleSysInfo(mode: string): void { shell._dispatchPanel("sysinfo", mode); }
         function toggleSysInfoSettings(mode: string): void { shell._dispatchPanel("sysInfoSettings", mode); }
         function toggleTray(mode: string): void { shell._dispatchPanel("trayicons", mode); }
-        function toggleRecording(): void { screenRecording.toggleRecording(); }
+        function toggleRecording(): void { shell._toggleRecording(); }
         function clipboardList(): string {
             const entries = ClipboardHistory.entries.values;
             const lines = [];
