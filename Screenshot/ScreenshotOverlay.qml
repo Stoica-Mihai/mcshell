@@ -1,6 +1,6 @@
 import QtQuick
 import Quickshell
-import Quickshell.Io
+import qs.Core
 
 // Screenshot dispatcher: owns one ScreenshotScreenOverlay per screen and
 // routes captureFullScreen/captureArea to the overlay on the niri-focused
@@ -19,23 +19,8 @@ Item {
     // filters on its own screen.name. Empty target means "first screen".
     signal _captureRequested(string targetScreen, string mode)
 
-    property string _pendingMode: ""
-
     function _dispatch(mode) {
-        _pendingMode = mode;
-        _outputDetect.running = true;
-    }
-
-    Process {
-        id: _outputDetect
-        command: ["niri", "msg", "-j", "focused-output"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                let name = "";
-                try { name = JSON.parse(this.text).name; } catch (e) {}
-                root._captureRequested(name, root._pendingMode);
-            }
-        }
+        _captureRequested(FocusedOutput.name, mode);
     }
 
     Variants {

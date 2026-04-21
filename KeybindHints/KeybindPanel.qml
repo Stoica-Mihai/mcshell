@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 import Quickshell.Wayland
 import qs.Config
 import qs.Core
@@ -24,11 +23,11 @@ OverlayWindow {
 
     property int selectedIndex: -1
 
+    // Surface is always-alive — reassign `screen` to niri's focused output
+    // before opening so the overlay follows focus on multi-monitor.
     function open() {
-        _outputDetect.running = true;
-    }
-
-    function _afterOutputDetect() {
+        const s = FocusedOutput.screen;
+        if (s && panel.screen !== s) panel.screen = s;
         isOpen = true;
         searchArea.reset();
         selectedIndex = -1;
@@ -41,27 +40,6 @@ OverlayWindow {
 
     function toggle() {
         if (isOpen) close(); else open();
-    }
-
-    // Surface is always-alive — detect niri's focused output and reassign
-    // `screen` before opening so the overlay follows focus on multi-monitor.
-    Process {
-        id: _outputDetect
-        command: ["niri", "msg", "-j", "focused-output"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const name = JSON.parse(this.text).name;
-                    for (const s of Quickshell.screens) {
-                        if (s.name === name && panel.screen !== s) {
-                            panel.screen = s;
-                            break;
-                        }
-                    }
-                } catch (e) {}
-                panel._afterOutputDetect();
-            }
-        }
     }
 
     function navigate(dir) {

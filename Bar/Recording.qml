@@ -29,25 +29,18 @@ Item {
         recorder.signal(2); // SIGINT
     }
 
-    // Ensure output directory exists, detect focused output, then start
+    // Ensure output directory exists, then start wf-recorder scoped to the
+    // focused niri output.
     SafeProcess {
         id: mkdirProc
         command: ["mkdir", "-p", Quickshell.env("HOME") + "/Videos"]
         failMessage: "failed to create recordings directory"
-        onFinished: outputDetect.running = true
-    }
-
-    Process {
-        id: outputDetect
-        command: ["sh", "-c", "niri msg focused-output 2>/dev/null | head -1 | grep -oP '\\(\\K[^)]+' || echo ''"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const output = this.text.trim();
-                var cmd = ["wf-recorder", "-f", root._currentPath];
-                if (output) cmd.splice(1, 0, "-o", output);
-                recorder.command = cmd;
-                recorder.running = true;
-            }
+        onFinished: {
+            const output = FocusedOutput.name;
+            var cmd = ["wf-recorder", "-f", root._currentPath];
+            if (output) cmd.splice(1, 0, "-o", output);
+            recorder.command = cmd;
+            recorder.running = true;
         }
     }
 

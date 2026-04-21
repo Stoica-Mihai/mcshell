@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 import qs.Config
 import qs.Core
 import qs.Wallpaper
@@ -58,28 +57,21 @@ LauncherCategory {
     }
 
     // ── Focused screen detection ──
-    Process {
-        id: _focusDetect
-        command: ["niri", "msg", "-j", "focused-output"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                let focused = "";
-                try { focused = JSON.parse(this.text).name; } catch(e) {}
-                for (let i = 0; i < root._screenNames.length; i++) {
-                    if (root._screenNames[i] === focused) {
-                        root._selectedScreen = i;
-                        break;
-                    }
-                }
-                root._syncItems();
+    function _landOnFocusedScreen() {
+        const focused = FocusedOutput.name;
+        for (let i = 0; i < _screenNames.length; i++) {
+            if (_screenNames[i] === focused) {
+                _selectedScreen = i;
+                break;
             }
         }
+        _syncItems();
     }
 
     // ── Lifecycle ──
     function onTabEnter() {
         if (!WallpaperScanner.loaded) WallpaperScanner.scan();
-        else _focusDetect.running = true;
+        else _landOnFocusedScreen();
     }
 
     function onTabLeave() {}
@@ -102,7 +94,7 @@ LauncherCategory {
     Connections {
         target: WallpaperScanner
         function onScanned() {
-            if (launcher.isOpen) _focusDetect.running = true;
+            if (launcher.isOpen) root._landOnFocusedScreen();
         }
     }
 

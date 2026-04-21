@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 import Quickshell.Wayland
 import qs.Config
 import qs.Core
@@ -82,36 +81,11 @@ OverlayWindow {
     // The layer-shell surface is always-alive (pinned to whichever screen
     // it started on), so open requests first detect niri's focused output
     // and reassign `screen` before running the open transition.
-    property int _pendingTab: 0
-    property string _pendingLevel: "view"
-    property string _pendingTarget: ""
-
     function _requestOpen(tab, lvl, target) {
-        _pendingTab = tab;
-        _pendingLevel = lvl;
-        _pendingTarget = target || "";
-        _outputDetect.running = true;
-    }
-
-    Process {
-        id: _outputDetect
-        command: ["niri", "msg", "-j", "focused-output"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const name = JSON.parse(this.text).name;
-                    for (const s of Quickshell.screens) {
-                        if (s.name === name && launcher.screen !== s) {
-                            launcher.screen = s;
-                            break;
-                        }
-                    }
-                } catch (e) {}
-                launcher._initLauncher(launcher._pendingTab, launcher._pendingLevel);
-                if (launcher._pendingTarget && launcher.activeCategory)
-                    launcher.activeCategory.onOpenTarget(launcher._pendingTarget);
-            }
-        }
+        const s = FocusedOutput.screen;
+        if (s && launcher.screen !== s) launcher.screen = s;
+        _initLauncher(tab, lvl);
+        if (target && activeCategory) activeCategory.onOpenTarget(target);
     }
 
     function supportedModesFor(tabName) {
