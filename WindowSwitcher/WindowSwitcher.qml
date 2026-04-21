@@ -10,13 +10,7 @@ import qs.Widgets
 OverlayWindow {
     id: root
     namespace: "mcshell-window-switcher"
-
-    // Always-visible layer-shell surface — see AppLauncher for why.
-    visible: true
-    mask: isOpen ? null : _emptyRegion
-    focusMode: isOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-
-    Region { id: _emptyRegion }
+    active: isOpen
 
     property bool isOpen: false
     property int selectedIndex: 0

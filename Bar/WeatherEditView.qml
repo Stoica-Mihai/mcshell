@@ -109,10 +109,16 @@ ColumnLayout {
         }
     }
 
-    // Empty hint / error / results
+    // Empty hint / error / results — collapses when idle so the popup
+    // stays compact and the input has symmetric top/bottom padding.
     Item {
+        readonly property bool _hasContent: root.popup.geoLoading
+            || root.popup.geoError !== ""
+            || root.popup.geoResults.length > 0
         Layout.fillWidth: true
-        Layout.preferredHeight: Math.max(60, Math.min(root.popup.geoResults.length * 40, 240))
+        Layout.preferredHeight: _hasContent
+            ? Math.max(60, Math.min(root.popup.geoResults.length * 40, 240))
+            : 0
 
         Text {
             anchors.centerIn: parent

@@ -9,16 +9,7 @@ import qs.Widgets
 OverlayWindow {
     id: launcher
     namespace: "mcshell-launcher"
-
-    // Always-visible layer-shell surface. Hiding (visible=false) destroys
-    // the QQuickWindow and races with Qt 6.11 Wayland handleScreensChanged
-    // (segfaults inside calculateScreenFromSurfaceEvents). Instead toggle
-    // click-through via the mask and keyboard focus grab via focusMode.
-    visible: true
-    mask: isOpen ? null : _emptyRegion
-    focusMode: isOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-
-    Region { id: _emptyRegion }
+    active: isOpen
 
     // ── Public API ──────────────────────────────────────
     property bool isOpen: false

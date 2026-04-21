@@ -19,7 +19,7 @@ Item {
 
     // ── Configuration ─────────────────────────────────────
     readonly property int popupWidth: 360
-    readonly property int defaultTimeout: 5000   // ms
+    readonly property int defaultTimeout: Theme.notifDefaultTimeout
     readonly property int maxPopups: 5
     readonly property int topMargin: Theme.barHeight + Theme.barMargin * 2 + 8
     readonly property int rightMargin: Theme.barMargin + 4

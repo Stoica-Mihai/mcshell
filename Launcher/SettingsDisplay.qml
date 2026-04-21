@@ -27,69 +27,75 @@ SettingsPanel {
     readonly property var modes: [UserSettings.modeOff, UserSettings.modeManual, UserSettings.modeAuto]
     readonly property int modeIndex: modes.indexOf(UserSettings.nightLightMode)
     readonly property bool nightOn: UserSettings.nightLightMode !== UserSettings.modeOff
+    readonly property bool nightAuto: UserSettings.nightLightMode === UserSettings.modeAuto
+    readonly property bool nightManual: UserSettings.nightLightMode === UserSettings.modeManual
 
     // ── Notification auto-clean mapping ──
     readonly property var _cleanValues: ["never", "30m", "1h", "6h", "24h"]
     readonly property var _cleanLabels: ["Never", "30 min", "1 hour", "6 hours", "24 hours"]
     readonly property int _cleanIndex: Math.max(0, _cleanValues.indexOf(UserSettings.notifAutoClean))
 
-    // 0 = brightness, 1 = night light toggle, 2 = temperature, 3 = sunrise, 4 = sunset, then idle, then auto-clean
-    readonly property int _idleItem: {
-        if (!nightOn) return 2;
-        if (UserSettings.nightLightMode === UserSettings.modeAuto) return 5;
-        return 3;
-    }
-    readonly property int _cleanItem: _idleItem + 1
-    readonly property int _sysInfoItem: _cleanItem + 1
-    itemCount: _sysInfoItem + 1
-    function adjustLeft() {
-        if (selectedItem === 0) {
-            Brightness.set(Math.max(0, Brightness.percent - 5));
-            return true;
-        }
-        if (selectedItem === 1) {
-            const idx = Math.max(0, modeIndex - 1);
-            UserSettings.nightLightMode = modes[idx];
-            UserSettings.applyNightLight();
-            return true;
-        }
-        if (selectedItem === 2 && UserSettings.nightLightMode === UserSettings.modeManual) {
-            UserSettings.nightLightTemp = Math.max(UserSettings.tempMin, UserSettings.nightLightTemp - 100);
-            UserSettings.applyNightLight();
-            return true;
-        }
-        if (selectedItem === 3 && UserSettings.nightLightMode === UserSettings.modeAuto) { adjustTime("sunrise", -30); return true; }
-        if (selectedItem === 4 && UserSettings.nightLightMode === UserSettings.modeAuto) { adjustTime("sunset", -30); return true; }
-        if (selectedItem === _idleItem) { UserSettings.idleTimeout = Math.max(0, UserSettings.idleTimeout - 5); return true; }
-        if (selectedItem === _cleanItem) { UserSettings.notifAutoClean = _cleanValues[Math.max(0, _cleanIndex - 1)]; return true; }
-        if (selectedItem === _sysInfoItem) { UserSettings.sysInfoEnabled = !UserSettings.sysInfoEnabled; return true; }
-        return false;
-    }
-    function adjustRight() {
-        if (selectedItem === 0) {
-            Brightness.set(Math.min(100, Brightness.percent + 5));
-            return true;
-        }
-        if (selectedItem === 1) {
-            const idx = Math.min(2, modeIndex + 1);
-            UserSettings.nightLightMode = modes[idx];
-            UserSettings.applyNightLight();
-            return true;
-        }
-        if (selectedItem === 2 && UserSettings.nightLightMode === UserSettings.modeManual) {
-            UserSettings.nightLightTemp = Math.min(UserSettings.tempMax, UserSettings.nightLightTemp + 100);
-            UserSettings.applyNightLight();
-            return true;
-        }
-        if (selectedItem === 3 && UserSettings.nightLightMode === UserSettings.modeAuto) { adjustTime("sunrise", 30); return true; }
-        if (selectedItem === 4 && UserSettings.nightLightMode === UserSettings.modeAuto) { adjustTime("sunset", 30); return true; }
-        if (selectedItem === _idleItem) { UserSettings.idleTimeout = Math.min(60, UserSettings.idleTimeout + 5); return true; }
-        if (selectedItem === _cleanItem) { UserSettings.notifAutoClean = _cleanValues[Math.min(_cleanValues.length - 1, _cleanIndex + 1)]; return true; }
-        if (selectedItem === _sysInfoItem) { UserSettings.sysInfoEnabled = !UserSettings.sysInfoEnabled; return true; }
-        return false;
+    // Declarative item registry — each row's `selected` binding and the
+    // panel's adjustLeft/adjustRight dispatch resolve by id, so visibility
+    // changes (night light off/auto/manual) rearrange indices automatically.
+    readonly property var items: {
+        const list = [
+            { id: "brightness",
+              adjustLeft:  () => Brightness.set(Math.max(0, Brightness.percent - 5)),
+              adjustRight: () => Brightness.set(Math.min(100, Brightness.percent + 5)) },
+            { id: "nightLight",
+              adjustLeft:  () => _cycleNightMode(-1),
+              adjustRight: () => _cycleNightMode(1) },
+        ];
+        if (nightOn) list.push({
+            id: "temperature",
+            adjustLeft:  () => nightManual && _adjustTemp(-100),
+            adjustRight: () => nightManual && _adjustTemp(100),
+        });
+        if (nightAuto) list.push(
+            { id: "sunrise", adjustLeft: () => _adjustTime("sunrise", -30), adjustRight: () => _adjustTime("sunrise", 30) },
+            { id: "sunset",  adjustLeft: () => _adjustTime("sunset", -30),  adjustRight: () => _adjustTime("sunset", 30) },
+        );
+        list.push(
+            { id: "idle",
+              adjustLeft:  () => UserSettings.idleTimeout = Math.max(0, UserSettings.idleTimeout - 5),
+              adjustRight: () => UserSettings.idleTimeout = Math.min(60, UserSettings.idleTimeout + 5) },
+            { id: "autoClean",
+              adjustLeft:  () => UserSettings.notifAutoClean = _cleanValues[Math.max(0, _cleanIndex - 1)],
+              adjustRight: () => UserSettings.notifAutoClean = _cleanValues[Math.min(_cleanValues.length - 1, _cleanIndex + 1)] },
+            { id: "sysInfo",
+              adjustLeft:  () => UserSettings.sysInfoEnabled = !UserSettings.sysInfoEnabled,
+              adjustRight: () => UserSettings.sysInfoEnabled = !UserSettings.sysInfoEnabled },
+        );
+        return list;
     }
 
-    function adjustTime(which, deltaMin) {
+    itemCount: items.length
+    function _indexOf(id) { for (let i = 0; i < items.length; i++) if (items[i].id === id) return i; return -1; }
+    function _dispatch(dir) {
+        const item = items[selectedItem];
+        if (!item) return false;
+        const handler = dir < 0 ? item.adjustLeft : item.adjustRight;
+        if (!handler) return false;
+        handler();
+        return true;
+    }
+    function adjustLeft()  { return _dispatch(-1); }
+    function adjustRight() { return _dispatch(1); }
+
+    function _cycleNightMode(delta) {
+        const idx = Math.max(0, Math.min(2, modeIndex + delta));
+        UserSettings.nightLightMode = modes[idx];
+        UserSettings.applyNightLight();
+    }
+
+    function _adjustTemp(delta) {
+        UserSettings.nightLightTemp = Math.max(UserSettings.tempMin,
+            Math.min(UserSettings.tempMax, UserSettings.nightLightTemp + delta));
+        UserSettings.applyNightLight();
+    }
+
+    function _adjustTime(which, deltaMin) {
         const current = which === "sunrise" ? UserSettings.nightLightSunrise : UserSettings.nightLightSunset;
         const parts = current.split(":").map(Number);
         let mins = parts[0] * 60 + (parts[1] || 0) + deltaMin;
@@ -106,7 +112,7 @@ SettingsPanel {
 
     // Brightness
     SettingsRow {
-        selected: root.active && root.selectedItem === 0
+        selected: root.active && root.selectedItem === root._indexOf("brightness")
         Layout.preferredHeight: Theme.settingsRowHeight
 
         SettingsRow.Icon { text: Theme.iconBrightness; color: Theme.yellow }
@@ -122,7 +128,7 @@ SettingsPanel {
 
     // Night light mode
     SettingsRow {
-        selected: root.active && root.selectedItem === 1
+        selected: root.active && root.selectedItem === root._indexOf("nightLight")
         Layout.preferredHeight: Theme.settingsRowHeight
 
         SettingsRow.Icon {
@@ -144,8 +150,8 @@ SettingsPanel {
     // Temperature (visible when manual or auto, adjustable only in manual mode)
     SettingsRow {
         visible: root.nightOn
-        opacity: UserSettings.nightLightMode === UserSettings.modeAuto ? Theme.opacityMuted : 1.0
-        selected: root.active && root.selectedItem === 2
+        opacity: root.nightAuto ? Theme.opacityMuted : 1.0
+        selected: root.active && root.selectedItem === root._indexOf("temperature")
         Layout.preferredHeight: Theme.settingsRowHeight
 
         SettingsRow.Icon { text: Theme.iconThermometer; color: Theme.yellow }
@@ -159,8 +165,8 @@ SettingsPanel {
 
     // Sunrise (auto mode only)
     SettingsRow {
-        visible: UserSettings.nightLightMode === UserSettings.modeAuto
-        selected: root.active && root.selectedItem === 3
+        visible: root.nightAuto
+        selected: root.active && root.selectedItem === root._indexOf("sunrise")
         Layout.preferredHeight: Theme.settingsRowCompact
 
         SettingsRow.Icon {
@@ -174,8 +180,8 @@ SettingsPanel {
 
     // Sunset (auto mode only)
     SettingsRow {
-        visible: UserSettings.nightLightMode === UserSettings.modeAuto
-        selected: root.active && root.selectedItem === 4
+        visible: root.nightAuto
+        selected: root.active && root.selectedItem === root._indexOf("sunset")
         Layout.preferredHeight: Theme.settingsRowCompact
 
         SettingsRow.Icon {
@@ -194,7 +200,7 @@ SettingsPanel {
 
     // Auto-lock timeout
     SettingsRow {
-        selected: root.active && root.selectedItem === root._idleItem
+        selected: root.active && root.selectedItem === root._indexOf("idle")
         Layout.preferredHeight: Theme.settingsRowHeight
 
         SettingsRow.Icon {
@@ -210,7 +216,7 @@ SettingsPanel {
 
     // Notification auto-clean
     SettingsRow {
-        selected: root.active && root.selectedItem === root._cleanItem
+        selected: root.active && root.selectedItem === root._indexOf("autoClean")
         Layout.preferredHeight: Theme.settingsRowHeight
 
         SettingsRow.Icon {
@@ -228,7 +234,7 @@ SettingsPanel {
 
     // System monitor
     SettingsRow {
-        selected: root.active && root.selectedItem === root._sysInfoItem
+        selected: root.active && root.selectedItem === root._indexOf("sysInfo")
         Layout.preferredHeight: Theme.settingsRowHeight
 
         SettingsRow.Icon {

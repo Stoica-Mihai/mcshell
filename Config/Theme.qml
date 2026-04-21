@@ -336,6 +336,9 @@ Singleton {
     }
 
     // ── Colors (writable, default to Tokyo Night) ──────
+    // IMPORTANT: every writable color below must have a matching `Behavior on X {
+    // ColorAnimation { duration: root.animSmooth } }` further down. Missing the
+    // Behavior makes palette switches snap instead of crossfade.
     property color bg: Qt.rgba(0.10, 0.10, 0.16, 0.85)
     property color bgSolid: "#1a1b26"
     property color fg: "#c0caf5"
@@ -423,6 +426,7 @@ Singleton {
     readonly property int notifShort: 2000      // quick status changes (toggle on/off)
     readonly property int notifNormal: 3000     // standard notifications
     readonly property int notifLong: 5000       // notifications with images
+    readonly property int notifDefaultTimeout: 5000  // fallback when sender omits timeout
 
     // ── Screenshot ─────────────────────────────────────
     readonly property string screenshotPrefix: "/tmp/mcshell-screenshot-"

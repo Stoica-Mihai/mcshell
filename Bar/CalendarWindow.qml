@@ -10,7 +10,7 @@ BarPopupWindow {
 
     cardHeight: calendarContent.fullHeight
     wantsKeyboardFocus: false
-    layershellNamespace: "mcshell-calendar"
+    namespace: "mcshell-calendar"
 
     // Reset view to current month each time it opens
     onIsOpenChanged: {

@@ -6,7 +6,7 @@ BarPopupWindow {
 
     cardHeight: configContent.fullHeight
     wantsKeyboardFocus: true
-    layershellNamespace: "mcshell-sysinfo-settings"
+    namespace: "mcshell-sysinfo-settings"
 
     SysInfoSettingsPopup {
         id: configContent

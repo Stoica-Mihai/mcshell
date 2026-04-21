@@ -10,13 +10,7 @@ import qs.Widgets
 OverlayWindow {
     id: panel
     namespace: "mcshell-keybinds"
-
-    // Always-visible layer-shell surface — see AppLauncher for why.
-    visible: true
-    mask: isOpen ? null : _emptyRegion
-    focusMode: isOpen ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-
-    Region { id: _emptyRegion }
+    active: isOpen
 
     // ── Public API ──────────────────────────────────────
     property bool isOpen: false

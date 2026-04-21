@@ -16,10 +16,9 @@ OverlayWindow {
     // has to sit above every other mcshell surface.
     layer: WlrLayer.Overlay
     focusMode: WlrKeyboardFocus.None
-    // Always visible — WlrLayershell destroys the QQuickWindow on hide
-    // (deleteOnInvisible), invalidating scene graph state. Use mask for
-    // click-through and opacity for content visibility instead.
-    visible: true
+    // Mask is managed imperatively below (see startCapture / _reset) —
+    // override the parent's `active`-driven binding with an empty region
+    // as the idle default.
     mask: Region {}
     anchors { top: true; bottom: true; left: true; right: true }
 

@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import qs.Config
+import qs.Core
 
 // Reusable layer shell window for bar dropdowns that need isolation from
 // the main bar surface (so they can receive keyboard focus).
@@ -19,14 +20,16 @@ import qs.Config
 //       wantsKeyboardFocus: true  // for panels with text input
 //       SomeContent { id: someContent; anchors.fill: parent }
 //   }
-PanelWindow {
+OverlayWindow {
     id: root
+    namespace: "mcshell-bar-popup"
+    active: isOpen
+    focusMode: wantsKeyboardFocus ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     property bool isOpen: false
     property real cardWidth: 320
     property real cardHeight: 200
     property bool wantsKeyboardFocus: false
-    property string layershellNamespace: "mcshell-bar-popup"
     // Horizontal placement under the bar: "left", "center" (default), "right".
     // Pick the one that lines up with the bar segment that owns the trigger.
     property string cardAlignment: "center"
@@ -70,24 +73,7 @@ PanelWindow {
         easing.type: Easing.InCubic
     }
 
-    // ── Window setup ────────────────────────────────────
-    // Always-visible layer-shell surface — see AppLauncher for why.
-    visible: true
-    mask: isOpen ? null : _emptyRegion
-    color: "transparent"
     anchors { top: true; bottom: true; left: true; right: true }
-
-    Region { id: _emptyRegion }
-
-    WlrLayershell.namespace: root.layershellNamespace
-    // Top layer so ScreenshotOverlay (on Overlay) sits above and receives
-    // input first. Other user overlays are also Top and stacked as siblings
-    // by map order.
-    WlrLayershell.layer: WlrLayer.Top
-    WlrLayershell.keyboardFocus: (isOpen && wantsKeyboardFocus)
-        ? WlrKeyboardFocus.Exclusive
-        : WlrKeyboardFocus.None
-    WlrLayershell.exclusionMode: ExclusionMode.Ignore
 
     // FocusScope so child inputs can take active focus via forceActiveFocus()
     // without being blocked, and Escape falls through to here if not handled.

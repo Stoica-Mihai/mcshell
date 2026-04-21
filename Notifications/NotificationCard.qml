@@ -109,7 +109,7 @@ Item {
                 property: "fraction"
                 from: 1.0
                 to: 0.0
-                duration: card.timeout > 0 ? card.timeout : 5000
+                duration: card.timeout > 0 ? card.timeout : Theme.notifDefaultTimeout
                 easing.type: Easing.Linear
                 running: true
                 onFinished: card.animateOut()
