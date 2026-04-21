@@ -56,6 +56,22 @@ LauncherCategory {
         return result;
     }
 
+    // ── Settled-selection debounce ──
+    // Full-resolution wallpaper decode is expensive (4K JPEG → tens of MB
+    // before sourceSize downscale). Scrolling rapidly triggers one decode
+    // per selection change → CPU pegs at 100%. Instead, the expanded card
+    // shows the cached thumbnail during scroll and only loads the full-res
+    // source once selection has been idle for _settleTimer.interval ms.
+    readonly property int _selectedIndex: launcher ? launcher.selectedIndex : 0
+    property int _settledIndex: -1
+    Timer {
+        id: _settleTimer
+        interval: 160
+        onTriggered: root._settledIndex = root._selectedIndex
+    }
+    on_SelectedIndexChanged: _settleTimer.restart()
+    Component.onCompleted: _settledIndex = _selectedIndex
+
     // ── Focused screen detection ──
     function _landOnFocusedScreen() {
         const focused = FocusedOutput.name;
@@ -260,11 +276,24 @@ LauncherCategory {
                 anchors.fill: parent
                 visible: wallStrip.isCurrent
 
+                // While scrolling, show the cached thumbnail (already decoded
+                // for the collapsed strip — effectively free). Only load the
+                // full-resolution source once selection has settled; otherwise
+                // a fast scroll triggers one 4K decode per index and pegs CPU.
+                readonly property bool _settled: wallStrip.isCurrent
+                    && wallStrip.index === root._settledIndex
+
                 OptImage {
                     anchors.fill: parent
-                    source: wallStrip.isCurrent && wallStrip.wallPath ? "file://" + wallStrip.wallPath : ""
+                    source: wallStrip.isCurrent && wallStrip.wallPath
+                        ? (parent._settled
+                            ? "file://" + wallStrip.wallPath
+                            : ThumbnailCache.sourceFor(wallStrip.wallPath))
+                        : ""
                     smooth: true
-                    sourceSize.height: root.launcher.carouselHeight
+                    sourceSize.height: parent._settled
+                        ? root.launcher.carouselHeight
+                        : root.launcher.wallpaperThumbHeight
                     opacity: status === Image.Ready ? 1 : 0
                     Behavior on opacity { NumberAnimation { duration: Theme.animSmooth } }
                 }
