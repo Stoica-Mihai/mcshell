@@ -31,10 +31,13 @@ ShellRoot {
     // Launcher tabs are not listed here — they declare modes on each LauncherCategory.
     // Authoritative SysInfo poll interval. Previously bound per-screen in
     // SysWaveform, which caused N bars to race on the same singleton property.
+    // When sysInfoEnabled is false we push the interval up to effectively idle
+    // polling (nothing consumes the values) instead of letting the singleton
+    // continue scraping /proc, /sys, hwmon, and NVML in the background.
     Binding {
         target: SysInfo
         property: "interval"
-        value: UserSettings.sysInfoInterval
+        value: UserSettings.sysInfoEnabled ? UserSettings.sysInfoInterval : 3600000
     }
 
     readonly property var _panelModes: ({
