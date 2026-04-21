@@ -19,7 +19,7 @@ ColumnLayout {
         id: focusTimer
         interval: Theme.animSmooth + 50
         running: true
-        onTriggered: if (searchField.visible) searchField.forceActiveFocus()
+        onTriggered: if (searchBox.visible) searchBox.field.forceActiveFocus()
     }
 
     // Header — "Set location" / "Change location" (click outside to dismiss)
@@ -38,74 +38,33 @@ ColumnLayout {
     }
 
     // Search input — parallelogram-skewed to match the bar aesthetic
-    Item {
+    SkewTextField {
+        id: searchBox
         Layout.fillWidth: true
         Layout.leftMargin: Theme.spacingLarge
         Layout.rightMargin: Theme.spacingLarge
-        Layout.preferredHeight: 28
+        icon: Theme.iconSearch
+        placeholder: "Start typing to search cities"
 
-        SkewRect {
-            anchors.fill: parent
-            fillColor: Theme.withAlpha(Theme.fg, 0.04)
-            strokeColor: searchField.activeFocus ? Theme.accent : Theme.border
-            strokeWidth: 1
-            skewAmount: -0.3
+        field.onTextChanged: root.popup.queueGeocode(searchBox.text)
+        field.Keys.onReturnPressed: {
+            const results = root.popup.geoResults;
+            const idx = root.popup.selectedIndex;
+            if (results.length > 0 && idx >= 0 && idx < results.length)
+                root.popup.selectLocation(results[idx]);
         }
-
-        RowLayout {
-            anchors.fill: parent
-            anchors.leftMargin: Theme.spacingMedium + 4
-            anchors.rightMargin: Theme.spacingMedium + 4
-            spacing: Theme.spacingNormal
-
-            Text {
-                text: Theme.iconSearch
-                font.family: Theme.iconFont
-                font.pixelSize: 12
-                color: Theme.fgDim
-                Layout.alignment: Qt.AlignVCenter
-            }
-
-            TextInput {
-                id: searchField
-                Layout.fillWidth: true
-                Layout.alignment: Qt.AlignVCenter
-                color: Theme.fg
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSize
-                clip: true
-                selectByMouse: true
-
-                onTextChanged: root.popup.queueGeocode(text)
-
-                Keys.onReturnPressed: {
-                    const results = root.popup.geoResults;
-                    const idx = root.popup.selectedIndex;
-                    if (results.length > 0 && idx >= 0 && idx < results.length)
-                        root.popup.selectLocation(results[idx]);
-                }
-                Keys.onDownPressed: {
-                    const n = root.popup.geoResults.length;
-                    if (n === 0) return;
-                    root.popup.selectedIndex = (root.popup.selectedIndex + 1) % n;
-                }
-                Keys.onUpPressed: {
-                    const n = root.popup.geoResults.length;
-                    if (n === 0) return;
-                    root.popup.selectedIndex = (root.popup.selectedIndex - 1 + n) % n;
-                }
-                Keys.onEscapePressed: {
-                    if (UserSettings.weatherConfigured) root.popup.cancelEdit();
-                }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "Start typing to search cities"
-                    color: Theme.fgDim
-                    font: parent.font
-                    visible: !parent.text
-                }
-            }
+        field.Keys.onDownPressed: {
+            const n = root.popup.geoResults.length;
+            if (n === 0) return;
+            root.popup.selectedIndex = (root.popup.selectedIndex + 1) % n;
+        }
+        field.Keys.onUpPressed: {
+            const n = root.popup.geoResults.length;
+            if (n === 0) return;
+            root.popup.selectedIndex = (root.popup.selectedIndex - 1 + n) % n;
+        }
+        field.Keys.onEscapePressed: {
+            if (UserSettings.weatherConfigured) root.popup.cancelEdit();
         }
     }
 

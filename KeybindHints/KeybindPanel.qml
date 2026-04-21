@@ -2,336 +2,343 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Wayland
 import qs.Config
 import qs.Core
 import qs.Widgets
+import qs.Bar
 
-OverlayWindow {
+// Keybind dropdown — flush under the left bar segment, same chrome as
+// Calendar / Weather popups. Reassigns screen to niri's focused output on
+// open so the dropdown follows multi-monitor focus.
+BarPopupWindow {
     id: panel
     namespace: Namespaces.keybinds
-    active: isOpen
-
-    // ── Public API ──────────────────────────────────────
-    property bool isOpen: false
+    cardAlignment: "left"
+    cardWidth: Theme.barSideWidth - Theme.barDiagSlant
+    cardHeight: 460
+    wantsKeyboardFocus: true
 
     property int selectedIndex: -1
 
-    // Surface is always-alive — reassign `screen` to niri's focused output
-    // before opening so the overlay follows focus on multi-monitor.
-    function open() {
-        const s = FocusedOutput.screen;
-        if (s && panel.screen !== s) panel.screen = s;
-        isOpen = true;
-        searchArea.reset();
-        selectedIndex = -1;
+    onIsOpenChanged: {
+        if (isOpen) {
+            const s = FocusedOutput.screen;
+            if (s && panel.screen !== s) panel.screen = s;
+            searchField.text = "";
+            selectedIndex = -1;
+            focusTimer.restart();
+        }
     }
 
-    function close() {
-        isOpen = false;
-        searchArea.text = "";
-    }
-
-    function toggle() {
-        if (isOpen) close(); else open();
+    Timer {
+        id: focusTimer
+        interval: Theme.animSmooth + 50
+        onTriggered: if (panel.isOpen) searchField.field.forceActiveFocus()
     }
 
     function navigate(dir) {
         const groups = parser.filteredGroups;
         let i = selectedIndex + dir;
-        // Skip section headers
         while (i >= 0 && i < groups.length && groups[i].isHeader) i += dir;
         if (i < 0 || i >= groups.length) return;
         selectedIndex = i;
         bindList.positionViewAtIndex(i, ListView.Contain);
     }
 
-    function navigateDown() { navigate(1); }
-    function navigateUp() { navigate(-1); }
-
-    // ── Window setup ────────────────────────────────────
-    anchors {
-        top: true
-        bottom: true
-        left: true
-        right: true
-    }
-
-    // ── Parser ──────────────────────────────────────────
     KeybindParser {
         id: parser
-        filterText: searchArea.text
+        filterText: searchField.text
         onFilteredGroupsChanged: panel.selectedIndex = -1
     }
 
-    // ── UI ──────────────────────────────────────────────
-
-    // Visible only while the panel is "open" — the surface itself stays
-    // alive (see the comment up top) but nothing renders when closed.
-    readonly property real _contentOpacity: panel.isOpen ? 1.0 : 0.0
-
-    // Semi-transparent dimmer -- click to close
-    Rectangle {
+    ColumnLayout {
         anchors.fill: parent
-        color: Theme.backdrop
-        opacity: panel._contentOpacity
-        Behavior on opacity { NumberAnimation { duration: Theme.animNormal } }
+        spacing: 0
 
-        MouseArea {
-            anchors.fill: parent
-            onClicked: panel.close()
+        // ── Inline header ────────────────────────────────
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.margins: 10
+            Layout.bottomMargin: 8
+            spacing: 8
+
+            Text {
+                text: "Keybindings"
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSize
+                font.bold: true
+                color: Theme.fg
+            }
+
+            Item { Layout.fillWidth: true }
+
+            Text {
+                text: {
+                    const n = parser.allBindings.length;
+                    return n > 0 ? `niri · ${n} binding${n !== 1 ? "s" : ""}`
+                                 : "loading...";
+                }
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeMini
+                color: Theme.fgDim
+            }
         }
-    }
 
-    // Centered card
-    Rectangle {
-        id: card
-        width: Math.min(700, parent.width * 0.85)
-        height: parent.height * 0.82
-        anchors.centerIn: parent
-        radius: Theme.dialogRadius
-        color: Theme.bg
-        border.width: 1
-        border.color: Theme.border
-        clip: true
-        opacity: panel._contentOpacity
-        Behavior on opacity { NumberAnimation { duration: Theme.animNormal } }
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 1
+            color: Theme.outlineVariant
+        }
 
-        ColumnLayout {
-            id: cardColumn
-            anchors.fill: parent
-            anchors.margins: 16
-            spacing: Theme.spacingLarge
+        SkewTextField {
+            id: searchField
+            Layout.fillWidth: true
+            Layout.leftMargin: Theme.spacingLarge
+            Layout.rightMargin: Theme.spacingLarge
+            Layout.topMargin: 8
+            Layout.bottomMargin: 4
+            icon: Theme.iconSearch
+            placeholder: "Filter keybindings..."
 
-            // ── Header row ──────────────────────────────
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: Theme.spacingMedium
-
-                Text {
-                    text: Theme.iconKeyboard
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSizeXLarge
-                    color: Theme.accent
-                    Layout.alignment: Qt.AlignVCenter
-                }
-
-                Text {
-                    text: "Keybindings"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeMedium
-                    font.bold: true
-                    color: Theme.fg
-                    Layout.alignment: Qt.AlignVCenter
-                }
-
-                Item { Layout.fillWidth: true }
-
-                Text {
-                    text: "ESC to close"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    color: Theme.fgDim
-                    Layout.alignment: Qt.AlignVCenter
+            field.Keys.onPressed: event => {
+                if (event.key === Qt.Key_Escape) {
+                    panel.close();
+                    event.accepted = true;
+                } else if (event.key === Qt.Key_Down) {
+                    panel.navigate(1);
+                    event.accepted = true;
+                } else if (event.key === Qt.Key_Up) {
+                    panel.navigate(-1);
+                    event.accepted = true;
                 }
             }
+        }
 
-            // ── Search field ────────────────────────────
-            StyledTextField {
-                id: searchArea
-                Layout.fillWidth: true
-                icon: Theme.iconSearch
-                placeholder: "Filter keybindings..."
+        // ── Scrollable list ──────────────────────────────
+        ListView {
+            id: bindList
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.leftMargin: 6
+            Layout.rightMargin: 6
+            clip: true
+            model: parser.filteredGroups
+            boundsBehavior: Flickable.StopAtBounds
+            flickDeceleration: 3000
+            maximumFlickVelocity: 4000
+            spacing: 1
 
-                field.Keys.onPressed: event => {
-                    if (event.key === Qt.Key_Escape) {
-                        panel.close();
-                        event.accepted = true;
-                    } else if (event.key === Qt.Key_Down) {
-                        panel.navigateDown();
-                        event.accepted = true;
-                    } else if (event.key === Qt.Key_Up) {
-                        panel.navigateUp();
-                        event.accepted = true;
-                    }
-                }
-            }
+            SmoothWheelHandler { target: bindList }
 
-            // ── Scrollable keybind list ─────────────────
-            ListView {
-                id: bindList
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                clip: true
-                model: parser.filteredGroups
-                boundsBehavior: Flickable.StopAtBounds
-                flickDeceleration: 3000
-                maximumFlickVelocity: 4000
+            ScrollBar.vertical: ThemedScrollBar {}
 
-                SmoothWheelHandler { target: bindList }
-                spacing: 0
+            delegate: Loader {
+                id: delegateLoader
+                required property var modelData
+                required property int index
+                width: bindList.width
 
-                ScrollBar.vertical: ThemedScrollBar {}
+                sourceComponent: modelData.isHeader ? sectionHeader : bindingRow
 
-                delegate: Loader {
-                    id: delegateLoader
-                    required property var modelData
-                    required property int index
-                    width: bindList.width
+                Component {
+                    id: sectionHeader
 
-                    sourceComponent: modelData.isHeader ? sectionHeader : bindingRow
+                    Item {
+                        width: delegateLoader.width
+                        height: 30
 
-                    Component {
-                        id: sectionHeader
-
-                        Item {
-                            width: delegateLoader.width
-                            height: 40
-
-                            RowLayout {
-                                anchors.left: parent.left
-                                anchors.right: parent.right
+                        Rectangle {
+                            anchors.fill: parent
+                            anchors.topMargin: 4
+                            anchors.bottomMargin: 2
+                            color: Qt.rgba(0.478, 0.635, 0.969, 0.18)
+                            Rectangle {
+                                width: 2
+                                anchors.top: parent.top
                                 anchors.bottom: parent.bottom
-                                anchors.leftMargin: 4
-                                anchors.rightMargin: 4
-                                anchors.bottomMargin: 4
-                                spacing: Theme.spacingNormal
+                                anchors.left: parent.left
+                                color: Theme.accent
+                            }
+                        }
 
-                                Text {
-                                    text: delegateLoader.modelData.icon || ""
-                                    font.family: Theme.iconFont
-                                    font.pixelSize: Theme.fontSizeBody
-                                    color: Theme.accent
-                                    Layout.alignment: Qt.AlignVCenter
-                                }
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 10
+                            anchors.rightMargin: 10
+                            anchors.topMargin: 4
+                            anchors.bottomMargin: 2
+                            spacing: 8
 
-                                Text {
-                                    text: delegateLoader.modelData.name || ""
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize
-                                    font.bold: true
-                                    color: Theme.accent
-                                    Layout.alignment: Qt.AlignVCenter
-                                }
+                            Text {
+                                text: delegateLoader.modelData.icon || ""
+                                font.family: Theme.iconFont
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: Theme.accent
+                                Layout.alignment: Qt.AlignVCenter
+                            }
 
-                                Rectangle {
-                                    Layout.fillWidth: true
-                                    Layout.alignment: Qt.AlignVCenter
-                                    height: 1
-                                    color: Theme.border
-                                }
+                            Text {
+                                text: (delegateLoader.modelData.name || "").toUpperCase()
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeMini
+                                font.bold: true
+                                font.letterSpacing: 0.8
+                                color: Theme.fg
+                                Layout.alignment: Qt.AlignVCenter
+                            }
 
-                                Text {
-                                    text: delegateLoader.modelData.count + ""
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSizeSmall
-                                    color: Theme.fgDim
-                                    Layout.alignment: Qt.AlignVCenter
-                                    Layout.rightMargin: 4
-                                }
+                            Item { Layout.fillWidth: true }
+
+                            Text {
+                                text: delegateLoader.modelData.count + ""
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeMini
+                                color: Theme.fgDim
+                                Layout.alignment: Qt.AlignVCenter
                             }
                         }
                     }
+                }
 
-                    Component {
-                        id: bindingRow
+                Component {
+                    id: bindingRow
 
-                        Rectangle {
-                            width: delegateLoader.width
-                            height: 34
-                            radius: Theme.radiusSmall
-                            color: delegateLoader.index === panel.selectedIndex ? Theme.overlayHover
-                                 : rowHover.hovered ? Theme.bgHover : "transparent"
+                    Rectangle {
+                        width: delegateLoader.width
+                        height: 28
+                        color: delegateLoader.index === panel.selectedIndex ? Theme.overlayHover
+                             : rowHover.hovered ? Theme.bgHover : "transparent"
 
-                            Behavior on color {
-                                ColorAnimation { duration: Theme.animFast }
-                            }
+                        Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
-                            HoverHandler {
-                                id: rowHover
-                            }
+                        HoverHandler { id: rowHover }
 
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: Theme.spacingNormal
-                                anchors.rightMargin: Theme.spacingNormal
-                                spacing: Theme.spacingLarge
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 10
+                            anchors.rightMargin: 10
+                            spacing: Theme.spacingMedium
 
-                                // Key caps
-                                Row {
-                                    Layout.preferredWidth: Math.min(280, delegateLoader.width * 0.42)
-                                    Layout.alignment: Qt.AlignVCenter
-                                    spacing: Theme.spacingTiny
-                                    layoutDirection: Qt.LeftToRight
+                            // Skewed key caps
+                            Row {
+                                Layout.preferredWidth: Math.min(170, delegateLoader.width * 0.45)
+                                Layout.alignment: Qt.AlignVCenter
+                                spacing: 2
+                                layoutDirection: Qt.LeftToRight
 
-                                    Repeater {
-                                        model: (delegateLoader.modelData.key || "").split(" + ")
+                                Repeater {
+                                    model: (delegateLoader.modelData.key || "").split(" + ")
+
+                                    Item {
+                                        required property var modelData
+                                        required property int index
+                                        width: capRect.width
+                                        height: capRect.height
+
+                                        readonly property bool isMod: {
+                                            const k = String(modelData).trim().toLowerCase();
+                                            return k === "mod" || k === "ctrl" || k === "shift"
+                                                || k === "alt"  || k === "super";
+                                        }
 
                                         Rectangle {
-                                            required property var modelData
-                                            required property int index
+                                            id: capRect
                                             width: capText.implicitWidth + 14
-                                            height: 22
-                                            radius: Theme.radiusTiny
-                                            color: Theme.accentLight
+                                            height: 18
+                                            color: parent.isMod ? Qt.rgba(0.733, 0.604, 0.969, 0.22)
+                                                                : Qt.rgba(0.478, 0.635, 0.969, 0.22)
                                             border.width: 1
-                                            border.color: Theme.accentBorder
+                                            border.color: parent.isMod ? Qt.rgba(0.733, 0.604, 0.969, 0.55)
+                                                                       : Qt.rgba(0.478, 0.635, 0.969, 0.55)
+                                            transform: Matrix4x4 {
+                                                matrix: Qt.matrix4x4(
+                                                    1, Math.tan(-0.21), 0, Math.tan(-0.21) * capRect.height / 2,
+                                                    0, 1, 0, 0,
+                                                    0, 0, 1, 0,
+                                                    0, 0, 0, 1)
+                                            }
 
                                             Text {
                                                 id: capText
                                                 anchors.centerIn: parent
-                                                text: modelData.trim()
+                                                text: parent.parent.modelData.trim()
                                                 font.family: Theme.fontFamily
-                                                font.pixelSize: Theme.fontSizeSmall
+                                                font.pixelSize: Theme.fontSizeMini
                                                 font.bold: true
-                                                color: Theme.accent
+                                                color: Theme.fg
+                                                transform: Matrix4x4 {
+                                                    matrix: Qt.matrix4x4(
+                                                        1, Math.tan(0.21), 0, Math.tan(0.21) * capText.height / -2,
+                                                        0, 1, 0, 0,
+                                                        0, 0, 1, 0,
+                                                        0, 0, 0, 1)
+                                                }
                                             }
                                         }
                                     }
                                 }
+                            }
 
-                                // Arrow separator
-                                Text {
-                                    text: Theme.iconArrowTo
-                                    font.pixelSize: Theme.fontSizeSmall
-                                    color: Theme.fgDim
-                                    Layout.alignment: Qt.AlignVCenter
-                                }
+                            Text {
+                                text: Theme.iconArrowTo
+                                font.pixelSize: Theme.fontSizeMini
+                                color: Theme.fgDim
+                                Layout.alignment: Qt.AlignVCenter
+                            }
 
-                                // Action description
-                                Text {
-                                    Layout.fillWidth: true
-                                    Layout.alignment: Qt.AlignVCenter
-                                    text: delegateLoader.modelData.action || ""
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSize
-                                    color: Theme.fg
-                                    elide: Text.ElideRight
-                                }
+                            Text {
+                                Layout.fillWidth: true
+                                Layout.alignment: Qt.AlignVCenter
+                                text: delegateLoader.modelData.action || ""
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeSmall
+                                color: Theme.fg
+                                elide: Text.ElideRight
                             }
                         }
                     }
                 }
             }
+        }
 
-            // ── Footer ──────────────────────────────────
+        // ── Footer ───────────────────────────────────────
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 1
+            color: Theme.outlineVariant
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.margins: 10
+            Layout.topMargin: 8
+            spacing: 6
+
             Text {
-                Layout.fillWidth: true
-                horizontalAlignment: Text.AlignHCenter
+                text: "live · niri/config.kdl"
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeMini
+                color: Theme.fgDim
+                Layout.alignment: Qt.AlignVCenter
+            }
+
+            Item { Layout.fillWidth: true }
+
+            Text {
                 text: {
                     const total = parser.allBindings.length;
-                    if (total === 0) return "Loading keybindings...";
                     let shown = 0;
                     for (let i = 0; i < parser.filteredGroups.length; i++) {
                         if (!parser.filteredGroups[i].isHeader) shown++;
                     }
-                    if (searchArea.text && shown === 0) return "No matching keybindings";
-                    if (searchArea.text) return `${shown} of ${total} keybindings`;
-                    return `${total} keybinding${total !== 1 ? "s" : ""} from niri config`;
+                    if (searchField.text && shown === 0) return "no match";
+                    if (searchField.text) return `${shown} / ${total}`;
+                    return "ESC close";
                 }
                 font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeSmall
+                font.pixelSize: Theme.fontSizeMini
                 color: Theme.fgDim
+                Layout.alignment: Qt.AlignVCenter
             }
         }
     }

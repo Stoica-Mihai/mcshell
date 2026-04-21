@@ -85,9 +85,8 @@ ipc_test launcherSettings edit;                   ipc_test toggleLauncher
 ipc_test toggleCalendar "";       ipc_test toggleCalendar ""
 ipc_test toggleVolume "";         ipc_test toggleVolume ""
 ipc_test toggleNotifications "";  ipc_test toggleNotifications ""
-ipc_test toggleWeather "";        ipc_test toggleWeather ""
-ipc_test toggleWeather view;        ipc_test toggleWeather ""
-ipc_test toggleWeather edit;        ipc_test toggleWeather ""
+ipc_test toggleWeather view;      ipc_test toggleWeather ""
+ipc_test toggleWeather edit;      ipc_test toggleWeather edit
 ipc_test toggleClockSettings "";  ipc_test toggleClockSettings ""
 ipc_test toggleSysInfo "";        ipc_test toggleSysInfo ""
 ipc_test toggleSysInfoSettings ""; ipc_test toggleSysInfoSettings ""
