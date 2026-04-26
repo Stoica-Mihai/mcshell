@@ -11,13 +11,7 @@ Singleton {
 
     readonly property string root:             _prefix
     readonly property string barZone:          _prefix + "-zone"
-    readonly property string barPopup:         _prefix + "-bar-popup"
-    readonly property string calendar:         _prefix + "-calendar"
-    readonly property string weather:          _prefix + "-weather"
-    readonly property string clockSettings:    _prefix + "-clock-settings"
-    readonly property string sysInfoSettings:  _prefix + "-sysinfo-settings"
     readonly property string launcher:         _prefix + "-launcher"
-    readonly property string keybinds:         _prefix + "-keybinds"
     readonly property string polkit:           _prefix + "-polkit"
     readonly property string screenshot:       _prefix + "-screenshot"
     readonly property string wallpaper:        _prefix + "-wallpaper"
