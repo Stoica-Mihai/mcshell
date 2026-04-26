@@ -288,12 +288,14 @@ Item {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 4
                 radius: Theme.radiusSmall
-                color: Theme.bgSolid
+                color: "transparent"
                 clip: true
 
                 OptImage {
                     id: previewImage
                     anchors.fill: parent
+                    // Show the whole screenshot — letterbox if needed
+                    fillMode: Image.PreserveAspectFit
                     source: {
                         const url = card.imageUrl || "";
                         // Strip image://icon/ wrapper to get raw file path
