@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Shapes
 import qs.Config
 import qs.Widgets
 
@@ -67,22 +66,17 @@ Item {
         onFinished: card.dismissed(card.notifId)
     }
 
-    // ── Card background — skewed parallelogram ──────────
     ParallelogramCard {
         id: bg
         x: card.slideX
         width: parent.width
         height: content.implicitHeight + Theme.popupPadding * 2
-        // Fully opaque even when blur is on. Blur regions are necessarily
-        // axis-aligned rectangles (a polygon Region stair-steps its edges
-        // via QRegion scanline rasterization), so a translucent fill leaks
-        // the rectangular blur boundary through the slanted parallelogram
-        // and makes the slanted countdown line look non-parallel to the
-        // visible (rectangular) card edge. Opaque fill makes the slanted
-        // bg edge the visible edge, restoring parallel-ness.
+        // Opaque so the rectangular Wayland blur region (polygon blur
+        // stair-steps via QRegion rasterization) doesn't leak through
+        // and make the slanted countdown line look non-parallel.
         backgroundColor: Theme.bg
         showBorder: false
-        _skew: -0.10
+        skew: -0.10
 
         // Click to dismiss (but not on interactive elements)
         MouseArea {
@@ -284,12 +278,12 @@ Item {
                 }
             }
 
-            // Large image preview (e.g. screenshot) — smaller and centered
-            // so the parallelogram's bottom-right slant doesn't clip into it.
+            // Image preview — narrowed and centered so the parallelogram's
+            // bottom-right slant doesn't clip into it.
             Rectangle {
                 id: previewContainer
                 visible: previewImage.status === Image.Ready
-                Layout.preferredWidth: parent.width - 2 * bg._absSkew
+                Layout.preferredWidth: parent.width - 2 * bg.absSkew
                 Layout.preferredHeight: visible ? Layout.preferredWidth * 9 / 32 : 0
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 4
@@ -315,7 +309,6 @@ Item {
 
     }
 
-    // ── Countdown state holder (no visuals) ──────────────
     Item {
         id: countdownItem
         property real fraction: 1.0
@@ -337,42 +330,42 @@ Item {
         function resume() { if (countdownAnim.paused) { countdownAnim.resume(); paused = false; } }
     }
 
-    // ── Countdown progress — a Shape painting a parallelogram strip flush
-    // with the card's slanted left edge. The ENCLOSING Item is wide enough
-    // (2*bg._absSkew + lineWidth) to fully contain the slanted path so Qt's
-    // Shape doesn't clip its bottom — using a 3px-wide wrapper (the line's
-    // visual width) clips the bottom of tall cards because the bottom-left
-    // vertex sits ~|bg._skewPx| pixels outside the wrapper.
-    Item {
+    // Countdown progress — a thin parallelogram strip flush with the card's
+    // slanted left edge. Painted on a Canvas (not Shape) because the strip's
+    // height shrinks every frame: Shape would re-tessellate the path on each
+    // tick, while Canvas just refills. The Item is wide enough to contain
+    // the slanted path so the bottom (which sticks out by |bg.skewPx|) isn't
+    // clipped at the line's narrow visual width.
+    Canvas {
         id: countdownLine
         readonly property real fraction: countdownItem.fraction
         readonly property real lineWidth: 3
-        x: bg.x + bg._bl
+        x: bg.x + bg.bl
         y: bg.y
-        width: 2 * bg._absSkew + lineWidth
+        width: 2 * bg.absSkew + lineWidth
         height: bg.height
         visible: fraction > 0
 
-        // In Item-local coords (Item origin at scene bg.x + bg._bl):
-        //   bg's left edge at scene line-bottom → local x = 0
-        //   bg's left edge at scene line-top    → local x = 2*bg._absSkew*f
-        readonly property real _topL: 2 * bg._absSkew * fraction
-        readonly property real _topY: height * (1 - fraction)
-        readonly property real _botY: height
-
-        Shape {
-            anchors.fill: parent
-            preferredRendererType: Shape.CurveRenderer
-            ShapePath {
-                fillColor: Theme.urgencyColor(card.urgency)
-                strokeColor: "transparent"
-                strokeWidth: 0
-                startX: countdownLine._topL;                          startY: countdownLine._topY
-                PathLine { x: countdownLine._topL + countdownLine.lineWidth; y: countdownLine._topY }
-                PathLine { x: countdownLine.lineWidth;                       y: countdownLine._botY }
-                PathLine { x: 0;                                             y: countdownLine._botY }
-                PathLine { x: countdownLine._topL;                           y: countdownLine._topY }
-            }
+        onPaint: {
+            const ctx = getContext("2d");
+            ctx.clearRect(0, 0, width, height);
+            // In canvas-local coords (origin at scene bg.x + bg.bl):
+            //   bg's left edge at scene line-bottom → local x = 0
+            //   bg's left edge at scene line-top    → local x = 2*bg.absSkew*f
+            const topL = 2 * bg.absSkew * fraction;
+            const topY = height * (1 - fraction);
+            ctx.beginPath();
+            ctx.moveTo(topL,             topY);
+            ctx.lineTo(topL + lineWidth, topY);
+            ctx.lineTo(lineWidth,        height);
+            ctx.lineTo(0,                height);
+            ctx.closePath();
+            ctx.fillStyle = Theme.urgencyColor(card.urgency);
+            ctx.fill();
         }
+
+        onFractionChanged: requestPaint()
+        onWidthChanged: requestPaint()
+        onHeightChanged: requestPaint()
     }
 }

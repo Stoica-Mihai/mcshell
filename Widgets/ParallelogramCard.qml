@@ -26,36 +26,35 @@ Item {
     // Whether content should be skewed to match the parallelogram
     property bool skewContent: false
 
-    // Skew geometry
-    property real _skew: Theme.cardSkew
-    readonly property real _skewPx: _skew * height / 2
-    readonly property real _tl: -_skewPx
-    readonly property real _tr: width - _skewPx
-    readonly property real _bl: _skewPx
-    readonly property real _br: width + _skewPx
-    readonly property real _absSkew: Math.abs(_skewPx)
+    // Skew geometry (public — derived values are useful for callers placing
+    // visuals along the slanted edges).
+    property real skew: Theme.cardSkew
+    readonly property real skewPx: skew * height / 2
+    readonly property real tl: -skewPx
+    readonly property real tr: width - skewPx
+    readonly property real bl: skewPx
+    readonly property real br: width + skewPx
+    readonly property real absSkew: Math.abs(skewPx)
 
-    // Background fill — Canvas with native 2D antialiasing. Wayland
-    // layer-shell surfaces have no MSAA backing, so Shape's slanted
-    // fill edges stair-step. Canvas's `ctx.fill()` antialiases per-pixel
-    // and avoids that. Bounds are widened by `_pad` (matching the border
-    // canvas) so the parallelogram protrusions aren't clipped.
+    // Background fill — Canvas (not Shape) for per-pixel AA on Wayland
+    // layer-shell surfaces, which lack MSAA. Bounds widened by `pad` so
+    // the slanted protrusions aren't clipped.
     Canvas {
         id: bgCanvas
-        readonly property real _pad: card._absSkew
-        x: -_pad
-        width: card.width + _pad * 2
+        readonly property real pad: card.absSkew
+        x: -pad
+        width: card.width + pad * 2
         height: card.height
 
         onPaint: {
             const ctx = getContext("2d");
             ctx.clearRect(0, 0, width, height);
-            const ox = _pad;
+            const ox = pad;
             ctx.beginPath();
-            ctx.moveTo(card._tl + ox, 0);
-            ctx.lineTo(card._tr + ox, 0);
-            ctx.lineTo(card._br + ox, card.height);
-            ctx.lineTo(card._bl + ox, card.height);
+            ctx.moveTo(card.tl + ox, 0);
+            ctx.lineTo(card.tr + ox, 0);
+            ctx.lineTo(card.br + ox, card.height);
+            ctx.lineTo(card.bl + ox, card.height);
             ctx.closePath();
             ctx.fillStyle = card.backgroundColor;
             ctx.fill();
@@ -68,7 +67,7 @@ Item {
 
         Connections {
             target: card
-            function on_SkewPxChanged() { bgCanvas.requestPaint(); }
+            function onSkewPxChanged() { bgCanvas.requestPaint(); }
             function onWidthChanged() { bgCanvas.requestPaint(); }
             function onHeightChanged() { bgCanvas.requestPaint(); }
             function onBackgroundColorChanged() { bgCanvas.requestPaint(); }
@@ -91,10 +90,10 @@ Item {
         Matrix4x4 {
             id: skewTransform
             matrix: Qt.matrix4x4(
-                1, card._skew, 0, -card._skew * contentWrapper.height / 2,
-                0, 1,          0, 0,
-                0, 0,          1, 0,
-                0, 0,          0, 1
+                1, card.skew, 0, -card.skew * contentWrapper.height / 2,
+                0, 1,         0, 0,
+                0, 0,         1, 0,
+                0, 0,         0, 1
             )
         }
 
@@ -109,26 +108,24 @@ Item {
         }
     }
 
-    // Border outline — Canvas with native 2D antialiasing. Same trick
-    // AnimatedBorder uses: extend Canvas bounds by `_pad` so the
-    // parallelogram protrusions and stroke aren't clipped.
+    // Border outline — Canvas for the same AA reason as the bg fill.
     Canvas {
         id: borderCanvas
-        readonly property real _pad: card._absSkew + card.borderWidth
-        x: -_pad
-        width: card.width + _pad * 2
+        readonly property real pad: card.absSkew + card.borderWidth
+        x: -pad
+        width: card.width + pad * 2
         height: card.height
         visible: card.showBorder
 
         onPaint: {
             const ctx = getContext("2d");
             ctx.clearRect(0, 0, width, height);
-            const ox = _pad;
+            const ox = pad;
             ctx.beginPath();
-            ctx.moveTo(card._tl + ox, 0);
-            ctx.lineTo(card._tr + ox, 0);
-            ctx.lineTo(card._br + ox, card.height);
-            ctx.lineTo(card._bl + ox, card.height);
+            ctx.moveTo(card.tl + ox, 0);
+            ctx.lineTo(card.tr + ox, 0);
+            ctx.lineTo(card.br + ox, card.height);
+            ctx.lineTo(card.bl + ox, card.height);
             ctx.closePath();
             ctx.strokeStyle = card.borderColor;
             ctx.lineWidth = card.borderWidth;
@@ -138,7 +135,7 @@ Item {
 
         Connections {
             target: card
-            function on_SkewPxChanged() { borderCanvas.requestPaint(); }
+            function onSkewPxChanged() { borderCanvas.requestPaint(); }
             function onWidthChanged() { borderCanvas.requestPaint(); }
             function onHeightChanged() { borderCanvas.requestPaint(); }
             function onBorderColorChanged() { borderCanvas.requestPaint(); }

@@ -257,8 +257,8 @@ Item {
                 right: root.rightMargin
             }
 
-            // Sizing — buffer must exceed the maximum |bg._skewPx| of any card
-            // (= |_skew| * tallestCard / 2). With _skew=-0.10 and ~400px cards
+            // Buffer must exceed the maximum |bg.skewPx| of any card
+            // (= |skew| * tallestCard / 2). With skew=-0.10 and ~400px cards
             // the slant reaches 20px, so 24px each side is comfortable.
             implicitWidth: root.popupWidth + 48
             implicitHeight: Math.max(1, stack.implicitHeight + 8)
