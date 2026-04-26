@@ -409,6 +409,21 @@ Singleton {
     readonly property real opacitySecondary: 0.7
     readonly property real opacityBody: 0.85
 
+    // ── Surface alphas ──────────────────────────────────
+    // Solid alphas used when blur is OFF; blurred alpha used when ON so the
+    // backdrop shows through.
+    readonly property real solidGlassAlpha: 0.88   // bar segments (no blur)
+    readonly property real solidCardAlpha: 0.85    // notification/polkit cards (no blur)
+    readonly property real blurAlpha: 0.55         // any glass surface when blur is ON
+
+    // Convenience: surface fill colors gated on UserSettings.blurEnabled.
+    function glassSurface() {
+        return withAlpha(surfaceContainer, UserSettings.blurEnabled ? blurAlpha : solidGlassAlpha);
+    }
+    function glassBg() {
+        return UserSettings.blurEnabled ? withAlpha(bg, blurAlpha) : bg;
+    }
+
     // ── Animation ──────────────────────────────────────
     readonly property int animFast: 100       // hover color feedback
     readonly property int animNormal: 150     // state changes (tabs, borders)

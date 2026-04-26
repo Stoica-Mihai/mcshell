@@ -265,6 +265,13 @@ Item {
                 item: stack
             }
 
+            // Background blur — bound to the stack bounding box, only when
+            // there are actual cards (otherwise the empty stack produces a
+            // phantom region that niri renders as a blurred rectangle).
+            BackgroundEffect.blurRegion: UserSettings.blurEnabled && notifModel.count > 0
+                ? stackBlurRegion : null
+            Region { id: stackBlurRegion; item: stack }
+
             // ── Notification stack ────────────────────────
             ColumnLayout {
                 id: stack

@@ -35,6 +35,14 @@ Item {
                 right: true
             }
 
+            // Background blur — only when the dialog is actually shown.
+            // The OverlayWindow's surface stays alive across activations and
+            // the dialog Rectangle keeps its full geometry (only opacity goes
+            // to 0 when inactive), so we must gate on agent.isActive too.
+            BackgroundEffect.blurRegion: UserSettings.blurEnabled && agent.isActive
+                ? dialogBlurRegion : null
+            Region { id: dialogBlurRegion; item: dialog }
+
             Connections {
                 target: agent
                 function onAuthenticationRequestStarted() {
@@ -75,7 +83,7 @@ Item {
                 width: Theme.dialogWidth
                 implicitHeight: content.implicitHeight + Theme.dialogPadding * 2
                 radius: Theme.dialogRadius
-                color: Theme.bg
+                color: Theme.glassBg()
                 border.width: 1
                 border.color: Theme.border
                 opacity: agent.isActive ? 1 : 0

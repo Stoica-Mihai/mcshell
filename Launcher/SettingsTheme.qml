@@ -10,7 +10,12 @@ SettingsPanel {
     // ── Header ──
     readonly property string headerIcon: Theme.iconPalette
     readonly property string headerTitle: "Theme"
-    readonly property string panelLegend: Theme.legend(Theme.hintUpDown, isWallpaperTheme ? Theme.hintAdjust : "", Theme.hintEnter + " apply", Theme.hintBack)
+    readonly property string panelLegend: {
+        const onBlur = selectedItem === 0;
+        const verb = onBlur ? "" : Theme.hintEnter + " apply";
+        const adjust = onBlur || isWallpaperTheme ? Theme.hintAdjust : "";
+        return Theme.legend(Theme.hintUpDown, adjust, verb, Theme.hintBack);
+    }
     readonly property string headerSubtitle: currentTheme
     readonly property color headerColor: Theme.accent
 
@@ -19,21 +24,30 @@ SettingsPanel {
     readonly property string currentTheme: UserSettings.themeName || "Tokyo Night"
     readonly property bool isWallpaperTheme: currentTheme === Theme.wallpaperThemeName
 
-    itemCount: themeNames.length
+    // Item 0 = blur toggle, items 1..N = palette names
+    itemCount: 1 + themeNames.length
 
     function activateItem() {
-        const name = themeNames[selectedItem];
+        if (selectedItem === 0) return;
+        const name = themeNames[selectedItem - 1];
         UserSettings.themeName = name;
         Theme.applyPalette(name);
     }
 
+    function _flipBlur() {
+        UserSettings.blurEnabled = !UserSettings.blurEnabled;
+        return true;
+    }
+
     function adjustLeft() {
-        if (themeNames[selectedItem] !== Theme.wallpaperThemeName || !isWallpaperTheme) return false;
+        if (selectedItem === 0) return _flipBlur();
+        if (themeNames[selectedItem - 1] !== Theme.wallpaperThemeName || !isWallpaperTheme) return false;
         strategyCycler.cycleLeft();
         return true;
     }
     function adjustRight() {
-        if (themeNames[selectedItem] !== Theme.wallpaperThemeName || !isWallpaperTheme) return false;
+        if (selectedItem === 0) return _flipBlur();
+        if (themeNames[selectedItem - 1] !== Theme.wallpaperThemeName || !isWallpaperTheme) return false;
         strategyCycler.cycleRight();
         return true;
     }
@@ -49,6 +63,21 @@ SettingsPanel {
         }
     }
 
+    // ── Item 0: Blur toggle ──
+    SettingsRow {
+        selected: root.active && root.selectedItem === 0
+        Layout.preferredHeight: 32
+
+        SettingsRow.Icon {
+            text: Theme.iconImage
+            color: UserSettings.blurEnabled ? Theme.accent : Theme.fgDim
+        }
+        SettingsRow.Label { text: "Blur surfaces"; Layout.fillWidth: true }
+        SkewToggle {
+            state: UserSettings.blurEnabled ? 1 : 0
+        }
+    }
+
     Repeater {
         id: themeRepeater
         model: root.themeNames
@@ -57,7 +86,7 @@ SettingsPanel {
             required property string modelData
             required property int index
             readonly property bool isWallpaper: modelData === Theme.wallpaperThemeName
-            selected: root.active && root.selectedItem === index
+            selected: root.active && root.selectedItem === (index + 1)
             Layout.preferredHeight: 32
             label: modelData
             isCurrent: modelData === root.currentTheme

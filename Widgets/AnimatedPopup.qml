@@ -1,5 +1,6 @@
 import QtQuick
 import Quickshell
+import Quickshell.Wayland
 import qs.Config
 
 // PopupWindow with slide-down/up animation and themed background.
@@ -93,12 +94,15 @@ PopupWindow {
         onFinished: root.visible = false
     }
 
+    BackgroundEffect.blurRegion: UserSettings.blurEnabled ? bgRegion : null
+    Region { id: bgRegion; item: bg }
+
     // ── Themed background ─────────────────────────────────
     Rectangle {
         id: bg
         anchors.fill: parent
         radius: 0
-        color: Theme.surfaceContainer
+        color: Theme.glassSurface()
         border.width: 1
         border.color: Theme.outlineVariant
 

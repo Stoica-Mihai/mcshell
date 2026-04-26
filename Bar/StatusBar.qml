@@ -128,6 +128,18 @@ Scope {
             item: root.hasPopup ? fullSurface : barRect
         }
 
+        // Background blur — polygons matching the parallelogram shape of each
+        // bar segment via the mcs-qs `Region.polygon` API. Each section
+        // exposes its own `pts` array (single source of truth shared with
+        // BarSegment) so blur and fill never drift.
+        BackgroundEffect.blurRegion: UserSettings.blurEnabled ? barBlurRegion : null
+        Region {
+            id: barBlurRegion
+            Region { item: leftSection;   polygon: leftSection.pts }
+            Region { item: centerSection; polygon: centerSection.pts }
+            Region { item: rightSection;  polygon: rightSection.pts }
+        }
+
         // ── Dismiss area — behind everything, catches outside clicks ──
         MouseArea {
             anchors.fill: parent
@@ -154,7 +166,7 @@ Scope {
             height: Theme.barHeight
 
 
-            readonly property real _glassAlpha: 0.88
+            readonly property real _glassAlpha: UserSettings.blurEnabled ? Theme.blurAlpha : Theme.solidGlassAlpha
             readonly property color _bgColor: Theme.withAlpha(Theme.surfaceContainer, _glassAlpha)
 
             // ── Left segment ────────────────────────────
@@ -164,10 +176,19 @@ Scope {
                 height: parent.height
                 width: Theme.barSideWidth
 
+                // Single source of truth — shared between BarSegment.pts and
+                // the bar blur region polygon so they can never drift apart.
+                readonly property var pts: [
+                    [0, 0],
+                    [width, 0],
+                    [width - Theme.barDiagSlant, height],
+                    [0, height]
+                ]
+
                 BarSegment {
                     anchors.fill: parent
                     fillColor: barRect._bgColor
-                    pts: [[0,0], [width,0], [width-Theme.barDiagSlant,height], [0,height]]
+                    pts: leftSection.pts
                 }
 
                 // Launcher + workspaces — locked to left
@@ -206,12 +227,18 @@ Scope {
                 height: parent.height
                 width: Math.max(centerContent.implicitWidth + Theme.barDiagSlant * 2 + Theme.barSegmentPadding, Theme.minCenterWidth)
 
-
                 // Trapezoid — narrow top, wide bottom: /----\
+                readonly property var pts: [
+                    [Theme.barDiagSlant, 0],
+                    [width - Theme.barDiagSlant, 0],
+                    [width, height],
+                    [0, height]
+                ]
+
                 BarSegment {
                     anchors.fill: parent
                     fillColor: barRect._bgColor
-                    pts: [[Theme.barDiagSlant,0], [width-Theme.barDiagSlant,0], [width,height], [0,height]]
+                    pts: centerSection.pts
                 }
 
                 // Center content: recording dot | clock | separator | weather
@@ -282,12 +309,18 @@ Scope {
                 height: parent.height
                 width: Theme.barSideWidth
 
+                readonly property var pts: [
+                    [0, 0],
+                    [width, 0],
+                    [width, height],
+                    [Theme.barDiagSlant, height]
+                ]
+
                 BarSegment {
                     anchors.fill: parent
                     fillColor: barRect._bgColor
-                    pts: [[0,0], [width,0], [width,height], [Theme.barDiagSlant,height]]
+                    pts: rightSection.pts
                 }
-
 
                 // Media zone — left side of right segment, clipped to available space
                 Item {

@@ -72,7 +72,7 @@ Item {
         width: parent.width
         height: content.implicitHeight + Theme.popupPadding * 2
         radius: Theme.barRadius
-        color: Theme.bg
+        color: Theme.glassBg()
         border.width: 1
         border.color: Theme.border
 

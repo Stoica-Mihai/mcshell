@@ -75,6 +75,10 @@ OverlayWindow {
 
     anchors { top: true; bottom: true; left: true; right: true }
 
+    // Background blur — only the visible card rectangle.
+    BackgroundEffect.blurRegion: UserSettings.blurEnabled ? cardBlurRegion : null
+    Region { id: cardBlurRegion; item: card }
+
     // FocusScope so child inputs can take active focus via forceActiveFocus()
     // without being blocked, and Escape falls through to here if not handled.
     // Requires `wantsKeyboardFocus: true` for Escape to arrive — the
@@ -108,7 +112,7 @@ OverlayWindow {
                 ? Math.max(1, root.cardHeight * root._openFraction)
                 : (root.isOpen ? root.cardHeight : 1)
             clip: true
-            color: Theme.surfaceContainer
+            color: Theme.glassSurface()
             border.width: 1
             border.color: Theme.outlineVariant
             radius: 0  // matches original AnimatedPopup (no rounded corners)

@@ -54,6 +54,7 @@ Singleton {
     property alias powerProfile: adapter.powerProfile            // "PowerSaver", "Balanced", "Performance"
     property alias borderAnimation: adapter.borderAnimation      // "midpoint", "clockwise", "corners", "fade"
     property alias barBorderStyle: adapter.barBorderStyle        // "solid", "gradient"
+    property alias blurEnabled: adapter.blurEnabled              // bool — surface blur via ext-background-effect
     property alias notifAutoClean: adapter.notifAutoClean        // "never", "30m", "1h", "6h", "24h"
     property alias weatherLocation: adapter.weatherLocation      // display name, e.g. "Bucharest, Romania"
     property alias weatherLat: adapter.weatherLat                // latitude (real)
@@ -218,6 +219,7 @@ Singleton {
             property string powerProfile: "Balanced"
             property string borderAnimation: "midpoint"
             property string barBorderStyle: "gradient"
+            property bool blurEnabled: false
             property string notifAutoClean: "never"
             property string weatherLocation: ""
             property real weatherLat: 0
