@@ -2,6 +2,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Niri
 
 // Reactive "which niri output currently has focus?" — exposes the focused
@@ -24,16 +25,25 @@ import Quickshell.Niri
 // surface's screen). Binding a layer-shell surface's screen reactively
 // would race with Qt 6.11's handleScreensChanged — see the Screenshot
 // dispatcher note in CLAUDE.md.
-QtObject {
+Singleton {
     id: root
 
-    readonly property string name: {
+    // Live name from Niri's IPC stream — empty during the brief window
+    // before Niri.workspaces has its first event after shell startup.
+    readonly property string _liveName: {
         const workspaces = Niri.workspaces ? Niri.workspaces.values : [];
         for (let i = 0; i < workspaces.length; i++) {
             if (workspaces[i].focused) return workspaces[i].output;
         }
         return "";
     }
+
+    // Bootstrap fallback — one-shot `niri msg -j focused-output` at shell
+    // startup so the very first consumer (e.g. screenshot dispatcher) gets
+    // the right output even before the IPC stream has populated.
+    property string _bootstrapName: ""
+
+    readonly property string name: _liveName || _bootstrapName
 
     readonly property var screen: {
         if (!name) return null;
@@ -42,5 +52,22 @@ QtObject {
             if (screens[i].name === name) return screens[i];
         }
         return null;
+    }
+
+    Component.onCompleted: _bootstrap.running = true
+
+    Process {
+        id: _bootstrap
+        command: ["niri", "msg", "-j", "focused-output"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    const out = JSON.parse(text);
+                    if (out && out.name) root._bootstrapName = out.name;
+                } catch (e) {
+                    console.warn("FocusedOutput bootstrap parse failed:", e);
+                }
+            }
+        }
     }
 }
