@@ -282,17 +282,25 @@ LauncherCategory {
                 anchors.fill: parent
                 visible: wallStrip.isCurrent
 
+                // Thumbnail base — always shown so a brief Loading state on
+                // the full-res image above never reveals an empty card.
                 OptImage {
                     anchors.fill: parent
                     source: wallStrip.isCurrent && wallStrip.wallPath
-                        ? (wallStrip._settled
-                            ? "file://" + wallStrip.wallPath
-                            : ThumbnailCache.sourceFor(wallStrip.wallPath))
-                        : ""
+                        ? ThumbnailCache.sourceFor(wallStrip.wallPath) : ""
                     smooth: true
-                    sourceSize.height: wallStrip._settled
-                        ? root.launcher.carouselHeight
-                        : root.launcher.wallpaperThumbHeight
+                    sourceSize.height: root.launcher.wallpaperThumbHeight
+                }
+
+                // Full-res overlay — fades in on top of the thumbnail once
+                // selection has settled and the file has decoded.
+                OptImage {
+                    anchors.fill: parent
+                    source: wallStrip.isCurrent && wallStrip._settled
+                        && wallStrip.wallPath
+                        ? "file://" + wallStrip.wallPath : ""
+                    smooth: true
+                    sourceSize.height: root.launcher.carouselHeight
                     opacity: status === Image.Ready ? 1 : 0
                     Behavior on opacity { NumberAnimation { duration: Theme.animSmooth } }
                 }
