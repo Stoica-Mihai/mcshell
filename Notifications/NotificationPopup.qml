@@ -42,7 +42,7 @@ Item {
     // ── Internal notification list model ──────────────────
     ListModel {
         id: notifModel
-        // Each entry: { notifId, appName, summary, body, iconUrl, urgency, timeout }
+        // Each entry: { notifId, appName, summary, body, appIconUrl, imageUrl, urgency, timeout }
     }
 
     // ── Shared pause state (across all screens) ─────────
@@ -70,7 +70,7 @@ Item {
     property alias historyModel: _historyModel
     ListModel {
         id: _historyModel
-        // Each entry: { nid, appName, summary, body, iconUrl, urgency, timestamp }
+        // Each entry: { nid, appName, summary, body, appIconUrl, imageUrl, urgency, timestamp }
     }
 
     function removeHistoryById(nid: string) {
@@ -137,12 +137,12 @@ Item {
         bodyHyperlinksSupported: false
 
         onNotification: notification => {
-            // Build icon URL: prefer image, then appIcon
-            let icon = "";
-            if (notification.image && notification.image.toString() !== "")
-                icon = notification.image;
-            else if (notification.appIcon && notification.appIcon.toString() !== "")
-                icon = notification.appIcon;
+            // Header app icon — small icon for the notification source
+            const appIconUrl = (notification.appIcon && notification.appIcon.toString() !== "")
+                ? notification.appIcon.toString() : "";
+            // Body image — large preview, only when the notification supplies one
+            const imageUrl = (notification.image && notification.image.toString() !== "")
+                ? notification.image.toString() : "";
 
             // Determine timeout
             let timeout = root.defaultTimeout;
@@ -163,7 +163,8 @@ Item {
                 appName: notification.appName || "",
                 summary: notification.summary || "",
                 body:    notification.body    || "",
-                iconUrl: icon,
+                appIconUrl: appIconUrl,
+                imageUrl:   imageUrl,
                 urgency: notification.urgency < 0 || notification.urgency > 2
                          ? 1 : notification.urgency,
                 timeout: timeout,
@@ -190,7 +191,8 @@ Item {
                 appName: entry.appName,
                 summary: entry.summary,
                 body:    entry.body,
-                iconUrl: icon,
+                appIconUrl: appIconUrl,
+                imageUrl:   imageUrl,
                 urgency: entry.urgency,
                 hasInlineReply: entry.hasInlineReply,
                 timestamp: new Date().toLocaleString(Qt.locale(), "hh:mm AP"),
@@ -255,8 +257,10 @@ Item {
                 right: root.rightMargin
             }
 
-            // Sizing
-            implicitWidth: root.popupWidth + 16  // 8px padding each side
+            // Sizing — buffer must exceed the maximum |bg._skewPx| of any card
+            // (= |_skew| * tallestCard / 2). With _skew=-0.10 and ~400px cards
+            // the slant reaches 20px, so 24px each side is comfortable.
+            implicitWidth: root.popupWidth + 48
             implicitHeight: Math.max(1, stack.implicitHeight + 8)
 
             // Click-through: make the window itself transparent to input,
@@ -265,32 +269,9 @@ Item {
                 item: stack
             }
 
-            // Background blur — one rounded region per visible card, so
-            // blur tracks each card's slide-in/out animation individually.
-            // Built dynamically because the cards are a Repeater delegate.
-            BackgroundEffect.blurRegion: UserSettings.blurEnabled && notifModel.count > 0
-                ? stackBlurRegion : null
-            Region { id: stackBlurRegion }
-
-            Component {
-                id: cardRegionComp
-                Region { property var src; item: src; radius: Theme.barRadius }
-            }
-
-            function _rebuildBlurRegions() {
-                // Destroy the previous batch explicitly — relying on GC under
-                // notification churn would let old QObjects pile up.
-                const old = stackBlurRegion.regions;
-                for (let i = 0; i < old.length; i++) old[i].destroy();
-
-                const list = [];
-                for (let i = 0; i < notifRepeater.count; i++) {
-                    const card = notifRepeater.itemAt(i);
-                    if (card && card.visibleRect)
-                        list.push(cardRegionComp.createObject(stackBlurRegion, { src: card.visibleRect }));
-                }
-                stackBlurRegion.regions = list;
-            }
+            // No BackgroundEffect.blurRegion: notification cards are opaque
+            // (see NotificationCard.qml backgroundColor comment) so a blur
+            // underneath would be invisible anyway.
 
             // ── Notification stack ────────────────────────
             ColumnLayout {
@@ -305,7 +286,6 @@ Item {
                 Repeater {
                     id: notifRepeater
                     model: notifModel
-                    onCountChanged: Qt.callLater(_rebuildBlurRegions)
 
                     delegate: NotificationCard {
                         id: notifCard

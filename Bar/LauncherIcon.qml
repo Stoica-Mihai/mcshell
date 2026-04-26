@@ -1,9 +1,9 @@
 import QtQuick
 import qs.Config
+import qs.Widgets
 
-// Launcher button — three straight vertical bars, each stepped up-right so
-// the group reads as a right-leaning slash while the bars themselves remain
-// upright. Colors pull from the theme palette.
+// Launcher button — wraps the shared McshellLogo widget with hover scale
+// + a click signal so it can drive the launcher panel from the bar.
 Item {
     id: root
 
@@ -14,44 +14,15 @@ Item {
     implicitWidth: size
     implicitHeight: size
 
-    Item {
-        id: stack
+    McshellLogo {
+        id: logo
         anchors.centerIn: parent
-        width: root.size
-        height: root.size
+        size: root.size
         opacity: mouse.containsMouse ? 1.0 : 0.9
         scale:   mouse.containsMouse ? 1.1 : 1.0
 
-        // MSAA so the rotated bar edges don't stair-step.
-        layer.enabled: true
-        layer.smooth: true
-        layer.samples: 4
-
         Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
         Behavior on scale   { NumberAnimation { duration: Theme.animFast } }
-
-        readonly property real barW: 2.5
-        readonly property real barH: root.size * 0.6
-        readonly property real stepX: 3.5
-        readonly property real stepY: 2.5
-        readonly property real barTilt: 18
-
-        Repeater {
-            model: [
-                { color: Theme.accent,    step: -1 },
-                { color: Theme.tertiary,  step:  0 },
-                { color: Theme.red,       step:  1 }
-            ]
-            Rectangle {
-                width: stack.barW
-                height: stack.barH
-                color: modelData.color
-                antialiasing: true
-                rotation: stack.barTilt
-                x: stack.width  / 2 + stack.stepX * 1.5 * modelData.step - width  / 2
-                y: stack.height / 2 - stack.stepY       * modelData.step - height / 2
-            }
-        }
     }
 
     MouseArea {

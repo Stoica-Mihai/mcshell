@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Shapes
 import qs.Config
 import qs.Widgets
 
@@ -12,7 +13,8 @@ Item {
     required property string appName
     required property string summary
     required property string body
-    required property string iconUrl
+    required property string appIconUrl
+    required property string imageUrl
     required property int urgency
     required property int timeout
     required property bool hasActions
@@ -22,10 +24,6 @@ Item {
 
     // Function to look up the notification object (set by parent)
     property var getNotifRef: function() { return null; }
-
-    // Visible card rect — exposed so the parent popup can attach a blur
-    // region that tracks the card's slide-in/out animation.
-    readonly property alias visibleRect: bg
 
     signal dismissed(string notifId)
 
@@ -69,16 +67,22 @@ Item {
         onFinished: card.dismissed(card.notifId)
     }
 
-    // ── Card background ───────────────────────────────────
-    Rectangle {
+    // ── Card background — skewed parallelogram ──────────
+    ParallelogramCard {
         id: bg
         x: card.slideX
         width: parent.width
         height: content.implicitHeight + Theme.popupPadding * 2
-        radius: Theme.barRadius
-        color: Theme.glassBg()
-        border.width: 1
-        border.color: Theme.border
+        // Fully opaque even when blur is on. Blur regions are necessarily
+        // axis-aligned rectangles (a polygon Region stair-steps its edges
+        // via QRegion scanline rasterization), so a translucent fill leaks
+        // the rectangular blur boundary through the slanted parallelogram
+        // and makes the slanted countdown line look non-parallel to the
+        // visible (rectangular) card edge. Opaque fill makes the slanted
+        // bg edge the visible edge, restoring parallel-ness.
+        backgroundColor: Theme.bg
+        showBorder: false
+        _skew: -0.10
 
         // Click to dismiss (but not on interactive elements)
         MouseArea {
@@ -94,100 +98,36 @@ Item {
             }
         }
 
-        // Circular countdown — top-right, aligned with header
-        Item {
-            id: countdownItem
-            width: 28
-            height: 28
-            anchors.right: parent.right
-            anchors.rightMargin: Theme.spacingLarge
-            anchors.top: parent.top
-            anchors.topMargin: Theme.spacingLarge
-
-            property real fraction: 1.0
-            property bool paused: false
-
-            NumberAnimation {
-                id: countdownAnim
-                target: countdownItem
-                property: "fraction"
-                from: 1.0
-                to: 0.0
-                duration: card.timeout > 0 ? card.timeout : Theme.notifDefaultTimeout
-                easing.type: Easing.Linear
-                running: true
-                onFinished: card.animateOut()
-            }
-
-            function pause() { if (countdownAnim.running) { countdownAnim.pause(); paused = true; } }
-            function resume() { if (countdownAnim.paused) { countdownAnim.resume(); paused = false; } }
-
-            Canvas {
-                anchors.fill: parent
-                property real fraction: countdownItem.fraction
-                property color ringColor: Theme.urgencyColor(card.urgency)
-                onFractionChanged: requestPaint()
-                onPaint: {
-                    var ctx = getContext("2d");
-                    var cx = width / 2;
-                    var cy = height / 2;
-                    var r = Math.min(cx, cy) - 1.5;
-                    var lineWidth = 2.5;
-
-                    ctx.clearRect(0, 0, width, height);
-
-                    ctx.beginPath();
-                    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
-                    ctx.lineWidth = lineWidth;
-                    ctx.strokeStyle = Theme.withAlpha(Theme.fg, 0.1);
-                    ctx.stroke();
-
-                    if (fraction > 0) {
-                        var startAngle = -Math.PI / 2;
-                        var endAngle = startAngle + (2 * Math.PI * fraction);
-                        ctx.beginPath();
-                        ctx.arc(cx, cy, r, startAngle, endAngle);
-                        ctx.lineWidth = lineWidth;
-                        ctx.strokeStyle = ringColor;
-                        ctx.lineCap = "round";
-                        ctx.stroke();
-                    }
-                }
-            }
-
-        }
-
         // ── Content ───────────────────────────────────────
         ColumnLayout {
             id: content
             anchors {
                 top: parent.top
                 left: parent.left
-                right: countdownItem.left
+                right: parent.right
                 margins: Theme.popupPadding
-                rightMargin: Theme.spacingNormal
+                // Extra clearance from the countdown line on the left edge
+                leftMargin: Theme.popupPadding + Theme.spacingNormal
             }
             spacing: Theme.spacingTiny
 
-            // Header row: icon + app name
+            // Header row: mcshell brand mark + sender app icon + app name
             RowLayout {
                 Layout.fillWidth: true
                 spacing: Theme.spacingNormal
 
-                // App icon (Nerd Font bell fallback)
-                Text {
-                    id: iconFallback
-                    visible: !iconImage.visible
-                    text: Theme.iconBell
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSizeMedium
-                    color: Theme.accent
+                // Permanent mcshell logo — every notification carries the brand
+                McshellLogo {
+                    size: 16
+                    Layout.preferredWidth: 16
+                    Layout.preferredHeight: 16
                     Layout.alignment: Qt.AlignVCenter
                 }
 
+                // Sender app icon — shown only when the notification supplied one
                 OptImage {
                     id: iconImage
-                    source: card.iconUrl
+                    source: card.appIconUrl
                     visible: status === Image.Ready
                     Layout.preferredWidth: 16
                     Layout.preferredHeight: 16
@@ -344,12 +284,14 @@ Item {
                 }
             }
 
-            // Large image preview (e.g. screenshot)
+            // Large image preview (e.g. screenshot) — smaller and centered
+            // so the parallelogram's bottom-right slant doesn't clip into it.
             Rectangle {
                 id: previewContainer
                 visible: previewImage.status === Image.Ready
-                Layout.fillWidth: true
-                Layout.preferredHeight: visible ? width * 9 / 21 : 0
+                Layout.preferredWidth: parent.width - 2 * bg._absSkew
+                Layout.preferredHeight: visible ? Layout.preferredWidth * 9 / 32 : 0
+                Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 4
                 radius: Theme.radiusSmall
                 color: Theme.bgSolid
@@ -359,7 +301,7 @@ Item {
                     id: previewImage
                     anchors.fill: parent
                     source: {
-                        const url = card.iconUrl || "";
+                        const url = card.imageUrl || "";
                         // Strip image://icon/ wrapper to get raw file path
                         if (url.startsWith("image://icon//"))
                             return "file://" + url.substring("image://icon/".length);
@@ -371,5 +313,66 @@ Item {
             }
         }
 
+    }
+
+    // ── Countdown state holder (no visuals) ──────────────
+    Item {
+        id: countdownItem
+        property real fraction: 1.0
+        property bool paused: false
+
+        NumberAnimation {
+            id: countdownAnim
+            target: countdownItem
+            property: "fraction"
+            from: 1.0
+            to: 0.0
+            duration: card.timeout > 0 ? card.timeout : Theme.notifDefaultTimeout
+            easing.type: Easing.Linear
+            running: true
+            onFinished: card.animateOut()
+        }
+
+        function pause() { if (countdownAnim.running) { countdownAnim.pause(); paused = true; } }
+        function resume() { if (countdownAnim.paused) { countdownAnim.resume(); paused = false; } }
+    }
+
+    // ── Countdown progress — a Shape painting a parallelogram strip flush
+    // with the card's slanted left edge. The ENCLOSING Item is wide enough
+    // (2*bg._absSkew + lineWidth) to fully contain the slanted path so Qt's
+    // Shape doesn't clip its bottom — using a 3px-wide wrapper (the line's
+    // visual width) clips the bottom of tall cards because the bottom-left
+    // vertex sits ~|bg._skewPx| pixels outside the wrapper.
+    Item {
+        id: countdownLine
+        readonly property real fraction: countdownItem.fraction
+        readonly property real lineWidth: 3
+        x: bg.x + bg._bl
+        y: bg.y
+        width: 2 * bg._absSkew + lineWidth
+        height: bg.height
+        visible: fraction > 0
+
+        // In Item-local coords (Item origin at scene bg.x + bg._bl):
+        //   bg's left edge at scene line-bottom → local x = 0
+        //   bg's left edge at scene line-top    → local x = 2*bg._absSkew*f
+        readonly property real _topL: 2 * bg._absSkew * fraction
+        readonly property real _topY: height * (1 - fraction)
+        readonly property real _botY: height
+
+        Shape {
+            anchors.fill: parent
+            preferredRendererType: Shape.CurveRenderer
+            ShapePath {
+                fillColor: Theme.urgencyColor(card.urgency)
+                strokeColor: "transparent"
+                strokeWidth: 0
+                startX: countdownLine._topL;                          startY: countdownLine._topY
+                PathLine { x: countdownLine._topL + countdownLine.lineWidth; y: countdownLine._topY }
+                PathLine { x: countdownLine.lineWidth;                       y: countdownLine._botY }
+                PathLine { x: 0;                                             y: countdownLine._botY }
+                PathLine { x: countdownLine._topL;                           y: countdownLine._topY }
+            }
+        }
     }
 }

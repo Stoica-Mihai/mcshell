@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Shapes
 import qs.Config
 
 // Reusable parallelogram-shaped card with antialiased edges.
@@ -34,22 +33,47 @@ Item {
     readonly property real _tr: width - _skewPx
     readonly property real _bl: _skewPx
     readonly property real _br: width + _skewPx
+    readonly property real _absSkew: Math.abs(_skewPx)
 
-    // Background fill
-    Shape {
-        anchors.fill: parent
-        preferredRendererType: Shape.CurveRenderer
+    // Background fill — Canvas with native 2D antialiasing. Wayland
+    // layer-shell surfaces have no MSAA backing, so Shape's slanted
+    // fill edges stair-step. Canvas's `ctx.fill()` antialiases per-pixel
+    // and avoids that. Bounds are widened by `_pad` (matching the border
+    // canvas) so the parallelogram protrusions aren't clipped.
+    Canvas {
+        id: bgCanvas
+        readonly property real _pad: card._absSkew
+        x: -_pad
+        width: card.width + _pad * 2
+        height: card.height
 
-        ShapePath {
-            fillColor: card.backgroundColor
-            strokeColor: card.bgStrokeColor
-            strokeWidth: card.bgStrokeWidth
+        onPaint: {
+            const ctx = getContext("2d");
+            ctx.clearRect(0, 0, width, height);
+            const ox = _pad;
+            ctx.beginPath();
+            ctx.moveTo(card._tl + ox, 0);
+            ctx.lineTo(card._tr + ox, 0);
+            ctx.lineTo(card._br + ox, card.height);
+            ctx.lineTo(card._bl + ox, card.height);
+            ctx.closePath();
+            ctx.fillStyle = card.backgroundColor;
+            ctx.fill();
+            if (card.bgStrokeWidth > 0) {
+                ctx.strokeStyle = card.bgStrokeColor;
+                ctx.lineWidth = card.bgStrokeWidth;
+                ctx.stroke();
+            }
+        }
 
-            startX: card._tl; startY: 0
-            PathLine { x: card._tr; y: 0 }
-            PathLine { x: card._br; y: card.height }
-            PathLine { x: card._bl; y: card.height }
-            PathLine { x: card._tl; y: 0 }
+        Connections {
+            target: card
+            function on_SkewPxChanged() { bgCanvas.requestPaint(); }
+            function onWidthChanged() { bgCanvas.requestPaint(); }
+            function onHeightChanged() { bgCanvas.requestPaint(); }
+            function onBackgroundColorChanged() { bgCanvas.requestPaint(); }
+            function onBgStrokeColorChanged() { bgCanvas.requestPaint(); }
+            function onBgStrokeWidthChanged() { bgCanvas.requestPaint(); }
         }
     }
 
@@ -85,29 +109,40 @@ Item {
         }
     }
 
-    // Border ring — OddEvenFill for uniform width on all edges
-    Shape {
-        anchors.fill: parent
+    // Border outline — Canvas with native 2D antialiasing. Same trick
+    // AnimatedBorder uses: extend Canvas bounds by `_pad` so the
+    // parallelogram protrusions and stroke aren't clipped.
+    Canvas {
+        id: borderCanvas
+        readonly property real _pad: card._absSkew + card.borderWidth
+        x: -_pad
+        width: card.width + _pad * 2
+        height: card.height
         visible: card.showBorder
-        preferredRendererType: Shape.CurveRenderer
 
-        ShapePath {
-            fillColor: card.borderColor
-            fillRule: ShapePath.OddEvenFill
-            strokeColor: "transparent"
-            strokeWidth: 0
+        onPaint: {
+            const ctx = getContext("2d");
+            ctx.clearRect(0, 0, width, height);
+            const ox = _pad;
+            ctx.beginPath();
+            ctx.moveTo(card._tl + ox, 0);
+            ctx.lineTo(card._tr + ox, 0);
+            ctx.lineTo(card._br + ox, card.height);
+            ctx.lineTo(card._bl + ox, card.height);
+            ctx.closePath();
+            ctx.strokeStyle = card.borderColor;
+            ctx.lineWidth = card.borderWidth;
+            ctx.lineJoin = "miter";
+            ctx.stroke();
+        }
 
-            startX: card._tl; startY: 0
-            PathLine { x: card._tr; y: 0 }
-            PathLine { x: card._br; y: card.height }
-            PathLine { x: card._bl; y: card.height }
-            PathLine { x: card._tl; y: 0 }
-
-            PathMove { x: card._tl + card.borderWidth; y: card.borderWidth }
-            PathLine { x: card._tr - card.borderWidth; y: card.borderWidth }
-            PathLine { x: card._br - card.borderWidth; y: card.height - card.borderWidth }
-            PathLine { x: card._bl + card.borderWidth; y: card.height - card.borderWidth }
-            PathLine { x: card._tl + card.borderWidth; y: card.borderWidth }
+        Connections {
+            target: card
+            function on_SkewPxChanged() { borderCanvas.requestPaint(); }
+            function onWidthChanged() { borderCanvas.requestPaint(); }
+            function onHeightChanged() { borderCanvas.requestPaint(); }
+            function onBorderColorChanged() { borderCanvas.requestPaint(); }
+            function onBorderWidthChanged() { borderCanvas.requestPaint(); }
         }
     }
 }
