@@ -270,8 +270,9 @@ Item {
             }
 
             // No BackgroundEffect.blurRegion: notification cards are opaque
-            // (see NotificationCard.qml backgroundColor comment) so a blur
-            // underneath would be invisible anyway.
+            // so blur underneath would be invisible. Wayland blur regions
+            // are axis-aligned rectangles, which would leak a vertical edge
+            // through any translucent slanted card.
 
             // ── Notification stack ────────────────────────
             ColumnLayout {

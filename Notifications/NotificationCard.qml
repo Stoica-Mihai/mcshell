@@ -71,10 +71,10 @@ Item {
         x: card.slideX
         width: parent.width
         height: content.implicitHeight + Theme.popupPadding * 2
-        // Opaque so the rectangular Wayland blur region (polygon blur
-        // stair-steps via QRegion rasterization) doesn't leak through
-        // and make the slanted countdown line look non-parallel.
-        backgroundColor: Theme.bg
+        // Truly opaque (Theme.bg has alpha 0.85). The card needs to fully
+        // cover what's behind so the rectangular Wayland blur boundary
+        // doesn't leak through and break the slanted parallelogram shape.
+        backgroundColor: Theme.bgSolid
         showBorder: false
         skew: -0.10
 
