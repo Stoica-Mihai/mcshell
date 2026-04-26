@@ -6,8 +6,10 @@ import Quickshell.Bluetooth
 import Quickshell.Networking
 import Quickshell.Services.SystemTray
 import qs.Config
+import qs.Core
 import qs.Widgets
 import qs.NotificationHistory
+import qs.KeybindHints
 
 Scope {
     id: root
@@ -15,10 +17,8 @@ Scope {
     property string screenName: ""
     property var screen: null
     property bool hasPopup: sharedDropdown.activePanel !== ""
-        || calendarWindow.isOpen
-        || weatherWindow.isOpen
-        || clockSettingsWindow.isOpen
-        || sysInfoSettingsWindow.isOpen
+        || centerDropdown.activePanel !== ""
+        || leftDropdown.activePanel !== ""
 
     property int unreadNotifications: 0
     property var notifHistoryModel: null
@@ -34,32 +34,61 @@ Scope {
     property int panelToggleTrigger: 0
     property string panelToggleName: ""
     property string panelToggleMode: ""
-    // Dispatch table for bar-popup-window panels. Any panel name not in the
-    // table falls through to the shared right-segment dropdown.
+    // Dispatch table mapping panel names → owning dropdown.
     readonly property var _barPanels: ({
-        calendar: calendarWindow,
-        weather: weatherWindow,
-        clockSettings: clockSettingsWindow,
-        sysInfoSettings: sysInfoSettingsWindow
+        keybinds:        leftDropdown,
+        calendar:        centerDropdown,
+        weather:         centerDropdown,
+        clockSettings:   centerDropdown,
+        volume:          sharedDropdown,
+        notifications:   sharedDropdown,
+        media:           sharedDropdown,
+        sysinfo:         sharedDropdown,
+        sysInfoSettings: sharedDropdown,
+        trayicons:       sharedDropdown,
+        tray:            sharedDropdown
     })
     onPanelToggleTriggerChanged: {
         if (!panelToggleName) return;
-        const win = _barPanels[panelToggleName];
-        if (!win) {
-            sharedDropdown.togglePanel(panelToggleName);
+        // Multi-monitor: only the StatusBar on niri's focused output reacts.
+        // FocusedOutput.name is "" until niri's first IPC reply — fall
+        // through and open everywhere during that bootstrap window.
+        if (FocusedOutput.name !== "" && FocusedOutput.name !== root.screenName) return;
+
+        if (panelToggleName === "weather") {
+            _toggleWeather(panelToggleMode);
             return;
         }
-        if (panelToggleMode === "edit" && win.toggleEdit) win.toggleEdit();
-        else if (win.togglePreview) win.togglePreview();
-        else win.toggle();
+        const dropdown = _barPanels[panelToggleName];
+        if (!dropdown) return;
+        dropdown.togglePanel(panelToggleName);
+    }
+
+    // Weather has two modes — "edit" shows the location search, "view"
+    // shows the forecast. Replicates the old toggleEdit/togglePreview
+    // behavior of WeatherWindow now that everything lives in centerDropdown.
+    function _toggleWeather(mode) {
+        const isOpen = centerDropdown.activePanel === "weather";
+        if (isOpen) {
+            if (mode === "edit" && !weatherContent.editMode) {
+                weatherContent.editMode = true;
+                return;
+            }
+            if (mode !== "edit" && weatherContent.editMode) {
+                weatherContent.editMode = false;
+                return;
+            }
+            centerDropdown.closePanel();
+            return;
+        }
+        weatherContent.editMode = (mode === "edit");
+        centerDropdown.openPanel("weather");
     }
 
     function dismissPopups() {
         sharedDropdown.closePanel();
-        calendarWindow.close();
-        weatherWindow.close();
-        clockSettingsWindow.close();
-        sysInfoSettingsWindow.close();
+        centerDropdown.closePanel();
+        leftDropdown.closePanel();
     }
 
     // ── Exclusive zone — reserves bar space, no content ────
@@ -114,10 +143,9 @@ Scope {
         WlrLayershell.namespace: Namespaces.root
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.exclusionMode: ExclusionMode.Ignore
-        // Grab keyboard focus while a sharedDropdown panel is open so Escape
-        // reaches us. BarPopupWindow popups have their own layer-shell
-        // surface with keyboardFocus Exclusive and handle Escape themselves.
-        WlrLayershell.keyboardFocus: sharedDropdown.activePanel !== ""
+        // Grab keyboard focus while any dropdown is open so typed input
+        // and Escape reach the active panel.
+        WlrLayershell.keyboardFocus: root.hasPopup
             ? WlrKeyboardFocus.Exclusive
             : WlrKeyboardFocus.None
 
@@ -148,13 +176,11 @@ Scope {
             onClicked: root.dismissPopups()
         }
 
-        // Escape dismisses the active sharedDropdown panel. Only grabs focus
-        // while one is open (via keyboardFocus above); BarPopupWindow popups
-        // handle Escape on their own surface.
+        // Escape dismisses any active dropdown.
         FocusScope {
             anchors.fill: parent
-            focus: sharedDropdown.activePanel !== ""
-            Keys.onEscapePressed: sharedDropdown.closePanel()
+            focus: root.hasPopup
+            Keys.onEscapePressed: root.dismissPopups()
         }
 
         // ── Bar content — positioned at top ──────────────────
@@ -267,19 +293,11 @@ Scope {
                     Clock {
                         id: clock
                         anchors.verticalCenter: parent.verticalCenter
-                        popupVisible: calendarWindow.isOpen || clockSettingsWindow.isOpen
-                        onTogglePopup: {
-                            clockSettingsWindow.close();
-                            calendarWindow.toggle();
-                        }
-                        onToggleConfigPopup: {
-                            calendarWindow.close();
-                            clockSettingsWindow.toggle();
-                        }
-                        onDismissPopup: {
-                            calendarWindow.close();
-                            clockSettingsWindow.close();
-                        }
+                        popupVisible: centerDropdown.activePanel === "calendar"
+                            || centerDropdown.activePanel === "clockSettings"
+                        onTogglePopup: centerDropdown.togglePanel("calendar")
+                        onToggleConfigPopup: centerDropdown.togglePanel("clockSettings")
+                        onDismissPopup: centerDropdown.closePanel()
                     }
 
                     // Separator between clock and weather
@@ -293,10 +311,10 @@ Scope {
                     Weather {
                         id: weather
                         anchors.verticalCenter: parent.verticalCenter
-                        popupVisible: weatherWindow.isOpen
-                        onTogglePopup: weatherWindow.togglePreview()
-                        onToggleEditPopup: weatherWindow.toggleEdit()
-                        onDismissPopup: weatherWindow.close()
+                        popupVisible: centerDropdown.activePanel === "weather"
+                        onTogglePopup: root._toggleWeather("view")
+                        onToggleEditPopup: root._toggleWeather("edit")
+                        onDismissPopup: centerDropdown.closePanel()
                     }
                 }
 
@@ -515,14 +533,8 @@ Scope {
                             SysWaveform {
                                 visible: UserSettings.sysInfoEnabled
                                 active: sharedDropdown.activePanel === "sysinfo"
-                                onClicked: {
-                                    sysInfoSettingsWindow.close();
-                                    sharedDropdown.togglePanel("sysinfo");
-                                }
-                                onToggleConfigPopup: {
-                                    sharedDropdown.closePanel();
-                                    sysInfoSettingsWindow.toggle();
-                                }
+                                onClicked: sharedDropdown.togglePanel("sysinfo")
+                                onToggleConfigPopup: sharedDropdown.togglePanel("sysInfoSettings")
                             }
                         }
                     }
@@ -545,6 +557,7 @@ Scope {
                         case "media": return mediaContent.implicitHeight + Theme.popupPadding * 2;
                         case "sysinfo": return sysInfoContent.implicitHeight + Theme.popupPadding * 2;
                         case "trayicons": return trayIconsContent.implicitHeight + Theme.popupPadding * 2;
+                        case "sysInfoSettings": return sysInfoSettingsContent.fullHeight;
                         default: return 100;
                         }
                     }
@@ -604,6 +617,18 @@ Scope {
                         anchors.top: parent.top
                         anchors.margins: Theme.popupPadding
                         sourceComponent: SysInfoPanel {}
+                    }
+
+                    // ── SysInfo settings section ──────────
+                    // Loader-gated so KeyboardRowNav and the per-GPU
+                    // Repeater don't churn while the panel is closed.
+                    Loader {
+                        id: sysInfoSettingsContent
+                        active: sharedDropdown.activePanel === "sysInfoSettings"
+                        visible: active
+                        anchors.fill: parent
+                        sourceComponent: SysInfoSettingsPopup { windowOpen: sysInfoSettingsContent.active }
+                        readonly property real fullHeight: item ? item.fullHeight : 0
                     }
 
                     // ── Notifications section ─────────────
@@ -788,36 +813,87 @@ Scope {
         }
     }
 
-    // Calendar dropdown — shares BarPopupWindow chrome with weather.
-    // Width matches the center trapezoid's wide bottom edge so the
-    // dropdown visually continues the bar below.
-    CalendarWindow {
-        id: calendarWindow
-        screen: root.screen
-        currentDate: clock.currentDate
-        cardWidth: centerSection.width
+    // Center dropdown — calendar / weather / clock-settings panels.
+    // Hosted as an AnimatedPopup like the right-segment sharedDropdown so
+    // niri's ext-background-effect samples through the parent layer
+    // surface (windows-underneath blur instead of wallpaper-only).
+    AnimatedPopup {
+        id: centerDropdown
+
+        autoPosition: false
+        anchorSection: centerSection
+        anchorX: 0
+        implicitWidth: centerSection.width
+        anchor.adjustment: PopupAdjustment.None
+
+        fullHeight: {
+            switch (centerDropdown.activePanel) {
+            case "calendar":      return calendarContent.fullHeight;
+            case "weather":       return weatherContent.fullHeight;
+            case "clockSettings": return clockSettingsContent.fullHeight;
+            default: return 100;
+            }
+        }
+
+        onVisibleChanged: {
+            if (!visible) centerDropdown.activePanel = "";
+        }
+
+        CalendarPopup {
+            id: calendarContent
+            visible: centerDropdown.activePanel === "calendar"
+            enabled: visible
+            anchors.fill: parent
+            currentDate: clock.currentDate
+            windowOpen: visible
+        }
+
+        WeatherPopup {
+            id: weatherContent
+            visible: centerDropdown.activePanel === "weather"
+            enabled: visible
+            anchors.fill: parent
+            weather: weather
+            windowOpen: visible
+        }
+
+        ClockSettingsPopup {
+            id: clockSettingsContent
+            visible: centerDropdown.activePanel === "clockSettings"
+            enabled: visible
+            anchors.fill: parent
+            windowOpen: visible
+        }
     }
 
-    // Weather dropdown — its own layer shell window so it can receive
-    // keyboard focus for the search field without affecting the bar.
-    WeatherWindow {
-        id: weatherWindow
-        screen: root.screen
-        weather: weather
-        cardWidth: centerSection.width
-    }
+    // Left dropdown — keybind hints panel.
+    AnimatedPopup {
+        id: leftDropdown
 
-    ClockSettingsWindow {
-        id: clockSettingsWindow
-        screen: root.screen
-        cardWidth: centerSection.width
-    }
+        autoPosition: false
+        anchorSection: leftSection
+        anchorX: 0
+        implicitWidth: Theme.barSideWidth - Theme.barDiagSlant
+        anchor.adjustment: PopupAdjustment.None
 
-    SysInfoSettingsWindow {
-        id: sysInfoSettingsWindow
-        screen: root.screen
-        cardWidth: rightSection.width - Theme.barDiagSlant
-        cardAlignment: "right"
+        fullHeight: {
+            switch (leftDropdown.activePanel) {
+            case "keybinds": return keybindContent.fullHeight;
+            default: return 100;
+            }
+        }
+
+        onVisibleChanged: {
+            if (!visible) leftDropdown.activePanel = "";
+        }
+
+        KeybindPanel {
+            id: keybindContent
+            visible: leftDropdown.activePanel === "keybinds"
+            enabled: visible
+            anchors.fill: parent
+            windowOpen: visible
+        }
     }
 
     // Recording state (passed from shell.qml)

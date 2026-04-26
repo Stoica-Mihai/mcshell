@@ -14,6 +14,17 @@ Item {
     property int viewMonth: viewDate.getMonth()
     property string viewMode: "days"  // "days", "months", "years"
 
+    // Mirrors the parent dropdown's open state. Reset to the current month
+    // on each fresh open so the calendar doesn't reopen on whatever month
+    // the user last navigated to.
+    property bool windowOpen: false
+    onWindowOpenChanged: {
+        if (windowOpen) {
+            viewDate = new Date();
+            viewMode = "days";
+        }
+    }
+
     readonly property real fullHeight: calContent.implicitHeight + 16
 
     anchors.fill: parent

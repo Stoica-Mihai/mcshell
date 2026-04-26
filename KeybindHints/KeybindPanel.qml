@@ -1,35 +1,24 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Quickshell
 import qs.Config
-import qs.Core
 import qs.Widgets
-import qs.Bar
 
-// Keybind dropdown — flush under the left bar segment, same chrome as
-// Calendar / Weather popups. Reassigns screen to niri's focused output on
-// open so the dropdown follows multi-monitor focus.
-BarPopupWindow {
+// Keybind dropdown content — hosted inside the left AnimatedPopup. Content
+// only (no window): the parent dropdown owns chrome, animation, and blur.
+FocusScope {
     id: panel
-    namespace: Namespaces.keybinds
-    cardAlignment: "left"
-    cardWidth: Theme.barSideWidth - Theme.barDiagSlant
-    cardHeight: 460
-    wantsKeyboardFocus: true
+
+    // Mirrors the parent dropdown's open state — true while activePanel ===
+    // "keybinds". Used to reset state and steal focus on re-open.
+    property bool windowOpen: false
+
+    readonly property real fullHeight: 460
 
     property int selectedIndex: -1
 
-    // Reassign screen BEFORE the surface activates so BackgroundEffect's
-    // blurRegion binds to the correct surface lifetime — otherwise blur
-    // never attaches when the panel opens on a non-default output.
-    onAboutToOpen: {
-        const s = FocusedOutput.screen;
-        if (s && panel.screen !== s) panel.screen = s;
-    }
-
-    onIsOpenChanged: {
-        if (isOpen) {
+    onWindowOpenChanged: {
+        if (windowOpen) {
             searchField.text = "";
             selectedIndex = -1;
             focusTimer.restart();
@@ -39,7 +28,7 @@ BarPopupWindow {
     Timer {
         id: focusTimer
         interval: Theme.animSmooth + 50
-        onTriggered: if (panel.isOpen) searchField.field.forceActiveFocus()
+        onTriggered: if (panel.windowOpen) searchField.field.forceActiveFocus()
     }
 
     function navigate(dir) {
@@ -56,6 +45,8 @@ BarPopupWindow {
         filterText: searchField.text
         onFilteredGroupsChanged: panel.selectedIndex = -1
     }
+
+    anchors.fill: parent
 
     ColumnLayout {
         anchors.fill: parent
@@ -107,16 +98,14 @@ BarPopupWindow {
             placeholder: "Filter keybindings..."
 
             field.Keys.onPressed: event => {
-                if (event.key === Qt.Key_Escape) {
-                    panel.close();
-                    event.accepted = true;
-                } else if (event.key === Qt.Key_Down) {
+                if (event.key === Qt.Key_Down) {
                     panel.navigate(1);
                     event.accepted = true;
                 } else if (event.key === Qt.Key_Up) {
                     panel.navigate(-1);
                     event.accepted = true;
                 }
+                // Escape falls through to AnimatedPopup's built-in handler.
             }
         }
 

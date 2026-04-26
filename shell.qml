@@ -10,7 +10,6 @@ import qs.Config
 import qs.Bar
 import qs.Notifications
 import qs.Launcher
-import qs.KeybindHints
 import qs.LockScreen
 import qs.Polkit
 import qs.Wallpaper
@@ -41,15 +40,17 @@ ShellRoot {
     }
 
     readonly property var _panelModes: ({
-        weather:       ["view", "edit"],
-        calendar:      ["view"],
-        clockSettings: ["view"],
-        volume:        ["view"],
-        notifications: ["view"],
-        media:         ["view"],
-        tray:          ["view"],
-        trayicons:     ["view"],
-        sysinfo:       ["view"]
+        weather:         ["view", "edit"],
+        calendar:        ["view"],
+        clockSettings:   ["view"],
+        sysInfoSettings: ["view"],
+        keybinds:        ["view"],
+        volume:          ["view"],
+        notifications:   ["view"],
+        media:           ["view"],
+        tray:            ["view"],
+        trayicons:       ["view"],
+        sysinfo:         ["view"]
     })
 
     // Validate a mode against a panel/tab's supported modes. Returns the
@@ -146,13 +147,10 @@ ShellRoot {
 
     // Lazy-loaded transient overlays — parsed on first use, kept after.
     Component { id: _appLauncherComponent; AppLauncher {} }
-    Component { id: _keybindPanelComponent; KeybindPanel {} }
     Component { id: _recordingComponent; Recording {} }
     Loader { id: appLauncherLoader; active: false; sourceComponent: _appLauncherComponent }
-    Loader { id: keybindPanelLoader; active: false; sourceComponent: _keybindPanelComponent }
     Loader { id: recordingLoader; active: false; sourceComponent: _recordingComponent }
 
-    function _toggleKeybinds() { keybindPanelLoader.active = true; keybindPanelLoader.item.toggle(); }
     function _toggleRecording() { recordingLoader.active = true; recordingLoader.item.toggleRecording(); }
 
     // IdleMonitor created dynamically in Component.onCompleted above
@@ -199,7 +197,7 @@ ShellRoot {
         function launcherWallpaper(mode: string, target: string): void { shell._dispatchLauncher("wallpaper", mode, target); }
         function launcherSettings(mode: string, target: string): void { shell._dispatchLauncher("settings", mode, target); }
 
-        function toggleKeybinds(): void { shell._toggleKeybinds(); }
+        function toggleKeybinds(mode: string): void { shell._dispatchPanel("keybinds", mode); }
         function lock(): void { ShellActions.lock(); }
         function toggleDnd(): void { UserSettings.doNotDisturb = !UserSettings.doNotDisturb; }
         function setWallpaper(path: string): void { ShellActions.setWallpaper(path); }

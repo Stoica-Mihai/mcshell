@@ -77,12 +77,10 @@ ColumnLayout {
         }
     }
 
-    // Hourly grid (8 cells)
-    Grid {
+    // Hourly row (8 cells distributed evenly).
+    RowLayout {
         Layout.fillWidth: true
-        columns: 8
-        columnSpacing: 2
-        rowSpacing: 0
+        spacing: 2
 
         Repeater {
             model: root.weather ? root.weather.hourly : []
@@ -91,8 +89,8 @@ ColumnLayout {
                 required property var modelData
                 required property int index
 
-                width: (parent.width - (7 * 2)) / 8
-                height: 44
+                Layout.fillWidth: true
+                Layout.preferredHeight: 44
                 radius: Theme.radiusTiny
                 color: index === 0 ? Theme.accent : "transparent"
 
