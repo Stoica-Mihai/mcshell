@@ -44,8 +44,11 @@ OverlayWindow {
 
     function close() {
         _closeTransition();
-        level = "view";
-        searchField.text = "";
+        // Don't reset level / searchField / selectedIndex here — the close
+        // animation is still painting, and clearing the search would rebuild
+        // the carousel with the full unfiltered model, making the highlighted
+        // card flip mid-fade (looks like a different app was launched).
+        // _initLauncher fully resets state on the next open.
         for (let i = 0; i < categories.length; i++)
             categories[i].onTabLeave();
     }
