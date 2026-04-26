@@ -39,9 +39,10 @@ Item {
             // The OverlayWindow's surface stays alive across activations and
             // the dialog Rectangle keeps its full geometry (only opacity goes
             // to 0 when inactive), so we must gate on agent.isActive too.
+            // `radius` matches the dialog Rectangle so blur follows its corners.
             BackgroundEffect.blurRegion: UserSettings.blurEnabled && agent.isActive
                 ? dialogBlurRegion : null
-            Region { id: dialogBlurRegion; item: dialog }
+            Region { id: dialogBlurRegion; item: dialog; radius: Theme.dialogRadius }
 
             Connections {
                 target: agent

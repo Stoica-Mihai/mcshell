@@ -35,6 +35,21 @@ SettingsPanel {
     readonly property var _cleanLabels: ["Never", "30 min", "1 hour", "6 hours", "24 hours"]
     readonly property int _cleanIndex: Math.max(0, _cleanValues.indexOf(UserSettings.notifAutoClean))
 
+    // ── Auto-lock mapping ──
+    readonly property var _idleValues: [0, 5, 10, 15, 30, 45, 60]
+    readonly property var _idleLabels: ["Off", "5 min", "10 min", "15 min", "30 min", "45 min", "60 min"]
+    readonly property int _idleIndex: Math.max(0, _idleValues.indexOf(UserSettings.idleTimeout))
+
+    // ── Sunrise/sunset time slots (30-min granularity) ──
+    readonly property var _timeSlots: {
+        const list = [];
+        for (let h = 0; h < 24; h++)
+            for (let m = 0; m < 60; m += 30)
+                list.push(String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0"));
+        return list;
+    }
+    function _slotIndex(t) { const i = _timeSlots.indexOf(t); return i < 0 ? 0 : i; }
+
     // Declarative item registry — each row's `selected` binding and the
     // panel's adjustLeft/adjustRight dispatch resolve by id, so visibility
     // changes (night light off/auto/manual) rearrange indices automatically.
@@ -58,8 +73,8 @@ SettingsPanel {
         );
         list.push(
             { id: "idle",
-              adjustLeft:  () => UserSettings.idleTimeout = Math.max(0, UserSettings.idleTimeout - 5),
-              adjustRight: () => UserSettings.idleTimeout = Math.min(60, UserSettings.idleTimeout + 5) },
+              adjustLeft:  () => UserSettings.idleTimeout = _idleValues[Math.max(0, _idleIndex - 1)],
+              adjustRight: () => UserSettings.idleTimeout = _idleValues[Math.min(_idleValues.length - 1, _idleIndex + 1)] },
             { id: "autoClean",
               adjustLeft:  () => UserSettings.notifAutoClean = _cleanValues[Math.max(0, _cleanIndex - 1)],
               adjustRight: () => UserSettings.notifAutoClean = _cleanValues[Math.min(_cleanValues.length - 1, _cleanIndex + 1)] },
@@ -136,14 +151,11 @@ SettingsPanel {
             color: root.nightOn ? Theme.yellow : Theme.fgDim
         }
         SettingsRow.Label { text: "Night Light"; Layout.fillWidth: true }
-        SettingsRow.Value {
-            text: root.modes[root.modeIndex].charAt(0).toUpperCase() + root.modes[root.modeIndex].slice(1)
-            color: root.nightOn ? Theme.yellow : Theme.fgDim
-            Layout.rightMargin: 4
-        }
         SkewToggle {
             stateCount: 3
             state: root.modeIndex
+            labels: ["Off", "Manual", "Auto"]
+            labelColor: root.nightOn ? Theme.yellow : Theme.fgDim
         }
     }
 
@@ -175,7 +187,12 @@ SettingsPanel {
             color: Theme.yellow
         }
         SettingsRow.Label { text: "Sunrise"; Layout.fillWidth: true }
-        SettingsRow.Label { text: UserSettings.nightLightSunrise; color: Theme.accent }
+        CyclePicker {
+            pillValue: true
+            model: root._timeSlots
+            currentIndex: root._slotIndex(UserSettings.nightLightSunrise)
+            textColor: Theme.yellow
+        }
     }
 
     // Sunset (auto mode only)
@@ -190,9 +207,11 @@ SettingsPanel {
             color: Theme.accent
         }
         SettingsRow.Label { text: "Sunset"; Layout.fillWidth: true }
-        SettingsRow.Label {
-            text: UserSettings.nightLightSunset
-            color: Theme.accent
+        CyclePicker {
+            pillValue: true
+            model: root._timeSlots
+            currentIndex: root._slotIndex(UserSettings.nightLightSunset)
+            textColor: Theme.accent
         }
     }
 
@@ -208,9 +227,11 @@ SettingsPanel {
             color: UserSettings.idleTimeout > 0 ? Theme.accent : Theme.fgDim
         }
         SettingsRow.Label { text: "Auto Lock"; Layout.fillWidth: true }
-        SettingsRow.Value {
-            text: UserSettings.idleTimeout > 0 ? UserSettings.idleTimeout + " min" : "Off"
-            color: UserSettings.idleTimeout > 0 ? Theme.accent : Theme.fgDim
+        CyclePicker {
+            pillValue: true
+            model: root._idleLabels
+            currentIndex: root._idleIndex
+            textColor: UserSettings.idleTimeout > 0 ? Theme.accent : Theme.fgDim
         }
     }
 
@@ -224,9 +245,11 @@ SettingsPanel {
             color: root._cleanIndex > 0 ? Theme.accent : Theme.fgDim
         }
         SettingsRow.Label { text: "Auto Clean"; Layout.fillWidth: true }
-        SettingsRow.Value {
-            text: root._cleanLabels[root._cleanIndex]
-            color: root._cleanIndex > 0 ? Theme.accent : Theme.fgDim
+        CyclePicker {
+            pillValue: true
+            model: root._cleanLabels
+            currentIndex: root._cleanIndex
+            textColor: root._cleanIndex > 0 ? Theme.accent : Theme.fgDim
         }
     }
 

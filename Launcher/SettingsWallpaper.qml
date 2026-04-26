@@ -91,9 +91,11 @@ SettingsPanel {
             color: root._enabled ? Theme.accent : Theme.fgDim
         }
         SettingsRow.Label { text: "Auto Rotate"; Layout.fillWidth: true }
-        SettingsRow.Value {
-            text: root._options[root._intervalIndex].label
-            color: root._enabled ? Theme.accent : Theme.fgDim
+        CyclePicker {
+            pillValue: true
+            model: root._options.map(o => o.label)
+            currentIndex: root._intervalIndex
+            textColor: root._enabled ? Theme.accent : Theme.fgDim
         }
     }
 

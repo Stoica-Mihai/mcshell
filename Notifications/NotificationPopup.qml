@@ -265,12 +265,32 @@ Item {
                 item: stack
             }
 
-            // Background blur — bound to the stack bounding box, only when
-            // there are actual cards (otherwise the empty stack produces a
-            // phantom region that niri renders as a blurred rectangle).
+            // Background blur — one rounded region per visible card, so
+            // blur tracks each card's slide-in/out animation individually.
+            // Built dynamically because the cards are a Repeater delegate.
             BackgroundEffect.blurRegion: UserSettings.blurEnabled && notifModel.count > 0
                 ? stackBlurRegion : null
-            Region { id: stackBlurRegion; item: stack }
+            Region { id: stackBlurRegion }
+
+            Component {
+                id: cardRegionComp
+                Region { property var src; item: src; radius: Theme.barRadius }
+            }
+
+            function _rebuildBlurRegions() {
+                // Destroy the previous batch explicitly — relying on GC under
+                // notification churn would let old QObjects pile up.
+                const old = stackBlurRegion.regions;
+                for (let i = 0; i < old.length; i++) old[i].destroy();
+
+                const list = [];
+                for (let i = 0; i < notifRepeater.count; i++) {
+                    const card = notifRepeater.itemAt(i);
+                    if (card && card.visibleRect)
+                        list.push(cardRegionComp.createObject(stackBlurRegion, { src: card.visibleRect }));
+                }
+                stackBlurRegion.regions = list;
+            }
 
             // ── Notification stack ────────────────────────
             ColumnLayout {
@@ -283,7 +303,9 @@ Item {
                 spacing: Theme.spacingNormal
 
                 Repeater {
+                    id: notifRepeater
                     model: notifModel
+                    onCountChanged: Qt.callLater(_rebuildBlurRegions)
 
                     delegate: NotificationCard {
                         id: notifCard

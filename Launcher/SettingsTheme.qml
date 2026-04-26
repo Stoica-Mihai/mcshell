@@ -64,17 +64,20 @@ SettingsPanel {
     }
 
     // ── Item 0: Blur toggle ──
-    SettingsRow {
+    // Use SelectionRow so it matches the theme rows below (checkmark column +
+    // label filling middle + fixed-width right column for the SkewToggle).
+    SelectionRow {
         selected: root.active && root.selectedItem === 0
-        Layout.preferredHeight: 32
+        label: "Blur surfaces"
+        isCurrent: UserSettings.blurEnabled
 
-        SettingsRow.Icon {
-            text: Theme.iconImage
-            color: UserSettings.blurEnabled ? Theme.accent : Theme.fgDim
-        }
-        SettingsRow.Label { text: "Blur surfaces"; Layout.fillWidth: true }
-        SkewToggle {
-            state: UserSettings.blurEnabled ? 1 : 0
+        Item {
+            Layout.preferredWidth: 120
+            Layout.preferredHeight: parent.height
+            SkewToggle {
+                anchors.centerIn: parent
+                state: UserSettings.blurEnabled ? 1 : 0
+            }
         }
     }
 

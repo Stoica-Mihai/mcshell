@@ -23,6 +23,10 @@ Item {
     // Function to look up the notification object (set by parent)
     property var getNotifRef: function() { return null; }
 
+    // Visible card rect — exposed so the parent popup can attach a blur
+    // region that tracks the card's slide-in/out animation.
+    readonly property alias visibleRect: bg
+
     signal dismissed(string notifId)
 
     // ── Sizing ────────────────────────────────────────────

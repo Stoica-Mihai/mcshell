@@ -414,6 +414,7 @@ FocusScope {
 
                     SkewToggle {
                         state: UserSettings.sysInfoGpuVisible(modelData.name) ? 1 : 0
+                        labels: ["Hidden", "Visible"]
                     }
                 }
 
