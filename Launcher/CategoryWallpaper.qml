@@ -62,10 +62,13 @@ LauncherCategory {
     // per selection change → CPU pegs at 100%. Instead, the expanded card
     // shows the cached thumbnail during scroll and only loads the full-res
     // source once selection has been idle for _settleTimer.interval ms.
+    // Interval matches the carousel width animation so the full-res image
+    // appears after motion has stopped, avoiding a mid-animation snap as
+    // the overlay fades in over still-moving cards.
     property int _settledIndex: launcher.selectedIndex
     Timer {
         id: _settleTimer
-        interval: 160
+        interval: Theme.animCarousel
         onTriggered: root._settledIndex = launcher.selectedIndex
     }
     Connections {

@@ -122,9 +122,10 @@ OverlayWindow {
     }
 
     // ── Window setup ────────────────────────────────────
-    // Anchor below the status bar so the bar stays visible/usable
+    // Fullscreen layer-shell surface so the wallpaper-blur (via
+    // BackgroundEffect.blurRegion on backdrop) extends edge-to-edge.
+    // The status bar is on a higher layer and stays visible/usable above it.
     anchors { top: true; bottom: true; left: true; right: true }
-    margins.top: Theme.barHeight + Theme.barMargin * 2
 
     // ── Categories ──────────────────────────────────────
     property list<LauncherCategory> categories: [
@@ -400,16 +401,14 @@ OverlayWindow {
                                 text: modelData.tabIcon
                                 font.family: Theme.iconFont
                                 font.pixelSize: Theme.fontSizeSmall
-                                color: launcher.activeTab === index ? Theme.fg : Theme.fgDim
-                                Behavior on color { ColorAnimation { duration: Theme.animNormal } }
+                                color: Theme.fg
                             }
 
                             Text {
                                 text: modelData.tabLabel
                                 font.family: Theme.fontFamily
                                 font.pixelSize: Theme.fontSizeSmall
-                                color: launcher.activeTab === index ? Theme.fg : Theme.fgDim
-                                Behavior on color { ColorAnimation { duration: Theme.animNormal } }
+                                color: Theme.fg
                             }
                         }
 
@@ -429,7 +428,7 @@ OverlayWindow {
                     text: Theme.iconSearch
                     font.family: Theme.iconFont
                     font.pixelSize: Theme.fontSizeMedium
-                    color: Theme.fgDim
+                    color: Theme.fg
                     Layout.alignment: Qt.AlignVCenter
                 }
 
@@ -521,7 +520,7 @@ OverlayWindow {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: launcher.activeCategory.searchPlaceholder
-                        color: Theme.fgDim
+                        color: Theme.fg
                         font: parent.font
                         visible: !parent.text
                     }
