@@ -28,7 +28,7 @@ Item {
 
     Behavior on width {
         enabled: launcher && launcher.isOpen && !launcher._suppressCarouselAnim
-        NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic }
+        NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.InOutQuad }
     }
     Behavior on opacity {
         enabled: launcher && launcher.isOpen && !launcher._suppressCarouselAnim

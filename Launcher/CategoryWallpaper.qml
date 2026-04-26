@@ -58,17 +58,20 @@ LauncherCategory {
 
     // ── Settled-selection debounce ──
     // Full-resolution wallpaper decode is expensive (4K JPEG → tens of MB
-    // before sourceSize downscale). Scrolling rapidly triggers one decode
-    // per selection change → CPU pegs at 100%. Instead, the expanded card
-    // shows the cached thumbnail during scroll and only loads the full-res
-    // source once selection has been idle for _settleTimer.interval ms.
-    // Interval matches the carousel width animation so the full-res image
-    // appears after motion has stopped, avoiding a mid-animation snap as
-    // the overlay fades in over still-moving cards.
-    property int _settledIndex: launcher.selectedIndex
+    // before sourceSize downscale). Scrolling rapidly would trigger one
+    // decode per selection change. The expanded card shows the cached
+    // thumbnail during scroll and only loads the full-res source once
+    // selection has been idle for _settleTimer.interval ms — short enough
+    // that the fade-in overlaps (and ends with) the carousel motion, so
+    // the user sees one continuous animation rather than motion-then-fade.
+    // Plain int (not a binding) — initialize once, then update only via the
+    // timer. A live binding would track selectedIndex on the very first nav
+    // (before the timer ever fires), bypassing the debounce.
+    property int _settledIndex: 0
+    Component.onCompleted: _settledIndex = launcher.selectedIndex
     Timer {
         id: _settleTimer
-        interval: Theme.animCarousel
+        interval: 80
         onTriggered: root._settledIndex = launcher.selectedIndex
     }
     Connections {

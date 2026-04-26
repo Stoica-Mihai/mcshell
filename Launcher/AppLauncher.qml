@@ -611,7 +611,7 @@ OverlayWindow {
 
                 Behavior on x {
                     enabled: launcher.isOpen && !launcher._suppressCarouselAnim
-                    NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.InOutQuad }
                 }
 
                 Repeater {
