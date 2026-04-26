@@ -9,7 +9,9 @@ import qs.Widgets
 OverlayWindow {
     id: launcher
     namespace: Namespaces.launcher
-    active: isOpen
+    // Stay active while the close animation is still playing so the surface
+    // (and its blur region) doesn't tear down mid-fade.
+    active: isOpen || _animProgress > 0
 
     // ── Public API ──────────────────────────────────────
     property bool isOpen: false
@@ -235,7 +237,10 @@ OverlayWindow {
     // ── UI ──────────────────────────────────────────────
 
     // Wallpaper-and-app blur behind the whole launcher when blur is on.
-    BackgroundEffect.blurRegion: UserSettings.blurEnabled && launcher.isOpen
+    // Gate on _animProgress (not isOpen) so blur persists through the close
+    // animation — otherwise the blur drops the moment close starts and the
+    // remainder of the fade plays unblurred.
+    BackgroundEffect.blurRegion: UserSettings.blurEnabled && launcher._animProgress > 0
         ? launcherBlurRegion : null
     Region { id: launcherBlurRegion; item: backdrop }
 
