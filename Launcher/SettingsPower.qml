@@ -1,6 +1,5 @@
 import QtQuick
 import QtQuick.Layouts
-import QtQuick.Shapes
 import Quickshell
 import Quickshell.Io
 import qs.Widgets
@@ -104,10 +103,8 @@ SettingsPanel {
     // Danger actions (reboot, shutdown) arm a 3s countdown on first Enter,
     // fire when it expires, and cancel on a second Enter press.
     readonly property int _confirmDuration: 3000
-    readonly property int _ringSize: 36
-    readonly property real _ringCenter: _ringSize / 2
-    readonly property real _ringRadius: (_ringSize - _ringStroke) / 2
-    readonly property real _ringStroke: 2.5
+    readonly property int _pillWidth: 48
+    readonly property int _pillHeight: 22
 
     property int _confirmingItem: -1
     property real _confirmProgress: 0
@@ -202,55 +199,39 @@ SettingsPanel {
                 Layout.fillWidth: true
             }
 
-            // Hold-to-confirm ring (danger actions only)
+            // Hold-to-confirm pill (danger actions only) — parallelogram with
+            // a left-to-right progress fill that follows the same slant.
             Item {
                 visible: modelData.danger
-                implicitWidth: root._ringSize
-                implicitHeight: root._ringSize
+                implicitWidth: root._pillWidth
+                implicitHeight: root._pillHeight
 
-                Shape {
+                // Background pill
+                SkewRect {
                     anchors.fill: parent
-                    preferredRendererType: Shape.CurveRenderer
-
-                    // Background ring
-                    ShapePath {
-                        fillColor: "transparent"
-                        strokeWidth: root._ringStroke
-                        strokeColor: Theme.accentLight
-                        PathAngleArc {
-                            centerX: root._ringCenter
-                            centerY: root._ringCenter
-                            radiusX: root._ringRadius
-                            radiusY: root._ringRadius
-                            startAngle: -90
-                            sweepAngle: 360
-                        }
-                    }
-
-                    // Progress ring — color transitions accent → red over time
-                    ShapePath {
-                        fillColor: "transparent"
-                        strokeWidth: root._ringStroke
-                        capStyle: ShapePath.RoundCap
-                        strokeColor: _isConfirming ? _confirmColor : "transparent"
-                        PathAngleArc {
-                            centerX: root._ringCenter
-                            centerY: root._ringCenter
-                            radiusX: root._ringRadius
-                            radiusY: root._ringRadius
-                            startAngle: -90
-                            sweepAngle: _isConfirming ? root._confirmProgress * 360 : 0
-                        }
-                    }
+                    fillColor: Theme.accentLight
+                    strokeColor: Theme.withAlpha(_isConfirming ? _confirmColor : Theme.accent, 0.4)
+                    strokeWidth: 1
                 }
 
-                // Seconds countdown inside the ring (static "3" when idle).
+                // Progress fill — own parallelogram with the same skew, so its
+                // right edge follows the diagonal as it grows left-to-right.
+                SkewRect {
+                    visible: _isConfirming
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: parent.width * root._confirmProgress
+                    fillColor: _confirmColor
+                }
+
+                // Seconds countdown
                 Text {
                     anchors.centerIn: parent
                     text: root._remainingSeconds
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeMini
-                    color: _isConfirming ? _confirmColor : Theme.fgDim
+                    color: _isConfirming ? Theme.accentFg : Theme.fgDim
                 }
             }
         }
