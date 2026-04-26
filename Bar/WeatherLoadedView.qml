@@ -11,7 +11,7 @@ ColumnLayout {
 
     Layout.fillWidth: true
     spacing: Theme.spacingSmall
-    opacity: (weather && weather.fetchState === "loading") ? 0.55 : 1.0
+    opacity: (weather && weather.fetchState === "loading") ? Theme.opacityLoading : 1.0
     Behavior on opacity { NumberAnimation { duration: Theme.animFast } }
 
     // Header — location

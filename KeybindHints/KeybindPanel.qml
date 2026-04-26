@@ -151,7 +151,7 @@ BarPopupWindow {
                             anchors.fill: parent
                             anchors.topMargin: 4
                             anchors.bottomMargin: 2
-                            color: Qt.rgba(0.478, 0.635, 0.969, 0.18)
+                            color: Theme.withAlpha(Theme.accent, 0.18)
                             Rectangle {
                                 width: 2
                                 anchors.top: parent.top
@@ -245,11 +245,11 @@ BarPopupWindow {
                                             id: capRect
                                             width: capText.implicitWidth + 14
                                             height: 18
-                                            color: parent.isMod ? Qt.rgba(0.733, 0.604, 0.969, 0.22)
-                                                                : Qt.rgba(0.478, 0.635, 0.969, 0.22)
+                                            color: parent.isMod ? Theme.withAlpha(Theme.secondary, 0.22)
+                                                                : Theme.withAlpha(Theme.accent, 0.22)
                                             border.width: 1
-                                            border.color: parent.isMod ? Qt.rgba(0.733, 0.604, 0.969, 0.55)
-                                                                       : Qt.rgba(0.478, 0.635, 0.969, 0.55)
+                                            border.color: parent.isMod ? Theme.withAlpha(Theme.secondary, 0.55)
+                                                                       : Theme.withAlpha(Theme.accent, 0.55)
                                             transform: Matrix4x4 {
                                                 matrix: Qt.matrix4x4(
                                                     1, Math.tan(-0.21), 0, Math.tan(-0.21) * capRect.height / 2,

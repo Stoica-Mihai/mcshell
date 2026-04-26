@@ -144,7 +144,7 @@ Item {
             SequentialAnimation on x {
                 running: progressLine.opacity > 0
                 loops: Animation.Infinite
-                NumberAnimation { from: -progressInner.width; to: progressLine.width; duration: 1200; easing.type: Easing.InOutQuad }
+                NumberAnimation { from: -progressInner.width; to: progressLine.width; duration: Theme.animMarquee; easing.type: Easing.InOutQuad }
             }
         }
     }

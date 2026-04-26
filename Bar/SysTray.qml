@@ -46,7 +46,7 @@ Item {
         target: root
         property: "_t"
         from: 0; to: 1
-        duration: 600
+        duration: Theme.animSlow
         easing.type: Easing.InOutCubic
     }
 

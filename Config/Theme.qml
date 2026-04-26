@@ -407,6 +407,7 @@ Singleton {
     readonly property real opacityMuted: 0.5
     readonly property real opacitySubtle: 0.6
     readonly property real opacitySecondary: 0.7
+    readonly property real opacityLoading: 0.55
     readonly property real opacityBody: 0.85
 
     // ── Surface alphas ──────────────────────────────────
@@ -436,6 +437,8 @@ Singleton {
     readonly property int animLockShake: 50   // lock screen error shake
     readonly property int animPopIn: 120       // element appearance pop-in
     readonly property int animElastic: 400     // elastic error shake
+    readonly property int animSlow: 600        // slow intros (SysTray ring)
+    readonly property int animMarquee: 1200    // marquee/progress sweeps
 
     // ── Notification timeouts ──────────────────────────
     readonly property int notifShort: 2000      // quick status changes (toggle on/off)
