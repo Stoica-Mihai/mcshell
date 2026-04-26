@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Qs.NiriIpc
 import qs.Config
 import qs.Widgets
 
@@ -82,7 +83,30 @@ LauncherCategory {
 
     function launchApp(entry) {
         launcher.close();
-        Qt.callLater(function() { if (entry) entry.execute(); });
+        Qt.callLater(function() {
+            if (!entry) return;
+            const win = _findRunningWindow(entry);
+            if (win) Niri.dispatch(["focus-window", "--id", win.id.toString()]);
+            else entry.execute();
+        });
+    }
+
+    // Match a DesktopEntry to a running niri window by appId. Tries the
+    // entry's startupClass first (the WM_CLASS hint from the .desktop file,
+    // explicitly meant for this), then the entry id as a fallback for
+    // Wayland-native apps where the basename matches appId.
+    function _findRunningWindow(entry) {
+        const windows = Niri.windows ? Niri.windows.values : [];
+        if (windows.length === 0) return null;
+        const sc = (entry.startupClass || "").toLowerCase();
+        const id = (entry.id || "").toLowerCase();
+        for (let i = 0; i < windows.length; i++) {
+            const a = (windows[i].appId || "").toLowerCase();
+            if (!a) continue;
+            if (sc && a === sc) return windows[i];
+            if (id && a === id) return windows[i];
+        }
+        return null;
     }
 
     // ── Card delegate ──
