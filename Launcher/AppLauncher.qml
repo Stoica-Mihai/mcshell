@@ -122,7 +122,9 @@ OverlayWindow {
     }
 
     // ── Window setup ────────────────────────────────────
+    // Anchor below the status bar so the bar stays visible/usable
     anchors { top: true; bottom: true; left: true; right: true }
+    margins.top: Theme.barHeight + Theme.barMargin * 2
 
     // ── Categories ──────────────────────────────────────
     property list<LauncherCategory> categories: [
@@ -231,10 +233,17 @@ OverlayWindow {
 
     // ── UI ──────────────────────────────────────────────
 
-    // Backdrop
+    // Wallpaper-and-app blur behind the whole launcher when blur is on.
+    BackgroundEffect.blurRegion: UserSettings.blurEnabled && launcher.isOpen
+        ? launcherBlurRegion : null
+    Region { id: launcherBlurRegion; item: backdrop }
+
+    // Backdrop — dim when blur is off (only visual separation); transparent
+    // when blur is on so the BackgroundEffect carries the look.
     Rectangle {
+        id: backdrop
         anchors.fill: parent
-        color: Theme.backdrop
+        color: UserSettings.blurEnabled ? "transparent" : Theme.backdrop
         opacity: launcher._animProgress
         MouseArea { anchors.fill: parent; onClicked: launcher.close() }
     }
@@ -264,6 +273,10 @@ OverlayWindow {
                     function onSurfaceContainerChanged() { searchBarBg.requestPaint(); }
                     function onOutlineVariantChanged() { searchBarBg.requestPaint(); }
                 }
+                Connections {
+                    target: UserSettings
+                    function onBlurEnabledChanged() { searchBarBg.requestPaint(); }
+                }
                 onPaint: {
                     var ctx = getContext("2d"), s = Theme.barDiagSlant;
                     ctx.clearRect(0, 0, width, height);
@@ -273,7 +286,8 @@ OverlayWindow {
                     ctx.lineTo(width - s, height);
                     ctx.lineTo(0, height);
                     ctx.closePath();
-                    ctx.fillStyle = Theme.withAlpha(Theme.surfaceContainer, 0.92);
+                    ctx.fillStyle = Theme.withAlpha(Theme.surfaceContainer,
+                        UserSettings.blurEnabled ? Theme.blurAlpha : 0.92);
                     ctx.fill();
                     ctx.strokeStyle = Theme.outlineVariant;
                     ctx.lineWidth = 1;

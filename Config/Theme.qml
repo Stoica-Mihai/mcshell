@@ -262,7 +262,7 @@ Singleton {
         }},
         // Vibrant: high chroma, bold tinted surfaces, hue-rotated accent
         "Vibrant": { h2Offset: 0.86, h3Offset: 0.33, bg: [0.10, 0.10, 0.14, 0.85], colors: {
-            bgSolid: ["h", 0.25, 0.13],
+            bgSolid: ["h", 0.25, 0.18],
             fg: ["h", 0.08, 0.92], fgDim: ["h", 0.12, 0.50],
             accent: ["h2", 0.75, 0.90],
             red: [0.98, 0.75, 0.92], green: [0.35, 0.65, 0.80],
