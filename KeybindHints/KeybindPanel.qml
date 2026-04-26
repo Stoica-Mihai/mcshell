@@ -20,10 +20,16 @@ BarPopupWindow {
 
     property int selectedIndex: -1
 
+    // Reassign screen BEFORE the surface activates so BackgroundEffect's
+    // blurRegion binds to the correct surface lifetime — otherwise blur
+    // never attaches when the panel opens on a non-default output.
+    onAboutToOpen: {
+        const s = FocusedOutput.screen;
+        if (s && panel.screen !== s) panel.screen = s;
+    }
+
     onIsOpenChanged: {
         if (isOpen) {
-            const s = FocusedOutput.screen;
-            if (s && panel.screen !== s) panel.screen = s;
             searchField.text = "";
             selectedIndex = -1;
             focusTimer.restart();

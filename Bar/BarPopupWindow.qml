@@ -39,7 +39,14 @@ OverlayWindow {
 
     default property alias contentData: cardContent.data
 
+    // Fires before isOpen flips to true on open() — gives subclasses a hook
+    // to reassign `screen` (or other surface-lifetime state) before the
+    // Wayland surface activates, so attached effects like BackgroundEffect
+    // bind to the correct surface.
+    signal aboutToOpen()
+
     function open() {
+        aboutToOpen();
         isOpen = true;
         closeAnim.stop();
         openAnim.start();
