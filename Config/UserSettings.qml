@@ -68,7 +68,7 @@ Singleton {
     property alias sysInfoInterval: adapter.sysInfoInterval      // ms between polls (1000/2000/5000/10000)
     property alias sysInfoTempUnit: adapter.sysInfoTempUnit      // "C" or "F"
     property alias sysInfoNetUnit: adapter.sysInfoNetUnit        // "bytes" or "bits"
-    property alias sysInfoBarMetric: adapter.sysInfoBarMetric    // "cpu", "memory", "gpu" (gpu falls back to cpu if no GPU)
+    property alias sysInfoBarMetric: adapter.sysInfoBarMetric    // "cpu", "cpu-history", "memory", "gpu" (gpu falls back to cpu if no GPU)
     property alias sysInfoShowCpu: adapter.sysInfoShowCpu          // bool — per-section dropdown visibility
     property alias sysInfoShowMemory: adapter.sysInfoShowMemory    // bool
     property alias sysInfoShowThermal: adapter.sysInfoShowThermal  // bool

@@ -47,9 +47,11 @@ FocusScope {
 
     // Bar metric values — GPU option only offered if at least one GPU is detected.
     readonly property var _barMetricValues: SysInfo.gpus.length > 0
-        ? ["cpu", "memory", "gpu"] : ["cpu", "memory"]
+        ? ["cpu", "cpu-history", "memory", "gpu"]
+        : ["cpu", "cpu-history", "memory"]
     readonly property var _barMetricLabels: SysInfo.gpus.length > 0
-        ? ["CPU load", "Memory", "GPU load"] : ["CPU load", "Memory"]
+        ? ["CPU load", "CPU history", "Memory", "GPU load"]
+        : ["CPU load", "CPU history", "Memory"]
 
     // Fixed indices into _rows so sections can look up their selection state.
     readonly property int _idxInterval:      0

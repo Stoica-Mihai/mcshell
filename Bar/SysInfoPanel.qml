@@ -69,7 +69,10 @@ ColumnLayout {
                     Layout.fillWidth: true
                 }
                 Text {
-                    text: "Load " + SysInfo.loadAvg1.toFixed(2)
+                    text: "Load "
+                        + SysInfo.loadAvg1.toFixed(2) + " / "
+                        + SysInfo.loadAvg5.toFixed(2) + " / "
+                        + SysInfo.loadAvg15.toFixed(2)
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeMini
                     color: Theme.fgDim
@@ -421,7 +424,7 @@ ColumnLayout {
         Layout.topMargin: 4
 
         Text {
-            text: SysInfo.processesTotal + " procs"
+            text: SysInfo.processesRunning + " / " + SysInfo.processesTotal + " procs"
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeMini
             color: Theme.fgDim

@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell.Services.SysInfo
 import qs.Config
+import qs.Core
 import qs.Widgets
 
 // Tiny 8-bar waveform showing CPU core load inside the capsule.
@@ -43,12 +44,18 @@ Item {
         return Math.max(0, Math.min(1, (pct / 100 - threshold) * 8));
     }
 
+    function _cpuHistorySample(i) {
+        const h = SysHistory.cpuHistory;
+        return i < h.length ? h[i] : 0;
+    }
+
     WaveformBars {
         id: wave
         anchors.centerIn: parent
 
         barHeight: function(i) {
             if (root._metric === "cpu")    return root._cpuLoad(i) / 100 * 14;
+            if (root._metric === "cpu-history") return root._cpuHistorySample(i) / 100 * 14;
             if (root._metric === "memory") return root._thresholdFill(SysInfo.memPercent, i) * 14;
             if (root._metric === "gpu") {
                 const g = UserSettings.primaryGpu();
@@ -59,6 +66,7 @@ Item {
         }
         barColor: function(i) {
             if (root._metric === "cpu") return Theme.loadColor(root._cpuLoad(i));
+            if (root._metric === "cpu-history") return Theme.loadColor(root._cpuHistorySample(i));
             if (root._metric === "memory") return Theme.loadColor(SysInfo.memPercent);
             if (root._metric === "gpu") {
                 const g = UserSettings.primaryGpu();
