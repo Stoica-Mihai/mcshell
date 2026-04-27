@@ -15,6 +15,7 @@ OverlayWindow {
 
     // ── Public API ──────────────────────────────────────
     property bool isOpen: false
+    property alias searchField: searchField
     property bool _suppressCarouselAnim: false
     Timer {
         id: _animEnableTimer

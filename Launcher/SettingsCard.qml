@@ -10,6 +10,7 @@ Item {
 
     property string source: ""
     property bool active: false
+    property var launcher: null
     readonly property string panelLegend: loader.item?.panelLegend ?? Theme.legend(Theme.hintUpDown, Theme.hintEnter + " select", Theme.hintBack)
 
     // ── Common navigation interface ──
@@ -112,7 +113,11 @@ Item {
                 id: loader
                 width: parent.width
                 source: root.source
-                onLoaded: if (item) item.active = Qt.binding(() => root.active)
+                onLoaded: {
+                    if (!item) return;
+                    item.active = Qt.binding(() => root.active);
+                    if ('launcher' in item) item.launcher = Qt.binding(() => root.launcher);
+                }
             }
         }
     }

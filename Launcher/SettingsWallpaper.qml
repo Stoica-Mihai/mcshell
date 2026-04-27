@@ -204,10 +204,12 @@ SettingsPanel {
                 onAccepted: {
                     UserSettings.wallpaperFolder = text;
                     root._editingFolder = false;
+                    root.returnFocusToLauncher();
                 }
 
                 Keys.onEscapePressed: {
                     root._editingFolder = false;
+                    root.returnFocusToLauncher();
                 }
             }
         }

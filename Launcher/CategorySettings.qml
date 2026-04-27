@@ -112,6 +112,7 @@ LauncherCategory {
                 visible: parent.isCurrent
                 source: modelData.source ?? ""
                 active: parent.isCurrent && launcher.inEdit
+                launcher: root.launcher
                 onActiveChanged: {
                     if (active) root.activeSettingsCard = settingsCard;
                 }
