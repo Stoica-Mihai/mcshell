@@ -11,13 +11,13 @@ import qs.Config
 PopupWindow {
     id: root
 
-    // grabFocus is opt-in per consumer (set on leftDropdown for the
-    // keybind search). The default is false because Wayland's xdg-popup
-    // nesting rule forbids two grabbing popups open simultaneously and
-    // the bar has three sibling dropdowns. With grabFocus the popup is
-    // a Qt::Popup (keyboard works, blur samples through the bar so app
-    // windows show through); without it, a Qt::ToolTip (mouse only,
-    // keyboard handled by the bar's layer-shell keyboardFocus).
+    // No consumer sets grabFocus: every bar dropdown stays at the
+    // PopupWindow default. The bar's mainSurface holds keyboard via its
+    // own layer-shell keyboardFocus, so popups don't need an xdg-popup
+    // grab — and not asking for one means niri never has to reject a
+    // grab whose parent has no input serial. Blur source stays correct
+    // (xdg-popups sample through the parent layer-shell, picking up
+    // app windows behind the bar).
 
     property real fullHeight: 100
     property real openFraction: 0
@@ -120,10 +120,9 @@ PopupWindow {
         }
     }
 
-    // Escape to close. Use Shortcut rather than a focus-claiming Item +
-    // Keys.onEscapePressed: the latter fights for focus with inner content
-    // (notably the keybind panel's search field), and a tree rebuild can
-    // leave the focus claim winning permanently.
+    // Escape to close. The bar's FocusScope is the primary path (it has
+    // Exclusive keyboard while a popup is open), but the Shortcut catches
+    // it via WindowShortcut context as a defensive secondary path.
     Shortcut {
         sequence: "Escape"
         enabled: root.visible

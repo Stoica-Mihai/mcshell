@@ -55,25 +55,38 @@ Scope {
     })
     onPanelToggleTriggerChanged: {
         if (!panelToggleName) return;
-        // Only the focused output's StatusBar reacts. Without this, two
-        // dropdowns try to open simultaneously on multi-monitor setups,
-        // which causes Qt::Popup parent mismatches in mTopPopup tracking
-        // (qwaylandwindow.cpp:127) and a flurry of qt.qpa.wayland warnings.
-        // FocusedOutput.name can be "" briefly at startup before niri's
-        // first IPC reply — fall back to the first screen in that window
-        // so exactly one StatusBar still dispatches.
-        const targetScreen = FocusedOutput.name !== ""
-            ? FocusedOutput.name
-            : (Quickshell.screens.length > 0 ? Quickshell.screens[0].name : "");
-        if (targetScreen !== root.screenName) return;
 
         if (panelToggleName === "weather") {
+            // Only the focused output's StatusBar opens; any screen with
+            // weather already open closes it (handled inside _toggleWeather).
+            const isOpenHere = centerDropdown.activePanel === "weather";
+            if (!isOpenHere && !_isFocusedScreen()) return;
             _toggleWeather(panelToggleMode);
             return;
         }
         const dropdown = _barPanels[panelToggleName];
         if (!dropdown) return;
-        dropdown.togglePanel(panelToggleName);
+        // Split the close-vs-open paths so two leftDropdowns can never be
+        // opened simultaneously on a multi-monitor setup (which trips Qt's
+        // mTopPopup tracker — qwaylandwindow.cpp:127). Any screen with the
+        // panel currently open closes it, regardless of which monitor the
+        // user has focused now. Open only happens on the focused screen.
+        if (dropdown.activePanel === panelToggleName) {
+            dropdown.closePanel();
+            return;
+        }
+        if (!_isFocusedScreen()) return;
+        dropdown.openPanel(panelToggleName);
+    }
+
+    // Falls back to the first screen during the brief startup window
+    // before niri replies with its focused output, so exactly one
+    // StatusBar still wins the open dispatch.
+    function _isFocusedScreen() {
+        const target = FocusedOutput.name !== ""
+            ? FocusedOutput.name
+            : (Quickshell.screens.length > 0 ? Quickshell.screens[0].name : "");
+        return target === root.screenName;
     }
 
     // Weather has two modes — "edit" shows the location search, "view"
@@ -882,15 +895,10 @@ Scope {
     AnimatedPopup {
         id: leftDropdown
 
-        // Keybind panel has a search field, so this dropdown takes a
-        // Wayland xdg-popup grab to receive keyboard input. Without the
-        // grab the popup is a Qt::ToolTip and never gets focus. The bar's
-        // other dropdowns stay at the default (no grab) since they don't
-        // need keyboard. App-window blur — the user's hard requirement
-        // here — only works for xdg-popups of the bar layer-shell, so
-        // this stays as an AnimatedPopup rather than an OverlayWindow.
-        grabFocus: true
-
+        // grabFocus stays off (PopupWindow default). The keybind panel is
+        // a read-only overlay with no text input, so it never needs the
+        // xdg-popup grab — and not asking for it means niri never has to
+        // reject a grab whose parent layer-shell has no input serial.
         autoPosition: false
         anchorSection: leftSection
         anchorX: 0
@@ -913,7 +921,6 @@ Scope {
             visible: leftDropdown.activePanel === "keybinds"
             enabled: visible
             anchors.fill: parent
-            windowOpen: visible
         }
     }
 

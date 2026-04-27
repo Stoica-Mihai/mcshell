@@ -6,50 +6,18 @@ import qs.Widgets
 
 // Keybind dropdown content — hosted inside the left AnimatedPopup. Content
 // only (no window): the parent dropdown owns chrome, animation, and blur.
-FocusScope {
+//
+// Read-only overlay: scroll the list with the mouse wheel, dismiss with
+// Escape (handled by the bar's FocusScope) or by toggling the keybind
+// again. No search field — the popup runs without xdg-popup grab to keep
+// the parent layer-shell free of niri's input-serial requirement, which
+// means a TextInput inside the popup cannot receive keyboard events.
+Item {
     id: panel
-
-    // Mirrors the parent dropdown's open state — true while activePanel ===
-    // "keybinds". Used to reset state and steal focus on re-open.
-    property bool windowOpen: false
 
     readonly property real fullHeight: 460
 
-    property int selectedIndex: -1
-
-    onWindowOpenChanged: {
-        if (windowOpen) {
-            searchField.text = "";
-            selectedIndex = -1;
-            focusTimer.restart();
-        }
-    }
-
-    // After a hot-reload the panel may be re-created with windowOpen
-    // already true (no transition), so onWindowOpenChanged never fires —
-    // focus the field here too.
-    Component.onCompleted: if (windowOpen) focusTimer.restart()
-
-    Timer {
-        id: focusTimer
-        interval: Theme.animSmooth + 50
-        onTriggered: if (panel.windowOpen) searchField.field.forceActiveFocus()
-    }
-
-    function navigate(dir) {
-        const groups = parser.filteredGroups;
-        let i = selectedIndex + dir;
-        while (i >= 0 && i < groups.length && groups[i].isHeader) i += dir;
-        if (i < 0 || i >= groups.length) return;
-        selectedIndex = i;
-        bindList.positionViewAtIndex(i, ListView.Contain);
-    }
-
-    KeybindParser {
-        id: parser
-        filterText: searchField.text
-        onFilteredGroupsChanged: panel.selectedIndex = -1
-    }
+    KeybindParser { id: parser }
 
     anchors.fill: parent
 
@@ -92,28 +60,6 @@ FocusScope {
             color: Theme.outlineVariant
         }
 
-        SkewTextField {
-            id: searchField
-            Layout.fillWidth: true
-            Layout.leftMargin: Theme.spacingLarge
-            Layout.rightMargin: Theme.spacingLarge
-            Layout.topMargin: 8
-            Layout.bottomMargin: 4
-            icon: Theme.iconSearch
-            placeholder: "Filter keybindings..."
-
-            field.Keys.onPressed: event => {
-                if (event.key === Qt.Key_Down) {
-                    panel.navigate(1);
-                    event.accepted = true;
-                } else if (event.key === Qt.Key_Up) {
-                    panel.navigate(-1);
-                    event.accepted = true;
-                }
-                // Escape falls through to AnimatedPopup's built-in handler.
-            }
-        }
-
         // ── Scrollable list ──────────────────────────────
         ListView {
             id: bindList
@@ -121,6 +67,7 @@ FocusScope {
             Layout.fillHeight: true
             Layout.leftMargin: 6
             Layout.rightMargin: 6
+            Layout.topMargin: 4
             clip: true
             model: parser.filteredGroups
             boundsBehavior: Flickable.StopAtBounds
@@ -206,8 +153,7 @@ FocusScope {
                     Rectangle {
                         width: delegateLoader.width
                         height: 28
-                        color: delegateLoader.index === panel.selectedIndex ? Theme.overlayHover
-                             : rowHover.hovered ? Theme.bgHover : "transparent"
+                        color: rowHover.hovered ? Theme.bgHover : "transparent"
 
                         Behavior on color { ColorAnimation { duration: Theme.animFast } }
 
@@ -325,16 +271,7 @@ FocusScope {
             Item { Layout.fillWidth: true }
 
             Text {
-                text: {
-                    const total = parser.allBindings.length;
-                    let shown = 0;
-                    for (let i = 0; i < parser.filteredGroups.length; i++) {
-                        if (!parser.filteredGroups[i].isHeader) shown++;
-                    }
-                    if (searchField.text && shown === 0) return "no match";
-                    if (searchField.text) return `${shown} / ${total}`;
-                    return "ESC close";
-                }
+                text: "ESC close"
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeMini
                 color: Theme.fgDim
