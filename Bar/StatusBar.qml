@@ -9,20 +9,21 @@ import qs.Config
 import qs.Core
 import qs.Widgets
 import qs.NotificationHistory
+import qs.KeybindHints
 
 Scope {
     id: root
 
     property string screenName: ""
     property var screen: null
-    // keybindOpen mirrors the shell-level KeybindOverlay's isOpen so the
-    // bar's mainSurface input mask expands when the keybind hints panel
-    // is active even though it lives outside this StatusBar.
-    property bool keybindOpen: false
-    signal keybindDismissRequested()
+    // launcherOpen is set by shell.qml; when it flips on we dismiss any
+    // open bar dropdown so the launcher's fullscreen surface isn't
+    // overlapped by a stale popup.
+    property bool launcherOpen: false
+    onLauncherOpenChanged: if (launcherOpen) dismissPopups()
     property bool hasPopup: sharedDropdown.activePanel !== ""
         || centerDropdown.activePanel !== ""
-        || keybindOpen
+        || leftDropdown.activePanel !== ""
 
     property int unreadNotifications: 0
     property var notifHistoryModel: null
@@ -40,6 +41,7 @@ Scope {
     property string panelToggleMode: ""
     // Dispatch table mapping panel names → owning dropdown.
     readonly property var _barPanels: ({
+        keybinds:        leftDropdown,
         calendar:        centerDropdown,
         weather:         centerDropdown,
         clockSettings:   centerDropdown,
@@ -53,10 +55,17 @@ Scope {
     })
     onPanelToggleTriggerChanged: {
         if (!panelToggleName) return;
-        // Multi-monitor: only the StatusBar on niri's focused output reacts.
-        // FocusedOutput.name is "" until niri's first IPC reply — fall
-        // through and open everywhere during that bootstrap window.
-        if (FocusedOutput.name !== "" && FocusedOutput.name !== root.screenName) return;
+        // Only the focused output's StatusBar reacts. Without this, two
+        // dropdowns try to open simultaneously on multi-monitor setups,
+        // which causes Qt::Popup parent mismatches in mTopPopup tracking
+        // (qwaylandwindow.cpp:127) and a flurry of qt.qpa.wayland warnings.
+        // FocusedOutput.name can be "" briefly at startup before niri's
+        // first IPC reply — fall back to the first screen in that window
+        // so exactly one StatusBar still dispatches.
+        const targetScreen = FocusedOutput.name !== ""
+            ? FocusedOutput.name
+            : (Quickshell.screens.length > 0 ? Quickshell.screens[0].name : "");
+        if (targetScreen !== root.screenName) return;
 
         if (panelToggleName === "weather") {
             _toggleWeather(panelToggleMode);
@@ -91,7 +100,7 @@ Scope {
     function dismissPopups() {
         sharedDropdown.closePanel();
         centerDropdown.closePanel();
-        if (keybindOpen) keybindDismissRequested();
+        leftDropdown.closePanel();
     }
 
     // ── Exclusive zone — reserves bar space, no content ────
@@ -146,11 +155,9 @@ Scope {
         WlrLayershell.namespace: Namespaces.root
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.exclusionMode: ExclusionMode.Ignore
-        // Grab keyboard focus while a bar dropdown is open so Escape reaches
-        // the bar's FocusScope. The keybind overlay manages its own keyboard
-        // via its layer surface — yield exclusive focus when only it is open
-        // so the search field can actually receive input.
-        WlrLayershell.keyboardFocus: (root.hasPopup && !root.keybindOpen)
+        // Grab keyboard focus while any dropdown is open so Escape and
+        // typed input reach the active panel.
+        WlrLayershell.keyboardFocus: root.hasPopup
             ? WlrKeyboardFocus.Exclusive
             : WlrKeyboardFocus.None
 
@@ -871,8 +878,44 @@ Scope {
         }
     }
 
-    // (The keybind hints panel now lives in shell.qml as a layer-shell
-    // KeybindOverlay — see KeybindHints/KeybindOverlay.qml for why.)
+    // Left dropdown — keybind hints panel.
+    AnimatedPopup {
+        id: leftDropdown
+
+        // Keybind panel has a search field, so this dropdown takes a
+        // Wayland xdg-popup grab to receive keyboard input. Without the
+        // grab the popup is a Qt::ToolTip and never gets focus. The bar's
+        // other dropdowns stay at the default (no grab) since they don't
+        // need keyboard. App-window blur — the user's hard requirement
+        // here — only works for xdg-popups of the bar layer-shell, so
+        // this stays as an AnimatedPopup rather than an OverlayWindow.
+        grabFocus: true
+
+        autoPosition: false
+        anchorSection: leftSection
+        anchorX: 0
+        implicitWidth: Theme.barSideWidth - Theme.barDiagSlant
+        anchor.adjustment: PopupAdjustment.None
+
+        fullHeight: {
+            switch (leftDropdown.activePanel) {
+            case "keybinds": return keybindContent.fullHeight;
+            default: return 100;
+            }
+        }
+
+        onVisibleChanged: {
+            if (!visible) leftDropdown.activePanel = "";
+        }
+
+        KeybindPanel {
+            id: keybindContent
+            visible: leftDropdown.activePanel === "keybinds"
+            enabled: visible
+            anchors.fill: parent
+            windowOpen: visible
+        }
+    }
 
     // Recording state (passed from shell.qml)
     property bool isRecording: false

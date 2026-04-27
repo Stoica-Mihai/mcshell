@@ -16,5 +16,4 @@ Singleton {
     readonly property string screenshot:       _prefix + "-screenshot"
     readonly property string wallpaper:        _prefix + "-wallpaper"
     readonly property string notifications:    _prefix + "-notifications"
-    readonly property string keybinds:         _prefix + "-keybinds"
 }
