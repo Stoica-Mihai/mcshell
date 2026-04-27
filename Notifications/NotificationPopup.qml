@@ -130,7 +130,7 @@ Item {
     // ── Notification server (DBus daemon) ─────────────────
     NotificationServer {
         id: server
-        keepOnReload: false
+        keepOnReload: true
         imageSupported: true
         actionsSupported: true
         inlineReplySupported: true

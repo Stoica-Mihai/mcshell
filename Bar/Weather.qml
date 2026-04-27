@@ -84,15 +84,17 @@ Item {
         humidity = data.current?.relativehumidity_2m?.[0] ?? 0;
 
         // Hourly — pick next 8 hours starting from current hour
-        const nowHour = new Date().getHours();
+        const now = new Date();
+        const nowHour = now.getHours();
+        const today = now.getDate();
         const hourlyArr = [];
         const times = data.hourly?.time ?? [];
         const temps = data.hourly?.temperature_2m ?? [];
         const codes = data.hourly?.weathercode ?? [];
         let startIdx = 0;
         for (let i = 0; i < times.length; i++) {
-            if (new Date(times[i]).getHours() === nowHour
-                && new Date(times[i]).getDate() === new Date().getDate()) {
+            const t = new Date(times[i]);
+            if (t.getHours() === nowHour && t.getDate() === today) {
                 startIdx = i;
                 break;
             }
