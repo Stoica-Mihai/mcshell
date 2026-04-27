@@ -11,6 +11,14 @@ import qs.Config
 PopupWindow {
     id: root
 
+    // Without grabFocus the underlying QQuickWindow is created with the
+    // Qt::ToolTip flag (popupwindow.cpp), which never receives keyboard
+    // focus — fine for sliders and buttons, fatal for the keybind panel's
+    // search field. With grabFocus the window uses Qt::Popup, the
+    // compositor routes keyboard input, and click-outside dismissal is
+    // handled by the xdg-popup grab natively.
+    grabFocus: true
+
     property real fullHeight: 100
     property real openFraction: 0
     property bool isOpen: false
@@ -112,10 +120,13 @@ PopupWindow {
         }
     }
 
-    // Escape to close
-    Item {
-        anchors.fill: parent
-        focus: root.visible
-        Keys.onEscapePressed: root.close()
+    // Escape to close. Use Shortcut rather than a focus-claiming Item +
+    // Keys.onEscapePressed: the latter fights for focus with inner content
+    // (notably the keybind panel's search field), and a tree rebuild can
+    // leave the focus claim winning permanently.
+    Shortcut {
+        sequence: "Escape"
+        enabled: root.visible
+        onActivated: root.close()
     }
 }

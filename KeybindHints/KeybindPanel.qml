@@ -25,6 +25,11 @@ FocusScope {
         }
     }
 
+    // After a hot-reload the panel may be re-created with windowOpen
+    // already true (no transition), so onWindowOpenChanged never fires —
+    // focus the field here too.
+    Component.onCompleted: if (windowOpen) focusTimer.restart()
+
     Timer {
         id: focusTimer
         interval: Theme.animSmooth + 50
