@@ -870,6 +870,11 @@ Scope {
     AnimatedPopup {
         id: leftDropdown
 
+        // The keybind panel has a search field, so this dropdown is the
+        // only one that needs to actually receive keyboard input. See
+        // AnimatedPopup for why this stays opt-in rather than default.
+        grabFocus: true
+
         autoPosition: false
         anchorSection: leftSection
         anchorX: 0

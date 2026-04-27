@@ -11,13 +11,12 @@ import qs.Config
 PopupWindow {
     id: root
 
-    // Without grabFocus the underlying QQuickWindow is created with the
-    // Qt::ToolTip flag (popupwindow.cpp), which never receives keyboard
-    // focus — fine for sliders and buttons, fatal for the keybind panel's
-    // search field. With grabFocus the window uses Qt::Popup, the
-    // compositor routes keyboard input, and click-outside dismissal is
-    // handled by the xdg-popup grab natively.
-    grabFocus: true
+    // grabFocus is opt-in per consumer (set on leftDropdown for the
+    // keybind search). Default false because Wayland's xdg-popup nesting
+    // rule forbids two grabbing popups being open simultaneously, and the
+    // bar has three independent dropdowns that can chain into each other.
+    // Without grabFocus the popup is a Qt::ToolTip — mouse works, keyboard
+    // is handled by the bar's own layer-shell keyboardFocus.
 
     property real fullHeight: 100
     property real openFraction: 0
