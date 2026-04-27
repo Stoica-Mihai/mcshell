@@ -11,12 +11,13 @@ import qs.Config
 PopupWindow {
     id: root
 
-    // grabFocus is opt-in per consumer (set on leftDropdown for the
-    // keybind search). Default false because Wayland's xdg-popup nesting
-    // rule forbids two grabbing popups being open simultaneously, and the
-    // bar has three independent dropdowns that can chain into each other.
-    // Without grabFocus the popup is a Qt::ToolTip — mouse works, keyboard
-    // is handled by the bar's own layer-shell keyboardFocus.
+    // No consumer sets grabFocus: every bar dropdown stays at the
+    // PopupWindow default (Qt::ToolTip — mouse works, no keyboard).
+    // Wayland's xdg-popup nesting rule forbids two grabbing popups open
+    // at once, and the bar has multiple sibling dropdowns. Panels that
+    // genuinely need keyboard input live as layer-shell OverlayWindows
+    // instead (see KeybindHints/KeybindOverlay.qml). Escape is handled by
+    // the StatusBar's FocusScope via the layer-shell keyboardFocus.
 
     property real fullHeight: 100
     property real openFraction: 0

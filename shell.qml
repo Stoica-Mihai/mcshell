@@ -14,6 +14,7 @@ import qs.LockScreen
 import qs.Polkit
 import qs.Wallpaper
 import qs.Screenshot
+import qs.KeybindHints
 import Qs.DataControl
 import qs.Core
 import Quickshell.Bluetooth
@@ -44,7 +45,6 @@ ShellRoot {
         calendar:        ["view"],
         clockSettings:   ["view"],
         sysInfoSettings: ["view"],
-        keybinds:        ["view"],
         volume:          ["view"],
         notifications:   ["view"],
         media:           ["view"],
@@ -118,12 +118,14 @@ ShellRoot {
             notifHistoryModel: notifPopup.historyModel
             mediaPlaying: shell._mediaPlaying
             isRecording: recordingLoader.item?.active ?? false
+            keybindOpen: keybindOverlay.isOpen
             onLauncherRequested: shell._toggleLauncher()
             onWifiRequested: shell._dispatchLauncher("wifi", "", "")
             onBluetoothRequested: shell._dispatchLauncher("bluetooth", "", "")
             onNotifRemoved: nid => notifPopup.removeHistoryById(nid)
             onNotifCleared: notifPopup.clearHistory()
             onNotifPanelOpened: notifPopup.markAllRead()
+            onKeybindDismissRequested: keybindOverlay.close()
             panelToggleTrigger: shell._toggleCounter
             panelToggleName: shell._togglePanel
             panelToggleMode: shell._toggleMode
@@ -131,6 +133,7 @@ ShellRoot {
     }
 
     NotificationPopup { id: notifPopup }
+    KeybindOverlay { id: keybindOverlay }
     LockScreen {
         id: lockScreen
         Component.onCompleted: ShellActions.lockScreen = lockScreen
@@ -197,7 +200,7 @@ ShellRoot {
         function launcherWallpaper(mode: string, target: string): void { shell._dispatchLauncher("wallpaper", mode, target); }
         function launcherSettings(mode: string, target: string): void { shell._dispatchLauncher("settings", mode, target); }
 
-        function toggleKeybinds(mode: string): void { shell._dispatchPanel("keybinds", mode); }
+        function toggleKeybinds(mode: string): void { keybindOverlay.toggle(); }
         function lock(): void { ShellActions.lock(); }
         function toggleDnd(): void { UserSettings.doNotDisturb = !UserSettings.doNotDisturb; }
         function setWallpaper(path: string): void { ShellActions.setWallpaper(path); }

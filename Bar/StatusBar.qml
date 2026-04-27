@@ -9,16 +9,20 @@ import qs.Config
 import qs.Core
 import qs.Widgets
 import qs.NotificationHistory
-import qs.KeybindHints
 
 Scope {
     id: root
 
     property string screenName: ""
     property var screen: null
+    // keybindOpen mirrors the shell-level KeybindOverlay's isOpen so the
+    // bar's mainSurface input mask expands when the keybind hints panel
+    // is active even though it lives outside this StatusBar.
+    property bool keybindOpen: false
+    signal keybindDismissRequested()
     property bool hasPopup: sharedDropdown.activePanel !== ""
         || centerDropdown.activePanel !== ""
-        || leftDropdown.activePanel !== ""
+        || keybindOpen
 
     property int unreadNotifications: 0
     property var notifHistoryModel: null
@@ -36,7 +40,6 @@ Scope {
     property string panelToggleMode: ""
     // Dispatch table mapping panel names → owning dropdown.
     readonly property var _barPanels: ({
-        keybinds:        leftDropdown,
         calendar:        centerDropdown,
         weather:         centerDropdown,
         clockSettings:   centerDropdown,
@@ -88,7 +91,7 @@ Scope {
     function dismissPopups() {
         sharedDropdown.closePanel();
         centerDropdown.closePanel();
-        leftDropdown.closePanel();
+        if (keybindOpen) keybindDismissRequested();
     }
 
     // ── Exclusive zone — reserves bar space, no content ────
@@ -143,9 +146,11 @@ Scope {
         WlrLayershell.namespace: Namespaces.root
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.exclusionMode: ExclusionMode.Ignore
-        // Grab keyboard focus while any dropdown is open so typed input
-        // and Escape reach the active panel.
-        WlrLayershell.keyboardFocus: root.hasPopup
+        // Grab keyboard focus while a bar dropdown is open so Escape reaches
+        // the bar's FocusScope. The keybind overlay manages its own keyboard
+        // via its layer surface — yield exclusive focus when only it is open
+        // so the search field can actually receive input.
+        WlrLayershell.keyboardFocus: (root.hasPopup && !root.keybindOpen)
             ? WlrKeyboardFocus.Exclusive
             : WlrKeyboardFocus.None
 
@@ -866,40 +871,8 @@ Scope {
         }
     }
 
-    // Left dropdown — keybind hints panel.
-    AnimatedPopup {
-        id: leftDropdown
-
-        // The keybind panel has a search field, so this dropdown is the
-        // only one that needs to actually receive keyboard input. See
-        // AnimatedPopup for why this stays opt-in rather than default.
-        grabFocus: true
-
-        autoPosition: false
-        anchorSection: leftSection
-        anchorX: 0
-        implicitWidth: Theme.barSideWidth - Theme.barDiagSlant
-        anchor.adjustment: PopupAdjustment.None
-
-        fullHeight: {
-            switch (leftDropdown.activePanel) {
-            case "keybinds": return keybindContent.fullHeight;
-            default: return 100;
-            }
-        }
-
-        onVisibleChanged: {
-            if (!visible) leftDropdown.activePanel = "";
-        }
-
-        KeybindPanel {
-            id: keybindContent
-            visible: leftDropdown.activePanel === "keybinds"
-            enabled: visible
-            anchors.fill: parent
-            windowOpen: visible
-        }
-    }
+    // (The keybind hints panel now lives in shell.qml as a layer-shell
+    // KeybindOverlay — see KeybindHints/KeybindOverlay.qml for why.)
 
     // Recording state (passed from shell.qml)
     property bool isRecording: false
