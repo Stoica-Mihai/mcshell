@@ -64,6 +64,11 @@ Item {
         function onValuesChanged() { root.updatePlayer() }
     }
 
+    // Seed from already-running MPRIS players on construction. Without
+    // this a QML hot-reload re-creates Media with player=null and stays
+    // empty until the player happens to fire a state change.
+    Component.onCompleted: updatePlayer()
+
     Connections {
         target: root.player
         function onPlaybackStateChanged() { root.updatePlayer() }
