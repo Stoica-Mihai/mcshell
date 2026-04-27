@@ -13,6 +13,14 @@ OverlayWindow {
     // (and its blur region) doesn't tear down mid-fade.
     active: isOpen || _animProgress > 0
 
+    // Override OverlayWindow's permanent `visible: true` so we can briefly
+    // unmap during a screen swap. niri's ext-background-effect-v1 stays
+    // bound to the wl_surface's current output; without an unmap/remap,
+    // moving the surface to a different output leaves the blur effect on
+    // the old monitor and the launcher renders unblurred on the new one.
+    visible: !_suspendVisible
+    property bool _suspendVisible: false
+
     // ── Public API ──────────────────────────────────────
     property bool isOpen: false
     property alias searchField: searchField
@@ -80,7 +88,14 @@ OverlayWindow {
     // and reassign `screen` before running the open transition.
     function _requestOpen(tab, lvl, target) {
         const s = FocusedOutput.screen;
-        if (s && launcher.screen !== s) launcher.screen = s;
+        if (s && launcher.screen !== s) {
+            // Unmap the wl_surface, swap output, remap. Without the unmap
+            // niri's ext-background-effect-v1 stays bound to the previous
+            // output and the launcher renders unblurred on the new one.
+            launcher._suspendVisible = true;
+            launcher.screen = s;
+            Qt.callLater(() => launcher._suspendVisible = false);
+        }
         _initLauncher(tab, lvl);
         if (target && activeCategory) activeCategory.onOpenTarget(target);
     }
