@@ -56,12 +56,22 @@ QtObject {
     }
 
     // ── KDL parser for niri binds block ─────────────────
+    // Niri allows attribute flags between the key and the opening brace —
+    // `repeat=false`, `cooldown-ms=150`, `allow-when-locked=true`,
+    // `hotkey-overlay-title="…"`, `allow-inhibiting=false`. Without the
+    // attribute group in these regexes, every bind that uses them is
+    // silently dropped from the hints overlay.
+    readonly property string _attrPart: "((?:\\s+[a-z][a-z\\-]*(?:=(?:\"[^\"]*\"|[^\\s{}\"]+))?)*)"
+    readonly property var _oneLinerRe: new RegExp("^([A-Za-z0-9_+\\-]+)" + _attrPart + "\\s*\\{(.+)\\}$")
+    readonly property var _multiStartRe: new RegExp("^([A-Za-z0-9_+\\-]+)" + _attrPart + "\\s*\\{$")
+
     function parseConfig(text) {
         const bindings = [];
         const lines = text.split("\n");
         let inBinds = false;
         let braceDepth = 0;
         let currentKey = "";
+        let currentAttrs = "";
         let actionLines = [];
 
         for (let i = 0; i < lines.length; i++) {
@@ -85,20 +95,22 @@ QtObject {
             const closes = countChar(trimmed, '}');
 
             if (braceDepth === 1) {
-                // Single-line bind:  Mod+Key { action "arg"; }
-                const oneLiner = trimmed.match(/^([A-Za-z0-9_+\-]+)\s+\{(.+)\}$/);
+                // Single-line bind:  Mod+Key [attrs] { action "arg"; }
+                const oneLiner = trimmed.match(_oneLinerRe);
                 if (oneLiner) {
                     const key = oneLiner[1];
-                    const body = oneLiner[2].trim().replace(/;\s*$/, "").trim();
-                    if (body) bindings.push(_makeBinding(key, body));
+                    const attrs = oneLiner[2];
+                    const body = oneLiner[3].trim().replace(/;\s*$/, "").trim();
+                    if (body) bindings.push(_makeBinding(key, attrs, body));
                     // braceDepth unchanged (opened and closed on same line)
                     continue;
                 }
 
-                // Multi-line bind start:  Mod+Key {
-                const multiStart = trimmed.match(/^([A-Za-z0-9_+\-]+)\s+\{$/);
+                // Multi-line bind start:  Mod+Key [attrs] {
+                const multiStart = trimmed.match(_multiStartRe);
                 if (multiStart) {
                     currentKey = multiStart[1];
+                    currentAttrs = multiStart[2];
                     actionLines = [];
                     braceDepth += 1; // now at depth 2
                     continue;
@@ -126,8 +138,9 @@ QtObject {
                 // Returned to depth 1 means we closed this keybind
                 if (braceDepth === 1 && currentKey) {
                     const body = actionLines.join("; ");
-                    if (body) bindings.push(_makeBinding(currentKey, body));
+                    if (body) bindings.push(_makeBinding(currentKey, currentAttrs, body));
                     currentKey = "";
+                    currentAttrs = "";
                     actionLines = [];
                 }
 
@@ -142,13 +155,28 @@ QtObject {
         applyFilter();
     }
 
-    function _makeBinding(key, body) {
+    function _makeBinding(key, attrStr, body) {
+        const attrs = _parseAttrs(attrStr);
+        const title = attrs["hotkey-overlay-title"];
         return {
             key: formatKeyCombo(key),
-            action: humanizeAction(body),
+            // Prefer the user's hotkey-overlay-title over the raw command
+            // when set — it's already a human-friendly description.
+            action: title || humanizeAction(body),
             rawAction: body,
             category: categorizeBinding(body)
         };
+    }
+
+    function _parseAttrs(attrStr) {
+        const attrs = {};
+        if (!attrStr) return attrs;
+        const re = /([a-z][a-z\-]*)(?:=(?:"([^"]*)"|([^\s{}"]+)))?/g;
+        let m;
+        while ((m = re.exec(attrStr)) !== null) {
+            attrs[m[1]] = m[2] !== undefined ? m[2] : (m[3] !== undefined ? m[3] : "true");
+        }
+        return attrs;
     }
 
     function stripComment(line) {
