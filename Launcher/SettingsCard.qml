@@ -116,7 +116,7 @@ Item {
                 onLoaded: {
                     if (!item) return;
                     item.active = Qt.binding(() => root.active);
-                    if ('launcher' in item) item.launcher = Qt.binding(() => root.launcher);
+                    if ('launcher' in item) item.launcher = root.launcher;
                 }
             }
         }
