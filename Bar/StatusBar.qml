@@ -960,18 +960,7 @@ Scope {
                                 SkewPill {
                                     required property var modelData
                                     readonly property bool isActive: modelData === media.player
-                                    // Browsers expose one MPRIS player per tab, all with the
-                                    // same identity ("Mozilla zen"). Track title disambiguates.
-                                    readonly property string _label: {
-                                        const title = modelData ? modelData.trackTitle : "";
-                                        const id = modelData ? modelData.identity : "";
-                                        if (title && title.length > 0) {
-                                            const trimmed = title.length > 22 ? title.substring(0, 21) + "…" : title;
-                                            return id ? `${id}: ${trimmed}` : trimmed;
-                                        }
-                                        return id || (modelData ? modelData.dbusName : "") || "?";
-                                    }
-                                    text: _label
+                                    text: modelData.identity || modelData.dbusName || "?"
                                     fillColor: isActive ? Theme.withAlpha(Theme.accent, 0.20) : "transparent"
                                     strokeColor: isActive ? Theme.accent : Theme.outlineVariant
                                     textColor: isActive ? Theme.accent : Theme.fg
