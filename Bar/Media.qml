@@ -72,12 +72,36 @@ Item {
         return `${m}:${ss}`;
     }
 
-    // Live / unseekable: mpv sets canSeek=false on HLS / DASH livestreams,
-    // and length is typically 0 (or absent) for live content. The 24h fall-
-    // back catches the older heuristic of players that reported a huge length.
-    readonly property bool isLive: player !== null && (
-        !player.canSeek || player.length > maxReasonableLength
-    )
+    // Live / streaming detection. Several distinct cases:
+    //   1. canSeek=false — pure live HLS where mpv refuses to seek at all.
+    //   2. canSeek=true but the stream URL is an HLS .m3u8 / DASH .mpd
+    //      manifest — common for Twitch via streamlink and YouTube via
+    //      yt-dlp, which pipe a manifest to mpv. mpv permits seeking within
+    //      the demuxer's buffered window, so canSeek alone won't fire.
+    //   3. Length > 12h — almost nothing legitimate is 12 hours long; a long
+    //      Twitch broadcast that has been live for half a day reports its
+    //      cumulative session duration via mpris:length and trips this.
+    function _isStreamUrl(url) {
+        if (!url) return false;
+        const u = String(url);
+        const lower = u.toLowerCase();
+        // HLS / DASH manifests — what streamlink-piped mpv usually sees
+        if (lower.indexOf(".m3u8") >= 0) return true;
+        if (lower.indexOf(".mpd") >= 0) return true;
+        // Twitch live: https://twitch.tv/<channel> with no /videos/ path.
+        // Browsers and mpv-via-yt-dlp both produce this xesam:url.
+        if (/^https?:\/\/(?:www\.)?twitch\.tv\/[a-z0-9_]+\/?(?:\?.*)?$/i.test(u)) return true;
+        // YouTube live page: youtube.com/<channel>/live or /live/<id>
+        if (/youtube\.com\/[^?]*\/live(?:\/|\?|$)/i.test(u)) return true;
+        return false;
+    }
+    readonly property bool isLive: {
+        if (!player) return false;
+        if (!player.canSeek) return true;
+        if (player.length > 43200) return true; // > 12h
+        const md = player.metadata;
+        return !!md && _isStreamUrl(md["xesam:url"]);
+    }
 
     Connections {
         target: Mpris.players
