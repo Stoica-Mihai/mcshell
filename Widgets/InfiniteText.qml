@@ -9,7 +9,7 @@ Item {
 
     property string text: ""
     property alias font: label.font
-    property color normalColor: Theme.fgDim
+    property color normalColor: Theme.fg
     property color hoverColor: Theme.accent
     readonly property alias hovered: mouse.containsMouse
 

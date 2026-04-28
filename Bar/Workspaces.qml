@@ -164,7 +164,7 @@ Item {
                     font.bold: true
                     color: wsItem.urgent ? Theme.red
                          : wsItem.focused ? Theme.accent
-                         : wsItem.appCount > 0 ? Theme.fgDim
+                         : wsItem.appCount > 0 ? Theme.fg
                          : Theme.overlayHover
                     Behavior on color { ColorAnimation { duration: Theme.animNormal } }
                 }

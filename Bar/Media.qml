@@ -86,7 +86,6 @@ Item {
         MediaControls {
             player: root.player
             skipSize: Theme.iconSize - 2
-            controlColor: Theme.fgDim
         }
 
         // Track info: "Artist - Title" — scrolls on hover if truncated
