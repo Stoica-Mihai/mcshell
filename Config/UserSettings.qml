@@ -77,24 +77,21 @@ Singleton {
     property alias sysInfoShowDisk: adapter.sysInfoShowDisk        // bool
 
     // ── WiFi launcher card field visibility ──
-    // Each toggle controls whether that field appears in the focused
-    // network's card. Settings popup is reachable via right-click on
-    // the WiFi bar capsule.
-    property alias wifiCardSignal: adapter.wifiCardSignal       // signal strength %
-    property alias wifiCardSecurity: adapter.wifiCardSecurity   // security type label
-    property alias wifiCardStatus: adapter.wifiCardStatus       // Connected / Available
-    property alias wifiCardBand: adapter.wifiCardBand           // 2.4 / 5 / 6 GHz
-    property alias wifiCardChannel: adapter.wifiCardChannel     // channel number
-    property alias wifiCardBssid: adapter.wifiCardBssid         // AP MAC
-    property alias wifiCardBitrate: adapter.wifiCardBitrate     // current link rate
+    property alias wifiCardSignal: adapter.wifiCardSignal
+    property alias wifiCardSecurity: adapter.wifiCardSecurity
+    property alias wifiCardStatus: adapter.wifiCardStatus
+    property alias wifiCardBand: adapter.wifiCardBand
+    property alias wifiCardChannel: adapter.wifiCardChannel
+    property alias wifiCardBssid: adapter.wifiCardBssid
+    property alias wifiCardBitrate: adapter.wifiCardBitrate
 
     // ── Bluetooth launcher card field visibility ──
-    property alias bluetoothCardType: adapter.bluetoothCardType         // device-type label
-    property alias bluetoothCardStatus: adapter.bluetoothCardStatus     // Connected / Paired / Available
-    property alias bluetoothCardBattery: adapter.bluetoothCardBattery   // battery %
-    property alias bluetoothCardAddress: adapter.bluetoothCardAddress   // MAC
-    property alias bluetoothCardRssi: adapter.bluetoothCardRssi         // RSSI dBm
-    property alias bluetoothCardClass: adapter.bluetoothCardClass       // raw Class-of-Device hex
+    property alias bluetoothCardType: adapter.bluetoothCardType
+    property alias bluetoothCardStatus: adapter.bluetoothCardStatus
+    property alias bluetoothCardBattery: adapter.bluetoothCardBattery
+    property alias bluetoothCardAddress: adapter.bluetoothCardAddress
+    property alias bluetoothCardRssi: adapter.bluetoothCardRssi
+    property alias bluetoothCardClass: adapter.bluetoothCardClass
     // Hidden GPUs: absence from the list == visible, so new GPUs auto-appear.
     // Stored as JSON-serialized string[] (same pattern as wallpaperPerScreen).
     property alias sysInfoHiddenGpusJson: adapter.sysInfoHiddenGpusJson

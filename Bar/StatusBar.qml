@@ -664,7 +664,6 @@ Scope {
                         readonly property real fullHeight: item ? item.fullHeight : 0
                     }
 
-                    // ── WiFi card-visibility settings ─────
                     Loader {
                         id: wifiSettingsContent
                         active: sharedDropdown.activePanel === "wifiSettings"
@@ -674,7 +673,6 @@ Scope {
                         readonly property real fullHeight: item ? item.fullHeight : 0
                     }
 
-                    // ── Bluetooth card-visibility settings ─
                     Loader {
                         id: bluetoothSettingsContent
                         active: sharedDropdown.activePanel === "bluetoothSettings"

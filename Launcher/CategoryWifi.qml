@@ -43,9 +43,7 @@ LauncherCategory {
     }
 
     // ── Frequency helpers ──
-    // niri's NM AccessPoint Frequency property returns MHz. Map common ranges
-    // to a band label and channel number; bands outside the standard 2.4/5/6
-    // GHz ranges fall through to a raw MHz label.
+    // NM AccessPoint Frequency is in MHz.
     function _wifiBand(mhz) {
         if (!mhz || mhz < 1) return "";
         if (mhz < 3000) return "2.4 GHz";
@@ -212,7 +210,6 @@ LauncherCategory {
                     return parts.join(Theme.separator);
                 }
 
-                // Optional BSSID / MAC line for the connected (or focused) AP.
                 Text {
                     visible: UserSettings.wifiCardBssid && !!modelData.bssid
                     Layout.alignment: Qt.AlignHCenter
