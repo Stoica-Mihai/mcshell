@@ -72,7 +72,12 @@ Item {
         return `${m}:${ss}`;
     }
 
-    readonly property bool isLive: player && player.length > maxReasonableLength
+    // Live / unseekable: mpv sets canSeek=false on HLS / DASH livestreams,
+    // and length is typically 0 (or absent) for live content. The 24h fall-
+    // back catches the older heuristic of players that reported a huge length.
+    readonly property bool isLive: player !== null && (
+        !player.canSeek || player.length > maxReasonableLength
+    )
 
     Connections {
         target: Mpris.players
