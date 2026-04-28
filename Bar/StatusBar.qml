@@ -241,7 +241,7 @@ Scope {
             height: Theme.barHeight
 
 
-            readonly property real _glassAlpha: UserSettings.blurEnabled ? Theme.blurAlpha : Theme.solidGlassAlpha
+            readonly property real _glassAlpha: UserSettings.blurEnabled ? Theme.blurBarAlpha : Theme.solidGlassAlpha
             readonly property color _bgColor: Theme.withAlpha(Theme.surfaceContainer, _glassAlpha)
 
             // ── Left segment ────────────────────────────

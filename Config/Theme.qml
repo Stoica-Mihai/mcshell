@@ -416,6 +416,7 @@ Singleton {
     readonly property real solidGlassAlpha: 0.88   // bar segments (no blur)
     readonly property real solidCardAlpha: 0.85    // notification/polkit cards (no blur)
     readonly property real blurAlpha: 0.55         // any glass surface when blur is ON
+    readonly property real blurBarAlpha: 0.78      // bar segments when blur is ON — needs more contrast for small text
 
     // Convenience: surface fill colors gated on UserSettings.blurEnabled.
     function glassSurface() {
