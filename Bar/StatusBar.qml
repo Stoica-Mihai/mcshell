@@ -945,33 +945,29 @@ Scope {
                             }
                         }
 
-                        // Player picker — chips for switching between active MPRIS players.
-                        // Only visible when more than one player is alive. Tapping a chip
-                        // pins Media to that player; an extra "Auto" chip restores the
-                        // play-priority logic.
+                        // Player picker — one chip per source identity. Multi-tab browsers
+                        // (and any source that exposes more than one MPRIS player under the
+                        // same identity) collapse into a single chip; clicking the active
+                        // chip cycles through its members.
                         Flow {
                             Layout.fillWidth: true
                             Layout.topMargin: 4
                             spacing: Theme.spacingTiny
-                            visible: Mpris.players.values.length > 1
+                            visible: media.groupedPlayers.length > 1
+                                || (media.groupedPlayers.length === 1 && media.groupedPlayers[0].players.length > 1)
 
                             Repeater {
-                                model: Mpris.players.values
+                                model: media.groupedPlayers
                                 SkewPill {
                                     required property var modelData
-                                    readonly property bool isActive: modelData === media.player
-                                    // Browsers expose one MPRIS player per tab, all with the
-                                    // same identity ("Mozilla zen"). Track title disambiguates.
-                                    readonly property string _label: {
-                                        const title = modelData ? modelData.trackTitle : "";
-                                        const id = modelData ? modelData.identity : "";
-                                        if (title && title.length > 0) {
-                                            const trimmed = title.length > 22 ? title.substring(0, 21) + "…" : title;
-                                            return id ? `${id}: ${trimmed}` : trimmed;
-                                        }
-                                        return id || (modelData ? modelData.dbusName : "") || "?";
+                                    readonly property bool isActive: modelData.players.indexOf(media.player) >= 0
+                                    readonly property int activeIndex: isActive ? modelData.players.indexOf(media.player) : -1
+                                    text: {
+                                        const n = modelData.players.length;
+                                        if (n === 1) return modelData.identity;
+                                        if (isActive) return `${modelData.identity} ${activeIndex + 1}/${n}`;
+                                        return `${modelData.identity} (${n})`;
                                     }
-                                    text: _label
                                     fillColor: isActive ? Theme.withAlpha(Theme.accent, 0.20) : "transparent"
                                     strokeColor: isActive ? Theme.accent : Theme.outlineVariant
                                     textColor: isActive ? Theme.accent : Theme.fg
@@ -980,7 +976,7 @@ Scope {
                                     MouseArea {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: media.pinPlayer(parent.modelData)
+                                        onClicked: media.selectGroup(parent.modelData.players)
                                     }
                                 }
                             }
