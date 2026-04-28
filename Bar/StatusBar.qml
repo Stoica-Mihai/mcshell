@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Bluetooth
 import Quickshell.Networking
+import Quickshell.Services.Mpris
 import Quickshell.Services.SystemTray
 import qs.Config
 import qs.Core
@@ -854,12 +855,134 @@ Scope {
                             }
                         }
 
-                        // Transport controls
-                        MediaControls {
+                        // Transport row: shuffle | prev / play / next | loop
+                        RowLayout {
                             Layout.alignment: Qt.AlignHCenter
-                            player: media.player
-                            spacing: 20
-                            playSize: Theme.iconSize + 4
+                            spacing: Theme.spacingMedium
+
+                            IconButton {
+                                icon: Theme.iconShuffle
+                                size: Theme.iconSize
+                                visible: media.player && media.player.shuffleSupported
+                                normalColor: media.player && media.player.shuffle ? Theme.accent : Theme.fg
+                                onClicked: if (media.player) media.player.shuffle = !media.player.shuffle
+                            }
+
+                            MediaControls {
+                                player: media.player
+                                spacing: 20
+                                playSize: Theme.iconSize + 4
+                            }
+
+                            IconButton {
+                                size: Theme.iconSize
+                                visible: media.player && media.player.loopSupported
+                                readonly property int _loop: media.player ? media.player.loopState : 0
+                                icon: _loop === MprisLoopState.Track ? Theme.iconLoopOne
+                                    : _loop === MprisLoopState.Playlist ? Theme.iconLoopAll
+                                    : Theme.iconLoopOff
+                                normalColor: _loop !== MprisLoopState.None ? Theme.accent : Theme.fg
+                                onClicked: {
+                                    if (!media.player) return;
+                                    const next = (media.player.loopState + 1) % 3;
+                                    media.player.loopState = next;
+                                }
+                            }
+                        }
+
+                        // Volume slider — speaker icon (mute toggle) + slider + %
+                        RowLayout {
+                            id: mediaVolumeRow
+                            Layout.fillWidth: true
+                            Layout.topMargin: 4
+                            visible: media.player && media.player.volumeSupported
+                            spacing: Theme.spacingSmall
+
+                            readonly property real _vol: media.player ? media.player.volume : 0
+                            readonly property bool _muted: _vol < 0.001
+                            // Restored when the user un-mutes — MPRIS players don't
+                            // expose a separate mute, so we have to remember what
+                            // volume to bounce back to.
+                            property real _preMuteVol: 0.5
+
+                            IconButton {
+                                size: Theme.iconSize
+                                icon: mediaVolumeRow._muted ? Theme.iconVolMuted
+                                    : mediaVolumeRow._vol < 0.3 ? Theme.iconVolLow
+                                    : mediaVolumeRow._vol < 0.7 ? Theme.iconVolMid
+                                    : Theme.iconVolHigh
+                                normalColor: mediaVolumeRow._muted ? Theme.red : Theme.fg
+                                onClicked: {
+                                    if (!media.player) return;
+                                    if (mediaVolumeRow._muted) {
+                                        media.player.volume = mediaVolumeRow._preMuteVol;
+                                    } else {
+                                        mediaVolumeRow._preMuteVol = media.player.volume;
+                                        media.player.volume = 0;
+                                    }
+                                }
+                            }
+
+                            SliderTrack {
+                                Layout.fillWidth: true
+                                value: mediaVolumeRow._vol
+                                accentColor: Theme.accent
+                                trackHeight: 4
+                                knobSize: 12
+                                step: Theme.volumeStep
+                                onMoved: function(newValue) {
+                                    if (media.player) media.player.volume = newValue;
+                                }
+                            }
+
+                            Text {
+                                Layout.preferredWidth: 32
+                                horizontalAlignment: Text.AlignRight
+                                text: Math.round(mediaVolumeRow._vol * 100) + "%"
+                                color: Theme.fgDim
+                                font.family: Theme.fontFamily
+                                font.pixelSize: Theme.fontSizeTiny
+                            }
+                        }
+
+                        // Player picker — chips for switching between active MPRIS players.
+                        // Only visible when more than one player is alive. Tapping a chip
+                        // pins Media to that player; an extra "Auto" chip restores the
+                        // play-priority logic.
+                        Flow {
+                            Layout.fillWidth: true
+                            Layout.topMargin: 4
+                            spacing: Theme.spacingTiny
+                            visible: Mpris.players.values.length > 1
+
+                            Repeater {
+                                model: Mpris.players.values
+                                Rectangle {
+                                    required property var modelData
+                                    readonly property bool isActive: modelData === media.player
+                                    radius: height / 2
+                                    color: isActive ? Theme.withAlpha(Theme.accent, 0.2) : "transparent"
+                                    border.width: 1
+                                    border.color: isActive ? Theme.accent : Theme.outlineVariant
+                                    implicitWidth: chipLabel.implicitWidth + Theme.spacingMedium * 2
+                                    implicitHeight: chipLabel.implicitHeight + Theme.spacingTiny * 2
+
+                                    Text {
+                                        id: chipLabel
+                                        anchors.centerIn: parent
+                                        text: modelData.identity || modelData.dbusName || "?"
+                                        color: parent.isActive ? Theme.accent : Theme.fg
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSizeTiny
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: media.pinPlayer(parent.modelData)
+                                    }
+                                }
+                            }
                         }
                     }
 

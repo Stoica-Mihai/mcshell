@@ -19,16 +19,31 @@ Item {
     signal togglePopup()
     signal dismissPopup()
 
-    // Pick the first active player, prefer one that's playing
+    // Pick the first active player, prefer one that's playing.
+    // Pinning (via the popup's player-picker chip) overrides auto-pick and
+    // is cleared when the pinned player goes away.
     property var player: null
+    property var pinnedPlayer: null
     property bool isPlaying: player ? player.playbackState === MprisPlaybackState.Playing : false
     property string title: player ? (player.trackTitle || "").replace(/[\r\n]/g, "") : ""
     property string artist: player ? (player.trackArtist || "") : ""
+
+    function pinPlayer(p) {
+        pinnedPlayer = (pinnedPlayer === p) ? null : p;
+        updatePlayer();
+    }
 
     function updatePlayer() {
         if (!Mpris.players || !Mpris.players.values) { player = null; return; }
 
         const all = Mpris.players.values;
+
+        if (pinnedPlayer && all.indexOf(pinnedPlayer) >= 0) {
+            player = pinnedPlayer;
+            return;
+        }
+        if (pinnedPlayer) pinnedPlayer = null;
+
         let playing = null;
         let fallback = null;
 

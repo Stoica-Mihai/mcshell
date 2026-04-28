@@ -616,6 +616,9 @@ Singleton {
     readonly property string iconWallpaper: "\u{f00ab}"
     readonly property string iconFolder: "\uf07b"
     readonly property string iconShuffle: "\uf074"
+    readonly property string iconLoopOff: "\u{f0455}"
+    readonly property string iconLoopAll: "\u{f0456}"
+    readonly property string iconLoopOne: "\u{f0457}"
     readonly property string iconExpand: "\uf065"
 
     // ── Legend hint building blocks ─────────────────────
