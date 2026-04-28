@@ -203,7 +203,7 @@ LauncherCategory {
                     if (UserSettings.bluetoothCardRssi && modelData.rssi !== 0)
                         parts.push(modelData.rssi + " dBm");
                     if (UserSettings.bluetoothCardClass && modelData.bluetoothClass)
-                        parts.push("0x" + modelData.bluetoothClass.toString(16));
+                        parts.push("Class 0x" + modelData.bluetoothClass.toString(16).padStart(6, "0"));
                     return parts.join(Theme.separator);
                 }
 
