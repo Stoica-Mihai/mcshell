@@ -957,24 +957,14 @@ Scope {
 
                             Repeater {
                                 model: Mpris.players.values
-                                Rectangle {
+                                SkewPill {
                                     required property var modelData
                                     readonly property bool isActive: modelData === media.player
-                                    radius: height / 2
-                                    color: isActive ? Theme.withAlpha(Theme.accent, 0.2) : "transparent"
-                                    border.width: 1
-                                    border.color: isActive ? Theme.accent : Theme.outlineVariant
-                                    implicitWidth: chipLabel.implicitWidth + Theme.spacingMedium * 2
-                                    implicitHeight: chipLabel.implicitHeight + Theme.spacingTiny * 2
-
-                                    Text {
-                                        id: chipLabel
-                                        anchors.centerIn: parent
-                                        text: modelData.identity || modelData.dbusName || "?"
-                                        color: parent.isActive ? Theme.accent : Theme.fg
-                                        font.family: Theme.fontFamily
-                                        font.pixelSize: Theme.fontSizeTiny
-                                    }
+                                    text: modelData.identity || modelData.dbusName || "?"
+                                    fillColor: isActive ? Theme.withAlpha(Theme.accent, 0.20) : "transparent"
+                                    strokeColor: isActive ? Theme.accent : Theme.outlineVariant
+                                    textColor: isActive ? Theme.accent : Theme.fg
+                                    fontSize: Theme.fontSizeTiny
 
                                     MouseArea {
                                         anchors.fill: parent
