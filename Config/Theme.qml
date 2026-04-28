@@ -673,7 +673,7 @@ Singleton {
         if (pct > 60) return red;
         if (pct > 30) return yellow;
         if (pct > 10) return accent;
-        return fgDim;
+        return fg;
     }
 
     // Temperature color — green (cool), yellow (warm), red (hot)

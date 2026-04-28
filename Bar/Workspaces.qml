@@ -163,8 +163,7 @@ Item {
                     font.pixelSize: Theme.fontSizeMini
                     font.bold: true
                     color: wsItem.urgent ? Theme.red
-                         : wsItem.focused ? Theme.accent
-                         : wsItem.appCount > 0 ? Theme.fg
+                         : wsItem.appCount > 0 || wsItem.focused ? Theme.fg
                          : Theme.overlayHover
                     Behavior on color { ColorAnimation { duration: Theme.animNormal } }
                 }
