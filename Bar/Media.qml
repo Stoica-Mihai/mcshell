@@ -33,46 +33,6 @@ Item {
         updatePlayer();
     }
 
-    // Players grouped by identity. Browsers expose one MPRIS player per
-    // active media tab (all sharing the same identity), so the picker
-    // collapses them into one chip-per-source and cycles within a group
-    // on repeated clicks.
-    readonly property var groupedPlayers: {
-        const all = Mpris.players ? Mpris.players.values : [];
-        const order = [];
-        const byKey = ({});
-        for (let i = 0; i < all.length; i++) {
-            const p = all[i];
-            const key = p.identity || p.dbusName || "?";
-            if (!byKey[key]) {
-                byKey[key] = { identity: key, players: [] };
-                order.push(byKey[key]);
-            }
-            byKey[key].players.push(p);
-        }
-        return order;
-    }
-
-    // Click semantics for a chip group:
-    //   - clicking the active group with >1 player → cycle to the next
-    //   - clicking the active group with 1 player → unpin (revert to auto)
-    //   - clicking a different group → pin to its first player
-    function selectGroup(players) {
-        if (!players || players.length === 0) return;
-        const idx = players.indexOf(player);
-        if (idx >= 0) {
-            if (players.length > 1) {
-                pinnedPlayer = players[(idx + 1) % players.length];
-                updatePlayer();
-                return;
-            }
-            pinPlayer(players[0]);
-            return;
-        }
-        pinnedPlayer = players[0];
-        updatePlayer();
-    }
-
     function updatePlayer() {
         if (!Mpris.players || !Mpris.players.values) { player = null; return; }
 
