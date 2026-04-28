@@ -10,7 +10,7 @@ SettingsRow {
 
     required property string label
     property bool isCurrent: false
-    property color activeColor: Theme.accent
+    property color activeColor: Theme.fg
 
     Layout.preferredHeight: 30
 

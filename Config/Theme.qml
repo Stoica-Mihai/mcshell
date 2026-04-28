@@ -13,7 +13,7 @@ Singleton {
             bg:      Qt.rgba(0.10, 0.10, 0.16, 0.85),
             bgSolid: "#1a1b26",
             fg:      "#c0caf5",
-            fgDim:   "#565f89",
+            fgDim:   "#8b94bf",
             accent:  "#7aa2f7",
             red:     "#f7768e",
             green:   "#9ece6a",
@@ -33,7 +33,7 @@ Singleton {
             bg:      Qt.rgba(0.12, 0.12, 0.18, 0.85),
             bgSolid: "#1e1e2e",
             fg:      "#cdd6f4",
-            fgDim:   "#6c7086",
+            fgDim:   "#9ca3bd",
             accent:  "#89b4fa",
             red:     "#f38ba8",
             green:   "#a6e3a1",
@@ -53,7 +53,7 @@ Singleton {
             bg:      Qt.rgba(0.16, 0.15, 0.13, 0.85),
             bgSolid: "#282828",
             fg:      "#ebdbb2",
-            fgDim:   "#928374",
+            fgDim:   "#bdaf93",
             accent:  "#83a598",
             red:     "#fb4934",
             green:   "#b8bb26",
@@ -73,7 +73,7 @@ Singleton {
             bg:      Qt.rgba(0.18, 0.20, 0.25, 0.85),
             bgSolid: "#2e3440",
             fg:      "#eceff4",
-            fgDim:   "#4c566a",
+            fgDim:   "#9cb2c2",
             accent:  "#88c0d0",
             red:     "#bf616a",
             green:   "#a3be8c",
@@ -93,7 +93,7 @@ Singleton {
             bg:      Qt.rgba(0.16, 0.16, 0.21, 0.85),
             bgSolid: "#282a36",
             fg:      "#f8f8f2",
-            fgDim:   "#6272a4",
+            fgDim:   "#adb5cb",
             accent:  "#bd93f9",
             red:     "#ff5555",
             green:   "#50fa7b",
@@ -113,7 +113,7 @@ Singleton {
             bg:      Qt.rgba(0.14, 0.13, 0.18, 0.85),
             bgSolid: "#191724",
             fg:      "#e0def4",
-            fgDim:   "#6e6a86",
+            fgDim:   "#a7a4bd",
             accent:  "#c4a7e7",
             red:     "#eb6f92",
             green:   "#9ccfd8",
@@ -133,7 +133,7 @@ Singleton {
             bg:      Qt.rgba(0.17, 0.20, 0.17, 0.85),
             bgSolid: "#2d353b",
             fg:      "#d3c6aa",
-            fgDim:   "#859289",
+            fgDim:   "#acaca9",
             accent:  "#a7c080",
             red:     "#e67e80",
             green:   "#a7c080",
@@ -250,7 +250,7 @@ Singleton {
         // Tonal: tinted surfaces, balanced chroma (like Material TonalSpot)
         "Tonal": { h2Offset: 0.17, h3Offset: 0.33, bg: [0.10, 0.10, 0.14, 0.85], colors: {
             bgSolid: ["h", 0.15, 0.12],
-            fg: ["h", 0.05, 0.90], fgDim: ["h", 0.08, 0.45],
+            fg: ["h", 0.05, 0.90], fgDim: ["h", 0.08, 0.65],
             accent: ["h", 0.60, 0.85],
             red: [0.98, 0.65, 0.90], green: [0.35, 0.55, 0.75],
             yellow: [0.11, 0.60, 0.88], cyan: [0.52, 0.55, 0.85],
@@ -263,7 +263,7 @@ Singleton {
         // Vibrant: high chroma, bold tinted surfaces, hue-rotated accent
         "Vibrant": { h2Offset: 0.86, h3Offset: 0.33, bg: [0.10, 0.10, 0.14, 0.85], colors: {
             bgSolid: ["h", 0.25, 0.18],
-            fg: ["h", 0.08, 0.92], fgDim: ["h", 0.12, 0.50],
+            fg: ["h", 0.08, 0.92], fgDim: ["h", 0.12, 0.68],
             accent: ["h2", 0.75, 0.90],
             red: [0.98, 0.75, 0.92], green: [0.35, 0.65, 0.80],
             yellow: [0.11, 0.70, 0.92], cyan: [0.52, 0.65, 0.88],
@@ -276,7 +276,7 @@ Singleton {
         // Neutral: accent from seed, pure gray surfaces
         "Neutral": { h2Offset: 0.17, h3Offset: 0.33, bg: [0.10, 0.10, 0.12, 0.85], colors: {
             bgSolid: [0, 0, 0.11],
-            fg: [0, 0, 0.88], fgDim: [0, 0, 0.42],
+            fg: [0, 0, 0.88], fgDim: [0, 0, 0.65],
             accent: ["h", 0.60, 0.85],
             red: [0.98, 0.65, 0.90], green: [0.35, 0.55, 0.75],
             yellow: [0.11, 0.60, 0.88], cyan: [0.52, 0.55, 0.85],
@@ -289,7 +289,7 @@ Singleton {
         // Muted: low chroma tinted surfaces, softer accent
         "Muted": { h2Offset: 0.17, h3Offset: 0.33, bg: [0.10, 0.10, 0.14, 0.85], colors: {
             bgSolid: ["h", 0.10, 0.12],
-            fg: ["h", 0.03, 0.85], fgDim: ["h", 0.05, 0.42],
+            fg: ["h", 0.03, 0.85], fgDim: ["h", 0.05, 0.62],
             accent: ["h", 0.35, 0.75],
             red: [0.98, 0.50, 0.80], green: [0.35, 0.40, 0.70],
             yellow: [0.11, 0.45, 0.80], cyan: [0.52, 0.40, 0.75],
