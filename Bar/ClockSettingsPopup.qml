@@ -16,6 +16,7 @@ FocusScope {
 
     readonly property alias selectedRow: nav.selectedRow
     readonly property alias rowCount: nav.rowCount
+    readonly property alias nav: nav
 
     readonly property date _exampleDate: new Date(2024, 0, 15)
 

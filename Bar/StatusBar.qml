@@ -203,10 +203,32 @@ Scope {
             onClicked: root.dismissPopups()
         }
 
-        // Escape dismisses any active dropdown.
+        // Bar dropdowns are xdg-popups without a grab, so Wayland delivers
+        // keystrokes to mainSurface (this layer-shell), not to the popup.
+        // We dispatch nav keys to whichever popup exposes a `nav` controller.
         FocusScope {
             anchors.fill: parent
             focus: root.hasPopup
+
+            function _activeNav() {
+                const items = [
+                    sharedDropdown.activePanel === "wifiSettings"      ? wifiSettingsContent.item      : null,
+                    sharedDropdown.activePanel === "bluetoothSettings" ? bluetoothSettingsContent.item : null,
+                    sharedDropdown.activePanel === "sysInfoSettings"   ? sysInfoSettingsContent.item   : null,
+                    centerDropdown.activePanel === "clockSettings"     ? clockSettingsContent          : null
+                ];
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i] && items[i].nav) return items[i].nav;
+                }
+                return null;
+            }
+
+            Keys.onUpPressed:     { const n = _activeNav(); if (n) n.navigate(-1); }
+            Keys.onDownPressed:   { const n = _activeNav(); if (n) n.navigate(1); }
+            Keys.onLeftPressed:   { const n = _activeNav(); if (n) n.adjust(-1); }
+            Keys.onRightPressed:  { const n = _activeNav(); if (n) n.adjust(1); }
+            Keys.onReturnPressed: { const n = _activeNav(); if (n) n.activate(); }
+            Keys.onSpacePressed:  { const n = _activeNav(); if (n) n.activate(); }
             Keys.onEscapePressed: root.dismissPopups()
         }
 

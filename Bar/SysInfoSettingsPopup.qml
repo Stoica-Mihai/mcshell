@@ -13,6 +13,8 @@ FocusScope {
     property bool windowOpen: false
 
     readonly property real fullHeight: content.implicitHeight + Theme.spacingNormal * 2
+    readonly property alias nav: nav
+
 
     // ── Row dispatch table ──────────────────────────────
     // Each entry describes one focusable row. `kind` drives what keyboard

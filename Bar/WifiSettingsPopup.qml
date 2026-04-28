@@ -9,6 +9,7 @@ FocusScope {
     property bool windowOpen: false
 
     readonly property real fullHeight: content.implicitHeight + Theme.spacingNormal * 2
+    readonly property alias nav: nav
 
     readonly property var _rows: [
         { kind: "check", setting: "wifiCardSignal",   label: "Signal strength" },
