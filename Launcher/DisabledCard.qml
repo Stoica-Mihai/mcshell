@@ -14,6 +14,7 @@ ParallelogramCard {
 
     width: 500
     height: 350
+    backgroundColor: Theme.glassSurface()
     bgStrokeColor: Theme.border
     bgStrokeWidth: 1
 
