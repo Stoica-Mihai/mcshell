@@ -209,7 +209,7 @@ LauncherCategory {
 
                 // MAC address
                 Text {
-                    visible: UserSettings.bluetoothCardAddress && modelData.address
+                    visible: UserSettings.bluetoothCardAddress && !!modelData.address
                     Layout.alignment: Qt.AlignHCenter
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeMini
