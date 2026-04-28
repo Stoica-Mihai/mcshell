@@ -3,6 +3,7 @@
 
 import QtQuick
 import Quickshell
+import Quickshell.DBus
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Services.Mpris
@@ -194,6 +195,24 @@ ShellRoot {
                 NotificationDispatcher.sendWithImage("Screenshot", "Window copied to clipboard", shell._windowScreenshotPath);
             }
         }
+    }
+
+    // D-Bus mirror of the IPC surface.
+    // busctl --user introspect com.mcshell.Shell /Shell
+    // busctl --user call com.mcshell.Shell /Shell com.mcshell.Shell ToggleVolume s view
+    DBusIpcHandler {
+        service: "com.mcshell.Shell"
+        path: "/Shell"
+        iface: "com.mcshell.Shell"
+
+        function toggleLauncher(): void { shell._toggleLauncher(); }
+        function lock(): void { ShellActions.lock(); }
+        function toggleDnd(): void { UserSettings.doNotDisturb = !UserSettings.doNotDisturb; }
+        function toggleVolume(mode: string): void { shell._dispatchPanel("volume", mode); }
+        function toggleNotifications(mode: string): void { shell._dispatchPanel("notifications", mode); }
+        function toggleSysInfo(mode: string): void { shell._dispatchPanel("sysinfo", mode); }
+        function toggleBluetooth(): void { const a = Bluetooth.defaultAdapter; if (a) a.enabled = !a.enabled; }
+        function toggleWifi(): void { Networking.wifiEnabled = !Networking.wifiEnabled; }
     }
 
     // IPC — qs -c mcshell ipc call mcshell <function>
