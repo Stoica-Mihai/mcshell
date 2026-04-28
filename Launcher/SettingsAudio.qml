@@ -9,11 +9,22 @@ import qs.Widgets
 SettingsPanel {
     id: root
 
-    // Common PipeWire sample rates. 0 == auto (let PipeWire negotiate).
-    // PipeWire silently falls back if the active card's profile doesn't
-    // support the requested rate.
-    readonly property var _rateValues: [0, 44100, 48000, 88200, 96000, 176400, 192000]
-    readonly property var _rateLabels: ["Auto", "44.1 kHz", "48 kHz", "88.2 kHz", "96 kHz", "176.4 kHz", "192 kHz"]
+    // PipeWire sample rates the active sink reports as supported, plus
+    // an "Auto" entry that clears clock.force-rate. Falls back to a
+    // common-rate list while the sink hasn't enumerated yet.
+    readonly property var _allRates: [0, 44100, 48000, 88200, 96000, 176400, 192000, 352800, 384000]
+    function _rateLabel(hz) {
+        if (hz === 0) return "Auto";
+        return (hz / 1000).toFixed(hz % 1000 === 0 ? 0 : 1) + " kHz";
+    }
+    readonly property var _supportedSet: defaultSink?.audio?.supportedRates ?? []
+    readonly property var _rateValues: {
+        if (_supportedSet.length === 0) return _allRates;
+        const out = [0];
+        for (let i = 0; i < _supportedSet.length; i++) out.push(_supportedSet[i]);
+        return out;
+    }
+    readonly property var _rateLabels: _rateValues.map(_rateLabel)
 
     SafeProcess {
         id: rateProc
