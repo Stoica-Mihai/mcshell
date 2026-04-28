@@ -1,53 +1,57 @@
 import QtQuick
 import qs.Config
 
-// Reusable slider track with knob, click-to-set, drag, and scroll.
-// Set `value` (0.0–1.0), bind `onMoved(real newValue)` to apply changes.
+// Skewed-morphism slider — parallelogram track + parallelogram knob + a
+// short tick mark dropping below the knob to mark the current value.
+// Set `value` (0..1) and bind `onMoved(real newValue)` to apply changes.
 Item {
     id: root
 
-    // ── API ─────────────────────────────────────────────
-    property real value: 0               // 0.0 to 1.0
+    property real value: 0
     property color accentColor: Theme.accent
     property color knobColor: Theme.fg
     property int trackHeight: 6
     property int knobSize: 14
-    property real step: Theme.volumeStep  // scroll step
+    property real step: Theme.volumeStep
+
+    property real skewAmount: -0.3
 
     signal moved(real newValue)
 
-    // Expose drag state so parents can suppress polling
     readonly property bool dragging: sliderMouse.pressed
 
-    height: 20
+    height: knobSize + 6
 
-    // ── Track background ────────────────────────────────
-    Rectangle {
+    SkewRect {
+        id: track
         anchors.verticalCenter: parent.verticalCenter
         width: parent.width
         height: root.trackHeight
-        radius: height / 2
-        color: Theme.overlayHover
-
-        // Fill
-        Rectangle {
-            width: Math.max(0, Math.min(parent.width, parent.width * root.value))
-            height: parent.height
-            radius: parent.radius
-            color: root.accentColor
-
-            Behavior on width { NumberAnimation { duration: Theme.animSlider } }
-        }
+        skewAmount: root.skewAmount
+        fillColor: Theme.overlayHover
+        strokeColor: Theme.withAlpha(Theme.fg, 0.08)
+        strokeWidth: 1
     }
 
-    // ── Knob ────────────────────────────────────────────
-    Rectangle {
+    SkewRect {
+        anchors.verticalCenter: parent.verticalCenter
+        width: Math.max(0, Math.min(parent.width, parent.width * root.value))
+        height: root.trackHeight
+        skewAmount: root.skewAmount
+        fillColor: root.accentColor
+        Behavior on width { NumberAnimation { duration: Theme.animSlider } }
+    }
+
+    SkewRect {
+        id: knob
         width: root.knobSize
         height: root.knobSize
-        radius: root.knobSize / 2
-        y: (parent.height - height) / 2
+        anchors.verticalCenter: parent.verticalCenter
         x: Math.max(0, Math.min(parent.width - width, (parent.width - width) * root.value))
-        color: root.knobColor
+        skewAmount: root.skewAmount
+        fillColor: root.knobColor
+        strokeColor: root.accentColor
+        strokeWidth: 1
 
         Behavior on x {
             enabled: !sliderMouse.pressed
@@ -55,7 +59,15 @@ Item {
         }
     }
 
-    // ── Interaction ─────────────────────────────────────
+    Rectangle {
+        anchors.top: knob.bottom
+        anchors.topMargin: 1
+        x: knob.x + knob.width / 2 - width / 2
+        width: 1
+        height: 4
+        color: root.accentColor
+    }
+
     MouseArea {
         id: sliderMouse
         anchors.fill: parent
