@@ -11,7 +11,9 @@ Item {
     required property int volume
     required property bool muted
 
-    signal clicked(var event)
+    signal leftClicked()
+    signal rightClicked()
+    signal middleClicked()
     signal wheel(var event)
 
     property bool active: false
@@ -47,15 +49,14 @@ Item {
 
     ActiveUnderline { visible: root.active }
 
-    MouseArea {
+    BarClickArea {
         id: mouse
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
-        onClicked: event => root.clicked(event)
+        onLeftClicked:   root.leftClicked()
+        onRightClicked:  root.rightClicked()
+        onMiddleClicked: root.middleClicked()
         onWheel: event => root.wheel(event)
-        onCanceled: root.clicked({ button: Qt.LeftButton })
     }
 
     ThemedTooltip {

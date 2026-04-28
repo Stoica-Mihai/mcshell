@@ -17,8 +17,9 @@ Item {
     property bool highlight: false
     property bool active: false
 
-    signal clicked(var event)
-    signal wheel(var event)
+    signal leftClicked()
+    signal rightClicked()
+    signal middleClicked()
 
     implicitWidth: row.implicitWidth
     implicitHeight: row.implicitHeight
@@ -83,19 +84,14 @@ Item {
         }
     }
 
-    // Underline when panel is active
     ActiveUnderline { visible: root.active }
 
-    MouseArea {
+    BarClickArea {
         id: mouse
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: Qt.PointingHandCursor
-        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
-        onClicked: event => root.clicked(event)
-        onWheel: event => root.wheel(event)
-        // Wayland layer-shell can cancel the first pointer grab after
-        // startup (input region settling). Re-emit as a left click.
-        onCanceled: root.clicked({ button: Qt.LeftButton })
+        onLeftClicked:   root.leftClicked()
+        onRightClicked:  root.rightClicked()
+        onMiddleClicked: root.middleClicked()
     }
 }

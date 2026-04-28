@@ -456,14 +456,9 @@ Scope {
                                 alert: !Networking.wifiEnabled
                                 enabled_: Networking.wifiEnabled && !root._wifiConnected
                                 connected: root._wifiConnected
-                                onClicked: event => {
-                                    if (event.button === Qt.MiddleButton)
-                                        Networking.wifiEnabled = !Networking.wifiEnabled;
-                                    else if (event.button === Qt.RightButton)
-                                        sharedDropdown.togglePanel("wifiSettings");
-                                    else
-                                        root.wifiRequested();
-                                }
+                                onLeftClicked:   root.wifiRequested()
+                                onMiddleClicked: Networking.wifiEnabled = !Networking.wifiEnabled
+                                onRightClicked:  sharedDropdown.togglePanel("wifiSettings")
 
                                 ThemedTooltip {
                                     showWhen: wifiCapsule.hovered && root._wifiConnected
@@ -485,14 +480,9 @@ Scope {
                                 alert: !(root._btAdapter?.enabled ?? false)
                                 enabled_: (root._btAdapter?.enabled ?? false) && !root._btConnected
                                 connected: root._btConnected
-                                onClicked: event => {
-                                    if (event.button === Qt.MiddleButton && root._btAdapter)
-                                        root._btAdapter.enabled = !root._btAdapter.enabled;
-                                    else if (event.button === Qt.RightButton)
-                                        sharedDropdown.togglePanel("bluetoothSettings");
-                                    else
-                                        root.bluetoothRequested();
-                                }
+                                onLeftClicked:   root.bluetoothRequested()
+                                onMiddleClicked: if (root._btAdapter) root._btAdapter.enabled = !root._btAdapter.enabled
+                                onRightClicked:  sharedDropdown.togglePanel("bluetoothSettings")
 
                                 ThemedTooltip {
                                     showWhen: btCapsule.hovered && root._btConnected
@@ -521,12 +511,8 @@ Scope {
                                 volume: volume.volume
                                 muted: volume.muted
                                 active: sharedDropdown.activePanel === "volume"
-                                onClicked: event => {
-                                    if (event.button === Qt.MiddleButton)
-                                        volume.toggleMute();
-                                    else
-                                        sharedDropdown.togglePanel("volume");
-                                }
+                                onLeftClicked:   sharedDropdown.togglePanel("volume")
+                                onMiddleClicked: volume.toggleMute()
                                 onWheel: event => {
                                     const step = Theme.volumeStep;
                                     if (event.angleDelta.y > 0)
@@ -552,12 +538,8 @@ Scope {
                                 badge: UserSettings.doNotDisturb ? 0 : root.unreadNotifications
                                 badgeColor: Theme.yellow
                                 active: sharedDropdown.activePanel === "notifications"
-                                onClicked: event => {
-                                    if (event.button === Qt.MiddleButton)
-                                        UserSettings.doNotDisturb = !UserSettings.doNotDisturb;
-                                    else
-                                        sharedDropdown.togglePanel("notifications");
-                                }
+                                onLeftClicked:   sharedDropdown.togglePanel("notifications")
+                                onMiddleClicked: UserSettings.doNotDisturb = !UserSettings.doNotDisturb
                             }
 
                             // System waveform
