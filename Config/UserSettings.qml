@@ -76,6 +76,13 @@ Singleton {
     property alias sysInfoShowNetwork: adapter.sysInfoShowNetwork  // bool
     property alias sysInfoShowDisk: adapter.sysInfoShowDisk        // bool
 
+    // ── Audio ──
+    // Force PipeWire's clock.force-rate to this value on shell start and on
+    // change. 0 means "auto" — leave PipeWire to negotiate. PipeWire only
+    // honors the value if the device's profile supports it; setting 192000
+    // on a card that maxes at 48000 silently falls back to 48000.
+    property alias audioForceRate: adapter.audioForceRate
+
     // ── WiFi launcher card field visibility ──
     property alias wifiCardSignal: adapter.wifiCardSignal
     property alias wifiCardSecurity: adapter.wifiCardSecurity
@@ -258,6 +265,7 @@ Singleton {
             property bool sysInfoShowNetwork: true
             property bool sysInfoShowDisk: false
             property string sysInfoHiddenGpusJson: "[]"
+            property int audioForceRate: 0
             property bool wifiCardSignal: true
             property bool wifiCardSecurity: true
             property bool wifiCardStatus: true
