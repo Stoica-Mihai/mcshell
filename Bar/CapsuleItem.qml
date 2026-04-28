@@ -91,7 +91,7 @@ Item {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        acceptedButtons: Qt.LeftButton | Qt.MiddleButton
+        acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
         onClicked: event => root.clicked(event)
         onWheel: event => root.wheel(event)
         // Wayland layer-shell can cancel the first pointer grab after

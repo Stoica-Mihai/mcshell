@@ -75,6 +75,26 @@ Singleton {
     property alias sysInfoShowGpu: adapter.sysInfoShowGpu          // bool
     property alias sysInfoShowNetwork: adapter.sysInfoShowNetwork  // bool
     property alias sysInfoShowDisk: adapter.sysInfoShowDisk        // bool
+
+    // ── WiFi launcher card field visibility ──
+    // Each toggle controls whether that field appears in the focused
+    // network's card. Settings popup is reachable via right-click on
+    // the WiFi bar capsule.
+    property alias wifiCardSignal: adapter.wifiCardSignal       // signal strength %
+    property alias wifiCardSecurity: adapter.wifiCardSecurity   // security type label
+    property alias wifiCardStatus: adapter.wifiCardStatus       // Connected / Available
+    property alias wifiCardBand: adapter.wifiCardBand           // 2.4 / 5 / 6 GHz
+    property alias wifiCardChannel: adapter.wifiCardChannel     // channel number
+    property alias wifiCardBssid: adapter.wifiCardBssid         // AP MAC
+    property alias wifiCardBitrate: adapter.wifiCardBitrate     // current link rate
+
+    // ── Bluetooth launcher card field visibility ──
+    property alias bluetoothCardType: adapter.bluetoothCardType         // device-type label
+    property alias bluetoothCardStatus: adapter.bluetoothCardStatus     // Connected / Paired / Available
+    property alias bluetoothCardBattery: adapter.bluetoothCardBattery   // battery %
+    property alias bluetoothCardAddress: adapter.bluetoothCardAddress   // MAC
+    property alias bluetoothCardRssi: adapter.bluetoothCardRssi         // RSSI dBm
+    property alias bluetoothCardClass: adapter.bluetoothCardClass       // raw Class-of-Device hex
     // Hidden GPUs: absence from the list == visible, so new GPUs auto-appear.
     // Stored as JSON-serialized string[] (same pattern as wallpaperPerScreen).
     property alias sysInfoHiddenGpusJson: adapter.sysInfoHiddenGpusJson
@@ -241,6 +261,19 @@ Singleton {
             property bool sysInfoShowNetwork: true
             property bool sysInfoShowDisk: false
             property string sysInfoHiddenGpusJson: "[]"
+            property bool wifiCardSignal: true
+            property bool wifiCardSecurity: true
+            property bool wifiCardStatus: true
+            property bool wifiCardBand: true
+            property bool wifiCardChannel: false
+            property bool wifiCardBssid: false
+            property bool wifiCardBitrate: false
+            property bool bluetoothCardType: true
+            property bool bluetoothCardStatus: true
+            property bool bluetoothCardBattery: true
+            property bool bluetoothCardAddress: true
+            property bool bluetoothCardRssi: false
+            property bool bluetoothCardClass: false
         }
 
         onAdapterUpdated: root._save()

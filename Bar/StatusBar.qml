@@ -50,6 +50,8 @@ Scope {
         media:           sharedDropdown,
         sysinfo:         sharedDropdown,
         sysInfoSettings: sharedDropdown,
+        wifiSettings:    sharedDropdown,
+        bluetoothSettings: sharedDropdown,
         trayicons:       sharedDropdown,
         tray:            sharedDropdown
     })
@@ -457,6 +459,8 @@ Scope {
                                 onClicked: event => {
                                     if (event.button === Qt.MiddleButton)
                                         Networking.wifiEnabled = !Networking.wifiEnabled;
+                                    else if (event.button === Qt.RightButton)
+                                        sharedDropdown.togglePanel("wifiSettings");
                                     else
                                         root.wifiRequested();
                                 }
@@ -484,6 +488,8 @@ Scope {
                                 onClicked: event => {
                                     if (event.button === Qt.MiddleButton && root._btAdapter)
                                         root._btAdapter.enabled = !root._btAdapter.enabled;
+                                    else if (event.button === Qt.RightButton)
+                                        sharedDropdown.togglePanel("bluetoothSettings");
                                     else
                                         root.bluetoothRequested();
                                 }
@@ -583,6 +589,8 @@ Scope {
                         case "sysinfo": return sysInfoContent.implicitHeight + Theme.popupPadding * 2;
                         case "trayicons": return trayIconsContent.implicitHeight + Theme.popupPadding * 2;
                         case "sysInfoSettings": return sysInfoSettingsContent.fullHeight;
+                        case "wifiSettings": return wifiSettingsContent.fullHeight;
+                        case "bluetoothSettings": return bluetoothSettingsContent.fullHeight;
                         default: return 100;
                         }
                     }
@@ -653,6 +661,26 @@ Scope {
                         visible: active
                         anchors.fill: parent
                         sourceComponent: SysInfoSettingsPopup { windowOpen: sysInfoSettingsContent.active }
+                        readonly property real fullHeight: item ? item.fullHeight : 0
+                    }
+
+                    // ── WiFi card-visibility settings ─────
+                    Loader {
+                        id: wifiSettingsContent
+                        active: sharedDropdown.activePanel === "wifiSettings"
+                        visible: active
+                        anchors.fill: parent
+                        sourceComponent: WifiSettingsPopup { windowOpen: wifiSettingsContent.active }
+                        readonly property real fullHeight: item ? item.fullHeight : 0
+                    }
+
+                    // ── Bluetooth card-visibility settings ─
+                    Loader {
+                        id: bluetoothSettingsContent
+                        active: sharedDropdown.activePanel === "bluetoothSettings"
+                        visible: active
+                        anchors.fill: parent
+                        sourceComponent: BluetoothSettingsPopup { windowOpen: bluetoothSettingsContent.active }
                         readonly property real fullHeight: item ? item.fullHeight : 0
                     }
 

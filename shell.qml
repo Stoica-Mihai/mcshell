@@ -48,6 +48,8 @@ ShellRoot {
         calendar:        ["view"],
         clockSettings:   ["view"],
         sysInfoSettings: ["view"],
+        wifiSettings:    ["view"],
+        bluetoothSettings: ["view"],
         keybinds:        ["view"],
         volume:          ["view"],
         notifications:   ["view"],
@@ -219,6 +221,8 @@ ShellRoot {
         function toggleClockSettings(mode: string): void { shell._dispatchPanel("clockSettings", mode); }
         function toggleSysInfo(mode: string): void { shell._dispatchPanel("sysinfo", mode); }
         function toggleSysInfoSettings(mode: string): void { shell._dispatchPanel("sysInfoSettings", mode); }
+        function toggleWifiSettings(mode: string): void { shell._dispatchPanel("wifiSettings", mode); }
+        function toggleBluetoothSettings(mode: string): void { shell._dispatchPanel("bluetoothSettings", mode); }
         function toggleTray(mode: string): void { shell._dispatchPanel("trayicons", mode); }
         function toggleRecording(): void { shell._toggleRecording(); }
         function clipboardList(): string {

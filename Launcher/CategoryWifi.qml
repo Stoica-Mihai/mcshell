@@ -42,6 +42,27 @@ LauncherCategory {
         return null;
     }
 
+    // ── Frequency helpers ──
+    // niri's NM AccessPoint Frequency property returns MHz. Map common ranges
+    // to a band label and channel number; bands outside the standard 2.4/5/6
+    // GHz ranges fall through to a raw MHz label.
+    function _wifiBand(mhz) {
+        if (!mhz || mhz < 1) return "";
+        if (mhz < 3000) return "2.4 GHz";
+        if (mhz < 5950) return "5 GHz";
+        if (mhz < 7250) return "6 GHz";
+        return mhz + " MHz";
+    }
+
+    function _wifiChannel(mhz) {
+        if (!mhz || mhz < 1) return "";
+        if (mhz === 2484) return "14";  // 802.11b/g 14
+        if (mhz < 3000) return Math.round((mhz - 2407) / 5).toString();
+        if (mhz >= 5170 && mhz <= 5895) return Math.round((mhz - 5000) / 5).toString();
+        if (mhz >= 5945 && mhz <= 7125) return Math.round((mhz - 5950) / 5 + 1).toString();
+        return "";
+    }
+
     // ── Lifecycle ──
     function onTabEnter() {
         if (wifiDevice) wifiDevice.scannerEnabled = true;
@@ -166,16 +187,46 @@ LauncherCategory {
                 nameText: modelData.name || "Hidden Network"
                 nameColor: modelData.connected ? Theme.accent : Theme.fg
                 infoText: {
-                    const signal = Math.round(modelData.signalStrength * 100) + "%";
-                    const sec = modelData.security === WifiSecurityType.Open ? "Open" : "Secured";
-                    const status = modelData.connected ? "Connected" : "";
-                    return [signal, sec, status].filter(s => s).join(Theme.separator);
+                    const parts = [];
+                    if (UserSettings.wifiCardSignal)
+                        parts.push(Math.round(modelData.signalStrength * 100) + "%");
+                    if (UserSettings.wifiCardSecurity) {
+                        parts.push(modelData.security === WifiSecurityType.Open
+                            ? "Open"
+                            : WifiSecurityType.toString(modelData.security));
+                    }
+                    if (UserSettings.wifiCardBand) {
+                        const band = root._wifiBand(modelData.frequency);
+                        if (band) parts.push(band);
+                    }
+                    if (UserSettings.wifiCardChannel) {
+                        const ch = root._wifiChannel(modelData.frequency);
+                        if (ch) parts.push("ch " + ch);
+                    }
+                    if (UserSettings.wifiCardBitrate && modelData.connected) {
+                        const br = root.wifiDevice ? root.wifiDevice.bitrate : 0;
+                        if (br > 0) parts.push((br / 1000).toFixed(0) + " Mbps");
+                    }
+                    if (UserSettings.wifiCardStatus && modelData.connected)
+                        parts.push("Connected");
+                    return parts.join(Theme.separator);
+                }
+
+                // Optional BSSID / MAC line for the connected (or focused) AP.
+                Text {
+                    visible: UserSettings.wifiCardBssid && !!modelData.bssid
+                    Layout.alignment: Qt.AlignHCenter
+                    text: modelData.bssid || ""
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeMini
+                    color: Theme.fgDim
+                    opacity: Theme.opacityDim
                 }
 
                 StatusHintText {
                     visible: !wifiStrip.showingPassword
                     tracker: wifiTracker
-                    targetId: modelData.name
+                    targetId: modelData.name || ""
                     successStatuses: ["connected"]
                     neutralStatuses: ["disconnected"]
                     statusLabels: ({

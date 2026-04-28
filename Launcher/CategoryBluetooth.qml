@@ -189,18 +189,27 @@ LauncherCategory {
                 nameColor: modelData.connected ? Theme.accent : Theme.fg
                 infoText: {
                     const parts = [];
-                    const devType = (root.btDeviceTypes[modelData.icon]?.label) ?? "";
-                    if (devType) parts.push(devType);
-                    if (modelData.connected) parts.push("Connected");
-                    else if (modelData.paired) parts.push("Paired");
-                    else parts.push("Available");
-                    if (modelData.batteryAvailable)
+                    if (UserSettings.bluetoothCardType) {
+                        const devType = (root.btDeviceTypes[modelData.icon]?.label) ?? "";
+                        if (devType) parts.push(devType);
+                    }
+                    if (UserSettings.bluetoothCardStatus) {
+                        if (modelData.connected) parts.push("Connected");
+                        else if (modelData.paired) parts.push("Paired");
+                        else parts.push("Available");
+                    }
+                    if (UserSettings.bluetoothCardBattery && modelData.batteryAvailable)
                         parts.push(Math.round(modelData.battery * 100) + "%");
+                    if (UserSettings.bluetoothCardRssi && modelData.rssi !== 0)
+                        parts.push(modelData.rssi + " dBm");
+                    if (UserSettings.bluetoothCardClass && modelData.bluetoothClass)
+                        parts.push("0x" + modelData.bluetoothClass.toString(16));
                     return parts.join(Theme.separator);
                 }
 
                 // MAC address
                 Text {
+                    visible: UserSettings.bluetoothCardAddress && modelData.address
                     Layout.alignment: Qt.AlignHCenter
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeMini
