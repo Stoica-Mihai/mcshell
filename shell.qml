@@ -222,7 +222,14 @@ ShellRoot {
                 req.fail();
                 return;
             }
-            req.setSelectedSourceIds([req.availableSources[0].id]);
+            // Multi-select: if the caller asked for `multiple=true`,
+            // share every available monitor (real picker UI lets the
+            // user choose; for now we approve all on multi-select and
+            // first-only on single-select).
+            const ids = req.multiple
+                ? req.availableSources.map(s => s.id)
+                : [req.availableSources[0].id];
+            req.setSelectedSourceIds(ids);
             req.approve();
         }
     }
