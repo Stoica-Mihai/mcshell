@@ -92,24 +92,35 @@ LauncherCategory {
         onTriggered: root.refreshBt(root.launcher.searchText)
     }
 
-    // ── Processes ──
-    SafeProcess {
-        id: btPairProc
-        failMessage: "Bluetooth pairing failed"
-        onRead: data => {
-            const line = data.trim();
-            if (line === "PAIRED" || line === "CONNECTED") {
-                btTracker.status = line === "CONNECTED" ? "connected" : "paired";
+    // Track the device we last asked to pair, so we can mirror its state
+    // changes into btTracker for the carousel hint text.
+    property var _activePairDev: null
+    Connections {
+        target: _activePairDev
+        function onPairedChanged() {
+            if (_activePairDev && _activePairDev.paired) {
+                btTracker.status = "paired";
                 btTracker.autoClear();
-            } else if (line === "FAILED") {
-                btTracker.status = "failed";
-                btTracker.autoClear();
-                NotificationDispatcher.send("Bluetooth", `Failed to connect to ${btTracker.targetId}`, Theme.notifNormal, "critical");
+                _activePairDev.connect();
             }
         }
-        onFailed: {
-            btTracker.status = "failed";
-            btTracker.autoClear();
+        function onPairingChanged() {
+            if (_activePairDev && !_activePairDev.pairing && !_activePairDev.paired) {
+                btTracker.status = "failed";
+                btTracker.autoClear();
+                NotificationDispatcher.send(
+                    "Bluetooth",
+                    `Failed to pair with ${btTracker.targetId}`,
+                    Theme.notifNormal,
+                    "critical"
+                );
+            }
+        }
+        function onConnectedChanged() {
+            if (_activePairDev && _activePairDev.connected) {
+                btTracker.status = "connected";
+                btTracker.autoClear();
+            }
         }
     }
 
@@ -153,12 +164,15 @@ LauncherCategory {
             btTracker.autoClear();
         } else if (dev.paired) {
             btTracker.status = "connecting";
+            _activePairDev = dev;
             dev.connect();
-            btTracker.autoClear();
         } else {
             btTracker.status = "pairing";
-            btPairProc.command = [Quickshell.env("HOME") + "/.config/quickshell/mcshell/Core/bt-pair.sh", dev.address];
-            btPairProc.running = true;
+            _activePairDev = dev;
+            // BlueZ routes any pin / passkey / confirmation prompts to our
+            // registered Agent1 (Bluetooth.pairingAgent), which the
+            // BluetoothPairingDialog renders.
+            dev.pair();
         }
     }
 

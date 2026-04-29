@@ -13,6 +13,7 @@ import qs.Notifications
 import qs.Launcher
 import qs.LockScreen
 import qs.Polkit
+import qs.Bluetooth
 import qs.Wallpaper
 import qs.Screenshot
 import Qs.DataControl
@@ -149,6 +150,7 @@ ShellRoot {
         Component.onCompleted: ShellActions.lockScreen = lockScreen
     }
     PolkitDialog {}
+    BluetoothPairingDialog {}
     WallpaperRenderer {
         id: wallpaper
         Component.onCompleted: ShellActions.wallpaper = wallpaper
