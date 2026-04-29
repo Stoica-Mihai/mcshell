@@ -23,6 +23,13 @@ OverlayWindow {
     anchors { top: true; bottom: true; left: true; right: true }
 
     property string mode: "" // "full" | "area"
+
+    // Emitted on a successful save with the absolute path; consumers (e.g.
+    // the xdg-desktop-portal Screenshot bridge in shell.qml) wrap into a
+    // file:// URI to reply to the requester.
+    signal captured(string filePath)
+    signal captureFailed()
+
     property string _savePath: ""
     property string _tmpPath: ""
     property bool _captured: false
@@ -114,6 +121,7 @@ OverlayWindow {
         _copyToClipboard(_tmpPath);
         Quickshell.execDetached({ command: ["mv", _tmpPath, _savePath] });
         NotificationDispatcher.sendWithImage("Screenshot", "Copied to clipboard", _savePath);
+        captured(_savePath);
         _close();
     }
 
@@ -135,6 +143,9 @@ OverlayWindow {
                 root._copyToClipboard(root._savePath);
                 Quickshell.execDetached({ command: ["rm", "-f", root._tmpPath] });
                 NotificationDispatcher.sendWithImage("Screenshot", "Copied to clipboard", root._savePath);
+                root.captured(root._savePath);
+            } else {
+                root.captureFailed();
             }
             root._close();
         });

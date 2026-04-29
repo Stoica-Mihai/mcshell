@@ -21,6 +21,10 @@ Item {
     function captureFullScreen() { _dispatch("full"); }
     function captureArea() { _dispatch("area"); }
 
+    // Forwarded from the per-screen overlay that handled the capture.
+    signal captured(string filePath)
+    signal captureFailed()
+
     // ── Internals ───────────────────────────────────────
     signal _captureRequested(string targetScreen, string mode)
 
@@ -48,8 +52,12 @@ Item {
         model: Quickshell.screens
 
         ScreenshotScreenOverlay {
+            id: screenOverlay
             required property var modelData
             screen: modelData
+
+            onCaptured: filePath => root.captured(filePath)
+            onCaptureFailed: root.captureFailed()
 
             Connections {
                 target: root
@@ -57,7 +65,7 @@ Item {
                     const isTargeted = targetScreen
                         ? modelData.name === targetScreen
                         : modelData === Quickshell.screens[0];
-                    if (isTargeted) startCapture(mode);
+                    if (isTargeted) screenOverlay.startCapture(mode);
                 }
             }
         }

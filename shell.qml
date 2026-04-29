@@ -153,16 +153,40 @@ ShellRoot {
     PolkitDialog {}
     BluetoothPairingDialog {}
 
-    // xdg-desktop-portal Screenshot bridge. The mcs-qs ScreenshotPortal
-    // singleton claims the impl-portal service name on startup and emits
-    // requestReceived for each app screenshot. Until ScreenshotOverlay
-    // grows a saved-file callback we just fail the request — the portal
-    // infrastructure is in place; the UX hookup is a follow-up.
+    // xdg-desktop-portal Screenshot bridge.
+    // The mcs-qs ScreenshotPortal singleton claims the impl-portal service
+    // on startup and emits requestReceived for each app screenshot. We
+    // route to ScreenshotOverlay — interactive=true falls through to the
+    // area-selection UI, otherwise a fullscreen capture happens immediately
+    // — and reply with the file:// URI once the overlay reports the save.
+    property var _portalRequest: null
     Connections {
         target: ScreenshotPortal
         function onRequestReceived(req) {
-            console.warn("ScreenshotPortal request from", req.appId, "— not yet wired, failing");
-            req.fail();
+            if (shell._portalRequest && !shell._portalRequest.answered) {
+                shell._portalRequest.fail();
+            }
+            shell._portalRequest = req;
+            if (req.interactive) {
+                screenshot.captureArea();
+            } else {
+                screenshot.captureFullScreen();
+            }
+        }
+    }
+    Connections {
+        target: screenshot
+        function onCaptured(filePath) {
+            if (shell._portalRequest && !shell._portalRequest.answered) {
+                shell._portalRequest.respondWithFile("file://" + filePath);
+            }
+            shell._portalRequest = null;
+        }
+        function onCaptureFailed() {
+            if (shell._portalRequest && !shell._portalRequest.answered) {
+                shell._portalRequest.cancel();
+            }
+            shell._portalRequest = null;
         }
     }
     WallpaperRenderer {
