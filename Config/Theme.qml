@@ -555,6 +555,10 @@ Singleton {
     readonly property string iconArrowRight: "\u25B6"
     readonly property string iconArrowTo: "\u2192"
 
+    // Visibility toggle (password reveal etc.)
+    readonly property string iconEye: "\uf06e"
+    readonly property string iconEyeSlash: "\uf070"
+
     // Power
     readonly property string iconLock: "\uf023"
     readonly property string iconLogout: "\uf08b"

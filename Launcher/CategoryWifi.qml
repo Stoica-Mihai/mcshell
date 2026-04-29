@@ -259,7 +259,7 @@ LauncherCategory {
                     iconSize: 14
                     echoMode: TextInput.Password
                     passwordCharacter: "\u25CF"
-                    field.horizontalAlignment: TextInput.AlignHCenter
+                    showVisibilityToggle: true
 
                     onVisibleChanged: if (visible) field.forceActiveFocus()
 
