@@ -248,7 +248,11 @@ LauncherCategory {
                     id: wifiPwField
                     visible: wifiStrip.showingPassword
                     Layout.alignment: Qt.AlignHCenter
-                    Layout.preferredWidth: parent.width * 0.92
+                    // Card body is narrow — escape the parent's preferredWidth
+                    // so the field gets actual typing room. Carousel strip
+                    // around the card is wide enough to host this comfortably.
+                    Layout.preferredWidth: 320
+                    Layout.minimumWidth: 320
                     Layout.preferredHeight: 44
                     placeholder: "Password"
                     icon: Theme.iconLock
