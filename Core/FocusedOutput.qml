@@ -2,48 +2,26 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import Quickshell.Niri
 
 // Reactive "which niri output currently has focus?" — exposes the focused
 // workspace's output name and the matching Quickshell.screens entry.
 //
-// Replaces five near-identical `Process { command: ["niri", "msg", "-j",
-// "focused-output"] }` + StdioCollector + JSON.parse blocks scattered
-// across the launcher, window switcher, keybind panel, screenshot
-// overlay, wallpaper category, and recording driver. Niri's IPC already
-// pushes focus changes into NiriWorkspace.focused, so the shell-out was
-// never necessary — just underutilised native state.
-//
-// Usage:
-//   import qs.Core
-//   const name = FocusedOutput.name;      // "DP-4" or "" if none
-//   const s    = FocusedOutput.screen;    // matching Quickshell screen
-//                                         // object, or null if none
-//
-// Read at the moment you need it (e.g. before reassigning a layer-shell
-// surface's screen). Binding a layer-shell surface's screen reactively
-// would race with Qt 6.11's handleScreensChanged — see the Screenshot
-// dispatcher note in CLAUDE.md.
+// Sourced entirely from Niri.workspaces. The previous `niri msg -j
+// focused-output` Process bootstrap is gone — the IPC stream populates
+// workspaces almost immediately on connection, and the only worst-case
+// would be a screenshot keyed within the first frame after shell start
+// going to screens[0] instead of the focused monitor.
 Singleton {
     id: root
 
-    // Live name from Niri's IPC stream — empty during the brief window
-    // before Niri.workspaces has its first event after shell startup.
-    readonly property string _liveName: {
+    readonly property string name: {
         const workspaces = Niri.workspaces ? Niri.workspaces.values : [];
         for (let i = 0; i < workspaces.length; i++) {
             if (workspaces[i].focused) return workspaces[i].output;
         }
         return "";
     }
-
-    // Bootstrap fallback — one-shot `niri msg -j focused-output` at shell
-    // startup so the very first consumer (e.g. screenshot dispatcher) gets
-    // the right output even before the IPC stream has populated.
-    property string _bootstrapName: ""
-
-    readonly property string name: _liveName || _bootstrapName
 
     readonly property var screen: {
         if (!name) return null;
@@ -52,22 +30,5 @@ Singleton {
             if (screens[i].name === name) return screens[i];
         }
         return null;
-    }
-
-    Component.onCompleted: _bootstrap.running = true
-
-    Process {
-        id: _bootstrap
-        command: ["niri", "msg", "-j", "focused-output"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                try {
-                    const out = JSON.parse(text);
-                    if (out && out.name) root._bootstrapName = out.name;
-                } catch (e) {
-                    console.warn("FocusedOutput bootstrap parse failed:", e);
-                }
-            }
-        }
     }
 }
