@@ -91,22 +91,14 @@ Item {
             }
         }
 
-        Item {
+        Text {
+            id: eyeText
             Layout.alignment: Qt.AlignVCenter
-            Layout.preferredWidth: eyeText.implicitWidth
-            Layout.preferredHeight: eyeText.implicitHeight
             visible: root.showVisibilityToggle && root._isPassword
-
-            Text {
-                id: eyeText
-                anchors.fill: parent
-                horizontalAlignment: Text.AlignHCenter
-                verticalAlignment: Text.AlignVCenter
-                text: root._revealed ? Theme.iconEyeSlash : Theme.iconEye
-                font.family: Theme.iconFont
-                font.pixelSize: root.iconSize
-                color: eyeMouse.containsMouse ? Theme.accent : Theme.fgDim
-            }
+            text: root._revealed ? Theme.iconEyeSlash : Theme.iconEye
+            font.family: Theme.iconFont
+            font.pixelSize: root.iconSize
+            color: eyeMouse.containsMouse ? Theme.accent : Theme.fgDim
 
             MouseArea {
                 id: eyeMouse
