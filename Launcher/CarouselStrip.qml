@@ -43,6 +43,17 @@ Item {
     property color borderColor: focused && isCurrent ? Theme.accent : Theme.outlineVariant
     property bool showBorder: isCurrent
 
+    // Fallback click for expanded card. Sits *under* the card so any
+    // interactive descendant (the eye toggle in SkewTextField, password
+    // submit buttons, etc.) gets the click first; inert content like
+    // Text falls through and activates the card.
+    MouseArea {
+        anchors.fill: parent
+        visible: strip.isCurrent
+        cursorShape: Qt.PointingHandCursor
+        onClicked: strip.onStripActivated()
+    }
+
     ParallelogramCard {
         id: card
         anchors.fill: parent
@@ -61,14 +72,6 @@ Item {
         style: UserSettings.borderAnimation
         color: Theme.accent
         thickness: 2
-    }
-
-    // Fallback click for expanded card
-    MouseArea {
-        anchors.fill: parent
-        visible: strip.isCurrent
-        cursorShape: Qt.PointingHandCursor
-        onClicked: strip.onStripActivated()
     }
 
     // Click to select or activate — override these for custom behavior
