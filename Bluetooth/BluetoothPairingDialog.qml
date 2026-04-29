@@ -221,8 +221,6 @@ Item {
                     }
                 }
             }
-
-            Keys.onEscapePressed: root._cancel()
         }
     }
 

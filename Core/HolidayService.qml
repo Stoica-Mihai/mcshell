@@ -40,13 +40,18 @@ Singleton {
     // binding re-evaluation picks up the data once it arrives. _retryTick
     // is a binding dependency — a false→Full connectivity transition bumps
     // it, which re-evaluates every consumer binding and retries the fetch.
+    //
+    // ensureYear() is dispatched via Qt.callLater so the side effect runs
+    // after the current binding pass settles. Calling it inline triggers
+    // QML's binding-loop detector when ensureYear writes to _pending and
+    // a sibling binding reads the same key — both depend on this map.
     function _cachedMap(year) {
         _retryTick;
         const cc = UserSettings.weatherCountryCode;
         if (!cc || !year) return null;
         const key = `${year}-${cc}`;
         const map = _cache[key];
-        if (!map) { ensureYear(year); return null; }
+        if (!map) { Qt.callLater(ensureYear, year); return null; }
         return map;
     }
 
