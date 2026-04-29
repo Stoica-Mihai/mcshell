@@ -14,6 +14,7 @@ import qs.Launcher
 import qs.LockScreen
 import qs.Polkit
 import qs.Bluetooth
+import Quickshell.Services.Portal
 import qs.Wallpaper
 import qs.Screenshot
 import Qs.DataControl
@@ -151,6 +152,19 @@ ShellRoot {
     }
     PolkitDialog {}
     BluetoothPairingDialog {}
+
+    // xdg-desktop-portal Screenshot bridge. The mcs-qs ScreenshotPortal
+    // singleton claims the impl-portal service name on startup and emits
+    // requestReceived for each app screenshot. Until ScreenshotOverlay
+    // grows a saved-file callback we just fail the request — the portal
+    // infrastructure is in place; the UX hookup is a follow-up.
+    Connections {
+        target: ScreenshotPortal
+        function onRequestReceived(req) {
+            console.warn("ScreenshotPortal request from", req.appId, "— not yet wired, failing");
+            req.fail();
+        }
+    }
     WallpaperRenderer {
         id: wallpaper
         Component.onCompleted: ShellActions.wallpaper = wallpaper
