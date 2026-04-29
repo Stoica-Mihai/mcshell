@@ -13,8 +13,13 @@ import qs.Widgets
 //
 // Mirrors BluetoothPairingDialog: Variants over Quickshell.screens, an
 // always-active layer-shell overlay per screen with a backdrop +
-// centered glass dialog. Each available source becomes a card with a
-// live ScreencopyView preview; click to select, confirm to approve.
+// centered glass dialog. Each available source becomes a card showing
+// the monitor name + resolution; click to select, confirm to approve.
+//
+// (Live preview thumbnails are intentionally skipped — the capture
+// would happen on the same layer-shell surface that hosts the dialog,
+// recursively including the dialog itself in the snapshot. xdpw-style
+// pre-capture-pass infrastructure is the proper fix; deferred.)
 //
 // Multi-select is enabled only when the requesting app asks for it
 // (`req.multiple`). Single-select is the common case (Firefox /
@@ -60,18 +65,6 @@ Item {
 
     function _cancel() {
         if (root.activeRequest) root.activeRequest.cancel();
-    }
-
-    // Map a source id ("output:NAME") back to a Quickshell screen so
-    // the card can host a live ScreencopyView preview of it.
-    function _screenForId(id) {
-        if (!id || !id.startsWith("output:")) return null;
-        const name = id.substring(7);
-        const list = Quickshell.screens;
-        for (let i = 0; i < list.length; i++) {
-            if (list[i].name === name) return list[i];
-        }
-        return null;
     }
 
     Variants {
@@ -178,42 +171,50 @@ Item {
                                 required property var modelData
                                 readonly property bool selected:
                                     root._selectedIds.indexOf(modelData.id) >= 0
-                                readonly property var screenObj:
-                                    root._screenForId(modelData.id)
 
                                 Layout.fillWidth: true
-                                Layout.preferredHeight: 160
+                                Layout.preferredHeight: 130
                                 radius: 8
-                                color: Theme.withAlpha(Theme.fg, 0.04)
+                                color: card.selected
+                                    ? Theme.withAlpha(Theme.accent, 0.12)
+                                    : Theme.withAlpha(Theme.fg, 0.04)
                                 border.width: card.selected ? 2 : 1
                                 border.color: card.selected ? Theme.accent : Theme.outlineVariant
 
+                                Behavior on color { ColorAnimation { duration: Theme.animNormal } }
                                 Behavior on border.color { ColorAnimation { duration: Theme.animNormal } }
 
-                                ScreencopyView {
-                                    anchors.fill: parent
-                                    anchors.margins: 6
-                                    captureSource: card.screenObj
-                                    paintCursor: false
-                                    live: false
-                                    visible: card.screenObj !== null
-                                }
-
-                                Rectangle {
-                                    anchors.left: parent.left
-                                    anchors.bottom: parent.bottom
-                                    anchors.right: parent.right
-                                    height: labelText.implicitHeight + 10
-                                    color: Theme.withAlpha(Theme.bg, 0.7)
-                                    radius: 0
+                                ColumnLayout {
+                                    anchors.centerIn: parent
+                                    width: parent.width - 20
+                                    spacing: 6
 
                                     Text {
-                                        id: labelText
-                                        anchors.centerIn: parent
+                                        Layout.alignment: Qt.AlignHCenter
+                                        text: Theme.iconMonitor
+                                        font.family: Theme.iconFont
+                                        font.pixelSize: Theme.iconSizeMedium
+                                        color: card.selected ? Theme.accent : Theme.fg
+                                    }
+
+                                    Text {
+                                        Layout.fillWidth: true
+                                        horizontalAlignment: Text.AlignHCenter
                                         text: card.modelData.label || card.modelData.id
                                         color: Theme.fg
                                         font.family: Theme.fontFamily
                                         font.pixelSize: Theme.fontSizeSmall
+                                        elide: Text.ElideMiddle
+                                    }
+
+                                    Text {
+                                        Layout.alignment: Qt.AlignHCenter
+                                        text: card.modelData.width > 0
+                                            ? `${card.modelData.width} × ${card.modelData.height}`
+                                            : ""
+                                        color: Theme.fgDim
+                                        font.family: Theme.fontFamily
+                                        font.pixelSize: Theme.fontSizeMini
                                     }
                                 }
 
