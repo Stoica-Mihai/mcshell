@@ -95,10 +95,18 @@ LauncherCategory {
     Connections {
         target: _activeNet
         function onConnectedChanged() {
-            if (_activeNet && _activeNet.connected) {
+            if (!_activeNet) return;
+            if (_activeNet.connected) {
                 wifiTracker.status = "connected";
-                wifiTracker.autoClear();
+            } else if (wifiTracker.status === "disconnecting") {
+                // The complementary path — flip from "disconnecting" → "disconnected"
+                // when the device actually drops the connection. Without this the
+                // status sticks at "disconnecting..." forever.
+                wifiTracker.status = "disconnected";
+            } else {
+                return; // not a transition we care about
             }
+            wifiTracker.autoClear();
         }
         function onConnectionFailed(reason) {
             wifiTracker.status = "failed";
