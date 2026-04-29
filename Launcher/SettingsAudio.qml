@@ -2,7 +2,6 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Services.Pipewire
 import qs.Config
-import qs.Core
 import qs.Widgets
 
 // Audio settings card content — output/input device selection + volume.
@@ -26,15 +25,8 @@ SettingsPanel {
     }
     readonly property var _rateLabels: _rateValues.map(_rateLabel)
 
-    SafeProcess {
-        id: rateProc
-        failMessage: "Failed to set PipeWire clock.force-rate"
-    }
-
     function applyForceRate() {
-        rateProc.command = ["pw-metadata", "-n", "settings", "0",
-            "clock.force-rate", UserSettings.audioForceRate.toString()];
-        rateProc.running = true;
+        Pipewire.setForceRate(UserSettings.audioForceRate);
     }
 
     Component.onCompleted: applyForceRate()
