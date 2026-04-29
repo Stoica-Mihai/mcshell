@@ -244,14 +244,15 @@ LauncherCategory {
                 }
 
                 // Password input (inside the card)
-                StyledTextField {
+                SkewTextField {
                     id: wifiPwField
                     visible: wifiStrip.showingPassword
                     Layout.alignment: Qt.AlignHCenter
-                    Layout.preferredWidth: parent.width * 0.8
-                    implicitHeight: 36
-                    color: Theme.overlay
+                    Layout.preferredWidth: parent.width * 0.92
+                    Layout.preferredHeight: 44
+                    placeholder: "Password"
                     icon: Theme.iconLock
+                    iconSize: 14
                     echoMode: TextInput.Password
                     passwordCharacter: "\u25CF"
 
