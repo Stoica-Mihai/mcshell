@@ -208,6 +208,25 @@ ShellRoot {
         }
     }
 
+    // ScreenCast picker — stub. Picks the first available source and
+    // approves immediately so the SelectSources delayed-reply unblocks.
+    // Real picker UI lands in step 5 of PLAN-screencast-portal.md.
+    Connections {
+        target: ScreenCastPortal
+        function onPickerRequested(req) {
+            console.warn("ScreenCast picker:", req.appId,
+                "sources=", req.availableSources.length,
+                "types=", req.sourceTypes,
+                "multiple=", req.multiple);
+            if (req.availableSources.length === 0) {
+                req.fail();
+                return;
+            }
+            req.setSelectedSourceIds([req.availableSources[0].id]);
+            req.approve();
+        }
+    }
+
     WallpaperRenderer {
         id: wallpaper
         Component.onCompleted: ShellActions.wallpaper = wallpaper
