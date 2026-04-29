@@ -89,28 +89,29 @@ LauncherCategory {
         function onValuesChanged() { root.refreshWifi(root.launcher.searchText); }
     }
 
-    // ── WiFi processes ──
-    SafeProcess {
-        id: wifiConnectProc
-        failMessage: "WiFi connect failed"
-        onFinished: {
-            wifiTracker.status = wifiTracker.status === "disconnecting" ? "disconnected" : "connected";
-            wifiTracker.autoClear();
+    // Track the network we last asked to connect, so we know what to
+    // forget on a NoSecrets/WrongSecrets failure.
+    property var _activeNet: null
+    Connections {
+        target: _activeNet
+        function onConnectedChanged() {
+            if (_activeNet && _activeNet.connected) {
+                wifiTracker.status = "connected";
+                wifiTracker.autoClear();
+            }
         }
-        onFailed: {
+        function onConnectionFailed(reason) {
             wifiTracker.status = "failed";
-            if (wifiTracker.targetId !== "") {
-                wifiForgetProc.command = ["nmcli", "connection", "delete", "id", wifiTracker.targetId];
-                wifiForgetProc.running = true;
+            // If the network was just-added with a wrong PSK, forget it so
+            // the next connect attempt prompts again instead of silently
+            // re-trying with the bad credentials. (Reason values 1=NoSecrets,
+            // 2=WrongSecrets per Quickshell.Networking.ConnectionFailReason.)
+            if ((reason === 1 || reason === 2) && _activeNet) {
+                _activeNet.forget();
                 root.wifiPasswordSsid = wifiTracker.targetId;
             }
             wifiTracker.autoClear();
         }
-    }
-
-    SafeProcess {
-        id: wifiForgetProc
-        failMessage: "WiFi forget failed"
     }
 
 
@@ -130,28 +131,26 @@ LauncherCategory {
         const net = _sourceData[index];
         if (wifiPasswordSsid === net.name) return; // already showing password
         wifiTracker.targetId = net.name;
+        _activeNet = net;
         if (net.connected) {
             wifiTracker.status = "disconnecting";
-            wifiConnectProc.command = ["nmcli", "connection", "down", "id", net.name];
-            wifiConnectProc.running = true;
+            net.disconnect();
         } else if (net.known || net.security === WifiSecurityType.Open) {
             wifiTracker.status = "connecting";
-            wifiConnectProc.command = ["nmcli", "device", "wifi", "connect", net.name];
-            wifiConnectProc.running = true;
+            net.connect();
         } else {
             wifiPasswordSsid = net.name;
         }
     }
 
     // Helper for password submit from delegate
-    function connectWithPassword(ssid, password) {
-        wifiTracker.targetId = ssid;
+    function connectWithPassword(net, password) {
+        if (!net) return;
+        wifiTracker.targetId = net.name;
         wifiTracker.status = "connecting";
         wifiPasswordSsid = "";
-        wifiConnectProc.command = ["sh", "-c",
-            'nmcli device wifi connect "$1" password "$2" && nmcli connection modify "$1" 802-11-wireless-security.psk-flags 0',
-            "sh", ssid, password];
-        wifiConnectProc.running = true;
+        _activeNet = net;
+        net.connectWithPsk(password);
     }
 
     // ── Card delegate ──
@@ -252,7 +251,7 @@ LauncherCategory {
 
                     field.Keys.onReturnPressed: {
                         if (text.length > 0) {
-                            root.connectWithPassword(modelData.name, text);
+                            root.connectWithPassword(modelData, text);
                             text = "";
                             root.launcher.refocusSearch();
                         }
