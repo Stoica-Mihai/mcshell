@@ -107,6 +107,10 @@ ShellRoot {
     // Also create IdleMonitor dynamically (ext-idle-notify-v1 — not in stock quickshell).
     Component.onCompleted: {
         NotificationDispatcher;
+        // Force ScreenCastPortal init so the impl-portal ScreenCast adaptor
+        // registers on the bus. Skeleton stage — all slots currently
+        // respond with response=2 (other-error). See PLAN-screencast-portal.md.
+        ScreenCastPortal;
         try {
             Qt.createQmlObject(
                 'import Quickshell; IdleMonitor {'
@@ -203,6 +207,7 @@ ShellRoot {
             req.approve();
         }
     }
+
     WallpaperRenderer {
         id: wallpaper
         Component.onCompleted: ShellActions.wallpaper = wallpaper
