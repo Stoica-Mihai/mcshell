@@ -14,6 +14,7 @@ import qs.Launcher
 import qs.LockScreen
 import qs.Polkit
 import qs.Bluetooth
+import qs.Screencast
 import Quickshell.Services.Portal
 import qs.Wallpaper
 import qs.Screenshot
@@ -208,31 +209,10 @@ ShellRoot {
         }
     }
 
-    // ScreenCast picker — stub. Picks the first available source and
-    // approves immediately so the SelectSources delayed-reply unblocks.
-    // Real picker UI lands in step 5 of PLAN-screencast-portal.md.
-    Connections {
-        target: ScreenCastPortal
-        function onPickerRequested(req) {
-            console.warn("ScreenCast picker:", req.appId,
-                "sources=", req.availableSources.length,
-                "types=", req.sourceTypes,
-                "multiple=", req.multiple);
-            if (req.availableSources.length === 0) {
-                req.fail();
-                return;
-            }
-            // Multi-select: if the caller asked for `multiple=true`,
-            // share every available monitor (real picker UI lets the
-            // user choose; for now we approve all on multi-select and
-            // first-only on single-select).
-            const ids = req.multiple
-                ? req.availableSources.map(s => s.id)
-                : [req.availableSources[0].id];
-            req.setSelectedSourceIds(ids);
-            req.approve();
-        }
-    }
+    // ScreenCast picker dialog — themed overlay rendered when the portal
+    // emits `pickerRequested`. Single component, owns its own request
+    // state. See Screencast/ScreenCastPickerDialog.qml.
+    ScreenCastPickerDialog {}
 
     WallpaperRenderer {
         id: wallpaper
