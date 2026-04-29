@@ -189,6 +189,20 @@ ShellRoot {
             shell._portalRequest = null;
         }
     }
+
+    // xdg-desktop-portal Wallpaper bridge.
+    // Apps invoke the user-facing portal; we apply the requested URI via
+    // ShellActions.setWallpaper() and acknowledge with approve(). No
+    // preview / confirmation UI for now — a future iteration can render
+    // one when req.showPreview is true.
+    Connections {
+        target: WallpaperPortal
+        function onWallpaperRequested(req) {
+            const path = req.uri.startsWith("file://") ? req.uri.substring(7) : req.uri;
+            ShellActions.setWallpaper(path);
+            req.approve();
+        }
+    }
     WallpaperRenderer {
         id: wallpaper
         Component.onCompleted: ShellActions.wallpaper = wallpaper
