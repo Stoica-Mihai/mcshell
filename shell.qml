@@ -197,14 +197,17 @@ ShellRoot {
         }
     }
 
-    // D-Bus mirror of the IPC surface.
-    // busctl --user introspect com.mcshell.Shell /Shell
-    // busctl --user call com.mcshell.Shell /Shell com.mcshell.Shell ToggleVolume s view
+    // D-Bus mirror of the shell IPC surface + a few read-only state properties.
+    //   busctl --user introspect com.mcshell.Shell /Shell
+    //   busctl --user call com.mcshell.Shell /Shell com.mcshell.Shell ToggleVolume s view
+    //   busctl --user get-property com.mcshell.Shell /Shell com.mcshell.Shell DoNotDisturb
+    //   busctl --user monitor com.mcshell.Shell    # watch PropertiesChanged
     DBusIpcHandler {
         service: "com.mcshell.Shell"
         path: "/Shell"
         iface: "com.mcshell.Shell"
 
+        // Methods
         function toggleLauncher(): void { shell._toggleLauncher(); }
         function lock(): void { ShellActions.lock(); }
         function toggleDnd(): void { UserSettings.doNotDisturb = !UserSettings.doNotDisturb; }
@@ -213,6 +216,14 @@ ShellRoot {
         function toggleSysInfo(mode: string): void { shell._dispatchPanel("sysinfo", mode); }
         function toggleBluetooth(): void { const a = Bluetooth.defaultAdapter; if (a) a.enabled = !a.enabled; }
         function toggleWifi(): void { Networking.wifiEnabled = !Networking.wifiEnabled; }
+
+        // Read-only state — PropertiesChanged fires automatically from notify signals.
+        property bool doNotDisturb: UserSettings.doNotDisturb
+        property bool bluetoothEnabled: Bluetooth.defaultAdapter ? Bluetooth.defaultAdapter.enabled : false
+        property bool wifiEnabled: Networking.wifiEnabled
+
+        // Signals — emitted by the shell when major state transitions happen.
+        signal launcherOpened()
     }
 
     // IPC — qs -c mcshell ipc call mcshell <function>
