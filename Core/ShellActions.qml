@@ -2,8 +2,8 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Services.Logind
 import Qs.NiriIpc
-import qs.Core
 
 Singleton {
     id: root
@@ -12,23 +12,16 @@ Singleton {
     property var lockScreen: null
     property var wallpaper: null
 
-    // Session actions
+    // Session actions — power actions go through logind on the system bus
+    // (org.freedesktop.login1) instead of forking systemctl. polkit gates
+    // them the same way; setting interactive=true lets logind prompt.
     function lock() { if (lockScreen) lockScreen.lock(); }
     function logout() { Niri.dispatch(["quit", "--skip-confirmation"]); }
-    function reboot() { rebootProc.running = true; }
-    function shutdown() { shutdownProc.running = true; }
+    function reboot() { Logind.reboot(false); }
+    function shutdown() { Logind.powerOff(false); }
+    function suspend() { Logind.suspend(false); }
+    function hibernate() { Logind.hibernate(false); }
 
     // Wallpaper
     function setWallpaper(path) { if (wallpaper) wallpaper.setWallpaper(path); }
-
-    SafeProcess {
-        id: rebootProc
-        command: ["systemctl", "reboot"]
-        failMessage: "reboot failed"
-    }
-    SafeProcess {
-        id: shutdownProc
-        command: ["systemctl", "poweroff"]
-        failMessage: "shutdown failed"
-    }
 }

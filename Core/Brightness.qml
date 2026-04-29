@@ -3,9 +3,12 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import Quickshell.Services.Logind
 
 // Brightness state provider — single source of truth for screen brightness.
-// Uses FileView to watch sysfs backlight files (event-driven, no polling).
+// Reads sysfs backlight files directly (event-driven via FileView, no
+// polling). Writes go through logind's Session.SetBrightness D-Bus method
+// — same path brightnessctl uses internally, but no fork/exec.
 Singleton {
     id: root
 
@@ -18,8 +21,15 @@ Singleton {
     signal changed()
 
     function set(pct) {
-        setProc.command = ["brightnessctl", "set", pct + "%"];
-        setProc.running = true;
+        if (!_deviceName) return;
+        const target = Math.max(0, Math.min(root.max, Math.round(root.max * pct / 100)));
+        Logind.setBrightness("backlight", _deviceName, target);
+    }
+
+    // Basename of _device — used as the SetBrightness device argument.
+    readonly property string _deviceName: {
+        const idx = _device.lastIndexOf("/");
+        return idx >= 0 ? _device.substring(idx + 1) : "";
     }
 
     // ── Backlight device discovery ──
@@ -79,10 +89,4 @@ Singleton {
         }
     }
 
-    // ── Set brightness ──
-
-    SafeProcess {
-        id: setProc
-        failMessage: "brightnessctl set failed"
-    }
 }
