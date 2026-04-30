@@ -2,7 +2,6 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Qs.DataControl
-import qs.Config
 import qs.Core
 
 // Screen recording state — managed via wf-recorder process lifecycle.
@@ -36,10 +35,25 @@ Item {
         command: ["mkdir", "-p", Quickshell.env("HOME") + "/Videos"]
         failMessage: "failed to create recordings directory"
         onFinished: {
-            const output = FocusedOutput.name;
-            var cmd = ["wf-recorder", "-f", root._currentPath];
-            if (output) cmd.splice(1, 0, "-o", output);
-            recorder.command = cmd;
+            // wf-recorder prompts interactively when more than one output
+            // exists and -o isn't supplied; with no stdin attached it
+            // immediately exits 2. Always pass -o so a multi-monitor setup
+            // doesn't hit that. Fall back to the first available screen
+            // when FocusedOutput hasn't populated yet (Recording is in a
+            // Loader that instantiates lazily — niri IPC may not have
+            // produced workspace data on the very first toggle).
+            let output = FocusedOutput.name;
+            if (!output) {
+                const screens = Quickshell.screens;
+                if (screens && screens.length > 0) output = screens[0].name;
+            }
+            if (!output) {
+                console.warn("[mcshell] Recording: no output to capture");
+                NotificationDispatcher.send("Recording failed", "no output to capture", 5000);
+                root._currentPath = "";
+                return;
+            }
+            recorder.command = ["wf-recorder", "-o", output, "-f", root._currentPath];
             recorder.running = true;
         }
     }
