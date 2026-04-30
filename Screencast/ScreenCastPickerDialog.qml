@@ -192,7 +192,6 @@ Item {
                         Layout.rightMargin: 4
 
                         readonly property real skewAmount: root._stripSkew
-                        readonly property real _skewPx: skewAmount * height / 2
                         readonly property int _count:
                             root.activeRequest?.availableSources?.length ?? 0
                         readonly property int _spacing: 14
