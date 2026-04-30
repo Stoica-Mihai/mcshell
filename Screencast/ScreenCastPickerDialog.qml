@@ -25,11 +25,12 @@ Item {
     property var activeRequest: null
     property var _selectedIds: []
 
-    /// Skew angle for the strip + inner dividers. Stronger than
-    /// Theme.cardSkew (-0.03) so the picker reads as a single connected
-    /// parallelogram, not a barely-tilted rectangle. Matches the skew
-    /// used elsewhere for SkewPill / SkewTextField accents.
-    readonly property real _stripSkew: -0.3
+    /// Shared skew angle for the dialog chrome AND compartments so all
+    /// slanted edges run parallel. -0.12 is the compromise between a
+    /// visible parallelogram on the compartments (skewPx ≈ 7 at 110px
+    /// height) and a not-overwhelming lean on the wider/taller dialog
+    /// chrome (skewPx ≈ 22 at ~370px height).
+    readonly property real _stripSkew: -0.12
 
     Connections {
         target: ScreenCastPortal
@@ -81,13 +82,21 @@ Item {
 
             anchors { top: true; bottom: true; left: true; right: true }
 
+            // Match the AppLauncher pattern: when blur is on, the blur
+            // region covers the entire screen (via the backdrop) and the
+            // backdrop itself goes transparent so the wallpaper-blur
+            // extends edge-to-edge. Through the dialog's translucency
+            // you then see uniformly blurred wallpaper, not mixed
+            // backdrop-dim + app windows behind. When blur is off, the
+            // backdrop reverts to the dim black overlay.
             BackgroundEffect.blurRegion: UserSettings.blurEnabled && root.activeRequest
-                ? dialogBlurRegion : null
-            Region { id: dialogBlurRegion; item: dialog; radius: Theme.dialogRadius }
+                ? backdropBlurRegion : null
+            Region { id: backdropBlurRegion; item: pickerBackdrop }
 
             Rectangle {
+                id: pickerBackdrop
                 anchors.fill: parent
-                color: Theme.backdrop
+                color: UserSettings.blurEnabled ? "transparent" : Theme.backdrop
                 opacity: root.activeRequest ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: Theme.animSmooth } }
                 MouseArea {
@@ -99,25 +108,27 @@ Item {
             Keys.onEscapePressed: root._cancel()
             Keys.onReturnPressed: root._approve()
 
-            Rectangle {
+            Item {
                 id: dialog
                 anchors.centerIn: parent
-                width: Math.min(parent.width - 80, 760)
-                implicitHeight: content.implicitHeight + Theme.dialogPadding * 2
-                radius: Theme.dialogRadius
-                // Theme.glassBg() honours the user's blur/transparency
-                // setting — when blur is on, the wallpaper behind the
-                // dialog is blurred (via BackgroundEffect.blurRegion
-                // above) so there's no see-through "halo" effect. When
-                // blur is off, glassBg falls back to a solid Theme.bg.
-                color: Theme.glassBg()
-                border.width: 1
-                border.color: Theme.outlineVariant
+                width: Math.min(parent.width - 120, 760)
+                implicitHeight: content.implicitHeight + 40
                 opacity: root.activeRequest ? 1 : 0
                 scale: root.activeRequest ? 1 : 0.95
 
                 Behavior on opacity { NumberAnimation { duration: Theme.animSmooth } }
                 Behavior on scale { NumberAnimation { duration: Theme.animSmooth; easing.type: Easing.OutCubic } }
+
+                // Dialog chrome shares the strip's skew angle so the
+                // dialog's left/right slants run parallel to each
+                // compartment's left/right slants.
+                SkewRect {
+                    anchors.fill: parent
+                    fillColor: Theme.glassBg()
+                    strokeColor: Theme.outlineVariant
+                    strokeWidth: 1
+                    skewAmount: root._stripSkew
+                }
 
                 MouseArea { anchors.fill: parent; onClicked: {} } // swallow
 
@@ -177,13 +188,6 @@ Item {
                         Layout.fillWidth: true
                         Layout.preferredHeight: 110
                         Layout.topMargin: 6
-                        // Inset just enough to keep the parallelogram's
-                        // overhanging top-right / bottom-left corners off
-                        // the dialog's rounded border. Combined with the
-                        // ColumnLayout's 14px content margin this gives
-                        // ~18px of total horizontal inset — a hair more
-                        // than skewPx (≈ 17) so the corners clear the
-                        // border with minimal visible perimeter padding.
                         Layout.leftMargin: 4
                         Layout.rightMargin: 4
 
@@ -191,98 +195,58 @@ Item {
                         readonly property real _skewPx: skewAmount * height / 2
                         readonly property int _count:
                             root.activeRequest?.availableSources?.length ?? 0
-                        readonly property real _cellWidth:
-                            _count > 0 ? width / _count : width
+                        readonly property int _spacing: 14
+                        // Each compartment width = (strip - gaps) / count.
+                        readonly property real _cellWidth: _count > 0
+                            ? (width - (_count - 1) * _spacing) / _count
+                            : width
 
-                        SkewRect {
-                            anchors.fill: parent
-                            // No interior fill — let the dialog background
-                            // show through. Selection state on a chosen
-                            // compartment paints accent over the same area.
-                            fillColor: "transparent"
-                            strokeColor: Theme.outline
-                            strokeWidth: 1
-                            skewAmount: strip.skewAmount
-                        }
-
-                        // Diagonal dividers between compartments. n-1 lines
-                        // for n sources. Each line runs parallel to the
-                        // outer skewed edges so the whole strip reads as
-                        // one connected parallelogram with internal slots.
-                        Repeater {
-                            model: Math.max(0, strip._count - 1)
-                            Shape {
-                                anchors.fill: parent
-                                preferredRendererType: Shape.CurveRenderer
-                                required property int index
-                                readonly property real cx:
-                                    strip._cellWidth * (index + 1)
-                                ShapePath {
-                                    strokeColor: Theme.outline
-                                    strokeWidth: 1
-                                    fillColor: "transparent"
-                                    startX: cx - strip._skewPx
-                                    startY: 0
-                                    PathLine {
-                                        x: cx + strip._skewPx
-                                        y: strip.height
-                                    }
-                                }
-                            }
-                        }
-
-                        // Compartment cells. Row inside the strip allocates
-                        // equal-width cells; each cell hosts its own skewed
-                        // selection fill + content + click handling.
+                        // Each compartment is now a standalone parallelogram
+                        // with its own outline + selection fill, separated by
+                        // _spacing pixels of gap. No outer strip outline and
+                        // no dividers — the gaps and the per-cell strokes do
+                        // the visual separation work.
                         Row {
                             anchors.fill: parent
+                            spacing: strip._spacing
+
                             Repeater {
                                 model: root.activeRequest?.availableSources ?? []
-
                                 Item {
                                     id: cell
                                     required property var modelData
                                     readonly property bool selected:
                                         root._selectedIds.indexOf(modelData.id) >= 0
-
                                     width: strip._cellWidth
                                     height: strip.height
 
                                     SkewRect {
                                         anchors.fill: parent
-                                        // Over-extend by 1px on every side to
-                                        // swallow anti-aliased edge artifacts
-                                        // where the cell's parallelogram fill
-                                        // meets the strip's outer parallelogram
-                                        // stroke. Without this the boundary
-                                        // pixels read as "transparent padding".
-                                        anchors.margins: -1
-                                        visible: cell.selected
-                                        // Higher-opacity tint so the selection
-                                        // is unambiguously visible against the
-                                        // dialog background.
-                                        fillColor: Theme.withAlpha(Theme.accent, 0.22)
-                                        strokeColor: "transparent"
+                                        // Selection is signalled only by
+                                        // the diamond at the top-right. No
+                                        // fill / stroke / text colour change.
+                                        fillColor: "transparent"
+                                        strokeColor: Theme.outline
+                                        strokeWidth: 1
                                         skewAmount: strip.skewAmount
                                     }
 
                                     Column {
                                         anchors.centerIn: parent
                                         spacing: 6
-
                                         Text {
                                             anchors.horizontalCenter: parent.horizontalCenter
                                             text: Theme.iconMonitor
                                             font.family: Theme.iconFont
                                             font.pixelSize: Theme.iconSizeMedium
-                                            color: cell.selected ? Theme.accent : Theme.fg
+                                            color: Theme.fg
                                         }
                                         Text {
                                             anchors.horizontalCenter: parent.horizontalCenter
                                             text: cell.modelData.label || cell.modelData.id
                                             font.family: Theme.fontFamily
                                             font.pixelSize: Theme.fontSizeSmall
-                                            color: cell.selected ? Theme.accent : Theme.fg
+                                            color: Theme.fg
                                             elide: Text.ElideMiddle
                                             width: cell.width - 24
                                             horizontalAlignment: Text.AlignHCenter
@@ -298,18 +262,16 @@ Item {
                                         }
                                     }
 
-                                    // Only render the diamond on the chosen
-                                    // compartment — empty diamonds on every
-                                    // cell are visual noise, and the rightmost
-                                    // one risks crowding the strip's outer
-                                    // skewed edge.
+                                    // Always visible; empty (outline only)
+                                    // when unselected, filled with the
+                                    // theme accent when this monitor is
+                                    // the active choice.
                                     SkewCheck {
                                         anchors.top: parent.top
                                         anchors.right: parent.right
                                         anchors.topMargin: 10
                                         anchors.rightMargin: 14
-                                        visible: cell.selected
-                                        checked: true
+                                        checked: cell.selected
                                         size: 14
                                     }
 
