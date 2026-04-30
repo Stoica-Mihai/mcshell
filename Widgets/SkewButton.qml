@@ -13,7 +13,6 @@ Item {
 
     property string label: ""
     property bool primary: false
-    property bool enabled: true
     property real skewAmount: -0.3
     signal clicked()
 

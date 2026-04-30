@@ -8,7 +8,10 @@ Item {
     id: root
 
     // ── PipeWire native binding ─────────────────────────
-    readonly property PwNode sink: Pipewire.ready ? Pipewire.defaultAudioSink : null
+    // QtObject (not PwNode) so the binding can hold null while
+    // Pipewire.ready is still false at startup. PwNode would trigger a
+    // QML type-check warning on every shell start.
+    readonly property QtObject sink: Pipewire.ready ? Pipewire.defaultAudioSink : null
     readonly property real rawVolume: sink?.audio?.volume ?? 0
     readonly property int volume: Math.round(rawVolume * 100)
     readonly property bool muted: sink?.audio?.muted ?? false

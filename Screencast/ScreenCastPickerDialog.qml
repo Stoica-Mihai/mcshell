@@ -105,9 +105,6 @@ Item {
                 }
             }
 
-            Keys.onEscapePressed: root._cancel()
-            Keys.onReturnPressed: root._approve()
-
             Item {
                 id: dialog
                 anchors.centerIn: parent
@@ -115,6 +112,13 @@ Item {
                 implicitHeight: content.implicitHeight + 40
                 opacity: root.activeRequest ? 1 : 0
                 scale: root.activeRequest ? 1 : 0.95
+
+                // Keys attach to Items, not Windows — putting them on the
+                // OverlayWindow itself triggers a Qt warning at every
+                // shell start.
+                focus: root.activeRequest !== null
+                Keys.onEscapePressed: root._cancel()
+                Keys.onReturnPressed: root._approve()
 
                 Behavior on opacity { NumberAnimation { duration: Theme.animSmooth } }
                 Behavior on scale { NumberAnimation { duration: Theme.animSmooth; easing.type: Easing.OutCubic } }
