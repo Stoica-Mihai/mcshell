@@ -114,7 +114,7 @@ Item {
         font.pixelSize: Theme.fontSizeMini
         font.bold: true
         color: root.expanded || root.hovered ? Theme.accent
-             : root.itemCount > 0 ? Theme.fgDim
+             : root.itemCount > 0 ? Theme.fg
              : Theme.overlayHover
 
         Behavior on color { ColorAnimation { duration: Theme.animNormal } }
