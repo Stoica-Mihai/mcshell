@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Shapes
 import Qs.NiriIpc
 import qs.Config
+import qs.Core
 import qs.Widgets
 
 Item {
@@ -23,21 +24,6 @@ Item {
         }
         filtered.sort((a, b) => a.idx - b.idx);
         return filtered;
-    }
-
-    // Unique appIds per workspace — { workspaceId: [appId, appId, ...] }
-    readonly property var _appsPerWorkspace: {
-        const windows = Niri.windows ? Niri.windows.values : [];
-        const map = {};
-        for (let i = 0; i < windows.length; i++) {
-            const w = windows[i];
-            const wsId = w.workspaceId;
-            if (wsId < 0) continue;
-            if (!map[wsId]) map[wsId] = [];
-            if (map[wsId].indexOf(w.appId) < 0)
-                map[wsId].push(w.appId);
-        }
-        return map;
     }
 
     readonly property int _ringSize: 22
@@ -76,7 +62,7 @@ Item {
 
                 property bool focused: modelData.focused
                 property bool urgent: modelData.urgent
-                readonly property var apps: root._appsPerWorkspace[modelData.id] || []
+                readonly property var apps: NiriAppsCache.appsByWorkspace[modelData.id] || []
                 readonly property int appCount: Math.min(apps.length, root._maxSegments)
 
                 // Transition driver — single animated value from 0 to 1
@@ -89,6 +75,33 @@ Item {
                     _toCount = appCount;
                     _t = 0;
                     _anim.restart();
+                }
+
+                // Per-count full sweep — hoisted so the 8 Shape segments
+                // don't each recompute it twice on every _t tick.
+                readonly property real _oldFullSweep: root._sweepForCount(_fromCount)
+                readonly property real _newFullSweep: root._sweepForCount(_toCount)
+
+                // Cumulative segment start angles — recomputed once per _t /
+                // _fromCount / _toCount change instead of inside each of the 8
+                // Shape segments. Length matches root._maxSegments so every
+                // segment delegate can read _cumStart[index] without an
+                // out-of-bounds undefined.
+                readonly property var _cumStart: {
+                    const from = _fromCount;
+                    const to = _toCount;
+                    const t = _t;
+                    const oldFull = _oldFullSweep;
+                    const newFull = _newFullSweep;
+                    const out = new Array(root._maxSegments);
+                    let angle = root._startOffset;
+                    for (let i = 0; i < root._maxSegments; i++) {
+                        out[i] = angle;
+                        const oldSw = i < from ? oldFull : 0;
+                        const newSw = i < to ? newFull : 0;
+                        angle += oldSw + (newSw - oldSw) * t + root._gapDeg;
+                    }
+                    return out;
                 }
 
                 NumberAnimation {
@@ -113,23 +126,15 @@ Item {
                         preferredRendererType: Shape.CurveRenderer
 
                         // Interpolated sweep for this segment
-                        readonly property real _oldSweep: index < wsItem._fromCount ? root._sweepForCount(wsItem._fromCount) : 0
-                        readonly property real _newSweep: index < wsItem._toCount ? root._sweepForCount(wsItem._toCount) : 0
+                        readonly property real _oldSweep: index < wsItem._fromCount ? wsItem._oldFullSweep : 0
+                        readonly property real _newSweep: index < wsItem._toCount ? wsItem._newFullSweep : 0
                         readonly property real _sweep: _oldSweep + (_newSweep - _oldSweep) * wsItem._t
 
-                        // Start angle — cumulative sum of previous segments' animated sweeps
-                        readonly property real _start: {
-                            let angle = root._startOffset;
-                            const from = wsItem._fromCount;
-                            const to = wsItem._toCount;
-                            const t = wsItem._t;
-                            for (let i = 0; i < index; i++) {
-                                const oldSw = i < from ? root._sweepForCount(from) : 0;
-                                const newSw = i < to ? root._sweepForCount(to) : 0;
-                                angle += oldSw + (newSw - oldSw) * t + root._gapDeg;
-                            }
-                            return angle;
-                        }
+                        // Start angle — O(1) lookup into the precomputed
+                        // cumulative-sweep array on wsItem (one array
+                        // allocation per _t tick instead of O(N²) work
+                        // across 8 segment bindings).
+                        readonly property real _start: wsItem._cumStart[index]
 
                         readonly property bool _visible: _sweep > 0.5
                         readonly property color _segColor: wsItem.urgent ? Theme.red : Theme.ringColors[index]
