@@ -29,11 +29,20 @@ OverlayWindow {
     // file:// URI to reply to the requester.
     signal captured(string filePath)
     signal captureFailed()
+    // Area-mode cross-overlay coordination. Emitted by this overlay when
+    // the user starts dragging here (so peers can disable themselves) and
+    // when this overlay finishes/cancels (so peers can tear down too).
+    signal areaClaimedHere()
+    signal areaSessionFinished()
 
     property string _savePath: ""
     property string _tmpPath: ""
     property bool _captured: false
     property bool _captureActive: false // true after first capture, never reset
+    // Set when a peer overlay claimed the area selection first. Hides the
+    // rubber-band MouseArea so the user can't draw on two screens at once;
+    // the dim backdrop stays so the freeze is visible.
+    property bool _passive: false
 
     // Area selection state
     property real _startX: 0
@@ -44,6 +53,7 @@ OverlayWindow {
     property real _selH: 0
     property bool _selecting: false
     readonly property bool _selectionReady: _selW > 2 && _selH > 2
+    readonly property bool _active: mode !== ""
 
     Region { id: _emptyRegion }
 
@@ -70,16 +80,27 @@ OverlayWindow {
         _timeout.start();
     }
 
+    // Peer signalled it claimed the area selection — we go passive so the
+    // user can only draw on one screen at a time.
+    function setPassive() {
+        if (root.mode === "area") root._passive = true;
+    }
+
     // ── Internals ───────────────────────────────────────
     function _reset() {
         _captured = false;
         _selecting = false;
+        _passive = false;
         _selX = 0; _selY = 0; _selW = 0; _selH = 0;
         _startX = 0; _startY = 0;
         cropImage.source = "";
     }
 
-    function _close() {
+    // Tear-down. `broadcast=false` skips fan-out — used when called from
+    // a peer's broadcast handler so we don't loop.
+    function _close(broadcast) {
+        if (!_active) return;
+        const wasArea = mode === "area";
         mode = "";
         _reset();
         captureView.opacity = 0;
@@ -87,6 +108,7 @@ OverlayWindow {
         WlrLayershell.keyboardFocus = WlrKeyboardFocus.None;
         _timeout.stop();
         _frameDelay.stop();
+        if (wasArea && broadcast !== false) root.areaSessionFinished();
     }
 
     function _onFrameReady() {
@@ -212,6 +234,9 @@ OverlayWindow {
         anchors.fill: parent
         visible: root.mode === "area" && root._captured
 
+        // Full dim while no selection drawn yet. Stays even when passive
+        // (peer claimed) so the user still sees this screen is "frozen"
+        // — only the rubber-band MouseArea is gated.
         Rectangle {
             anchors.fill: parent
             color: Theme.backdrop
@@ -301,6 +326,10 @@ OverlayWindow {
         MouseArea {
             anchors.fill: parent
             cursorShape: Qt.CrossCursor
+            // Disable interactions when a peer overlay claimed the area —
+            // user only drags on one screen at a time. The dim backdrop
+            // above stays visible so this screen still looks "frozen".
+            enabled: !root._passive
 
             onPressed: mouse => {
                 root._startX = mouse.x;
@@ -310,6 +339,10 @@ OverlayWindow {
                 root._selW = 0;
                 root._selH = 0;
                 root._selecting = true;
+                // First mousedown anywhere in the session wins. Tell peers
+                // to disable themselves so the user can't draw on another
+                // screen in parallel.
+                root.areaClaimedHere();
             }
 
             onPositionChanged: mouse => {
@@ -336,7 +369,7 @@ OverlayWindow {
                 root._close();
                 event.accepted = true;
             } else if (event.key === Qt.Key_Space && root.mode === "area"
-                       && root._selectionReady) {
+                       && root._selectionReady && !root._passive) {
                 root._grabSelection();
                 event.accepted = true;
             }
