@@ -195,12 +195,8 @@ Item {
                                             SkewRect {
                                                 anchors.fill: parent
                                                 fillColor: capRect.parent.isMod
-                                                    ? Theme.withAlpha(Theme.secondary, 0.22)
-                                                    : Theme.withAlpha(Theme.accent, 0.22)
-                                                strokeColor: capRect.parent.isMod
-                                                    ? Theme.withAlpha(Theme.secondary, 0.55)
-                                                    : Theme.withAlpha(Theme.accent, 0.55)
-                                                strokeWidth: 1
+                                                    ? Theme.withAlpha(Theme.secondary, 0.32)
+                                                    : Theme.withAlpha(Theme.accent, 0.32)
                                                 skewAmount: Math.tan(-0.21)
                                             }
 
