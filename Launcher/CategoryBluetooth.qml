@@ -83,13 +83,48 @@ LauncherCategory {
         }));
     }
 
-    // ── Polling timer (BT devices don't rebind Connections target) ──
-    // Gated on launcher.isOpen so we don't poll D-Bus while the UI is hidden.
+    // ── Reactive refresh ──
+    // Replaces the old 2 s polling loop. Three sources can trigger a
+    // refresh — model add/remove (valuesChanged), per-device property
+    // changes (connected/paired/name/rssi/battery), and the user's
+    // search query (handled by onSearch above). All three funnel into
+    // a 350 ms debounce so a BlueZ probe wave doesn't refresh N times.
+    readonly property bool _refreshGate:
+        root.launcher.isOpen && root.active && root.btReady
+
     Timer {
-        interval: 2000
-        running: root.launcher.isOpen && root.active && root.btReady
-        repeat: true
-        onTriggered: root.refreshBt(root.launcher.searchText)
+        id: _refreshDebounce
+        interval: 350
+        repeat: false
+        onTriggered: if (root._refreshGate) root.refreshBt(root.launcher.searchText)
+    }
+
+    // Model-level: device added / removed.
+    Connections {
+        target: root.btAdapter ? root.btAdapter.devices : null
+        enabled: root._refreshGate
+        function onValuesChanged() { _refreshDebounce.restart(); }
+    }
+
+    // Per-device: properties the carousel renders (connected, paired,
+    // name, rssi, battery). Instantiator dynamically tracks the device
+    // list so devices joining mid-session get listeners too; the delegate
+    // is non-visual — purely a Connections host. `.values` (QVariantList)
+    // is what the rest of the shell binds to as well; passing the raw
+    // ObjectModel doesn't expose `modelData` consistently in Instantiator.
+    Instantiator {
+        model: (root.btAdapter && root.btAdapter.devices)
+            ? root.btAdapter.devices.values : []
+        delegate: Connections {
+            required property var modelData
+            target: modelData
+            enabled: root._refreshGate
+            function onConnectedChanged() { _refreshDebounce.restart(); }
+            function onPairedChanged()    { _refreshDebounce.restart(); }
+            function onNameChanged()      { _refreshDebounce.restart(); }
+            function onRssiChanged()      { _refreshDebounce.restart(); }
+            function onBatteryChanged()   { _refreshDebounce.restart(); }
+        }
     }
 
     // Track the device we last asked to pair, so we can mirror its state

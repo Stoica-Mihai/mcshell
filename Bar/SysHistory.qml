@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Services.SysInfo
+import qs.Config
 
 // Shared rolling history of system metrics so multiple bar instances
 // don't each maintain their own buffer and drift out of sync. The 8-slot
@@ -14,6 +15,13 @@ Singleton {
     readonly property int length: 8
     property var cpuHistory: _empty()
 
+    // Only the bar capsule's "cpu-history" mode consumes this buffer.
+    // When the user picks cpu / memory / gpu we skip the slice+push churn
+    // entirely (and also reset the buffer below so re-entering cpu-history
+    // doesn't show a stale 16s tail).
+    readonly property bool active: SysInfo.enabled
+        && UserSettings.sysInfoBarMetric === "cpu-history"
+
     function _empty() {
         const a = [];
         for (let i = 0; i < length; i++) a.push(0);
@@ -24,7 +32,7 @@ Singleton {
     // emits no signal and would otherwise leave the history frozen.
     Timer {
         interval: SysInfo.interval > 0 ? SysInfo.interval : 2000
-        running: SysInfo.enabled
+        running: root.active
         repeat: true
         triggeredOnStart: true
         onTriggered: {
@@ -34,12 +42,9 @@ Singleton {
         }
     }
 
-    // Reset to zeros when polling is disabled so a stale tail doesn't
-    // hang around if the user toggles SysInfo back on later.
-    Connections {
-        target: SysInfo
-        function onEnabledChanged() {
-            if (!SysInfo.enabled) root.cpuHistory = root._empty();
-        }
-    }
+    // Reset to zeros whenever the buffer stops being consumed — either
+    // SysInfo polling disabled or bar metric switched away from cpu-history.
+    // Otherwise the next activation would render a stale tail until the
+    // ring rolls over (~16 s at 2 s interval).
+    onActiveChanged: if (!active) cpuHistory = _empty()
 }
