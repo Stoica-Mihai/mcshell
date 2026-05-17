@@ -26,40 +26,50 @@ ColumnLayout {
     spacing: Theme.spacingMedium
 
     // ── Internal state ─────────────────────────────────────
-    // Plain (non-bound) properties — Quickshell's MprisPlayer.length has no
-    // NOTIFY signal, so a binding on player.length never refreshes once cached.
-    // We sync imperatively from FrameAnimation (while playing) + metadata /
-    // playback-state Connections (covers pause + streaming sources where
-    // length grows as the source loads).
+    // trackLen: pure binding (noctalia-shell pattern). Quickshell's
+    // MprisPlayer.length emits lengthChanged, so the binding refreshes
+    // reactively. Sentinel guard rejects "infinite" lengths some live
+    // sources report (~10.6 days in microseconds).
+    //
+    // Known limitation: some streaming sources (YouTube via browser MPRIS
+    // bridge) report length=position while playing and only reflush the
+    // real total on pause. The displayed length will be inaccurate until
+    // the user pauses once. There's no in-shell fix for that — the source
+    // genuinely lies.
+    readonly property real trackLen: {
+        if (!media || !media.player) return 0;
+        const n = media.player.length;
+        return (n > 0 && n < 922337203685) ? n : 0;
+    }
+    // currentPos: imperative — MprisPlayer.position has no per-frame
+    // notify, so we poll via FrameAnimation while playing + sync on signals.
     property real currentPos: 0
-    property real trackLen: 0
 
-    function _syncFromPlayer() {
-        if (!media.player) { currentPos = 0; trackLen = 0; return; }
-        if (!seekSlider.dragging) currentPos = media.player.position;
-        trackLen = media.player.length;
+    function _syncPos() {
+        if (!media || !media.player) { currentPos = 0; return; }
+        if (seekSlider.dragging) return;
+        currentPos = media.player.position;
     }
 
-    Component.onCompleted: _syncFromPlayer()
-    onActiveChanged: if (active) _syncFromPlayer()
+    Component.onCompleted: _syncPos()
+    onActiveChanged: if (active) _syncPos()
 
     FrameAnimation {
         running: root.media.isPlaying && root.active
-        onTriggered: root._syncFromPlayer()
+        onTriggered: root._syncPos()
     }
 
     Connections {
         target: root.media.player
         enabled: root.active
-        function onPositionChanged() { if (!seekSlider.dragging) root._syncFromPlayer(); }
-        function onMetadataChanged() { root._syncFromPlayer(); }
-        function onPlaybackStateChanged() { root._syncFromPlayer(); }
+        function onPositionChanged()      { root._syncPos(); }
+        function onPlaybackStateChanged() { root._syncPos(); }
     }
 
     Connections {
         target: root.media
         enabled: root.active
-        function onPlayerChanged() { root._syncFromPlayer(); }
+        function onPlayerChanged() { root._syncPos(); }
     }
 
     // Album art
