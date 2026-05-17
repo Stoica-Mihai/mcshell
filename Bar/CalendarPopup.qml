@@ -261,7 +261,7 @@ Item {
             Layout.leftMargin: Theme.spacingNormal
             Layout.rightMargin: Theme.spacingNormal
             Layout.topMargin: Theme.spacingSmall
-            spacing: 2
+            spacing: Theme.spacingMicro
 
             Repeater {
                 model: root._monthHolidays

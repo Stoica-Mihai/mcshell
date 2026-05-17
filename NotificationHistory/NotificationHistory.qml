@@ -156,7 +156,7 @@ Item {
                                 margins: 7
                                 leftMargin: Theme.spacingMedium
                             }
-                            spacing: 2
+                            spacing: Theme.spacingMicro
 
                             // Header
                             RowLayout {

@@ -458,6 +458,7 @@ Singleton {
     readonly property int itemSpacing: 14
 
     // Spacing scale
+    readonly property int spacingMicro: 2
     readonly property int spacingTiny: 4
     readonly property int spacingSmall: 6
     readonly property int spacingNormal: 8
@@ -492,6 +493,15 @@ Singleton {
 
     // Audio
     readonly property real volumeStep: 0.02
+
+    // Media popup
+    readonly property int mediaAlbumSize: 160          // album-art square in media dropdown
+    readonly property int mediaPopupMaxWidth: 280      // max content width inside media dropdown
+
+    // Slider — compact variant (the SliderTrack/ControlSlider defaults are 6/14;
+    // these are the smaller sizes used inside media-popup seek/volume sliders).
+    readonly property int sliderTrackHeight: 4
+    readonly property int sliderKnobSize: 12
 
     // ── Typography ──────────────────────────────────────
     readonly property string fontFamily: "JetBrains Mono"

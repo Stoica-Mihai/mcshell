@@ -707,7 +707,7 @@ Scope {
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.top: parent.top
                         anchors.topMargin: Theme.popupPadding
-                        width: Math.min(parent.width - Theme.popupPadding * 2, 280)
+                        width: Math.min(parent.width - Theme.popupPadding * 2, Theme.mediaPopupMaxWidth)
                         spacing: Theme.spacingMedium
 
                         property real currentPos: media.player ? media.player.position : 0
@@ -736,8 +736,8 @@ Scope {
                         // Album art
                         Rectangle {
                             Layout.alignment: Qt.AlignHCenter
-                            Layout.preferredWidth: 160
-                            Layout.preferredHeight: 160
+                            Layout.preferredWidth: Theme.mediaAlbumSize
+                            Layout.preferredHeight: Theme.mediaAlbumSize
                             radius: Theme.radiusMedium
                             color: Theme.bgHover
                             clip: true
@@ -812,8 +812,8 @@ Scope {
                                 value: mediaContent.trackLen > 0
                                     ? Math.max(0, Math.min(1, mediaContent.currentPos / mediaContent.trackLen)) : 0
                                 accentColor: Theme.accent
-                                trackHeight: 4
-                                knobSize: 12
+                                trackHeight: Theme.sliderTrackHeight
+                                knobSize: Theme.sliderKnobSize
                                 step: Theme.volumeStep
                                 onMoved: function(newValue) {
                                     if (media.player && media.player.canSeek && mediaContent.trackLen > 0) {
@@ -927,8 +927,8 @@ Scope {
                                 Layout.fillWidth: true
                                 value: mediaVolumeRow._vol
                                 accentColor: Theme.accent
-                                trackHeight: 4
-                                knobSize: 12
+                                trackHeight: Theme.sliderTrackHeight
+                                knobSize: Theme.sliderKnobSize
                                 step: Theme.volumeStep
                                 onMoved: function(newValue) {
                                     if (media.player) media.player.volume = newValue;
