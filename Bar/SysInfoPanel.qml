@@ -92,24 +92,17 @@ ColumnLayout {
                 Repeater {
                     model: SysInfo.cpuCores.length
 
-                    Rectangle {
+                    SkewRect {
                         width: coreRow.barWidth
                         anchors.bottom: parent.bottom
-                        radius: 1.5
+                        skewAmount: Theme.cardSkew
 
                         readonly property real _load: index < SysInfo.cpuCores.length ? SysInfo.cpuCores[index] : 0
                         height: Math.max(2, _load / 100 * 20)
-                        color: Theme.loadColor(_load)
-
-                        transform: Matrix4x4 {
-                            matrix: Qt.matrix4x4(
-                                1, Theme.cardSkew, 0, -Theme.cardSkew * parent.height / 2,
-                                0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1
-                            )
-                        }
+                        fillColor: Theme.loadColor(_load)
 
                         Behavior on height { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
-                        Behavior on color  { ColorAnimation  { duration: Theme.animCarousel } }
+                        Behavior on fillColor { ColorAnimation { duration: Theme.animCarousel } }
                     }
                 }
             }
@@ -150,25 +143,23 @@ ColumnLayout {
             }
 
             // Fill meter (skewed to match card geometry)
-            Rectangle {
+            Item {
+                id: memMeter
                 Layout.fillWidth: true
                 Layout.preferredHeight: 4
                 Layout.topMargin: 4
-                radius: 2
-                color: Theme.border
 
-                transform: Matrix4x4 {
-                    matrix: Qt.matrix4x4(
-                        1, Theme.cardSkew, 0, -Theme.cardSkew * 2,
-                        0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1
-                    )
+                SkewRect {
+                    anchors.fill: parent
+                    fillColor: Theme.border
+                    skewAmount: Theme.cardSkew
                 }
 
-                Rectangle {
-                    width: parent.width * SysInfo.memPercent / 100
-                    height: parent.height
-                    radius: 2
-                    color: Theme.accent
+                SkewRect {
+                    width: memMeter.width * SysInfo.memPercent / 100
+                    height: memMeter.height
+                    fillColor: Theme.accent
+                    skewAmount: Theme.cardSkew
 
                     Behavior on width { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
                 }
@@ -317,24 +308,17 @@ ColumnLayout {
                 Repeater {
                     model: 8
 
-                    Rectangle {
+                    SkewRect {
                         anchors.bottom: parent.bottom
                         width: gpuWave._barW
                         height: Math.max(2, (index + 1) / 8 * parent.height)
-                        radius: 1.5
+                        skewAmount: Theme.cardSkew
 
-                        color: gpuCol._util > (index + 1) * 12.5 - 12.5
+                        fillColor: gpuCol._util > (index + 1) * 12.5 - 12.5
                             ? gpuCol._loadColor
                             : Theme.outlineVariant
 
-                        transform: Matrix4x4 {
-                            matrix: Qt.matrix4x4(
-                                1, Theme.cardSkew, 0, -Theme.cardSkew * parent.height / 2,
-                                0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1
-                            )
-                        }
-
-                        Behavior on color { ColorAnimation { duration: Theme.animCarousel } }
+                        Behavior on fillColor { ColorAnimation { duration: Theme.animCarousel } }
                     }
                 }
             }

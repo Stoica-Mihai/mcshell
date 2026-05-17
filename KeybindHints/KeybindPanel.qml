@@ -187,38 +187,31 @@ Item {
                                                 || k === "alt"  || k === "super";
                                         }
 
-                                        Rectangle {
+                                        Item {
                                             id: capRect
                                             width: capText.implicitWidth + 14
                                             height: 18
-                                            color: parent.isMod ? Theme.withAlpha(Theme.secondary, 0.22)
-                                                                : Theme.withAlpha(Theme.accent, 0.22)
-                                            border.width: 1
-                                            border.color: parent.isMod ? Theme.withAlpha(Theme.secondary, 0.55)
-                                                                       : Theme.withAlpha(Theme.accent, 0.55)
-                                            transform: Matrix4x4 {
-                                                matrix: Qt.matrix4x4(
-                                                    1, Math.tan(-0.21), 0, Math.tan(-0.21) * capRect.height / 2,
-                                                    0, 1, 0, 0,
-                                                    0, 0, 1, 0,
-                                                    0, 0, 0, 1)
+
+                                            SkewRect {
+                                                anchors.fill: parent
+                                                fillColor: capRect.parent.isMod
+                                                    ? Theme.withAlpha(Theme.secondary, 0.22)
+                                                    : Theme.withAlpha(Theme.accent, 0.22)
+                                                strokeColor: capRect.parent.isMod
+                                                    ? Theme.withAlpha(Theme.secondary, 0.55)
+                                                    : Theme.withAlpha(Theme.accent, 0.55)
+                                                strokeWidth: 1
+                                                skewAmount: Math.tan(-0.21)
                                             }
 
                                             Text {
                                                 id: capText
                                                 anchors.centerIn: parent
-                                                text: parent.parent.modelData.trim()
+                                                text: capRect.parent.modelData.trim()
                                                 font.family: Theme.fontFamily
                                                 font.pixelSize: Theme.fontSizeMini
                                                 font.bold: true
                                                 color: Theme.fg
-                                                transform: Matrix4x4 {
-                                                    matrix: Qt.matrix4x4(
-                                                        1, Math.tan(0.21), 0, Math.tan(0.21) * capText.height / -2,
-                                                        0, 1, 0, 0,
-                                                        0, 0, 1, 0,
-                                                        0, 0, 0, 1)
-                                                }
                                             }
                                         }
                                     }
