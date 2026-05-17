@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Qs.DataControl
 import qs.Config
+import qs.Widgets
 
 LauncherCategory {
     id: root
@@ -63,13 +64,17 @@ LauncherCategory {
                 color: Theme.fgDim
             }
 
-            Image {
+            // Clipboard previews are often screenshots at full screen
+            // resolution — without sourceSize a 4K image decodes to ~32 MB
+            // just to fill a ~100x480 strip card. OptImage's default of
+            // decoding to widget size handles this. fillMode override stays
+            // (we letterbox instead of crop so users see the whole image).
+            OptImage {
                 anchors.fill: parent
                 anchors.margins: 4
                 visible: !parent.isCurrent && (modelData.isImage ?? false)
                 source: modelData.imageUrl ?? ""
                 fillMode: Image.PreserveAspectFit
-                asynchronous: true
             }
 
             // Expanded content
@@ -89,14 +94,15 @@ LauncherCategory {
                     Layout.alignment: Qt.AlignHCenter
                 }
 
-                // Image preview (expanded)
-                Image {
+                // Image preview (expanded) — OptImage caps decode at the
+                // expanded card size (~700x480) instead of the source's
+                // native resolution.
+                OptImage {
                     visible: modelData.isImage ?? false
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     source: modelData.imageUrl ?? ""
                     fillMode: Image.PreserveAspectFit
-                    asynchronous: true
                     }
 
                 // Text content (non-image)
