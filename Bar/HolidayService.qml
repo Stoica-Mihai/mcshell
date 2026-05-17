@@ -3,6 +3,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import qs.Config
+import qs.Core
 
 // Public holidays for the weather location's country.
 // Source: Nager.Date (https://date.nager.at) — free, no auth, no rate limits.

@@ -1,7 +1,6 @@
 import QtQuick
 import Quickshell.Services.SysInfo
 import qs.Config
-import qs.Core
 import qs.Widgets
 
 // Tiny 8-bar waveform showing CPU core load inside the capsule.
