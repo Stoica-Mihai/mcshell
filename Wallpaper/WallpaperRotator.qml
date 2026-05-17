@@ -37,20 +37,10 @@ Item {
         return pick;
     }
 
-    // Prime the scanner if rotation is enabled before the Wall tab has
-    // ever been opened — otherwise paths would stay empty and the timer
-    // would idle forever.
-    Component.onCompleted: {
-        if (_enabled && !WallpaperScanner.loaded)
-            WallpaperScanner.scan();
-    }
-    Connections {
-        target: UserSettings
-        function onWallpaperRotateIntervalChanged() {
-            if (root._enabled && !WallpaperScanner.loaded)
-                WallpaperScanner.scan();
-        }
-    }
+    // WallpaperScanner self-scans on Component.onCompleted (forced eager
+    // init via the `WallpaperScanner;` reference in shell.qml's
+    // Component.onCompleted), so `paths` is already populated by the
+    // time the rotate timer first ticks — no priming needed here.
 
     Timer {
         id: rotateTimer

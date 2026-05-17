@@ -112,6 +112,10 @@ ShellRoot {
         // registers on the bus. Skeleton stage — all slots currently
         // respond with response=2 (other-error). See PLAN-screencast-portal.md.
         ScreenCastPortal;
+        // Force WallpaperScanner init so the `find` scan runs during shell
+        // startup — first launcher Wall-tab open then reads cached paths
+        // instead of forking + line-streaming `find` on the hot path.
+        WallpaperScanner;
         try {
             Qt.createQmlObject(
                 'import Quickshell; IdleMonitor {'
