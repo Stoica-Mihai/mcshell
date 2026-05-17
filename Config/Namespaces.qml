@@ -13,6 +13,7 @@ Singleton {
     readonly property string barZone:          _prefix + "-zone"
     readonly property string launcher:         _prefix + "-launcher"
     readonly property string polkit:           _prefix + "-polkit"
+    readonly property string bluetoothPair:    _prefix + "-btpair"
     readonly property string screenshot:       _prefix + "-screenshot"
     readonly property string wallpaper:        _prefix + "-wallpaper"
     readonly property string notifications:    _prefix + "-notifications"
