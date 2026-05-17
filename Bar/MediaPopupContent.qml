@@ -26,27 +26,40 @@ ColumnLayout {
     spacing: Theme.spacingMedium
 
     // ── Internal state ─────────────────────────────────────
-    property real currentPos: media.player ? media.player.position : 0
-    property real trackLen: media.player ? media.player.length : 0
+    // Plain (non-bound) properties — Quickshell's MprisPlayer.length has no
+    // NOTIFY signal, so a binding on player.length never refreshes once cached.
+    // We sync imperatively from FrameAnimation (while playing) + metadata /
+    // playback-state Connections (covers pause + streaming sources where
+    // length grows as the source loads).
+    property real currentPos: 0
+    property real trackLen: 0
+
+    function _syncFromPlayer() {
+        if (!media.player) { currentPos = 0; trackLen = 0; return; }
+        if (!seekSlider.dragging) currentPos = media.player.position;
+        trackLen = media.player.length;
+    }
+
+    Component.onCompleted: _syncFromPlayer()
+    onActiveChanged: if (active) _syncFromPlayer()
 
     FrameAnimation {
         running: root.media.isPlaying && root.active
-        onTriggered: {
-            if (root.media.player && !seekSlider.dragging)
-                root.media.player.positionChanged();
-        }
+        onTriggered: root._syncFromPlayer()
     }
 
     Connections {
         target: root.media.player
         enabled: root.active
-        function onPositionChanged() {
-            if (!seekSlider.dragging)
-                root.currentPos = root.media.player ? root.media.player.position : 0;
-        }
-        function onLengthChanged() {
-            root.trackLen = root.media.player ? root.media.player.length : 0;
-        }
+        function onPositionChanged() { if (!seekSlider.dragging) root._syncFromPlayer(); }
+        function onMetadataChanged() { root._syncFromPlayer(); }
+        function onPlaybackStateChanged() { root._syncFromPlayer(); }
+    }
+
+    Connections {
+        target: root.media
+        enabled: root.active
+        function onPlayerChanged() { root._syncFromPlayer(); }
     }
 
     // Album art
