@@ -4,7 +4,6 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Bluetooth
 import Quickshell.Networking
-import Quickshell.Services.Mpris
 import Quickshell.Services.SystemTray
 import qs.Config
 import qs.Core
@@ -40,22 +39,52 @@ Scope {
     property int panelToggleTrigger: 0
     property string panelToggleName: ""
     property string panelToggleMode: ""
-    // Dispatch table mapping panel names → owning dropdown.
+    // Dispatch table mapping panel names → descriptor.
+    //
+    // Each entry: { owner, fullHeight } where:
+    //   - owner: the AnimatedPopup that hosts this panel
+    //   - fullHeight: a () => number callback; called from the owner's
+    //     `fullHeight` binding. QML's binding evaluator captures the
+    //     property reads inside the function call, so the dropdown
+    //     re-evaluates when the content resizes.
+    //
+    // The padded-implicitHeight variants (volume / media / sysinfo /
+    // trayicons) match the per-content margins used inside the dropdown.
+    // The settings-Loader variants read `.fullHeight` off the Loader
+    // wrapper (which forwards `item.fullHeight`), preserving the
+    // existing distinction between `implicitHeight + popupPadding * 2`
+    // and panels that compute their own padded fullHeight (e.g.
+    // NotificationHistory, CalendarPopup).
     readonly property var _barPanels: ({
-        keybinds:        leftDropdown,
-        calendar:        centerDropdown,
-        weather:         centerDropdown,
-        clockSettings:   centerDropdown,
-        volume:          sharedDropdown,
-        notifications:   sharedDropdown,
-        media:           sharedDropdown,
-        sysinfo:         sharedDropdown,
-        sysInfoSettings: sharedDropdown,
-        wifiSettings:    sharedDropdown,
-        bluetoothSettings: sharedDropdown,
-        trayicons:       sharedDropdown,
-        tray:            sharedDropdown
+        keybinds:          { owner: leftDropdown,    fullHeight: () => keybindContent.fullHeight },
+        calendar:          { owner: centerDropdown,  fullHeight: () => calendarContent.fullHeight },
+        weather:           { owner: centerDropdown,  fullHeight: () => weatherContent.fullHeight },
+        clockSettings:     { owner: centerDropdown,  fullHeight: () => clockSettingsContent.fullHeight },
+        volume:            { owner: sharedDropdown,  fullHeight: () => volumeContent.implicitHeight + Theme.popupPadding * 2 },
+        notifications:     { owner: sharedDropdown,  fullHeight: () => notifContent.fullHeight },
+        media:             { owner: sharedDropdown,  fullHeight: () => mediaContent.implicitHeight + Theme.popupPadding * 2 },
+        sysinfo:           { owner: sharedDropdown,  fullHeight: () => sysInfoContent.implicitHeight + Theme.popupPadding * 2 },
+        sysInfoSettings:   { owner: sharedDropdown,  fullHeight: () => sysInfoSettingsContent.fullHeight },
+        wifiSettings:      { owner: sharedDropdown,  fullHeight: () => wifiSettingsContent.fullHeight },
+        bluetoothSettings: { owner: sharedDropdown,  fullHeight: () => bluetoothSettingsContent.fullHeight },
+        trayicons:         { owner: sharedDropdown,  fullHeight: () => trayIconsContent.implicitHeight + Theme.popupPadding * 2 },
+        // `tray` is the SysTray context-menu panel — opened by SysTray
+        // itself, no popup content in this dropdown, so fullHeight is
+        // only consulted when something other than the menu is active.
+        tray:              { owner: sharedDropdown,  fullHeight: () => 100 }
     })
+
+    // Resolve the active panel's fullHeight for a given owner. Returns
+    // 100 when nothing is active or the descriptor is missing. Called
+    // from each AnimatedPopup's `fullHeight` binding.
+    function _panelHeightFor(dropdown) {
+        const name = dropdown.activePanel;
+        if (!name) return 100;
+        const desc = _barPanels[name];
+        if (!desc || desc.owner !== dropdown) return 100;
+        return desc.fullHeight();
+    }
+
     onPanelToggleTriggerChanged: {
         if (!panelToggleName) return;
 
@@ -67,8 +96,9 @@ Scope {
             _toggleWeather(panelToggleMode);
             return;
         }
-        const dropdown = _barPanels[panelToggleName];
-        if (!dropdown) return;
+        const desc = _barPanels[panelToggleName];
+        if (!desc) return;
+        const dropdown = desc.owner;
         // Split the close-vs-open paths so two leftDropdowns can never be
         // opened simultaneously on a multi-monitor setup (which trips Qt's
         // mTopPopup tracker — qwaylandwindow.cpp:127). Any screen with the
@@ -586,19 +616,7 @@ Scope {
                     implicitWidth: rightSection.width - Theme.barDiagSlant
                     anchor.adjustment: PopupAdjustment.None
 
-                    fullHeight: {
-                        switch (sharedDropdown.activePanel) {
-                        case "volume": return volumeContent.implicitHeight + Theme.popupPadding * 2;
-                        case "notifications": return notifContent.fullHeight;
-                        case "media": return mediaContent.implicitHeight + Theme.popupPadding * 2;
-                        case "sysinfo": return sysInfoContent.implicitHeight + Theme.popupPadding * 2;
-                        case "trayicons": return trayIconsContent.implicitHeight + Theme.popupPadding * 2;
-                        case "sysInfoSettings": return sysInfoSettingsContent.fullHeight;
-                        case "wifiSettings": return wifiSettingsContent.fullHeight;
-                        case "bluetoothSettings": return bluetoothSettingsContent.fullHeight;
-                        default: return 100;
-                        }
-                    }
+                    fullHeight: root._panelHeightFor(sharedDropdown)
 
                     onVisibleChanged: {
                         if (!visible) {
@@ -700,280 +718,16 @@ Scope {
                     }
 
                     // ── Media section ─────────────────────
-                    ColumnLayout {
+                    MediaPopupContent {
                         id: mediaContent
-                        visible: sharedDropdown.activePanel === "media"
+                        media: media
+                        active: sharedDropdown.activePanel === "media"
+                        visible: active
                         enabled: visible
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.top: parent.top
                         anchors.topMargin: Theme.popupPadding
                         width: Math.min(parent.width - Theme.popupPadding * 2, 280)
-                        spacing: Theme.spacingMedium
-
-                        property real currentPos: media.player ? media.player.position : 0
-                        property real trackLen: media.player ? media.player.length : 0
-
-                        FrameAnimation {
-                            running: media.isPlaying && sharedDropdown.activePanel === "media"
-                            onTriggered: {
-                                if (media.player && !seekSlider.dragging)
-                                    media.player.positionChanged();
-                            }
-                        }
-
-                        Connections {
-                            target: media.player
-                            enabled: sharedDropdown.activePanel === "media"
-                            function onPositionChanged() {
-                                if (!seekSlider.dragging)
-                                    mediaContent.currentPos = media.player ? media.player.position : 0;
-                            }
-                            function onLengthChanged() {
-                                mediaContent.trackLen = media.player ? media.player.length : 0;
-                            }
-                        }
-
-                        // Album art
-                        Rectangle {
-                            Layout.alignment: Qt.AlignHCenter
-                            Layout.preferredWidth: 160
-                            Layout.preferredHeight: 160
-                            radius: Theme.radiusMedium
-                            color: Theme.bgHover
-                            clip: true
-                            layer.enabled: true
-
-                            OptImage {
-                                id: albumArt
-                                anchors.fill: parent
-                                source: media.player && media.player.trackArtUrl ? media.player.trackArtUrl : ""
-                                visible: status === Image.Ready
-                            }
-
-                            Text {
-                                anchors.centerIn: parent
-                                visible: !albumArt.visible
-                                text: Theme.iconPlay
-                                font.family: Theme.iconFont
-                                font.pixelSize: Theme.fontSizeHero
-                                color: Theme.fgDim
-                                opacity: Theme.opacityDim
-                            }
-                        }
-
-                        // Track title
-                        Text {
-                            Layout.fillWidth: true
-                            text: media.title || "Unknown Title"
-                            color: Theme.fg
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSize
-                            font.weight: Font.Medium
-                            elide: Text.ElideRight
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-
-                        // Artist
-                        Text {
-                            Layout.fillWidth: true
-                            Layout.topMargin: -6
-                            text: media.artist || "Unknown Artist"
-                            color: Theme.fgDim
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeSmall
-                            elide: Text.ElideRight
-                            horizontalAlignment: Text.AlignHCenter
-                        }
-
-                        // Album
-                        Text {
-                            Layout.fillWidth: true
-                            Layout.topMargin: -6
-                            visible: media.player && media.player.trackAlbum !== ""
-                            text: media.player ? (media.player.trackAlbum || "") : ""
-                            color: Theme.fgDim
-                            font.family: Theme.fontFamily
-                            font.pixelSize: Theme.fontSizeSmall
-                            font.italic: true
-                            elide: Text.ElideRight
-                            horizontalAlignment: Text.AlignHCenter
-                            opacity: Theme.opacityBody
-                        }
-
-                        // Seek bar
-                        ColumnLayout {
-                            Layout.fillWidth: true
-                            spacing: Theme.spacingTiny
-
-                            SliderTrack {
-                                id: seekSlider
-                                Layout.fillWidth: true
-                                visible: !media.isLive
-                                value: mediaContent.trackLen > 0
-                                    ? Math.max(0, Math.min(1, mediaContent.currentPos / mediaContent.trackLen)) : 0
-                                accentColor: Theme.accent
-                                trackHeight: 4
-                                knobSize: 12
-                                step: Theme.volumeStep
-                                onMoved: function(newValue) {
-                                    if (media.player && media.player.canSeek && mediaContent.trackLen > 0) {
-                                        media.player.position = newValue * mediaContent.trackLen;
-                                        mediaContent.currentPos = newValue * mediaContent.trackLen;
-                                    }
-                                }
-                            }
-
-                            RowLayout {
-                                Layout.fillWidth: true
-                                spacing: 0
-
-                                Text {
-                                    visible: !media.isLive
-                                    text: media.formatTime(mediaContent.currentPos)
-                                    color: Theme.fgDim
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSizeTiny
-                                }
-                                Item { Layout.fillWidth: true }
-                                Text {
-                                    visible: media.isLive
-                                    text: "LIVE"
-                                    color: Theme.red
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSizeTiny
-                                    font.bold: true
-                                    Layout.alignment: Qt.AlignHCenter
-                                }
-                                Item { Layout.fillWidth: true; visible: media.isLive }
-                                Text {
-                                    visible: !media.isLive
-                                    text: media.formatTime(mediaContent.trackLen)
-                                    color: Theme.fgDim
-                                    font.family: Theme.fontFamily
-                                    font.pixelSize: Theme.fontSizeTiny
-                                }
-                            }
-                        }
-
-                        // Transport row: shuffle | prev / play / next | loop
-                        RowLayout {
-                            Layout.alignment: Qt.AlignHCenter
-                            spacing: Theme.spacingMedium
-
-                            IconButton {
-                                icon: Theme.iconShuffle
-                                size: Theme.iconSize
-                                visible: media.player && media.player.shuffleSupported
-                                normalColor: media.player && media.player.shuffle ? Theme.accent : Theme.fg
-                                onClicked: if (media.player) media.player.shuffle = !media.player.shuffle
-                            }
-
-                            MediaControls {
-                                player: media.player
-                                spacing: 20
-                                playSize: Theme.iconSize + 4
-                            }
-
-                            IconButton {
-                                size: Theme.iconSize
-                                visible: media.player && media.player.loopSupported
-                                readonly property int _loop: media.player ? media.player.loopState : 0
-                                icon: _loop === MprisLoopState.Track ? Theme.iconLoopOne
-                                    : _loop === MprisLoopState.Playlist ? Theme.iconLoopAll
-                                    : Theme.iconLoopOff
-                                normalColor: _loop !== MprisLoopState.None ? Theme.accent : Theme.fg
-                                onClicked: {
-                                    if (!media.player) return;
-                                    const next = (media.player.loopState + 1) % 3;
-                                    media.player.loopState = next;
-                                }
-                            }
-                        }
-
-                        // Volume slider — speaker icon (mute toggle) + slider + %
-                        RowLayout {
-                            id: mediaVolumeRow
-                            Layout.fillWidth: true
-                            Layout.topMargin: 4
-                            visible: media.player && media.player.volumeSupported
-                            spacing: Theme.spacingSmall
-
-                            readonly property real _vol: media.player ? media.player.volume : 0
-                            readonly property bool _muted: _vol < 0.001
-                            // Restored when the user un-mutes — MPRIS players don't
-                            // expose a separate mute, so we have to remember what
-                            // volume to bounce back to.
-                            property real _preMuteVol: 0.5
-
-                            IconButton {
-                                size: Theme.iconSize
-                                icon: mediaVolumeRow._muted ? Theme.iconVolMuted
-                                    : mediaVolumeRow._vol < 0.3 ? Theme.iconVolLow
-                                    : mediaVolumeRow._vol < 0.7 ? Theme.iconVolMid
-                                    : Theme.iconVolHigh
-                                normalColor: mediaVolumeRow._muted ? Theme.red : Theme.fg
-                                onClicked: {
-                                    if (!media.player) return;
-                                    if (mediaVolumeRow._muted) {
-                                        media.player.volume = mediaVolumeRow._preMuteVol;
-                                    } else {
-                                        mediaVolumeRow._preMuteVol = media.player.volume;
-                                        media.player.volume = 0;
-                                    }
-                                }
-                            }
-
-                            SliderTrack {
-                                Layout.fillWidth: true
-                                value: mediaVolumeRow._vol
-                                accentColor: Theme.accent
-                                trackHeight: 4
-                                knobSize: 12
-                                step: Theme.volumeStep
-                                onMoved: function(newValue) {
-                                    if (media.player) media.player.volume = newValue;
-                                }
-                            }
-
-                            Text {
-                                Layout.preferredWidth: 32
-                                horizontalAlignment: Text.AlignRight
-                                text: Math.round(mediaVolumeRow._vol * 100) + "%"
-                                color: Theme.fgDim
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSizeTiny
-                            }
-                        }
-
-                        // Player picker — chips for switching between active MPRIS players.
-                        // Only visible when more than one player is alive. Tapping a chip
-                        // pins Media to that player; an extra "Auto" chip restores the
-                        // play-priority logic.
-                        Flow {
-                            Layout.fillWidth: true
-                            Layout.topMargin: 4
-                            spacing: Theme.spacingTiny
-                            visible: Mpris.players.values.length > 1
-
-                            Repeater {
-                                model: Mpris.players.values
-                                SkewPill {
-                                    required property var modelData
-                                    readonly property bool isActive: modelData === media.player
-                                    text: modelData.identity || modelData.dbusName || "?"
-                                    fillColor: isActive ? Theme.withAlpha(Theme.accent, 0.20) : "transparent"
-                                    strokeColor: isActive ? Theme.accent : Theme.outlineVariant
-                                    textColor: isActive ? Theme.accent : Theme.fg
-                                    fontSize: Theme.fontSizeTiny
-
-                                    MouseArea {
-                                        anchors.fill: parent
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: media.pinPlayer(parent.modelData)
-                                    }
-                                }
-                            }
-                        }
                     }
 
                 }
@@ -994,14 +748,7 @@ Scope {
         implicitWidth: centerSection.width
         anchor.adjustment: PopupAdjustment.None
 
-        fullHeight: {
-            switch (centerDropdown.activePanel) {
-            case "calendar":      return calendarContent.fullHeight;
-            case "weather":       return weatherContent.fullHeight;
-            case "clockSettings": return clockSettingsContent.fullHeight;
-            default: return 100;
-            }
-        }
+        fullHeight: root._panelHeightFor(centerDropdown)
 
         onVisibleChanged: {
             if (!visible) centerDropdown.activePanel = "";
@@ -1048,12 +795,7 @@ Scope {
         implicitWidth: Theme.barSideWidth - Theme.barDiagSlant
         anchor.adjustment: PopupAdjustment.None
 
-        fullHeight: {
-            switch (leftDropdown.activePanel) {
-            case "keybinds": return keybindContent.fullHeight;
-            default: return 100;
-            }
-        }
+        fullHeight: root._panelHeightFor(leftDropdown)
 
         onVisibleChanged: {
             if (!visible) leftDropdown.activePanel = "";
