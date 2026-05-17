@@ -238,13 +238,12 @@ ShellRoot {
         _windowScreenshotProc.command = ["niri", "msg", "action", "screenshot-window", "--path", _windowScreenshotPath];
         _windowScreenshotProc.running = true;
     }
-    Process {
+    SafeProcess {
         id: _windowScreenshotProc
-        onExited: (code, status) => {
-            if (code === 0) {
-                Quickshell.setClipboardImage(shell._windowScreenshotPath);
-                NotificationDispatcher.sendWithImage("Screenshot", "Window copied to clipboard", shell._windowScreenshotPath);
-            }
+        failMessage: "niri screenshot-window"
+        onFinished: {
+            Quickshell.setClipboardImage(shell._windowScreenshotPath);
+            NotificationDispatcher.sendWithImage("Screenshot", "Window copied to clipboard", shell._windowScreenshotPath);
         }
     }
 
