@@ -7,7 +7,10 @@ import qs.Core
 
 // Lists image files in UserSettings.wallpaperFolder. Shared between the
 // launcher's Wall picker and the auto-rotator so the `find` command and
-// line collector aren't duplicated.
+// line collector aren't duplicated. Scans eagerly on shell startup
+// (forced via a `WallpaperScanner;` reference in shell.qml's
+// Component.onCompleted) so the result is already cached when the
+// launcher's Wall tab is first opened.
 Singleton {
     id: root
 
@@ -34,6 +37,10 @@ Singleton {
         ];
         scanProc.running = true;
     }
+
+    // Pre-scan at shell startup so the launcher's Wall tab and the
+    // rotator both find `paths` already populated on first access.
+    Component.onCompleted: scan()
 
     Connections {
         target: UserSettings

@@ -202,7 +202,13 @@ Item {
                         }
                     }
 
-                    // Large clock
+                    // Large clock — SystemClock matches Bar/Clock.qml:19-22
+                    // and avoids per-minute Date allocation on the lock surface.
+                    SystemClock {
+                        id: clockTimer
+                        precision: SystemClock.Minutes
+                    }
+
                     Text {
                         id: clockText
                         Layout.alignment: Qt.AlignHCenter
@@ -210,20 +216,7 @@ Item {
                         font.pixelSize: Theme.fontSizeDisplay
                         font.weight: Font.Bold
                         color: Theme.fg
-                        text: Qt.formatTime(clockTimer.currentTime, "HH:mm")
-
-                        Timer {
-                            id: clockTimer
-                            property date currentTime: new Date()
-                            interval: 60000 - (Date.now() % 60000)
-                            running: lockSession.locked
-                            repeat: true
-                            triggeredOnStart: true
-                            onTriggered: {
-                                currentTime = new Date();
-                                interval = 60000;
-                            }
-                        }
+                        text: Qt.formatTime(clockTimer.date, "HH:mm")
                     }
 
                     // Date
@@ -232,7 +225,7 @@ Item {
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeLarge
                         color: Theme.fgDim
-                        text: Qt.formatDate(clockTimer.currentTime, "dddd, MMMM d")
+                        text: Qt.formatDate(clockTimer.date, "dddd, MMMM d")
                     }
 
                     // Spacer
