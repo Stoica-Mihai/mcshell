@@ -41,8 +41,15 @@ LauncherCategory {
     }
 
     // Precomputed reverse map: wallpaper path → [screen names].
-    // Evaluated once when perScreenMap/wallpaperPath changes, not per-card.
-    readonly property var _screensByPath: {
+    // Plain property + explicit Connections so it rebuilds only on the three
+    // settings that actually feed it (perScreenMap / wallpaperFolder /
+    // wallpaperPath), not on any other UserSettings change. A direct JS
+    // binding here would scope correctly via Qt's tracker today, but the
+    // explicit form keeps the rebuild from creeping wider as the function
+    // body picks up new reads in future edits.
+    property var _screensByPath: ({})
+
+    function _rebuildScreensByPath() {
         const map = UserSettings.perScreenMap;
         const folder = UserSettings.wallpaperFolder;
         const global = UserSettings.wallpaperPath;
@@ -53,7 +60,16 @@ LauncherCategory {
             if (!result[wp]) result[wp] = [];
             result[wp].push(name);
         }
-        return result;
+        _screensByPath = result;
+    }
+
+    on_ScreenListChanged: _rebuildScreensByPath()
+
+    Connections {
+        target: UserSettings
+        function onPerScreenMapChanged() { root._rebuildScreensByPath(); }
+        function onWallpaperFolderChanged() { root._rebuildScreensByPath(); }
+        function onWallpaperPathChanged() { root._rebuildScreensByPath(); }
     }
 
     // ── Settled-selection debounce ──
@@ -68,7 +84,10 @@ LauncherCategory {
     // timer. A live binding would track selectedIndex on the very first nav
     // (before the timer ever fires), bypassing the debounce.
     property int _settledIndex: 0
-    Component.onCompleted: _settledIndex = launcher.selectedIndex
+    Component.onCompleted: {
+        _rebuildScreensByPath();
+        _settledIndex = launcher.selectedIndex;
+    }
     Timer {
         id: _settleTimer
         interval: 80
@@ -188,7 +207,9 @@ LauncherCategory {
                         anchors.fill: parent
                         anchors.margins: parent.border.width
                         fillMode: Image.PreserveAspectCrop
-                        asynchronous: false
+                        // async so first paint of the strip isn't blocked
+                        // on decode of N screen thumbnails.
+                        asynchronous: true
                         cache: true
                         source: monitorSlot.screenWp ? "file://" + monitorSlot.screenWp : ""
                         sourceSize.width: 180
@@ -271,13 +292,17 @@ LauncherCategory {
             // a full-resolution decode.
             readonly property bool _settled: index === root._settledIndex
 
-            // Collapsed: thumbnail from disk cache (tiny JPEG, cheap to decode)
+            // Collapsed: thumbnail from disk cache (tiny JPEG, cheap to decode).
+            // sourceSize.width: 0 leaves width unconstrained so Qt decodes
+            // proportional to the height cap — overrides OptImage's default
+            // of decoding to widget width (the narrow ~100-px strip).
             OptImage {
                 anchors.fill: parent
                 visible: !wallStrip.isCurrent
                 source: wallStrip.isVisible && wallStrip.wallPath
                     ? ThumbnailCache.sourceFor(wallStrip.wallPath)
                     : ""
+                sourceSize.width: 0
                 sourceSize.height: root.launcher.wallpaperThumbHeight
                 opacity: status === Image.Ready ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: Theme.animSmooth } }
@@ -295,6 +320,7 @@ LauncherCategory {
                     source: wallStrip.isCurrent && wallStrip.wallPath
                         ? ThumbnailCache.sourceFor(wallStrip.wallPath) : ""
                     smooth: true
+                    sourceSize.width: 0
                     sourceSize.height: root.launcher.wallpaperThumbHeight
                 }
 
@@ -306,6 +332,7 @@ LauncherCategory {
                         && wallStrip.wallPath
                         ? "file://" + wallStrip.wallPath : ""
                     smooth: true
+                    sourceSize.width: 0
                     sourceSize.height: root.launcher.carouselHeight
                     opacity: status === Image.Ready ? 1 : 0
                     Behavior on opacity { NumberAnimation { duration: Theme.animSmooth } }

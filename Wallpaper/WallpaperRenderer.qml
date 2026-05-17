@@ -55,6 +55,12 @@ Item {
             property bool showingFirst: true
             property string _lastApplied: ""
 
+            // Decode to the screen's pixel size — a 4K JPEG on a 1080p output
+            // otherwise allocates ~32 MB per layer (×2 for crossfade) before
+            // the GPU even sees it. modelData is the QScreen for this window.
+            readonly property int _decodeW: modelData.width
+            readonly property int _decodeH: modelData.height
+
             // Two image layers for crossfade
             Image {
                 id: imageA
@@ -63,6 +69,8 @@ Item {
                 asynchronous: true
                 cache: true
                 smooth: true
+                sourceSize.width: wallpaperWindow._decodeW
+                sourceSize.height: wallpaperWindow._decodeH
                 opacity: wallpaperWindow.showingFirst ? 1.0 : 0.0
                 source: ""
 
@@ -81,6 +89,8 @@ Item {
                 asynchronous: true
                 cache: true
                 smooth: true
+                sourceSize.width: wallpaperWindow._decodeW
+                sourceSize.height: wallpaperWindow._decodeH
                 opacity: wallpaperWindow.showingFirst ? 0.0 : 1.0
                 source: ""
 

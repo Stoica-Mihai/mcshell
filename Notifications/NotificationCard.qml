@@ -296,6 +296,13 @@ Item {
                     anchors.fill: parent
                     // Show the whole screenshot — letterbox if needed
                     fillMode: Image.PreserveAspectFit
+                    // sourceSize inherits OptImage's default (Math.max(16, width/height)).
+                    // Pinning to previewContainer.Layout.preferredWidth here caused
+                    // a polish() feedback loop because preferredHeight depends on
+                    // `visible`, which depends on this Image's status. Letting the
+                    // default kick in trades one bounded re-decode (initial small
+                    // size while container is invisible, then full size on first
+                    // paint) for no loop.
                     source: {
                         const url = card.imageUrl || "";
                         // Strip image://icon/ wrapper to get raw file path
