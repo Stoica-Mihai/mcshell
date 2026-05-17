@@ -60,14 +60,14 @@ Scope {
         calendar:          { owner: centerDropdown,  fullHeight: () => calendarContent.fullHeight },
         weather:           { owner: centerDropdown,  fullHeight: () => weatherContent.fullHeight },
         clockSettings:     { owner: centerDropdown,  fullHeight: () => clockSettingsContent.fullHeight },
-        volume:            { owner: sharedDropdown,  fullHeight: () => volumeContent.implicitHeight + Theme.popupPadding * 2 },
-        notifications:     { owner: sharedDropdown,  fullHeight: () => notifContent.fullHeight },
-        media:             { owner: sharedDropdown,  fullHeight: () => mediaContent.implicitHeight + Theme.popupPadding * 2 },
-        sysinfo:           { owner: sharedDropdown,  fullHeight: () => sysInfoContent.implicitHeight + Theme.popupPadding * 2 },
+        volume:            { owner: sharedDropdown,  fullHeight: () => volumeContent.item ? volumeContent.item.implicitHeight + Theme.popupPadding * 2 : 0 },
+        notifications:     { owner: sharedDropdown,  fullHeight: () => notifContent.item ? notifContent.item.fullHeight : 0 },
+        media:             { owner: sharedDropdown,  fullHeight: () => mediaContent.item ? mediaContent.item.implicitHeight + Theme.popupPadding * 2 : 0 },
+        sysinfo:           { owner: sharedDropdown,  fullHeight: () => sysInfoContent.item ? sysInfoContent.item.implicitHeight + Theme.popupPadding * 2 : 0 },
         sysInfoSettings:   { owner: sharedDropdown,  fullHeight: () => sysInfoSettingsContent.fullHeight },
         wifiSettings:      { owner: sharedDropdown,  fullHeight: () => wifiSettingsContent.fullHeight },
         bluetoothSettings: { owner: sharedDropdown,  fullHeight: () => bluetoothSettingsContent.fullHeight },
-        trayicons:         { owner: sharedDropdown,  fullHeight: () => trayIconsContent.implicitHeight + Theme.popupPadding * 2 },
+        trayicons:         { owner: sharedDropdown,  fullHeight: () => trayIconsContent.item ? trayIconsContent.item.implicitHeight + Theme.popupPadding * 2 : 0 },
         // `tray` is the SysTray context-menu panel — opened by SysTray
         // itself, no popup content in this dropdown, so fullHeight is
         // only consulted when something other than the menu is active.
@@ -620,45 +620,57 @@ Scope {
 
                     onVisibleChanged: {
                         if (!visible) {
+                            // Close tray submenu BEFORE clearing activePanel so
+                            // the Loader's item is still alive. Once activePanel
+                            // flips empty the Loader deactivates and item → null.
+                            // Guard for safety on shell-init paths.
+                            if (trayIconsContent.item) trayIconsContent.item.closeMenu();
                             sharedDropdown.activePanel = "";
-                            trayIconsContent.closeMenu();
                         }
                     }
 
                     // ── Volume section ────────────────────
-                    ColumnLayout {
+                    // Loader-gated so PipeWire bindings (VolumeSlider /
+                    // AppVolume per-stream bindings) don't churn while
+                    // the panel is closed.
+                    Loader {
                         id: volumeContent
-                        visible: sharedDropdown.activePanel === "volume"
-                        enabled: visible
+                        active: sharedDropdown.activePanel === "volume"
+                        visible: active
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: parent.top
                         anchors.margins: Theme.popupPadding
-                        spacing: Theme.spacingTiny
+                        sourceComponent: ColumnLayout {
+                            spacing: Theme.spacingTiny
 
-                        VolumeSlider {
-                            volumeSource: volume
-                            Layout.fillWidth: true
-                            Layout.bottomMargin: 2
-                        }
+                            VolumeSlider {
+                                volumeSource: volume
+                                Layout.fillWidth: true
+                                Layout.bottomMargin: 2
+                            }
 
-                        Separator { visible: appVolume.hasStreams }
+                            Separator { visible: appVolume.hasStreams }
 
-                        AppVolume {
-                            id: appVolume
-                            Layout.fillWidth: true
+                            AppVolume {
+                                id: appVolume
+                                Layout.fillWidth: true
+                            }
                         }
                     }
 
                     // ── Tray icons section ────────────────
-                    SysTrayPanel {
+                    // Loader-gated so SystemTray icon decode bindings
+                    // stop firing while the panel is closed.
+                    Loader {
                         id: trayIconsContent
-                        visible: sharedDropdown.activePanel === "trayicons"
-                        enabled: visible
+                        active: sharedDropdown.activePanel === "trayicons"
+                        visible: active
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: parent.top
                         anchors.margins: Theme.popupPadding
+                        sourceComponent: SysTrayPanel {}
                     }
 
                     // ── SysInfo section ───────────────────
@@ -706,28 +718,46 @@ Scope {
                     }
 
                     // ── Notifications section ─────────────
-                    NotificationHistory {
+                    // Loader-gated so the history Repeater + per-entry
+                    // bindings don't stay live when the panel is closed.
+                    // notifPanelOpened() fires on Loader.onLoaded (each
+                    // activation cycle).
+                    Loader {
                         id: notifContent
-                        visible: sharedDropdown.activePanel === "notifications"
-                        historyModel: root.notifHistoryModel
-                        onRemoveFromHistory: nid => root.notifRemoved(nid)
-                        onClearAllHistory: root.notifCleared()
-                        onVisibleChanged: {
-                            if (visible) root.notifPanelOpened();
+                        active: sharedDropdown.activePanel === "notifications"
+                        visible: active
+                        anchors.fill: parent
+                        sourceComponent: NotificationHistory {
+                            historyModel: root.notifHistoryModel
+                            onRemoveFromHistory: nid => root.notifRemoved(nid)
+                            onClearAllHistory: root.notifCleared()
                         }
+                        onLoaded: root.notifPanelOpened()
                     }
 
                     // ── Media section ─────────────────────
-                    MediaPopupContent {
+                    // Loader-gated so MPRIS Connections + FrameAnimation
+                    // inside MediaPopupContent stop firing while the
+                    // panel is closed. The inner `active` prop is now
+                    // hardcoded true since the Loader's lifecycle is the
+                    // source of truth — if the Loader is active the
+                    // panel is meant to be live.
+                    Loader {
                         id: mediaContent
-                        media: media
+                        // Proxy outer `media` id through a Loader-scope
+                        // property; the Component below redeclares `media`
+                        // so a bare `media: media` would self-reference.
+                        property var _mediaRef: media
                         active: sharedDropdown.activePanel === "media"
                         visible: active
-                        enabled: visible
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.top: parent.top
                         anchors.topMargin: Theme.popupPadding
                         width: Math.min(parent.width - Theme.popupPadding * 2, Theme.mediaPopupMaxWidth)
+                        sourceComponent: MediaPopupContent {
+                            media: mediaContent._mediaRef
+                            active: true
+                        }
                     }
 
                 }
