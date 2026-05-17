@@ -1,7 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.Config
-import qs.Core
 import qs.Widgets
 
 Item {
