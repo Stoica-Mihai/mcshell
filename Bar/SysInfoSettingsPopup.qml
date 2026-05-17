@@ -7,34 +7,27 @@ import qs.Widgets
 // Sysinfo config dropdown content — skewed-morphism variant.
 // Keyboard-only navigation: ↑/↓ moves between rows, ←/→ cycles value,
 // Enter/Space toggles bool rows.
-FocusScope {
+SettingsPanelBase {
     id: root
-
-    property bool windowOpen: false
-
-    readonly property real fullHeight: content.implicitHeight + Theme.spacingNormal * 2
-    readonly property alias nav: nav
-
 
     // ── Row dispatch table ──────────────────────────────
     // Each entry describes one focusable row. `kind` drives what keyboard
-    // input does via KeyboardRowNav. Per-GPU rows use the `onActivate`
-    // escape hatch since their toggle semantics don't fit the default
-    // boolean-setting flip.
-    readonly property var _rows: {
+    // input does via KeyboardRowNav AND how the row's UI is rendered.
+    // `section` (optional) starts a new visual section above the row.
+    // Per-GPU rows use the `onActivate` escape hatch since their toggle
+    // semantics don't fit the default boolean-setting flip.
+    rows: {
         const base = [
-            { kind: "cycle",  setting: "sysInfoInterval",    values: [1000, 2000, 5000, 10000], model: ["1 s", "2 s", "5 s", "10 s"] },
-            { kind: "cycle",  setting: "sysInfoTempUnit",    values: ["C", "F"],                 model: ["\u00B0C", "\u00B0F"] },
-            { kind: "cycle",  setting: "sysInfoNetUnit",     values: ["bytes", "kbytes", "mbytes", "bits"], model: ["bytes", "KB", "MB", "bits"] },
-            { kind: "toggle", setting: "sysInfoEnabled" },
-            { kind: "cycle",  setting: "sysInfoBarMetric",   values: _barMetricValues,            model: _barMetricLabels },
-            { kind: "check",  setting: "sysInfoShowCpu" },
-            { kind: "check",  setting: "sysInfoShowMemory" },
-            { kind: "check",  setting: "sysInfoShowThermal" },
-            { kind: "check",  setting: "sysInfoShowGpu" },
-            { kind: "check",  setting: "sysInfoShowNetwork" },
-            { kind: "check",  setting: "sysInfoShowDisk" }
+            { kind: "cycle",  section: "General",     label: "Poll interval",     setting: "sysInfoInterval",  values: [1000, 2000, 5000, 10000], model: ["1 s", "2 s", "5 s", "10 s"] },
+            { kind: "cycle",                          label: "Temperature unit",  setting: "sysInfoTempUnit",  values: ["C", "F"],                model: ["°C", "°F"] },
+            { kind: "cycle",                          label: "Network units",     setting: "sysInfoNetUnit",   values: ["bytes", "kbytes", "mbytes", "bits"], model: ["bytes", "KB", "MB", "bits"] },
+            { kind: "toggle", section: "Bar capsule", label: "Show in bar",       setting: "sysInfoEnabled" },
+            { kind: "cycle",                          label: "Bar metric",        setting: "sysInfoBarMetric", values: _barMetricValues,          model: _barMetricLabels },
         ];
+        // The 2-column grid of dropdown-section toggles renders separately
+        // below, but the row descriptors live in this same array so the
+        // keyboard nav indexing stays unified.
+        for (let i = 0; i < _checkRows.length; i++) base.push(_checkRows[i]);
         for (let i = 0; i < SysInfo.gpus.length; i++) {
             const name = SysInfo.gpus[i].name;
             base.push({
@@ -45,7 +38,16 @@ FocusScope {
         }
         return base;
     }
-    readonly property alias rowCount: nav.rowCount
+
+    // Dropdown-section toggles — same row descriptors, also indexed by nav.
+    readonly property var _checkRows: [
+        { kind: "check", setting: "sysInfoShowCpu",     label: "Processor" },
+        { kind: "check", setting: "sysInfoShowMemory",  label: "Memory" },
+        { kind: "check", setting: "sysInfoShowThermal", label: "Thermal" },
+        { kind: "check", setting: "sysInfoShowGpu",     label: "GPU" },
+        { kind: "check", setting: "sysInfoShowNetwork", label: "Network" },
+        { kind: "check", setting: "sysInfoShowDisk",    label: "Disk I/O" }
+    ]
 
     // Bar metric values — GPU option only offered if at least one GPU is detected.
     readonly property var _barMetricValues: SysInfo.gpus.length > 0
@@ -55,145 +57,189 @@ FocusScope {
         ? ["CPU load", "CPU history", "Memory", "GPU load"]
         : ["CPU load", "CPU history", "Memory"]
 
-    // Fixed indices into _rows so sections can look up their selection state.
-    readonly property int _idxInterval:      0
-    readonly property int _idxTempUnit:      1
-    readonly property int _idxNetUnit:       2
-    readonly property int _idxShowInBar:     3
-    readonly property int _idxBarMetric:     4
-    readonly property int _idxSectionsStart: 5
-    readonly property int _idxGpusStart:     11
+    // Start indices into `rows` for sections rendered as their own block.
+    readonly property int _idxChecksStart: 5
+    readonly property int _idxGpusStart:   _idxChecksStart + _checkRows.length
 
-    readonly property alias selectedRow: nav.selectedRow
+    // Live preview tile — straight rectangle so it reads as a flat
+    // header inside the straight dropdown, with a solid accent bar
+    // flush against the left edge.
+    Rectangle {
+        id: previewTile
+        Layout.fillWidth: true
+        Layout.preferredHeight: previewGrid.implicitHeight + Theme.spacingMedium * 2
+        color: Theme.withAlpha(Theme.accent, 0.08)
+        radius: Theme.radiusSmall
+        clip: true
 
-    KeyboardRowNav {
-        id: nav
-        rows: root._rows
-    }
-
-    // ── Keyboard handlers ──────────────────────────────
-    anchors.fill: parent
-    focus: true
-
-    onWindowOpenChanged: if (windowOpen) { nav.reset(); forceActiveFocus(); }
-
-    Keys.onUpPressed:     nav.navigate(-1)
-    Keys.onDownPressed:   nav.navigate(1)
-    Keys.onLeftPressed:   nav.adjust(-1)
-    Keys.onRightPressed:  nav.adjust(1)
-    Keys.onReturnPressed: nav.activate()
-    Keys.onSpacePressed:  nav.activate()
-
-    // ── UI ─────────────────────────────────────────────
-    ColumnLayout {
-        id: content
-        anchors.fill: parent
-        anchors.margins: Theme.spacingNormal
-        spacing: Theme.spacingSmall
-
-        // Live preview tile — straight rectangle so it reads as a flat
-        // header inside the straight dropdown, with a solid accent bar
-        // flush against the left edge.
         Rectangle {
-            id: previewTile
-            Layout.fillWidth: true
-            Layout.preferredHeight: previewGrid.implicitHeight + Theme.spacingMedium * 2
-            color: Theme.withAlpha(Theme.accent, 0.08)
-            radius: Theme.radiusSmall
-            clip: true
-
-            Rectangle {
-                anchors.left: parent.left
-                anchors.top: parent.top
-                anchors.bottom: parent.bottom
-                width: 3
-                color: Theme.accent
-            }
-
-            GridLayout {
-                id: previewGrid
-                anchors.fill: parent
-                anchors.leftMargin: Theme.spacingLarge + 4
-                anchors.rightMargin: Theme.spacingMedium
-                anchors.topMargin: Theme.spacingMedium
-                anchors.bottomMargin: Theme.spacingMedium
-                columns: 2
-                columnSpacing: Theme.spacingMedium
-                rowSpacing: Theme.spacingTiny
-
-                component Key: Text {
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeMini
-                    color: Theme.fgDim
-                }
-                component Val: Text {
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeTiny
-                    color: Theme.fg
-                    Layout.alignment: Qt.AlignRight
-                }
-
-                Key { text: "CPU" }
-                Val { text: SysInfo.cpuPercent.toFixed(0) + "% · " + (SysInfo.cpuFreqMhz / 1000).toFixed(1) + " GHz" }
-                Key { text: "Memory" }
-                Val { text: Theme.toGB(SysInfo.memUsed) + " / " + Theme.toGB(SysInfo.memTotal) + " GB" }
-                Key { text: "CPU temp" }
-                Val {
-                    text: {
-                        const temps = SysInfo.temperatures;
-                        for (let i = 0; i < temps.length; i++) {
-                            const lbl = temps[i].label;
-                            if (lbl === "Tctl" || lbl === "Package id 0")
-                                return Theme.formatTemp(temps[i].value);
-                        }
-                        return temps.length > 0 ? Theme.formatTemp(temps[0].value) : "—";
-                    }
-                    color: Theme.yellow
-                }
-                Key { text: "GPU" }
-                Val {
-                    readonly property var _gpu: UserSettings.primaryGpu()
-                    text: {
-                        if (!_gpu) return "—";
-                        const parts = [];
-                        if (_gpu.utilization >= 0) parts.push(_gpu.utilization.toFixed(0) + "%");
-                        if (_gpu.power > 0) parts.push(_gpu.power.toFixed(0) + " W");
-                        return parts.join(" \u00B7 ");
-                    }
-                    color: _gpu && _gpu.utilization > 50 ? Theme.yellow : Theme.fg
-                }
-            }
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            width: 3
+            color: Theme.accent
         }
 
-        // ── Reusable row components ────────────────────
-        component SectionLabel: RowLayout {
-            property string text: ""
-            Layout.fillWidth: true
-            Layout.topMargin: Theme.spacingSmall
-            spacing: Theme.spacingSmall
+        GridLayout {
+            id: previewGrid
+            anchors.fill: parent
+            anchors.leftMargin: Theme.spacingLarge + 4
+            anchors.rightMargin: Theme.spacingMedium
+            anchors.topMargin: Theme.spacingMedium
+            anchors.bottomMargin: Theme.spacingMedium
+            columns: 2
+            columnSpacing: Theme.spacingMedium
+            rowSpacing: Theme.spacingTiny
 
-            SkewRect {
-                implicitWidth: 10
-                implicitHeight: 6
-                fillColor: Theme.accent
-                opacity: Theme.opacityBody
-            }
-            Text {
-                text: parent.text
+            component Key: Text {
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeMini
                 color: Theme.fgDim
-                Layout.fillWidth: true
+            }
+            component Val: Text {
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeTiny
+                color: Theme.fg
+                Layout.alignment: Qt.AlignRight
+            }
+
+            Key { text: "CPU" }
+            Val { text: SysInfo.cpuPercent.toFixed(0) + "% · " + (SysInfo.cpuFreqMhz / 1000).toFixed(1) + " GHz" }
+            Key { text: "Memory" }
+            Val { text: Theme.toGB(SysInfo.memUsed) + " / " + Theme.toGB(SysInfo.memTotal) + " GB" }
+            Key { text: "CPU temp" }
+            Val {
+                text: {
+                    const temps = SysInfo.temperatures;
+                    for (let i = 0; i < temps.length; i++) {
+                        const lbl = temps[i].label;
+                        if (lbl === "Tctl" || lbl === "Package id 0")
+                            return Theme.formatTemp(temps[i].value);
+                    }
+                    return temps.length > 0 ? Theme.formatTemp(temps[0].value) : "—";
+                }
+                color: Theme.yellow
+            }
+            Key { text: "GPU" }
+            Val {
+                readonly property var _gpu: UserSettings.primaryGpu()
+                text: {
+                    if (!_gpu) return "—";
+                    const parts = [];
+                    if (_gpu.utilization >= 0) parts.push(_gpu.utilization.toFixed(0) + "%");
+                    if (_gpu.power > 0) parts.push(_gpu.power.toFixed(0) + " W");
+                    return parts.join(" · ");
+                }
+                color: _gpu && _gpu.utilization > 50 ? Theme.yellow : Theme.fg
             }
         }
+    }
 
-        // Row shell with selection stripe + label + right-aligned control.
-        component SettingRowBase: Item {
-            id: rowBase
-            property int rowIndex: -1
-            property string label: ""
-            default property alias controls: controlsHolder.data
+    // ── Section header — accent tick + label ───────────
+    component SectionLabel: RowLayout {
+        property string text: ""
+        Layout.fillWidth: true
+        Layout.topMargin: Theme.spacingSmall
+        spacing: Theme.spacingSmall
 
+        SkewRect {
+            implicitWidth: 10
+            implicitHeight: 6
+            fillColor: Theme.accent
+            opacity: Theme.opacityBody
+        }
+        Text {
+            text: parent.text
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeMini
+            color: Theme.fgDim
+            Layout.fillWidth: true
+        }
+    }
+
+    // ── General + Bar capsule rows ─────────────────────
+    // Driven from `rows[0..4]` — each descriptor carries its label, the
+    // setting it binds to, and (for cycles) the visible model + persisted
+    // values. Section headers are emitted when `modelData.section` is set.
+    Repeater {
+        model: root.rows.slice(0, root._idxChecksStart)
+
+        ColumnLayout {
+            required property var modelData
+            required property int index
+            Layout.fillWidth: true
+            spacing: 0
+
+            SectionLabel {
+                visible: modelData.section !== undefined
+                text: modelData.section || ""
+            }
+
+            SettingsRowSlot {
+                selected: root.selectedRow === index
+                label: modelData.label
+
+                CyclePicker {
+                    visible: modelData.kind === "cycle"
+                    pillValue: true
+                    model: modelData.kind === "cycle" ? modelData.model : []
+                    currentIndex: modelData.kind === "cycle"
+                        ? Math.max(0, modelData.values.indexOf(UserSettings[modelData.setting]))
+                        : 0
+                    onIndexChanged: idx => {
+                        if (modelData.kind === "cycle")
+                            UserSettings[modelData.setting] = modelData.values[idx];
+                    }
+                }
+
+                SkewToggle {
+                    visible: modelData.kind === "toggle"
+                    state: modelData.kind === "toggle" && UserSettings[modelData.setting] ? 1 : 0
+                }
+            }
+        }
+    }
+
+    // ── Dropdown sections (2-column check grid) ────────
+    SectionLabel { text: "Dropdown sections" }
+
+    GridLayout {
+        Layout.fillWidth: true
+        Layout.leftMargin: Theme.spacingMedium
+        Layout.rightMargin: Theme.spacingMedium
+        columns: 2
+        columnSpacing: Theme.spacingLarge
+        rowSpacing: Theme.spacingTiny
+
+        Repeater {
+            model: root._checkRows
+            SettingsCheckRow {
+                required property var modelData
+                required property int index
+                selected: root.selectedRow === root._idxChecksStart + index
+                setting: modelData.setting
+                label: modelData.label
+            }
+        }
+    }
+
+    // ── Per-GPU toggles ────────────────────────────────
+    SectionLabel {
+        text: "GPUs"
+        visible: SysInfo.gpus.length > 0
+    }
+
+    Repeater {
+        model: SysInfo.gpus
+
+        // Custom row — vendor stripe + vendor tag + name + toggle.
+        // Can't use SettingsRowSlot because that reserves a single
+        // fillWidth label slot; GPU rows need their own layout.
+        Item {
+            id: gpuRow
+            required property var modelData
+            required property int index
+            readonly property int rowIndex: root._idxGpusStart + index
             readonly property bool isSelected: root.selectedRow === rowIndex
 
             Layout.fillWidth: true
@@ -201,234 +247,59 @@ FocusScope {
 
             SkewRect {
                 anchors.fill: parent
-                fillColor: rowBase.isSelected ? Theme.withAlpha(Theme.accent, 0.08) : "transparent"
-                visible: rowBase.isSelected
+                fillColor: Theme.withAlpha(Theme.accent, 0.08)
+                visible: gpuRow.isSelected
             }
-
             SkewRect {
                 x: 2; y: 4
                 width: 2
                 height: parent.height - 8
                 fillColor: Theme.accent
-                visible: rowBase.isSelected
+                visible: gpuRow.isSelected
             }
 
             RowLayout {
                 anchors.fill: parent
                 anchors.leftMargin: Theme.spacingLarge
                 anchors.rightMargin: Theme.spacingMedium
+                spacing: Theme.spacingSmall
+
+                SkewRect {
+                    Layout.preferredWidth: 3
+                    Layout.preferredHeight: 14
+                    Layout.alignment: Qt.AlignVCenter
+                    fillColor: gpuRow._vendorColor(modelData.vendor)
+                }
 
                 Text {
-                    text: rowBase.label
+                    text: modelData.vendor
+                    font.family: Theme.fontFamily
+                    font.pixelSize: Theme.fontSizeMini
+                    font.bold: true
+                    color: Theme.fgDim
+                }
+
+                Text {
+                    text: (modelData.name || "").replace(/^(NVIDIA|AMD|Intel)\s+/i, "")
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeSmall
                     color: Theme.fg
                     Layout.fillWidth: true
+                    elide: Text.ElideRight
                 }
 
-                Item {
-                    id: controlsHolder
-                    Layout.alignment: Qt.AlignVCenter
-                    implicitWidth: childrenRect.width
-                    implicitHeight: childrenRect.height
-                }
-            }
-        }
-
-        // ── General section ────────────────────────────
-        SectionLabel { text: "General" }
-
-        SettingRowBase {
-            rowIndex: root._idxInterval
-            label: "Poll interval"
-            CyclePicker {
-                pillValue: true
-                model: ["1 s", "2 s", "5 s", "10 s"]
-                readonly property var _values: [1000, 2000, 5000, 10000]
-                currentIndex: Math.max(0, _values.indexOf(UserSettings.sysInfoInterval))
-                onIndexChanged: idx => UserSettings.sysInfoInterval = _values[idx]
-            }
-        }
-
-        SettingRowBase {
-            rowIndex: root._idxTempUnit
-            label: "Temperature unit"
-            CyclePicker {
-                pillValue: true
-                model: ["\u00B0C", "\u00B0F"]
-                readonly property var _values: ["C", "F"]
-                currentIndex: Math.max(0, _values.indexOf(UserSettings.sysInfoTempUnit))
-                onIndexChanged: idx => UserSettings.sysInfoTempUnit = _values[idx]
-            }
-        }
-
-        SettingRowBase {
-            rowIndex: root._idxNetUnit
-            label: "Network units"
-            CyclePicker {
-                pillValue: true
-                model: ["bytes", "KB", "MB", "bits"]
-                readonly property var _values: ["bytes", "kbytes", "mbytes", "bits"]
-                currentIndex: Math.max(0, _values.indexOf(UserSettings.sysInfoNetUnit))
-                onIndexChanged: idx => UserSettings.sysInfoNetUnit = _values[idx]
-            }
-        }
-
-        // ── Bar capsule section ────────────────────────
-        SectionLabel { text: "Bar capsule" }
-
-        SettingRowBase {
-            rowIndex: root._idxShowInBar
-            label: "Show in bar"
-            SkewToggle {
-                state: UserSettings.sysInfoEnabled ? 1 : 0
-            }
-        }
-
-        SettingRowBase {
-            rowIndex: root._idxBarMetric
-            label: "Bar metric"
-            CyclePicker {
-                pillValue: true
-                model: root._barMetricLabels
-                currentIndex: Math.max(0, root._barMetricValues.indexOf(UserSettings.sysInfoBarMetric))
-                onIndexChanged: idx => UserSettings.sysInfoBarMetric = root._barMetricValues[idx]
-            }
-        }
-
-        // ── Dropdown sections ──────────────────────────
-        SectionLabel { text: "Dropdown sections" }
-
-        GridLayout {
-            Layout.fillWidth: true
-            Layout.leftMargin: Theme.spacingMedium
-            Layout.rightMargin: Theme.spacingMedium
-            columns: 2
-            columnSpacing: Theme.spacingLarge
-            rowSpacing: Theme.spacingTiny
-
-            // Same shape as SettingRowBase but compact and check-diamond based.
-            component CheckRow: Item {
-                property int rowIndex: -1
-                property string label: ""
-                property string setting: ""
-
-                readonly property bool isSelected: root.selectedRow === rowIndex
-
-                Layout.fillWidth: true
-                Layout.preferredHeight: 22
-
-                SkewRect {
-                    anchors.fill: parent
-                    fillColor: parent.isSelected ? Theme.withAlpha(Theme.accent, 0.08) : "transparent"
-                    visible: parent.isSelected
-                }
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: Theme.spacingSmall
-                    anchors.rightMargin: Theme.spacingSmall
-                    spacing: Theme.spacingNormal
-
-                    SkewCheck {
-                        checked: UserSettings[parent.parent.setting]
-                    }
-                    Text {
-                        text: parent.parent.label
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        color: Theme.fg
-                        Layout.fillWidth: true
-                    }
+                SkewToggle {
+                    state: UserSettings.sysInfoGpuVisible(modelData.name) ? 1 : 0
+                    labels: ["Hidden", "Visible"]
                 }
             }
 
-            CheckRow { rowIndex: root._idxSectionsStart + 0; setting: "sysInfoShowCpu";     label: "Processor" }
-            CheckRow { rowIndex: root._idxSectionsStart + 1; setting: "sysInfoShowMemory";  label: "Memory" }
-            CheckRow { rowIndex: root._idxSectionsStart + 2; setting: "sysInfoShowThermal"; label: "Thermal" }
-            CheckRow { rowIndex: root._idxSectionsStart + 3; setting: "sysInfoShowGpu";     label: "GPU" }
-            CheckRow { rowIndex: root._idxSectionsStart + 4; setting: "sysInfoShowNetwork"; label: "Network" }
-            CheckRow { rowIndex: root._idxSectionsStart + 5; setting: "sysInfoShowDisk";    label: "Disk I/O" }
-        }
-
-        // ── Per-GPU toggles ────────────────────────────
-        SectionLabel {
-            text: "GPUs"
-            visible: SysInfo.gpus.length > 0
-        }
-
-        Repeater {
-            model: SysInfo.gpus
-
-            // Custom row — vendor stripe + vendor tag + name + toggle.
-            // Can't use SettingRowBase because that reserves a single
-            // fillWidth label slot; GPU rows need their own layout.
-            Item {
-                id: gpuRow
-                required property var modelData
-                required property int index
-                readonly property int rowIndex: root._idxGpusStart + index
-                readonly property bool isSelected: root.selectedRow === rowIndex
-
-                Layout.fillWidth: true
-                Layout.preferredHeight: 26
-
-                SkewRect {
-                    anchors.fill: parent
-                    fillColor: gpuRow.isSelected ? Theme.withAlpha(Theme.accent, 0.08) : "transparent"
-                    visible: gpuRow.isSelected
-                }
-                SkewRect {
-                    x: 2; y: 4
-                    width: 2
-                    height: parent.height - 8
-                    fillColor: Theme.accent
-                    visible: gpuRow.isSelected
-                }
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.leftMargin: Theme.spacingLarge
-                    anchors.rightMargin: Theme.spacingMedium
-                    spacing: Theme.spacingSmall
-
-                    SkewRect {
-                        Layout.preferredWidth: 3
-                        Layout.preferredHeight: 14
-                        Layout.alignment: Qt.AlignVCenter
-                        fillColor: gpuRow._vendorColor(modelData.vendor)
-                    }
-
-                    Text {
-                        text: modelData.vendor
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeMini
-                        font.bold: true
-                        color: Theme.fgDim
-                    }
-
-                    Text {
-                        text: (modelData.name || "").replace(/^(NVIDIA|AMD|Intel)\s+/i, "")
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        color: Theme.fg
-                        Layout.fillWidth: true
-                        elide: Text.ElideRight
-                    }
-
-                    SkewToggle {
-                        state: UserSettings.sysInfoGpuVisible(modelData.name) ? 1 : 0
-                        labels: ["Hidden", "Visible"]
-                    }
-                }
-
-                function _vendorColor(vendor) {
-                    const v = (vendor || "").toLowerCase();
-                    if (v.indexOf("nvidia") >= 0) return Theme.green;
-                    if (v.indexOf("amd") >= 0)    return Theme.red;
-                    if (v.indexOf("intel") >= 0)  return Theme.cyan;
-                    return Theme.accent;
-                }
+            function _vendorColor(vendor) {
+                const v = (vendor || "").toLowerCase();
+                if (v.indexOf("nvidia") >= 0) return Theme.green;
+                if (v.indexOf("amd") >= 0)    return Theme.red;
+                if (v.indexOf("intel") >= 0)  return Theme.cyan;
+                return Theme.accent;
             }
         }
     }

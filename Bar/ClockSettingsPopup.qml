@@ -3,20 +3,9 @@ import QtQuick.Layouts
 import Quickshell
 import qs.Config
 import qs.Widgets
-import qs.Launcher
 
-FocusScope {
+SettingsPanelBase {
     id: root
-
-    // True while the hosting BarPopupWindow is actually open — used to gate
-    // the preview SystemClock so it doesn't tick while the popup is closed.
-    property bool windowOpen: false
-
-    readonly property real fullHeight: content.implicitHeight + Theme.spacingNormal * 2
-
-    readonly property alias selectedRow: nav.selectedRow
-    readonly property alias rowCount: nav.rowCount
-    readonly property alias nav: nav
 
     readonly property date _exampleDate: new Date(2024, 0, 15)
 
@@ -37,7 +26,7 @@ FocusScope {
     // the name of the UserSettings property to read/write.
     //
     // `values[i]` is persisted; `model[i]` is shown. The indices match.
-    readonly property var _rows: [
+    rows: [
         {
             kind: "cycle",
             section: "Time",
@@ -70,11 +59,6 @@ FocusScope {
         }
     ]
 
-    KeyboardRowNav {
-        id: nav
-        rows: root._rows
-    }
-
     // Preview ticker — gated on window visibility so it doesn't run perpetually.
     SystemClock {
         id: previewClock
@@ -82,101 +66,71 @@ FocusScope {
         enabled: root.windowOpen
     }
 
-    anchors.fill: parent
-    focus: true
+    // Preview
+    Text {
+        Layout.alignment: Qt.AlignHCenter
+        text: previewClock.date.toLocaleTimeString(Qt.locale(), UserSettings.clockTimeFormatString)
+        font.family: Theme.fontFamily
+        font.pixelSize: 32
+        font.weight: Font.Medium
+        color: Theme.fg
+    }
 
-    onWindowOpenChanged: if (windowOpen) { nav.reset(); forceActiveFocus(); }
+    Text {
+        Layout.alignment: Qt.AlignHCenter
+        Layout.bottomMargin: Theme.spacingSmall
+        text: previewClock.date.toLocaleDateString(Qt.locale(), UserSettings.clockDateFormat)
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSizeSmall
+        color: Theme.fgDim
+    }
 
-    Keys.onUpPressed:     nav.navigate(-1)
-    Keys.onDownPressed:   nav.navigate(1)
-    Keys.onLeftPressed:   nav.adjust(-1)
-    Keys.onRightPressed:  nav.adjust(1)
-    Keys.onReturnPressed: nav.activate()
-    Keys.onSpacePressed:  nav.activate()
+    Separator {}
 
-    ColumnLayout {
-        id: content
-        anchors.fill: parent
-        anchors.margins: Theme.spacingNormal
-        spacing: Theme.spacingSmall
+    Repeater {
+        id: rowRepeater
+        model: root.rows
 
-        // Preview
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            text: previewClock.date.toLocaleTimeString(Qt.locale(), UserSettings.clockTimeFormatString)
-            font.family: Theme.fontFamily
-            font.pixelSize: 32
-            font.weight: Font.Medium
-            color: Theme.fg
-        }
+        ColumnLayout {
+            id: rowItem
+            required property var modelData
+            required property int index
+            spacing: Theme.spacingTiny
+            Layout.fillWidth: true
 
-        Text {
-            Layout.alignment: Qt.AlignHCenter
-            Layout.bottomMargin: Theme.spacingSmall
-            text: previewClock.date.toLocaleDateString(Qt.locale(), UserSettings.clockDateFormat)
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeSmall
-            color: Theme.fgDim
-        }
+            Text {
+                visible: rowItem.modelData.section !== ""
+                Layout.leftMargin: Theme.spacingMedium
+                Layout.topMargin: Theme.spacingSmall
+                text: rowItem.modelData.section
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeMini
+                color: Theme.fgDim
+                opacity: Theme.opacitySecondary
+            }
 
-        Separator {}
+            SettingsRowSlot {
+                selected: root.selectedRow === rowItem.index
+                label: rowItem.modelData.label
 
-        Repeater {
-            id: rowRepeater
-            model: root._rows
-
-            ColumnLayout {
-                id: rowItem
-                required property var modelData
-                required property int index
-                spacing: Theme.spacingTiny
-                Layout.fillWidth: true
-
-                readonly property alias cycler: rowCycler
-
-                Text {
-                    visible: rowItem.modelData.section !== ""
-                    Layout.leftMargin: Theme.spacingMedium
-                    Layout.topMargin: Theme.spacingSmall
-                    text: rowItem.modelData.section
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeMini
-                    color: Theme.fgDim
-                    opacity: Theme.opacitySecondary
+                CyclePicker {
+                    pillValue: true
+                    visible: rowItem.modelData.kind === "cycle"
+                    model: rowItem.modelData.kind === "cycle" ? rowItem.modelData.model : []
+                    currentIndex: rowItem.modelData.kind === "cycle"
+                        ? Math.max(0, rowItem.modelData.values.indexOf(UserSettings[rowItem.modelData.setting]))
+                        : 0
+                    onIndexChanged: idx => {
+                        if (rowItem.modelData.kind === "cycle")
+                            UserSettings[rowItem.modelData.setting] = rowItem.modelData.values[idx];
+                    }
                 }
 
-                SettingsRow {
-                    Layout.preferredHeight: Theme.settingsRowCompact
-                    selected: root.selectedRow === rowItem.index
-
-                    Text {
-                        text: rowItem.modelData.label
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        color: Theme.fg
-                        Layout.fillWidth: true
-                    }
-
-                    CyclePicker {
-                        id: rowCycler
-                        pillValue: true
-                        visible: rowItem.modelData.kind === "cycle"
-                        model: rowItem.modelData.kind === "cycle" ? rowItem.modelData.model : []
-                        currentIndex: rowItem.modelData.kind === "cycle"
-                            ? Math.max(0, rowItem.modelData.values.indexOf(UserSettings[rowItem.modelData.setting]))
-                            : 0
-                        onIndexChanged: idx => {
-                            if (rowItem.modelData.kind === "cycle")
-                                UserSettings[rowItem.modelData.setting] = rowItem.modelData.values[idx];
-                        }
-                    }
-
-                    SkewToggle {
-                        visible: rowItem.modelData.kind === "toggle"
-                        state: rowItem.modelData.kind === "toggle"
-                            && UserSettings[rowItem.modelData.setting]
-                            ? 1 : 0
-                    }
+                SkewToggle {
+                    visible: rowItem.modelData.kind === "toggle"
+                    state: rowItem.modelData.kind === "toggle"
+                        && UserSettings[rowItem.modelData.setting]
+                        ? 1 : 0
                 }
             }
         }
