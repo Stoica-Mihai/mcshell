@@ -28,51 +28,85 @@ Item {
         return m || "cpu";
     }
 
-    // CPU: per-bar average of two cores, height scales with load.
-    // Memory / GPU: threshold style — bar i fills at i*12.5% (VolumeWaveform).
-    function _cpuLoad(i) {
-        const cores = SysInfo.cpuCores;
-        const i0 = i * 2;
-        const i1 = i0 + 1;
-        const a = i0 < cores.length ? cores[i0] : 0;
-        const b = i1 < cores.length ? cores[i1] : 0;
-        return (a + b) / 2;
-    }
-    function _thresholdFill(pct, i) {
-        const threshold = i / 8;
-        return Math.max(0, Math.min(1, (pct / 100 - threshold) * 8));
+    // Per-bar load percentage 0..100. Derived once per metric/sample change
+    // and consumed by both the heights and per-bar colors below — QML sees
+    // SysInfo.cpuCores / SysHistory.cpuHistory / etc. as binding deps and
+    // diffs the resulting array against the previous one.
+    readonly property var _barLoads: {
+        const out = new Array(8);
+        if (_metric === "cpu") {
+            const cores = SysInfo.cpuCores;
+            for (let i = 0; i < 8; i++) {
+                const a = (i * 2)     < cores.length ? cores[i * 2]     : 0;
+                const b = (i * 2 + 1) < cores.length ? cores[i * 2 + 1] : 0;
+                out[i] = (a + b) / 2;
+            }
+            return out;
+        }
+        if (_metric === "cpu-history") {
+            const h = SysHistory.cpuHistory;
+            for (let i = 0; i < 8; i++) out[i] = i < h.length ? h[i] : 0;
+            return out;
+        }
+        // memory / gpu fall through to a threshold style below — heights
+        // are derived from a single percentage, not per-bar. Broadcast
+        // that one value so the colors path can read it uniformly.
+        let pct = 0;
+        if (_metric === "memory") pct = SysInfo.memPercent;
+        else if (_metric === "gpu") {
+            const g = UserSettings.primaryGpu();
+            pct = g && g.utilization >= 0 ? g.utilization : 0;
+        }
+        for (let i = 0; i < 8; i++) out[i] = pct;
+        return out;
     }
 
-    function _cpuHistorySample(i) {
-        const h = SysHistory.cpuHistory;
-        return i < h.length ? h[i] : 0;
+    // Heights as 0..1 ratios. CPU modes scale load directly; threshold
+    // modes (memory/gpu) light bars progressively from left to right.
+    readonly property var _barHeights: {
+        const out = new Array(8);
+        const loads = _barLoads;
+        if (_metric === "cpu" || _metric === "cpu-history") {
+            for (let i = 0; i < 8; i++) out[i] = loads[i] / 100;
+            return out;
+        }
+        // threshold fill: bar i fills as pct crosses i/8.
+        const pct = loads[0]; // broadcast value
+        for (let i = 0; i < 8; i++) {
+            const threshold = i / 8;
+            out[i] = Math.max(0, Math.min(1, (pct / 100 - threshold) * 8));
+        }
+        return out;
+    }
+
+    // Per-bar colors only matter in CPU modes where each bar has its own
+    // load. Memory/GPU stay uniform — return null so WaveformBars uses
+    // the single `color` property instead of allocating an 8-entry array.
+    readonly property var _barColors: {
+        if (_metric === "cpu" || _metric === "cpu-history") {
+            const loads = _barLoads;
+            const out = new Array(8);
+            for (let i = 0; i < 8; i++) out[i] = Theme.loadColor(loads[i]);
+            return out;
+        }
+        return null;
+    }
+
+    readonly property color _uniformColor: {
+        if (_metric === "memory") return Theme.loadColor(SysInfo.memPercent);
+        if (_metric === "gpu") {
+            const g = UserSettings.primaryGpu();
+            return Theme.loadColor(g && g.utilization >= 0 ? g.utilization : 0);
+        }
+        return Theme.accent;
     }
 
     WaveformBars {
         id: wave
         anchors.centerIn: parent
-
-        barHeight: function(i) {
-            if (root._metric === "cpu")    return root._cpuLoad(i) / 100 * 14;
-            if (root._metric === "cpu-history") return root._cpuHistorySample(i) / 100 * 14;
-            if (root._metric === "memory") return root._thresholdFill(SysInfo.memPercent, i) * 14;
-            if (root._metric === "gpu") {
-                const g = UserSettings.primaryGpu();
-                const util = g && g.utilization >= 0 ? g.utilization : 0;
-                return root._thresholdFill(util, i) * 14;
-            }
-            return 0;
-        }
-        barColor: function(i) {
-            if (root._metric === "cpu") return Theme.loadColor(root._cpuLoad(i));
-            if (root._metric === "cpu-history") return Theme.loadColor(root._cpuHistorySample(i));
-            if (root._metric === "memory") return Theme.loadColor(SysInfo.memPercent);
-            if (root._metric === "gpu") {
-                const g = UserSettings.primaryGpu();
-                return Theme.loadColor(g && g.utilization >= 0 ? g.utilization : 0);
-            }
-            return Theme.accent;
-        }
+        model: root._barHeights
+        colors: root._barColors
+        color: root._uniformColor
     }
 
     ActiveUnderline { visible: root.active }
@@ -104,6 +138,6 @@ Item {
         if (!cpuTemp && temps.length > 0)
             cpuTemp = Theme.formatTemp(temps[0].value);
         const mem = SysInfo.memPercent.toFixed(0);
-        return `CPU ${cpu}%` + (cpuTemp ? ` \u00B7 ${cpuTemp}` : "") + ` \u00B7 ${mem}% RAM`;
+        return `CPU ${cpu}%` + (cpuTemp ? ` · ${cpuTemp}` : "") + ` · ${mem}% RAM`;
     }
 }

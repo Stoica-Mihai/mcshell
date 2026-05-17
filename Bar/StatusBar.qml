@@ -595,12 +595,17 @@ Scope {
                                 onMiddleClicked: UserSettings.doNotDisturb = !UserSettings.doNotDisturb
                             }
 
-                            // System waveform
-                            SysWaveform {
-                                visible: UserSettings.sysInfoEnabled
-                                active: sharedDropdown.activePanel === "sysinfo"
-                                onClicked: sharedDropdown.togglePanel("sysinfo")
-                                onToggleConfigPopup: sharedDropdown.togglePanel("sysInfoSettings")
+                            // System waveform — Loader-gated so the
+                            // SysInfo/SysHistory bindings stop churning
+                            // when the user disables the sysinfo capsule.
+                            Loader {
+                                active: UserSettings.sysInfoEnabled
+                                visible: active
+                                sourceComponent: SysWaveform {
+                                    active: sharedDropdown.activePanel === "sysinfo"
+                                    onClicked: sharedDropdown.togglePanel("sysinfo")
+                                    onToggleConfigPopup: sharedDropdown.togglePanel("sysInfoSettings")
+                                }
                             }
                         }
                     }
