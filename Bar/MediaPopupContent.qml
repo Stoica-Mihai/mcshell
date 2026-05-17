@@ -52,8 +52,8 @@ ColumnLayout {
     // Album art
     Rectangle {
         Layout.alignment: Qt.AlignHCenter
-        Layout.preferredWidth: 160
-        Layout.preferredHeight: 160
+        Layout.preferredWidth: Theme.mediaAlbumSize
+        Layout.preferredHeight: Theme.mediaAlbumSize
         radius: Theme.radiusMedium
         color: Theme.bgHover
         clip: true
@@ -128,8 +128,8 @@ ColumnLayout {
             value: root.trackLen > 0
                 ? Math.max(0, Math.min(1, root.currentPos / root.trackLen)) : 0
             accentColor: Theme.accent
-            trackHeight: 4
-            knobSize: 12
+            trackHeight: Theme.sliderTrackHeight
+            knobSize: Theme.sliderKnobSize
             step: Theme.volumeStep
             onMoved: function(newValue) {
                 if (root.media.player && root.media.player.canSeek && root.trackLen > 0) {
@@ -243,8 +243,8 @@ ColumnLayout {
             Layout.fillWidth: true
             value: mediaVolumeRow._vol
             accentColor: Theme.accent
-            trackHeight: 4
-            knobSize: 12
+            trackHeight: Theme.sliderTrackHeight
+            knobSize: Theme.sliderKnobSize
             step: Theme.volumeStep
             onMoved: function(newValue) {
                 if (root.media.player) root.media.player.volume = newValue;

@@ -727,7 +727,7 @@ Scope {
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.top: parent.top
                         anchors.topMargin: Theme.popupPadding
-                        width: Math.min(parent.width - Theme.popupPadding * 2, 280)
+                        width: Math.min(parent.width - Theme.popupPadding * 2, Theme.mediaPopupMaxWidth)
                     }
 
                 }

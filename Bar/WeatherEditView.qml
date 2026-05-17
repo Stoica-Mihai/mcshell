@@ -103,7 +103,7 @@ ColumnLayout {
             visible: !root.popup.geoLoading && root.popup.geoResults.length > 0
             clip: true
             model: root.popup.geoResults
-            spacing: 2
+            spacing: Theme.spacingMicro
             interactive: contentHeight > height
             currentIndex: root.popup.selectedIndex
             highlightFollowsCurrentItem: true

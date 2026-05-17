@@ -48,7 +48,7 @@ ColumnLayout {
         ColumnLayout {
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignVCenter
-            spacing: 2
+            spacing: Theme.spacingMicro
 
             Text {
                 text: root.weather ? WeatherCodes.name(root.weather.weatherCode) : ""
@@ -80,7 +80,7 @@ ColumnLayout {
     // Hourly row (8 cells distributed evenly).
     RowLayout {
         Layout.fillWidth: true
-        spacing: 2
+        spacing: Theme.spacingMicro
 
         Repeater {
             model: root.weather ? root.weather.hourly : []
@@ -96,7 +96,7 @@ ColumnLayout {
 
                 Column {
                     anchors.centerIn: parent
-                    spacing: 2
+                    spacing: Theme.spacingMicro
 
                     Text {
                         anchors.horizontalCenter: parent.horizontalCenter

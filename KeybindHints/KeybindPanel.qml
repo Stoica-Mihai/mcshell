@@ -169,7 +169,7 @@ Item {
                             Row {
                                 Layout.preferredWidth: Math.min(170, delegateLoader.width * 0.45)
                                 Layout.alignment: Qt.AlignVCenter
-                                spacing: 2
+                                spacing: Theme.spacingMicro
                                 layoutDirection: Qt.LeftToRight
 
                                 Repeater {

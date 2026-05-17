@@ -39,7 +39,7 @@ ColumnLayout {
             id: cpuCol
             anchors.fill: parent
             anchors.margins: 8
-            spacing: 2
+            spacing: Theme.spacingMicro
 
             RowLayout {
                 Layout.fillWidth: true
@@ -85,7 +85,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 20
                 Layout.topMargin: 4
-                spacing: 2
+                spacing: Theme.spacingMicro
 
                 readonly property real barWidth: (width - (SysInfo.cpuCores.length - 1) * 2) / Math.max(1, SysInfo.cpuCores.length)
 
@@ -129,7 +129,7 @@ ColumnLayout {
             id: memCol
             anchors.fill: parent
             anchors.margins: 8
-            spacing: 2
+            spacing: Theme.spacingMicro
 
             RowLayout {
                 Layout.fillWidth: true
@@ -255,7 +255,7 @@ ColumnLayout {
             // sits closer to the previous block's waveform than to its
             // own sub-line, making it look like it belongs to the GPU above.
             Layout.topMargin: index > 0 ? 8 : 0
-            spacing: 2
+            spacing: Theme.spacingMicro
 
             readonly property real _util: modelData.utilization >= 0 ? modelData.utilization : 0
             readonly property bool _hasVram: modelData.vramTotal > 0
@@ -310,7 +310,7 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.leftMargin: 12
                 Layout.preferredHeight: 18
-                spacing: 2
+                spacing: Theme.spacingMicro
 
                 readonly property real _barW: Math.max(2, (width - 7 * spacing) / 8)
 
