@@ -14,18 +14,12 @@ OverlayWindow {
     // (and its blur region) doesn't tear down mid-fade.
     active: isOpen || _animProgress > 0
 
-    // Toggled true for one tick to unmap the wl_surface while re-pinning
-    // `screen` (see _applyPrimary). The surface is otherwise permanently
-    // mapped (OverlayWindow keeps visible:true), so reassigning its screen
-    // live would (a) race Qt 6.11's Wayland handleScreensChanged and segfault
-    // and (b) leave niri's ext-background-effect-v1 blur bound to the old
-    // output. Unmap → reassign → remap avoids both.
+    // Toggled true for one tick to unmap the surface while re-pinning `screen`.
     visible: !_suspendVisible
     property bool _suspendVisible: false
 
-    // Screen is driven by UserSettings.primaryOutput (an output name) and is
-    // only re-pinned while the launcher is closed — a change made from the
-    // settings card (launcher open) therefore lands on the next open.
+    // Launcher screen follows UserSettings.primaryOutput, re-pinned only while
+    // closed (a change from the open settings card lands on the next open).
     function _resolveScreen() {
         const want = UserSettings.primaryOutput;
         if (want)
@@ -37,8 +31,8 @@ OverlayWindow {
         if (isOpen || _animProgress > 0) return;
         const s = _resolveScreen();
         if (!s || launcher.screen === s) return;
-        // Unmap before reassigning so the move happens on an unmapped surface
-        // (crash-safe), then remap so the blur effect re-binds to the new output.
+        // Unmap → reassign → remap: moving a live surface's screen crashes Qt
+        // 6.11 and strands niri's blur on the old output; an unmapped one is safe.
         _suspendVisible = true;
         launcher.screen = s;
         Qt.callLater(() => launcher._suspendVisible = false);
