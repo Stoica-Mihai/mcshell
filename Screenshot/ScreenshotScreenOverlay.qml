@@ -62,7 +62,11 @@ OverlayWindow {
         _reset();
         mode = captureMode;
         _savePath = Theme.screenshotPrefix + Date.now() + ".png";
-        _tmpPath = _savePath + ".tmp.png";
+        // Per-screen tmp path: area mode broadcasts startCapture to every
+        // overlay in the same tick, so Date.now() collides across screens.
+        // A shared tmp file means peers overwrite each other's frame and the
+        // crop reads the wrong screen's content. Scope by screen name.
+        _tmpPath = _savePath + "." + root.screen.name + ".tmp.png";
         mask = null;
 
         if (!_captureActive) {
