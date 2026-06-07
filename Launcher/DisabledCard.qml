@@ -37,7 +37,7 @@ ParallelogramCard {
             text: root.hint
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeSmall
-            color: Theme.fgDim
+            color: Theme.fg
         }
     }
 }

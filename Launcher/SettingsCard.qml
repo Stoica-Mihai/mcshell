@@ -103,7 +103,7 @@ Item {
                 text: loader.item?.headerSubtitle ?? ""
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeSmall
-                color: Theme.fgDim
+                color: Theme.fg
                 visible: text !== ""
             }
             Item { width: 1; height: 8 }

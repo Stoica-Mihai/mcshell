@@ -46,7 +46,7 @@ ColumnLayout {
         text: root.infoText
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeSmall
-        color: Theme.fgDim
+        color: Theme.fg
     }
 
     ColumnLayout {

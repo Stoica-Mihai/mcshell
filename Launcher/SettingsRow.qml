@@ -29,7 +29,7 @@ Rectangle {
     component Value: Text {
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeTiny
-        color: Theme.fgDim
+        color: Theme.fg
         horizontalAlignment: Text.AlignRight
     }
 

@@ -25,7 +25,7 @@ Text {
          : successStatuses.indexOf(activeStatus) >= 0 ? Theme.green
          : neutralStatuses.indexOf(activeStatus) >= 0 ? Theme.fgDim
          : activeStatus !== "" ? Theme.accent
-         : Theme.fgDim
+         : Theme.fg
 
     opacity: activeStatus !== "" ? 1.0 : Theme.opacitySubtle
 

@@ -231,7 +231,7 @@ SettingsPanel {
                     text: root._remainingSeconds
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeMini
-                    color: _isConfirming ? Theme.accentFg : Theme.fgDim
+                    color: _isConfirming ? Theme.accentFg : Theme.fg
                 }
             }
         }
