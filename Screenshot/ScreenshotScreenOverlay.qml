@@ -62,25 +62,16 @@ OverlayWindow {
         _reset();
         mode = captureMode;
         _savePath = Theme.screenshotPrefix + Date.now() + ".png";
-        // Per-screen tmp path: area mode broadcasts startCapture to every
-        // overlay in the same tick, so Date.now() collides across screens.
-        // A shared tmp file means peers overwrite each other's frame and the
-        // crop reads the wrong screen's content. Scope by screen name.
-        _tmpPath = _savePath + "." + root.screen.name + ".tmp.png";
+        // Per-screen tmp file: area mode broadcasts to all overlays in one
+        // tick, so a shared path lets peers clobber each other's frame.
+        _tmpPath = `${_savePath}.${root.screen.name}.tmp.png`;
         mask = null;
 
-        if (!_captureActive) {
-            // First capture ever: activate the ScreencopyView.
-            // createContext() auto-calls captureFrame() and hasContentChanged
-            // fires when the frame arrives (false→true).
-            _captureActive = true;
-        } else {
-            // Subsequent: context persists, just request a new frame.
-            // swapBuffers() in the response changes presentSecondBuffer,
-            // so syncSwapchain() recreates the texture (no early-return).
-            captureView.captureFrame();
-            _frameDelay.start();
-        }
+        // Fresh context on first use, else just request a new frame. Either
+        // way captureView.frameReady fires when the frame lands → _onFrameReady
+        // grabs exactly then (no timer, so never a stale frontbuffer).
+        if (!_captureActive) _captureActive = true;
+        else captureView.captureFrame();
         _timeout.start();
     }
 
@@ -111,7 +102,6 @@ OverlayWindow {
         mask = _emptyRegion;
         WlrLayershell.keyboardFocus = WlrKeyboardFocus.None;
         _timeout.stop();
-        _frameDelay.stop();
         if (wasArea && broadcast !== false) root.areaSessionFinished();
     }
 
@@ -119,10 +109,9 @@ OverlayWindow {
         if (_captured || mode === "") return;
         _captured = true;
         _timeout.stop();
-        _frameDelay.stop();
 
-        // Show the fresh frame now (not before capture, to avoid
-        // the overlay's stale content being included in the capture)
+        // Reveal the fresh frame for the grab (hidden during capture so the
+        // overlay's own content isn't included).
         captureView.opacity = 1;
 
         captureView.grabToImage(function(result) {
@@ -188,12 +177,6 @@ OverlayWindow {
     }
 
     Timer {
-        id: _frameDelay
-        interval: 100
-        onTriggered: root._onFrameReady()
-    }
-
-    Timer {
         id: _grabTimer
         interval: 50
         onTriggered: root._finishAreaCrop()
@@ -217,9 +200,9 @@ OverlayWindow {
     }
 
     // ── Screen capture ──────────────────────────────────
-    // captureSource is null until first capture, then stays set forever.
-    // Context + buffers persist across captures — no destruction, no wl_proxy errors.
-    // Opacity hides stale content between captures.
+    // Context persists once created (destroying it crashes: a trailing
+    // compositor event hits the freed zwlr_screencopy_frame). frameReady
+    // (mcs-qs) fires per frame, so the grab waits for the real arrival.
     ScreencopyView {
         id: captureView
         anchors.fill: parent
@@ -227,9 +210,7 @@ OverlayWindow {
         paintCursor: false
         opacity: 0
 
-        onHasContentChanged: {
-            if (hasContent) root._onFrameReady();
-        }
+        onFrameReady: root._onFrameReady()
     }
 
     // ── Area selection UI ───────────────────────────────
