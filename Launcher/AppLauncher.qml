@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Niri
 import Quickshell.Wayland
 import qs.Config
 import qs.Core
@@ -13,13 +14,42 @@ OverlayWindow {
     // (and its blur region) doesn't tear down mid-fade.
     active: isOpen || _animProgress > 0
 
-    // Override OverlayWindow's permanent `visible: true` so we can briefly
-    // unmap during a screen swap. niri's ext-background-effect-v1 stays
-    // bound to the wl_surface's current output; without an unmap/remap,
-    // moving the surface to a different output leaves the blur effect on
-    // the old monitor and the launcher renders unblurred on the new one.
+    // Toggled true for one tick to unmap the wl_surface while re-pinning
+    // `screen` (see _applyPrimary). The surface is otherwise permanently
+    // mapped (OverlayWindow keeps visible:true), so reassigning its screen
+    // live would (a) race Qt 6.11's Wayland handleScreensChanged and segfault
+    // and (b) leave niri's ext-background-effect-v1 blur bound to the old
+    // output. Unmap → reassign → remap avoids both.
     visible: !_suspendVisible
     property bool _suspendVisible: false
+
+    // Screen is driven by UserSettings.primaryOutput (an output name) and is
+    // only re-pinned while the launcher is closed — a change made from the
+    // settings card (launcher open) therefore lands on the next open.
+    function _resolveScreen() {
+        const want = UserSettings.primaryOutput;
+        if (want)
+            for (let i = 0; i < Quickshell.screens.length; i++)
+                if (Quickshell.screens[i].name === want) return Quickshell.screens[i];
+        return Quickshell.screens.length > 0 ? Quickshell.screens[0] : null;
+    }
+    function _applyPrimary() {
+        if (isOpen || _animProgress > 0) return;
+        const s = _resolveScreen();
+        if (!s || launcher.screen === s) return;
+        // Unmap before reassigning so the move happens on an unmapped surface
+        // (crash-safe), then remap so the blur effect re-binds to the new output.
+        _suspendVisible = true;
+        launcher.screen = s;
+        Qt.callLater(() => launcher._suspendVisible = false);
+    }
+    Component.onCompleted: _applyPrimary();
+    onActiveChanged: if (!active) _applyPrimary();
+
+    Connections {
+        target: UserSettings
+        function onPrimaryOutputChanged() { launcher._applyPrimary(); }
+    }
 
     // ── Public API ──────────────────────────────────────
     property bool isOpen: false
@@ -82,20 +112,12 @@ OverlayWindow {
         }
     }
 
-    // ── Focused-output-aware open ───────────────────────
-    // The layer-shell surface is always-alive (pinned to whichever screen
-    // it started on), so open requests first detect niri's focused output
-    // and reassign `screen` before running the open transition.
     function _requestOpen(tab, lvl, target) {
-        const s = FocusedOutput.screen;
-        if (s && launcher.screen !== s) {
-            // Unmap the wl_surface, swap output, remap. Without the unmap
-            // niri's ext-background-effect-v1 stays bound to the previous
-            // output and the launcher renders unblurred on the new one.
-            launcher._suspendVisible = true;
-            launcher.screen = s;
-            Qt.callLater(() => launcher._suspendVisible = false);
-        }
+        // niri grants layer-shell keyboard focus only on the focused output; if
+        // the launcher lives on another monitor, pull niri focus there so the
+        // search field receives keystrokes.
+        if (launcher.screen && FocusedOutput.name !== launcher.screen.name)
+            Niri.dispatch(["focus-monitor", launcher.screen.name]);
         _initLauncher(tab, lvl);
         if (target && activeCategory) activeCategory.onOpenTarget(target);
     }

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import qs.Config
 import qs.Core
 import qs.Widgets
@@ -34,6 +35,11 @@ SettingsPanel {
     readonly property var _cleanValues: ["never", "30m", "1h", "6h", "24h"]
     readonly property var _cleanLabels: ["Never", "30 min", "1 hour", "6 hours", "24 hours"]
     readonly property int _cleanIndex: Math.max(0, _cleanValues.indexOf(UserSettings.notifAutoClean))
+
+    // ── Primary output mapping (multi-monitor only) ──
+    readonly property var _screenNames: Quickshell.screens.map(s => s.name)
+    readonly property bool _multiScreen: Quickshell.screens.length > 1
+    readonly property int _primaryIndex: { const i = _screenNames.indexOf(UserSettings.primaryOutput); return i < 0 ? 0 : i; }
 
     // ── Auto-lock mapping ──
     readonly property var _idleValues: [0, 5, 10, 15, 30, 45, 60]
@@ -71,6 +77,11 @@ SettingsPanel {
             { id: "sunrise", adjustLeft: () => _adjustTime("sunrise", -30), adjustRight: () => _adjustTime("sunrise", 30) },
             { id: "sunset",  adjustLeft: () => _adjustTime("sunset", -30),  adjustRight: () => _adjustTime("sunset", 30) },
         );
+        if (_multiScreen) list.push({
+            id: "primaryOutput",
+            adjustLeft:  () => UserSettings.primaryOutput = _screenNames[Math.max(0, _primaryIndex - 1)],
+            adjustRight: () => UserSettings.primaryOutput = _screenNames[Math.min(_screenNames.length - 1, _primaryIndex + 1)],
+        });
         list.push(
             { id: "idle",
               adjustLeft:  () => UserSettings.idleTimeout = _idleValues[Math.max(0, _idleIndex - 1)],
@@ -216,6 +227,22 @@ SettingsPanel {
     }
 
     Separator {}
+
+    // Primary output (launcher home monitor; multi-monitor only)
+    SettingsRow {
+        visible: root._multiScreen
+        selected: root.active && root.selectedItem === root._indexOf("primaryOutput")
+        Layout.preferredHeight: Theme.settingsRowHeight
+
+        SettingsRow.Icon { text: Theme.iconMonitor; color: Theme.accent }
+        SettingsRow.Label { text: "Primary Output"; Layout.fillWidth: true }
+        CyclePicker {
+            pillValue: true
+            model: root._screenNames
+            currentIndex: root._primaryIndex
+            textColor: Theme.accent
+        }
+    }
 
     // Auto-lock timeout
     SettingsRow {
