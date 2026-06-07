@@ -79,8 +79,8 @@ SettingsPanel {
         );
         if (_multiScreen) list.push({
             id: "primaryOutput",
-            adjustLeft:  () => UserSettings.primaryOutput = _screenNames[Math.max(0, _primaryIndex - 1)],
-            adjustRight: () => UserSettings.primaryOutput = _screenNames[Math.min(_screenNames.length - 1, _primaryIndex + 1)],
+            adjustLeft:  () => primaryPicker.cycleLeft(),
+            adjustRight: () => primaryPicker.cycleRight(),
         });
         list.push(
             { id: "idle",
@@ -237,10 +237,12 @@ SettingsPanel {
         SettingsRow.Icon { text: Theme.iconMonitor; color: Theme.accent }
         SettingsRow.Label { text: "Primary Output"; Layout.fillWidth: true }
         CyclePicker {
+            id: primaryPicker
             pillValue: true
             model: root._screenNames
             currentIndex: root._primaryIndex
             textColor: Theme.accent
+            onIndexChanged: idx => UserSettings.primaryOutput = root._screenNames[idx]
         }
     }
 
