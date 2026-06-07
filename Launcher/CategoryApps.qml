@@ -152,7 +152,7 @@ LauncherCategory {
                     text: modelData.comment || modelData.genericName || ""
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeSmall
-                    color: Theme.fgDim
+                    color: Theme.fg
                     elide: Text.ElideRight
                     visible: text !== ""
                     Layout.maximumWidth: parent.width
