@@ -63,8 +63,11 @@ SettingsPanel {
         return sources;
     }
 
-    readonly property PwNode defaultSink: Pipewire.ready ? Pipewire.defaultAudioSink : null
-    readonly property PwNode defaultSource: Pipewire.ready ? Pipewire.defaultAudioSource : null
+    // QtObject (not PwNode) so the binding can hold null while Pipewire.ready
+    // is still false — a PwNode-typed nullable binding fails the QML type
+    // check and leaves the sink unbound, reading volume as 0.
+    readonly property QtObject defaultSink: Pipewire.ready ? Pipewire.defaultAudioSink : null
+    readonly property QtObject defaultSource: Pipewire.ready ? Pipewire.defaultAudioSource : null
     readonly property int volume: Math.round((defaultSink?.audio?.volume ?? 0) * 100)
 
     PwObjectTracker { objects: root.defaultSink ? [root.defaultSink] : [] }
