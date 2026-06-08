@@ -51,8 +51,7 @@ Item {
         _fetcher.fetch(
             `https://api.open-meteo.com/v1/forecast`
             + `?latitude=${UserSettings.weatherLat}&longitude=${UserSettings.weatherLon}`
-            + `&current_weather=true`
-            + `&current=relativehumidity_2m,apparent_temperature`
+            + `&current=temperature_2m,weather_code,apparent_temperature,relative_humidity_2m`
             + `&hourly=temperature_2m,weathercode`
             + `&daily=temperature_2m_max,temperature_2m_min,weathercode`
             + `&forecast_days=5&timezone=auto`);
@@ -61,7 +60,7 @@ Item {
     JsonFetcher {
         id: _fetcher
         onSuccess: data => {
-            if (!data.current_weather) {
+            if (!data.current) {
                 root._onFetchError("Could not parse weather data");
                 return;
             }
@@ -78,10 +77,10 @@ Item {
     }
 
     function _onFetchSuccess(data) {
-        tempC = data.current_weather.temperature;
-        weatherCode = data.current_weather.weathercode;
-        feelsLike = data.current?.apparent_temperature?.[0] ?? tempC;
-        humidity = data.current?.relativehumidity_2m?.[0] ?? 0;
+        tempC = data.current.temperature_2m;
+        weatherCode = data.current.weather_code;
+        feelsLike = data.current.apparent_temperature ?? tempC;
+        humidity = data.current.relative_humidity_2m ?? 0;
 
         // Hourly — pick next 8 hours starting from current hour
         const now = new Date();
@@ -128,11 +127,23 @@ Item {
         lastRefresh = new Date();
         fetchState = "ok";
         errorMsg = "";
+        _hasData = true;
+        errorRetry.stop();
     }
 
     function _onFetchError(msg) {
         fetchState = "error";
         errorMsg = msg;
+        // Recover fast from a transient blip instead of waiting for the
+        // 30-minute refresh; JsonFetcher's own cooldown prevents spamming.
+        if (UserSettings.weatherConfigured) errorRetry.restart();
+    }
+
+    Timer {
+        id: errorRetry
+        interval: 90 * 1000
+        repeat: false
+        onTriggered: if (UserSettings.weatherConfigured) root.fetch()
     }
 
     Timer {
@@ -144,6 +155,17 @@ Item {
 
     Component.onCompleted: {
         if (UserSettings.weatherConfigured) fetch();
+    }
+
+    // Keep retrying until the first reading lands. Covers a startup where
+    // Networking.connectivity wasn't Full yet when Component.onCompleted ran
+    // (the fetch was gated) and no later not-Full→Full transition fired for
+    // ConnectivityRetry to catch. Stops automatically once _hasData is set.
+    Timer {
+        interval: 10 * 1000
+        repeat: true
+        running: UserSettings.weatherConfigured && !root._hasData
+        onTriggered: root.fetch()
     }
 
     // Debounce coord edits so dragging a settings slider or editing both
@@ -162,22 +184,26 @@ Item {
     }
 
     // ── Display ───────────────────────────────────────────
-    // True while we have no usable reading yet (fresh startup, network still
-    // coming up, or a retry pending after an error).
-    readonly property bool _noData: fetchState !== "ok" && tempC === 0
+    // Once we have a successful reading we keep showing it through later
+    // transient fetch errors — a single network blip shouldn't blank the
+    // widget. The error/question state only shows before the first reading;
+    // staleness is surfaced in the popup footer via lastRefresh.
+    property bool _hasData: false
     readonly property string _displayIcon: {
-        if (!UserSettings.weatherConfigured || _noData) return Theme.iconWeatherQuestion;
+        if (!UserSettings.weatherConfigured) return Theme.iconWeatherQuestion;
+        if (_hasData) return WeatherCodes.icon(weatherCode);
         if (fetchState === "error") return Theme.iconWeatherError;
-        return WeatherCodes.icon(weatherCode);
+        return Theme.iconWeatherQuestion;
     }
     readonly property color _displayColor: {
-        if (!UserSettings.weatherConfigured || _noData) return Theme.fgDim;
+        if (!UserSettings.weatherConfigured) return Theme.fgDim;
+        if (_hasData) return WeatherCodes.color(weatherCode);
         if (fetchState === "error") return Theme.red;
-        return WeatherCodes.color(weatherCode);
+        return Theme.fgDim;
     }
     readonly property string _displayLabel: {
-        if (!UserSettings.weatherConfigured || fetchState === "error" || _noData) return "--°";
-        return Math.round(tempC) + "°";
+        if (_hasData) return Math.round(tempC) + "°";
+        return "--°";
     }
 
     RowLayout {
