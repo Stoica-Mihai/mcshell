@@ -1,9 +1,12 @@
+pragma Singleton
+
 import QtQuick
+import Quickshell
 import Quickshell.Services.UPower
 
-// Battery state provider — UPower bindings only.
-// UI is handled by SystemCapsule in StatusBar.
-Item {
+// Single source of truth for battery state (UPower bindings only). Shared by
+// every status bar's capsule so the state isn't recomputed per monitor.
+Singleton {
     id: root
 
     readonly property var device: UPower.displayDevice

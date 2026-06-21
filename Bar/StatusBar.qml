@@ -577,10 +577,10 @@ Scope {
 
                             // Battery
                             CapsuleItem {
-                                visible: battery.present
-                                icon: Theme.batteryIcon(battery.percentage, battery.charging)
-                                label: battery.percentage + "%"
-                                alert: battery.low
+                                visible: BatteryService.present
+                                icon: Theme.batteryIcon(BatteryService.percentage, BatteryService.charging)
+                                label: BatteryService.percentage + "%"
+                                alert: BatteryService.low
                             }
 
                             // Notification bell
@@ -751,7 +751,7 @@ Scope {
                         // Proxy outer `media` id through a Loader-scope
                         // property; the Component below redeclares `media`
                         // so a bare `media: media` would self-reference.
-                        property var _mediaRef: media
+                        property var _mediaRef: MediaService
                         active: sharedDropdown.activePanel === "media"
                         visible: active
                         anchors.horizontalCenter: parent.horizontalCenter
@@ -793,7 +793,7 @@ Scope {
             visible: centerDropdown.activePanel === "calendar"
             enabled: visible
             anchors.fill: parent
-            currentDate: clock.currentDate
+            currentDate: ClockService.date
             windowOpen: visible
         }
 
@@ -850,12 +850,6 @@ Scope {
     // Volume state — kept at root level for accessibility
     Volume {
         id: volume
-        visible: false
-    }
-
-    // Battery state
-    Battery {
-        id: battery
         visible: false
     }
 
