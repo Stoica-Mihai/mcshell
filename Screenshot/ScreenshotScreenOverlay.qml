@@ -135,7 +135,7 @@ OverlayWindow {
     function _finishFullScreen() {
         _copyToClipboard(_tmpPath);
         Quickshell.execDetached({ command: ["mv", _tmpPath, _savePath] });
-        NotificationDispatcher.sendWithImage("Screenshot", "Copied to clipboard", _savePath);
+        NotificationDispatcher.send("Screenshot", "Full screenshot copied to clipboard", Theme.notifNormal);
         captured(_savePath);
         _close();
     }
@@ -157,7 +157,7 @@ OverlayWindow {
             if (result && result.saveToFile(root._savePath)) {
                 root._copyToClipboard(root._savePath);
                 Quickshell.execDetached({ command: ["rm", "-f", root._tmpPath] });
-                NotificationDispatcher.sendWithImage("Screenshot", "Copied to clipboard", root._savePath);
+                NotificationDispatcher.send("Screenshot", "Regional screenshot copied to clipboard", Theme.notifNormal);
                 root.captured(root._savePath);
             } else {
                 root.captureFailed();

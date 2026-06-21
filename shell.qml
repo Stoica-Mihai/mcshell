@@ -247,7 +247,7 @@ ShellRoot {
         failMessage: "niri screenshot-window"
         onFinished: {
             Quickshell.setClipboardImage(shell._windowScreenshotPath);
-            NotificationDispatcher.sendWithImage("Screenshot", "Window copied to clipboard", shell._windowScreenshotPath);
+            NotificationDispatcher.send("Screenshot", "Window screenshot copied to clipboard", Theme.notifNormal);
         }
     }
 
