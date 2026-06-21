@@ -28,6 +28,25 @@ ColumnLayout {
         Text { text: value; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeTiny; font.bold: true; color: Theme.fg }
     }
 
+    // Name + ↓/↑ throughput row, shared by the network and disk sections.
+    component MetricSpeedRow: RowLayout {
+        property string name
+        property real downValue
+        property real upValue
+        Layout.fillWidth: true
+        Layout.preferredHeight: 20
+        spacing: Theme.spacingMedium
+        Text {
+            text: name
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeMini
+            color: Theme.fgDim
+            Layout.fillWidth: true
+        }
+        SpeedLabel { arrow: "↓"; arrowColor: Theme.cyan;  value: Theme.formatSpeed(downValue) }
+        SpeedLabel { arrow: "↑"; arrowColor: Theme.green; value: Theme.formatSpeed(upValue) }
+    }
+
     // ── CPU card ─────────────────────────────────────────
     ParallelogramCard {
         Layout.fillWidth: true
@@ -355,21 +374,10 @@ ColumnLayout {
     Repeater {
         model: UserSettings.sysInfoShowNetwork ? SysInfo.netInterfaces : []
 
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 20
-            spacing: Theme.spacingMedium
-
-            Text {
-                text: modelData.name
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeMini
-                color: Theme.fgDim
-                Layout.fillWidth: true
-            }
-
-            SpeedLabel { arrow: "\u2193"; arrowColor: Theme.cyan;  value: Theme.formatSpeed(modelData.rxBytesPerSec) }
-            SpeedLabel { arrow: "\u2191"; arrowColor: Theme.green; value: Theme.formatSpeed(modelData.txBytesPerSec) }
+        MetricSpeedRow {
+            name: modelData.name
+            downValue: modelData.rxBytesPerSec
+            upValue: modelData.txBytesPerSec
         }
     }
 
@@ -382,21 +390,10 @@ ColumnLayout {
     Repeater {
         model: UserSettings.sysInfoShowDisk ? SysInfo.diskDevices : []
 
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.preferredHeight: 20
-            spacing: Theme.spacingMedium
-
-            Text {
-                text: modelData.name
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeMini
-                color: Theme.fgDim
-                Layout.fillWidth: true
-            }
-
-            SpeedLabel { arrow: "\u2193"; arrowColor: Theme.cyan;  value: Theme.formatSpeed(modelData.readBytesPerSec) }
-            SpeedLabel { arrow: "\u2191"; arrowColor: Theme.green; value: Theme.formatSpeed(modelData.writeBytesPerSec) }
+        MetricSpeedRow {
+            name: modelData.name
+            downValue: modelData.readBytesPerSec
+            upValue: modelData.writeBytesPerSec
         }
     }
 

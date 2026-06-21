@@ -228,33 +228,30 @@ OverlayWindow {
             visible: root._selW === 0 && !root._selecting
         }
 
-        Rectangle {
-            width: parent.width
-            height: Math.max(0, root._selY)
+        // Dim the four regions outside the selection rect.
+        component DimRect: Rectangle {
             color: Theme.backdrop
             visible: root._selW > 0
         }
-        Rectangle {
+        DimRect {
+            width: parent.width
+            height: Math.max(0, root._selY)
+        }
+        DimRect {
             y: root._selY + root._selH
             width: parent.width
             height: Math.max(0, parent.height - root._selY - root._selH)
-            color: Theme.backdrop
-            visible: root._selW > 0
         }
-        Rectangle {
+        DimRect {
             y: root._selY
             width: Math.max(0, root._selX)
             height: root._selH
-            color: Theme.backdrop
-            visible: root._selW > 0
         }
-        Rectangle {
+        DimRect {
             x: root._selX + root._selW
             y: root._selY
             width: Math.max(0, parent.width - root._selX - root._selW)
             height: root._selH
-            color: Theme.backdrop
-            visible: root._selW > 0
         }
 
         Rectangle {
