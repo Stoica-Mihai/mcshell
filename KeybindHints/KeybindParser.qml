@@ -179,13 +179,16 @@ QtObject {
         return attrs;
     }
 
+    // True when char i opens/closes a quote (an unescaped double-quote).
+    function _isQuoteToggle(s, i) {
+        return s[i] === '"' && (i === 0 || s[i - 1] !== '\\');
+    }
+
     function stripComment(line) {
         // Remove // comments that are not inside quotes
         let inQuote = false;
         for (let i = 0; i < line.length; i++) {
-            if (line[i] === '"' && (i === 0 || line[i - 1] !== '\\')) {
-                inQuote = !inQuote;
-            }
+            if (_isQuoteToggle(line, i)) inQuote = !inQuote;
             if (!inQuote && line[i] === '/' && i + 1 < line.length && line[i + 1] === '/') {
                 return line.substring(0, i);
             }
@@ -197,7 +200,7 @@ QtObject {
         let n = 0;
         let inQuote = false;
         for (let i = 0; i < s.length; i++) {
-            if (s[i] === '"' && (i === 0 || s[i - 1] !== '\\')) inQuote = !inQuote;
+            if (_isQuoteToggle(s, i)) inQuote = !inQuote;
             if (!inQuote && s[i] === ch) n++;
         }
         return n;

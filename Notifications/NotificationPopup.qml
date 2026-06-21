@@ -73,11 +73,16 @@ Item {
         // Each entry: { nid, appName, summary, body, appIconUrl, imageUrl, urgency, timestamp }
     }
 
+    // Remove the history entry at index i, dropping its retained ref too.
+    function _removeHistoryAt(i) {
+        delete root._notifRefs[_historyModel.get(i).notifId];
+        _historyModel.remove(i);
+    }
+
     function removeHistoryById(nid: string) {
         for (let i = 0; i < _historyModel.count; i++) {
             if (_historyModel.get(i).notifId === nid) {
-                _historyModel.remove(i);
-                delete root._notifRefs[nid];
+                _removeHistoryAt(i);
                 return;
             }
         }
@@ -117,10 +122,8 @@ Item {
         if (threshold <= 0) return;
         const now = Date.now();
         for (let i = _historyModel.count - 1; i >= 0; i--) {
-            if (now - _historyModel.get(i).epochMs >= threshold) {
-                delete root._notifRefs[_historyModel.get(i).notifId];
-                _historyModel.remove(i);
-            }
+            if (now - _historyModel.get(i).epochMs >= threshold)
+                _removeHistoryAt(i);
         }
         if (unreadCount > _historyModel.count)
             unreadCount = _historyModel.count;

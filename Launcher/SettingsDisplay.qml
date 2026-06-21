@@ -110,7 +110,7 @@ SettingsPanel {
     function adjustRight() { return _dispatch(1); }
 
     function _cycleNightMode(delta) {
-        const idx = Math.max(0, Math.min(2, modeIndex + delta));
+        const idx = clampStep(modeIndex, delta, modes.length);
         UserSettings.nightLightMode = modes[idx];
         UserSettings.applyNightLight();
     }

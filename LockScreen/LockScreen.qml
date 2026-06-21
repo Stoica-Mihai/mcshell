@@ -64,9 +64,7 @@ Item {
             root.authInProgress = false;
             if (result === PamResult.Success) {
                 root.lastUnlockTime = Date.now();
-                root.currentPassword = "";
-                root.statusMessage = "";
-                root.waitingForResponse = false;
+                root._clearAuth();
                 lockSession.locked = false;
             } else {
                 root.currentPassword = "";
@@ -87,12 +85,17 @@ Item {
         }
     }
 
+    // Reset password input + status to a clean state.
+    function _clearAuth() {
+        currentPassword = "";
+        statusMessage = "";
+        waitingForResponse = false;
+    }
+
     function tryUnlock() {
         if (gracePeriodActive) {
             lastUnlockTime = Date.now();
-            currentPassword = "";
-            statusMessage = "";
-            waitingForResponse = false;
+            _clearAuth();
             lockSession.locked = false;
             return;
         }

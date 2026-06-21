@@ -56,21 +56,27 @@ OverlayWindow {
     }
 
 
+    // Bind the active category, clear search/selection, and fire its enter
+    // lifecycle. Shared by initial open and tab switching.
+    function _enterTab(tab) {
+        activeTab = tab;
+        _carouselDelegate = activeCategory.cardDelegate;
+        _carouselModel = Qt.binding(() => activeCategory.model);
+        searchField.text = "";
+        selectedIndex = 0;
+        activeCategory.onSearch("");
+        activeCategory.onTabEnter();
+        _animEnableTimer.restart();
+        searchField.forceActiveFocus();
+    }
+
     function _initLauncher(tab, initialLevel) {
         _suppressCarouselAnim = true;
         isOpen = true;
         _openTransition();
-        activeTab = tab;
         level = initialLevel;
-        searchField.text = "";
-        selectedIndex = 0;
-        _carouselDelegate = activeCategory.cardDelegate;
-        _carouselModel = Qt.binding(() => activeCategory.model);
-        activeCategory.onSearch("");
-        activeCategory.onTabEnter();
-        searchField.forceActiveFocus();
+        _enterTab(tab);
         Qt.callLater(tabHighlight._snapToTab, tab);
-        _animEnableTimer.restart();
     }
 
     function open() { _requestOpen(0, "view", ""); }
@@ -252,15 +258,7 @@ OverlayWindow {
         // Clear carousel before switching — prevents delegate/model cross-contamination
         _carouselModel = [];
         _carouselDelegate = null;
-        activeTab = tab;
-        _carouselDelegate = activeCategory.cardDelegate;
-        _carouselModel = Qt.binding(() => activeCategory.model);
-        searchField.text = "";
-        selectedIndex = 0;
-        activeCategory.onSearch("");
-        activeCategory.onTabEnter();
-        _animEnableTimer.restart();
-        searchField.forceActiveFocus();
+        _enterTab(tab);
     }
 
     // Debounce search filtering so the model only rebuilds once typing

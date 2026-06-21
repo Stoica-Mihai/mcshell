@@ -18,6 +18,8 @@ Item {
 
     signal moved(real newValue)
 
+    function _normalizeX(x) { return Math.max(0, Math.min(1, x / width)); }
+
     readonly property bool dragging: sliderMouse.pressed
 
     height: knobSize + 6
@@ -74,11 +76,11 @@ Item {
         cursorShape: Qt.PointingHandCursor
 
         onPressed: mouse => {
-            root.moved(Math.max(0, Math.min(1, mouse.x / width)));
+            root.moved(root._normalizeX(mouse.x));
         }
         onPositionChanged: mouse => {
             if (pressed)
-                root.moved(Math.max(0, Math.min(1, mouse.x / width)));
+                root.moved(root._normalizeX(mouse.x));
         }
         onWheel: wheel => {
             if (wheel.angleDelta.y > 0)
