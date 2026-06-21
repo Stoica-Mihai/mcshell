@@ -695,31 +695,30 @@ Scope {
                     // ── SysInfo settings section ──────────
                     // Loader-gated so KeyboardRowNav and the per-GPU
                     // Repeater don't churn while the panel is closed.
-                    Loader {
+                    component SettingsDropdownLoader: Loader {
+                        property string panel
+                        active: sharedDropdown.activePanel === panel
+                        visible: active
+                        anchors.fill: parent
+                        readonly property real fullHeight: item ? item.fullHeight : 0
+                    }
+
+                    SettingsDropdownLoader {
                         id: sysInfoSettingsContent
-                        active: sharedDropdown.activePanel === "sysInfoSettings"
-                        visible: active
-                        anchors.fill: parent
+                        panel: "sysInfoSettings"
                         sourceComponent: SysInfoSettingsPopup { windowOpen: sysInfoSettingsContent.active }
-                        readonly property real fullHeight: item ? item.fullHeight : 0
                     }
 
-                    Loader {
+                    SettingsDropdownLoader {
                         id: wifiSettingsContent
-                        active: sharedDropdown.activePanel === "wifiSettings"
-                        visible: active
-                        anchors.fill: parent
+                        panel: "wifiSettings"
                         sourceComponent: WifiSettingsPopup { windowOpen: wifiSettingsContent.active }
-                        readonly property real fullHeight: item ? item.fullHeight : 0
                     }
 
-                    Loader {
+                    SettingsDropdownLoader {
                         id: bluetoothSettingsContent
-                        active: sharedDropdown.activePanel === "bluetoothSettings"
-                        visible: active
-                        anchors.fill: parent
+                        panel: "bluetoothSettings"
                         sourceComponent: BluetoothSettingsPopup { windowOpen: bluetoothSettingsContent.active }
-                        readonly property real fullHeight: item ? item.fullHeight : 0
                     }
 
                     // ── Notifications section ─────────────
