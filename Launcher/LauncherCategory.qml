@@ -1,5 +1,4 @@
 import QtQuick
-import Quickshell
 
 // Base interface for launcher categories.
 // All category tabs extend this and override the relevant properties/functions.
@@ -13,27 +12,21 @@ Item {
     property string searchPlaceholder: ""
 
     // ── Data model (lazy-loaded) ──
-    // ScriptModel diffs each value reassignment and reuses delegates for items
-    // that persist, so filtering updates the visible cards in place instead of
-    // destroying and recreating every delegate (which flickered the cards on
-    // each keystroke). Its role is `modelData`, so delegates are unchanged.
-    property alias model: _model
+    property var model: []
     property var _sourceData: []
     property int _loadedCount: 0
-
-    ScriptModel { id: _model }
 
     function setItems(items, startIndex) {
         _sourceData = items;
         const w = 15;
         _loadedCount = Math.min(items.length, Math.max(w, (startIndex || 0) + w));
-        _model.values = items.length <= w ? items : items.slice(0, _loadedCount);
+        model = items.length <= w ? items : items.slice(0, _loadedCount);
     }
 
     Timer {
         id: _growTimer
         interval: 350
-        onTriggered: _model.values = _sourceData.slice(0, _loadedCount)
+        onTriggered: model = _sourceData.slice(0, _loadedCount)
     }
 
     function growItems(selectedIndex) {

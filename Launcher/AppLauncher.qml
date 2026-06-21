@@ -263,8 +263,28 @@ OverlayWindow {
         searchField.forceActiveFocus();
     }
 
+    // Debounce search filtering so the model only rebuilds once typing
+    // settles, not on every keystroke. The level switch and selection reset
+    // stay immediate; an empty query filters instantly (no wait to clear).
+    Timer {
+        id: searchDebounce
+        interval: 500
+        repeat: false
+        onTriggered: launcher.activeCategory.onSearch(searchField.text)
+    }
+
+    // Apply any pending debounced query now (e.g. before activating on Enter
+    // so the action runs against the filtered list, not the stale one).
+    function flushSearch() {
+        if (searchDebounce.running) {
+            searchDebounce.stop();
+            activeCategory.onSearch(searchField.text);
+        }
+    }
+
     // ── Activate selected item ──────────────────────────
     function activate() {
+        flushSearch();
         if (selectedIndex < 0 || selectedIndex >= currentCount) return;
         activeCategory.onActivate(selectedIndex);
     }
@@ -484,7 +504,12 @@ OverlayWindow {
 
                     onTextChanged: {
                         launcher.selectedIndex = 0;
-                        launcher.activeCategory.onSearch(text);
+                        if (text === "") {
+                            searchDebounce.stop();
+                            launcher.activeCategory.onSearch("");
+                        } else {
+                            searchDebounce.restart();
+                        }
                         if (text !== "" && launcher.inView)
                             launcher.level = "list";
                     }
