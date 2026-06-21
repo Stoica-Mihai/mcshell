@@ -34,10 +34,7 @@ LauncherCategory {
 
     // Wallpaper path for a given screen name
     function _wallpaperFor(screenName) {
-        const map = UserSettings.perScreenMap;
-        const folder = UserSettings.wallpaperFolder;
-        if (map[screenName]) return folder + "/" + map[screenName];
-        return UserSettings.wallpaperPath;
+        return UserSettings.wallpaperForScreen(screenName);
     }
 
     // Precomputed reverse map: wallpaper path → [screen names].
@@ -50,13 +47,10 @@ LauncherCategory {
     property var _screensByPath: ({})
 
     function _rebuildScreensByPath() {
-        const map = UserSettings.perScreenMap;
-        const folder = UserSettings.wallpaperFolder;
-        const global = UserSettings.wallpaperPath;
         const result = {};
         for (let i = 0; i < _screenList.length; i++) {
             const name = _screenList[i].name;
-            const wp = map[name] ? folder + "/" + map[name] : global;
+            const wp = UserSettings.wallpaperForScreen(name);
             if (!result[wp]) result[wp] = [];
             result[wp].push(name);
         }

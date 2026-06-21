@@ -42,14 +42,10 @@ Item {
                 right: true
             }
 
-            // Per-screen wallpaper — inline binding with explicit deps for
-            // reliable QML property tracking (avoids opaque function call).
-            readonly property string _screenWallpaper: {
-                const filename = UserSettings.perScreenMap[modelData.name];
-                if (filename)
-                    return UserSettings.wallpaperFolder + "/" + filename;
-                return UserSettings.wallpaperPath;
-            }
+            // Per-screen wallpaper path. Qt's property tracker captures the
+            // perScreenMap/folder/path reads inside the helper, so the binding
+            // stays reactive.
+            readonly property string _screenWallpaper: UserSettings.wallpaperForScreen(modelData.name)
 
             // Track which image layer is "front" for crossfade
             property bool showingFirst: true

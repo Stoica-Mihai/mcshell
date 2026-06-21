@@ -158,6 +158,17 @@ Singleton {
 
     // Reactive caches — avoids JSON.parse on every read.
     readonly property var perScreenMap: JSON.parse(adapter.wallpaperPerScreen || "{}")
+
+    // Wallpaper path for a screen: its per-screen override if set, else the
+    // global wallpaper. Single source for the screen→path rule (renderer,
+    // rotator, picker). Reads of perScreenMap/wallpaperFolder/wallpaperPath
+    // here are captured by Qt's property tracker even through this call, so
+    // bindings that call it stay reactive.
+    function wallpaperForScreen(name) {
+        const filename = perScreenMap[name];
+        if (filename) return adapter.wallpaperFolder + "/" + filename;
+        return wallpaperPath;
+    }
     // Which screen to rotate: "" = all, or a specific screen name
     property alias wallpaperRotateScreen: adapter.wallpaperRotateScreen
 

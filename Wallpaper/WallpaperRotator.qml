@@ -52,16 +52,12 @@ Item {
         onTriggered: {
             const target = UserSettings.wallpaperRotateScreen;
             const screens = Quickshell.screens;
-            const folder = UserSettings.wallpaperFolder;
-            const map = UserSettings.perScreenMap;
             const batch = {};
 
             for (let i = 0; i < screens.length; i++) {
                 const name = screens[i].name;
                 if (target !== "" && target !== name) continue;
-                const current = map[name]
-                    ? folder + "/" + map[name]
-                    : UserSettings.wallpaperPath;
+                const current = UserSettings.wallpaperForScreen(name);
                 const next = root._pickNext(current);
                 if (next) batch[name] = next;
             }
