@@ -802,7 +802,7 @@ Scope {
             visible: centerDropdown.activePanel === "weather"
             enabled: visible
             anchors.fill: parent
-            weather: weather
+            weather: WeatherService
             windowOpen: visible
         }
 
