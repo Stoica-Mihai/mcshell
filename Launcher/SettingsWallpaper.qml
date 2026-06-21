@@ -18,32 +18,16 @@ SettingsPanel {
 
     // ── Rotation interval ──
     readonly property var _options: UserSettings.wallpaperRotateOptions
-    readonly property int _intervalIndex: {
-        const id = UserSettings.wallpaperRotateInterval;
-        for (let i = 0; i < _options.length; i++)
-            if (_options[i].id === id) return i;
-        return 0;
-    }
+    readonly property int _intervalIndex: indexInList(_options, UserSettings.wallpaperRotateInterval, "id")
     readonly property bool _enabled: _options[_intervalIndex].ms > 0
 
     // ── Fill mode ──
     readonly property var _fillModes: UserSettings.wallpaperFillModes
-    readonly property int _fillIndex: {
-        const id = UserSettings.wallpaperFillMode;
-        for (let i = 0; i < _fillModes.length; i++)
-            if (_fillModes[i].id === id) return i;
-        return 0;
-    }
+    readonly property int _fillIndex: indexInList(_fillModes, UserSettings.wallpaperFillMode, "id")
 
     // ── Rotate screen ──
     readonly property var _rotateScreenNames: UserSettings.screenNames
-    readonly property int _rotateScreenIndex: {
-        const target = UserSettings.wallpaperRotateScreen;
-        if (!target) return 0;
-        for (let i = 0; i < _rotateScreenNames.length; i++)
-            if (_rotateScreenNames[i] === target) return i;
-        return 0;
-    }
+    readonly property int _rotateScreenIndex: indexInList(_rotateScreenNames, UserSettings.wallpaperRotateScreen)
 
     // ── Folder editing ──
     property bool _editingFolder: false
@@ -54,7 +38,7 @@ SettingsPanel {
     function adjustLeft() {
         if (selectedItem === 0) {
             // Interval doesn't wrap — "Off" is a hard boundary
-            UserSettings.wallpaperRotateInterval = _options[Math.max(0, _intervalIndex - 1)].id;
+            UserSettings.wallpaperRotateInterval = _options[clampStep(_intervalIndex, -1, _options.length)].id;
             return true;
         }
         if (selectedItem === 1) { orderPicker.cycleLeft(); return true; }
@@ -64,7 +48,7 @@ SettingsPanel {
     }
     function adjustRight() {
         if (selectedItem === 0) {
-            UserSettings.wallpaperRotateInterval = _options[Math.min(_options.length - 1, _intervalIndex + 1)].id;
+            UserSettings.wallpaperRotateInterval = _options[clampStep(_intervalIndex, 1, _options.length)].id;
             return true;
         }
         if (selectedItem === 1) { orderPicker.cycleRight(); return true; }

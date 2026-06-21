@@ -34,17 +34,17 @@ SettingsPanel {
     // ── Notification auto-clean mapping ──
     readonly property var _cleanValues: ["never", "30m", "1h", "6h", "24h"]
     readonly property var _cleanLabels: ["Never", "30 min", "1 hour", "6 hours", "24 hours"]
-    readonly property int _cleanIndex: Math.max(0, _cleanValues.indexOf(UserSettings.notifAutoClean))
+    readonly property int _cleanIndex: indexInList(_cleanValues, UserSettings.notifAutoClean)
 
     // ── Primary output mapping (multi-monitor only) ──
     readonly property var _screenNames: Quickshell.screens.map(s => s.name)
     readonly property bool _multiScreen: Quickshell.screens.length > 1
-    readonly property int _primaryIndex: { const i = _screenNames.indexOf(UserSettings.primaryOutput); return i < 0 ? 0 : i; }
+    readonly property int _primaryIndex: indexInList(_screenNames, UserSettings.primaryOutput)
 
     // ── Auto-lock mapping ──
     readonly property var _idleValues: [0, 5, 10, 15, 30, 45, 60]
     readonly property var _idleLabels: ["Off", "5 min", "10 min", "15 min", "30 min", "45 min", "60 min"]
-    readonly property int _idleIndex: Math.max(0, _idleValues.indexOf(UserSettings.idleTimeout))
+    readonly property int _idleIndex: indexInList(_idleValues, UserSettings.idleTimeout)
 
     // ── Sunrise/sunset time slots (30-min granularity) ──
     readonly property var _timeSlots: {
@@ -84,11 +84,11 @@ SettingsPanel {
         });
         list.push(
             { id: "idle",
-              adjustLeft:  () => UserSettings.idleTimeout = _idleValues[Math.max(0, _idleIndex - 1)],
-              adjustRight: () => UserSettings.idleTimeout = _idleValues[Math.min(_idleValues.length - 1, _idleIndex + 1)] },
+              adjustLeft:  () => UserSettings.idleTimeout = _idleValues[clampStep(_idleIndex, -1, _idleValues.length)],
+              adjustRight: () => UserSettings.idleTimeout = _idleValues[clampStep(_idleIndex, 1, _idleValues.length)] },
             { id: "autoClean",
-              adjustLeft:  () => UserSettings.notifAutoClean = _cleanValues[Math.max(0, _cleanIndex - 1)],
-              adjustRight: () => UserSettings.notifAutoClean = _cleanValues[Math.min(_cleanValues.length - 1, _cleanIndex + 1)] },
+              adjustLeft:  () => UserSettings.notifAutoClean = _cleanValues[clampStep(_cleanIndex, -1, _cleanValues.length)],
+              adjustRight: () => UserSettings.notifAutoClean = _cleanValues[clampStep(_cleanIndex, 1, _cleanValues.length)] },
             { id: "sysInfo",
               adjustLeft:  () => UserSettings.sysInfoEnabled = !UserSettings.sysInfoEnabled,
               adjustRight: () => UserSettings.sysInfoEnabled = !UserSettings.sysInfoEnabled },
