@@ -351,9 +351,14 @@ Singleton {
 
     // ── Auto-schedule ──
 
-    function _timeToMinutes(timeStr) {
-        const parts = timeStr.split(":").map(Number);
-        return parts[0] * 60 + (parts[1] || 0);
+    // HH:MM (24h) <-> minutes since midnight.
+    function parseHHMM(timeStr) {
+        const parts = String(timeStr).split(":").map(Number);
+        return (parts[0] || 0) * 60 + (parts[1] || 0);
+    }
+    function formatHHMM(mins) {
+        const m = ((mins % 1440) + 1440) % 1440;
+        return String(Math.floor(m / 60)).padStart(2, "0") + ":" + String(m % 60).padStart(2, "0");
     }
 
     // Temperature range and defaults
@@ -365,8 +370,8 @@ Singleton {
     function _updateAutoPhase() {
         const now = new Date();
         const nowMin = now.getHours() * 60 + now.getMinutes();
-        const sunset = _timeToMinutes(root.nightLightSunset);
-        const sunrise = _timeToMinutes(root.nightLightSunrise);
+        const sunset = parseHHMM(root.nightLightSunset);
+        const sunrise = parseHHMM(root.nightLightSunrise);
         const nightTemp = _autoNightTemp;
         const dayTemp = tempMax;
         const trans = _transitionMin;

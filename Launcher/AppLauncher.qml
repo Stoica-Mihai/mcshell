@@ -302,7 +302,7 @@ OverlayWindow {
     Rectangle {
         id: backdrop
         anchors.fill: parent
-        color: UserSettings.blurEnabled ? "transparent" : Theme.backdrop
+        color: Theme.backdropColor()
         opacity: launcher._animProgress
         MouseArea { anchors.fill: parent; onClicked: launcher.close() }
     }
@@ -346,7 +346,7 @@ OverlayWindow {
                     ctx.lineTo(0, height);
                     ctx.closePath();
                     ctx.fillStyle = Theme.withAlpha(Theme.surfaceContainer,
-                        UserSettings.blurEnabled ? Theme.blurAlpha : 0.92);
+                        UserSettings.blurEnabled ? Theme.blurAlpha : Theme.searchBarAlpha);
                     ctx.fill();
                     ctx.strokeStyle = Theme.outlineVariant;
                     ctx.lineWidth = 1;

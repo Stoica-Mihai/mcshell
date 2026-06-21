@@ -440,6 +440,13 @@ Singleton {
         return UserSettings.blurEnabled ? withAlpha(bg, blurAlpha) : bg;
     }
 
+    // Full-screen backdrop dim: transparent when blur carries the look.
+    function backdropColor() {
+        return UserSettings.blurEnabled ? "transparent" : backdrop;
+    }
+
+    readonly property real searchBarAlpha: 0.92   // launcher search bar fill (non-blur)
+
     // ── Animation ──────────────────────────────────────
     readonly property int animFast: 100       // hover color feedback
     readonly property int animNormal: 150     // state changes (tabs, borders)

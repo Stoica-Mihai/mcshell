@@ -32,8 +32,15 @@ SettingsPanel {
     readonly property bool nightManual: UserSettings.nightLightMode === UserSettings.modeManual
 
     // ── Notification auto-clean mapping ──
-    readonly property var _cleanValues: ["never", "30m", "1h", "6h", "24h"]
-    readonly property var _cleanLabels: ["Never", "30 min", "1 hour", "6 hours", "24 hours"]
+    readonly property var _cleanOptions: [
+        { value: "never", label: "Never" },
+        { value: "30m",   label: "30 min" },
+        { value: "1h",    label: "1 hour" },
+        { value: "6h",    label: "6 hours" },
+        { value: "24h",   label: "24 hours" }
+    ]
+    readonly property var _cleanValues: _cleanOptions.map(o => o.value)
+    readonly property var _cleanLabels: _cleanOptions.map(o => o.label)
     readonly property int _cleanIndex: indexInList(_cleanValues, UserSettings.notifAutoClean)
 
     // ── Primary output mapping (multi-monitor only) ──
@@ -42,8 +49,17 @@ SettingsPanel {
     readonly property int _primaryIndex: indexInList(_screenNames, UserSettings.primaryOutput)
 
     // ── Auto-lock mapping ──
-    readonly property var _idleValues: [0, 5, 10, 15, 30, 45, 60]
-    readonly property var _idleLabels: ["Off", "5 min", "10 min", "15 min", "30 min", "45 min", "60 min"]
+    readonly property var _idleOptions: [
+        { value: 0,  label: "Off" },
+        { value: 5,  label: "5 min" },
+        { value: 10, label: "10 min" },
+        { value: 15, label: "15 min" },
+        { value: 30, label: "30 min" },
+        { value: 45, label: "45 min" },
+        { value: 60, label: "60 min" }
+    ]
+    readonly property var _idleValues: _idleOptions.map(o => o.value)
+    readonly property var _idleLabels: _idleOptions.map(o => o.label)
     readonly property int _idleIndex: indexInList(_idleValues, UserSettings.idleTimeout)
 
     // ── Sunrise/sunset time slots (30-min granularity) ──
@@ -51,10 +67,10 @@ SettingsPanel {
         const list = [];
         for (let h = 0; h < 24; h++)
             for (let m = 0; m < 60; m += 30)
-                list.push(String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0"));
+                list.push(UserSettings.formatHHMM(h * 60 + m));
         return list;
     }
-    function _slotIndex(t) { const i = _timeSlots.indexOf(t); return i < 0 ? 0 : i; }
+    function _slotIndex(t) { return indexInList(_timeSlots, t); }
 
     // Declarative item registry — each row's `selected` binding and the
     // panel's adjustLeft/adjustRight dispatch resolve by id, so visibility
@@ -123,14 +139,9 @@ SettingsPanel {
 
     function _adjustTime(which, deltaMin) {
         const current = which === "sunrise" ? UserSettings.nightLightSunrise : UserSettings.nightLightSunset;
-        const parts = current.split(":").map(Number);
-        let mins = parts[0] * 60 + (parts[1] || 0) + deltaMin;
-        if (mins < 0) mins += 1440;
-        if (mins >= 1440) mins -= 1440;
-        const h = String(Math.floor(mins / 60)).padStart(2, "0");
-        const m = String(mins % 60).padStart(2, "0");
-        if (which === "sunrise") UserSettings.nightLightSunrise = h + ":" + m;
-        else UserSettings.nightLightSunset = h + ":" + m;
+        const next = UserSettings.formatHHMM(UserSettings.parseHHMM(current) + deltaMin);
+        if (which === "sunrise") UserSettings.nightLightSunrise = next;
+        else UserSettings.nightLightSunset = next;
         UserSettings.applyNightLight();
     }
 

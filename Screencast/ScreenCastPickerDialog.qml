@@ -96,7 +96,7 @@ Item {
             Rectangle {
                 id: pickerBackdrop
                 anchors.fill: parent
-                color: UserSettings.blurEnabled ? "transparent" : Theme.backdrop
+                color: Theme.backdropColor()
                 opacity: root.activeRequest ? 1 : 0
                 Behavior on opacity { NumberAnimation { duration: Theme.animSmooth } }
                 MouseArea {

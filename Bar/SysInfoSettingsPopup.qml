@@ -49,13 +49,18 @@ SettingsPanelBase {
         { kind: "check", setting: "sysInfoShowDisk",    label: "Disk I/O" }
     ]
 
-    // Bar metric values — GPU option only offered if at least one GPU is detected.
-    readonly property var _barMetricValues: SysInfo.gpus.length > 0
-        ? ["cpu", "cpu-history", "memory", "gpu"]
-        : ["cpu", "cpu-history", "memory"]
-    readonly property var _barMetricLabels: SysInfo.gpus.length > 0
-        ? ["CPU load", "CPU history", "Memory", "GPU load"]
-        : ["CPU load", "CPU history", "Memory"]
+    // Bar metric options — GPU only offered if at least one GPU is detected.
+    readonly property var _barMetricOptions: {
+        const opts = [
+            { value: "cpu",         label: "CPU load" },
+            { value: "cpu-history", label: "CPU history" },
+            { value: "memory",      label: "Memory" }
+        ];
+        if (SysInfo.gpus.length > 0) opts.push({ value: "gpu", label: "GPU load" });
+        return opts;
+    }
+    readonly property var _barMetricValues: _barMetricOptions.map(o => o.value)
+    readonly property var _barMetricLabels: _barMetricOptions.map(o => o.label)
 
     // Start indices into `rows` for sections rendered as their own block.
     readonly property int _idxChecksStart: 5
