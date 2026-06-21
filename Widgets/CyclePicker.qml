@@ -31,16 +31,18 @@ Item {
     implicitWidth: pillValue ? pillRow.implicitWidth : textLabel.implicitWidth
     implicitHeight: pillValue ? pillRow.implicitHeight : textLabel.implicitHeight
 
+    // Emit the target index without mutating currentIndex: callers bind
+    // currentIndex to a derived value and persist via onIndexChanged, so
+    // self-assigning here would break that binding. The setting write drives
+    // currentIndex back through the intact binding.
     function cycleLeft() {
         if (!enabled || model.length === 0) return;
-        currentIndex = (currentIndex - 1 + model.length) % model.length;
-        indexChanged(currentIndex);
+        indexChanged((currentIndex - 1 + model.length) % model.length);
     }
 
     function cycleRight() {
         if (!enabled || model.length === 0) return;
-        currentIndex = (currentIndex + 1) % model.length;
-        indexChanged(currentIndex);
+        indexChanged((currentIndex + 1) % model.length);
     }
 
     // ── Default: single-line text rendering ──

@@ -48,6 +48,9 @@ Item {
             try {
                 root.success(JSON.parse(body.toString()));
             } catch (e) {
+                // A 200 with malformed JSON: cool down too so a re-fetching
+                // caller can't hammer a broken endpoint.
+                root._nextAllowedAt = Date.now() + root.cooldownSeconds * 1000;
                 root.error("parse");
             }
         }

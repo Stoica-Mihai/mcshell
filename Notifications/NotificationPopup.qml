@@ -73,10 +73,12 @@ Item {
         // Each entry: { nid, appName, summary, body, appIconUrl, imageUrl, urgency, timestamp }
     }
 
-    // Remove the history entry at index i, dropping its retained ref too.
+    // Remove the history entry at index i, dropping its retained ref too and
+    // keeping unreadCount from exceeding the surviving entry count.
     function _removeHistoryAt(i) {
         delete root._notifRefs[_historyModel.get(i).notifId];
         _historyModel.remove(i);
+        if (unreadCount > _historyModel.count) unreadCount = _historyModel.count;
     }
 
     function removeHistoryById(nid: string) {
@@ -125,8 +127,6 @@ Item {
             if (now - _historyModel.get(i).epochMs >= threshold)
                 _removeHistoryAt(i);
         }
-        if (unreadCount > _historyModel.count)
-            unreadCount = _historyModel.count;
         _scheduleClean();
     }
 
@@ -202,9 +202,9 @@ Item {
                 epochMs: Date.now()
             });
 
-            // Cap history
+            // Cap history (drops the evicted entries' retained refs too)
             while (_historyModel.count > root.maxHistory)
-                _historyModel.remove(_historyModel.count - 1);
+                _removeHistoryAt(_historyModel.count - 1);
 
             root._scheduleClean();
 

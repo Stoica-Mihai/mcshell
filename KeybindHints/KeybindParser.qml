@@ -180,8 +180,13 @@ QtObject {
     }
 
     // True when char i opens/closes a quote (an unescaped double-quote).
+    // A quote is escaped only when preceded by an ODD run of backslashes, so
+    // \" is escaped but \\" (escaped backslash + quote) is a real toggle.
     function _isQuoteToggle(s, i) {
-        return s[i] === '"' && (i === 0 || s[i - 1] !== '\\');
+        if (s[i] !== '"') return false;
+        let bs = 0;
+        for (let j = i - 1; j >= 0 && s[j] === '\\'; j--) bs++;
+        return bs % 2 === 0;
     }
 
     function stripComment(line) {

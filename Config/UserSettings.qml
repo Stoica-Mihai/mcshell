@@ -166,7 +166,8 @@ Singleton {
     // bindings that call it stay reactive.
     function wallpaperForScreen(name) {
         const filename = perScreenMap[name];
-        if (filename) return adapter.wallpaperFolder + "/" + filename;
+        if (filename && adapter.wallpaperFolder)
+            return adapter.wallpaperFolder + "/" + filename;
         return wallpaperPath;
     }
     // Which screen to rotate: "" = all, or a specific screen name
