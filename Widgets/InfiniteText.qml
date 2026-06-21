@@ -18,8 +18,14 @@ Item {
     readonly property real _gap: 40
     readonly property real _cycleWidth: label.implicitWidth + _gap
 
+    // Height from font metrics, not content: mixed-script text (e.g. Latin +
+    // Arabic) inflates the line box via font fallback, which would push the
+    // visible glyphs off the bar's vertical center. A stable metric height +
+    // AlignVCenter on the label keeps the text centered like the icons.
+    FontMetrics { id: _fm; font: label.font }
+
     implicitWidth: label.implicitWidth
-    implicitHeight: label.implicitHeight
+    implicitHeight: _fm.height
     clip: true
 
     readonly property bool _overflows: label.implicitWidth > root.width
@@ -29,7 +35,8 @@ Item {
     // Primary text
     Text {
         id: label
-        anchors.verticalCenter: parent.verticalCenter
+        height: root.height
+        verticalAlignment: Text.AlignVCenter
         font.family: Theme.fontFamily
         color: root._color
         text: root.text
@@ -42,7 +49,8 @@ Item {
 
     // Duplicate for seamless loop
     Text {
-        anchors.verticalCenter: parent.verticalCenter
+        height: root.height
+        verticalAlignment: Text.AlignVCenter
         font.family: Theme.fontFamily
         color: root._color
         text: root.text
