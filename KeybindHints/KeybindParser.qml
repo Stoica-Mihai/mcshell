@@ -1,8 +1,12 @@
+pragma Singleton
+
 import QtQuick
 import Quickshell
 import Quickshell.Io
 
-QtObject {
+// Single shared niri-keybind parser. One FileView watcher + one parse for
+// the whole shell instead of one per StatusBar dropdown.
+Singleton {
     id: parser
 
     // ── Public input ────────────────────────────────────
@@ -224,22 +228,21 @@ QtObject {
         return s.trim();
     }
 
+    // Build a "Run: <basename> <args>" label from a spawn command + args.
+    function _spawnLabel(cmdRaw, argsRaw) {
+        const cmd = cmdRaw.replace(/"/g, "").split("/").pop();
+        const args = argsRaw.trim().replace(/"/g, "");
+        return args ? `Run: ${cmd} ${args}` : `Run: ${cmd}`;
+    }
+
     function humanizeAction(raw) {
         let s = raw.trim();
 
         // spawn "command" args... -> Run: command args
         const spawnMatch = s.match(/^spawn\s+"([^"]+)"(.*)$/);
-        if (spawnMatch) {
-            const cmd = spawnMatch[1].split("/").pop(); // basename
-            const args = spawnMatch[2].trim().replace(/"/g, "");
-            return args ? `Run: ${cmd} ${args}` : `Run: ${cmd}`;
-        }
+        if (spawnMatch) return _spawnLabel(spawnMatch[1], spawnMatch[2]);
         const spawnSimple = s.match(/^spawn\s+(\S+)(.*)$/);
-        if (spawnSimple) {
-            const cmd = spawnSimple[1].replace(/"/g, "").split("/").pop();
-            const args = spawnSimple[2].trim().replace(/"/g, "");
-            return args ? `Run: ${cmd} ${args}` : `Run: ${cmd}`;
-        }
+        if (spawnSimple) return _spawnLabel(spawnSimple[1], spawnSimple[2]);
 
         // Replace hyphens with spaces and capitalize
         s = s.replace(/-/g, " ");

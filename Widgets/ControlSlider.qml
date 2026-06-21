@@ -59,7 +59,7 @@ Item {
             }
 
             Text {
-                text: Math.round(root.value * 100) + "%"
+                text: Theme.percent(root.value) + "%"
                 color: root.muted ? Theme.red : Theme.fgDim
                 font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeSmall

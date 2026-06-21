@@ -87,52 +87,9 @@ SettingsPanelBase {
 
     Separator {}
 
-    Repeater {
-        id: rowRepeater
+    SettingsRowRepeater {
         model: root.rows
-
-        ColumnLayout {
-            id: rowItem
-            required property var modelData
-            required property int index
-            spacing: Theme.spacingTiny
-            Layout.fillWidth: true
-
-            Text {
-                visible: rowItem.modelData.section !== ""
-                Layout.leftMargin: Theme.spacingMedium
-                Layout.topMargin: Theme.spacingSmall
-                text: rowItem.modelData.section
-                font.family: Theme.fontFamily
-                font.pixelSize: Theme.fontSizeMini
-                color: Theme.fgDim
-                opacity: Theme.opacitySecondary
-            }
-
-            SettingsRowSlot {
-                selected: root.selectedRow === rowItem.index
-                label: rowItem.modelData.label
-
-                CyclePicker {
-                    pillValue: true
-                    visible: rowItem.modelData.kind === "cycle"
-                    model: rowItem.modelData.kind === "cycle" ? rowItem.modelData.model : []
-                    currentIndex: rowItem.modelData.kind === "cycle"
-                        ? Math.max(0, rowItem.modelData.values.indexOf(UserSettings[rowItem.modelData.setting]))
-                        : 0
-                    onIndexChanged: idx => {
-                        if (rowItem.modelData.kind === "cycle")
-                            UserSettings[rowItem.modelData.setting] = rowItem.modelData.values[idx];
-                    }
-                }
-
-                SkewToggle {
-                    visible: rowItem.modelData.kind === "toggle"
-                    state: rowItem.modelData.kind === "toggle"
-                        && UserSettings[rowItem.modelData.setting]
-                        ? 1 : 0
-                }
-            }
-        }
+        selectedRow: root.selectedRow
+        sectionTick: false
     }
 }

@@ -140,73 +140,17 @@ SettingsPanelBase {
         }
     }
 
-    // ── Section header — accent tick + label ───────────
-    component SectionLabel: RowLayout {
-        property string text: ""
-        Layout.fillWidth: true
-        Layout.topMargin: Theme.spacingSmall
-        spacing: Theme.spacingSmall
-
-        SkewRect {
-            implicitWidth: 10
-            implicitHeight: 6
-            fillColor: Theme.accent
-            opacity: Theme.opacityBody
-        }
-        Text {
-            text: parent.text
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeMini
-            color: Theme.fgDim
-            Layout.fillWidth: true
-        }
-    }
-
     // ── General + Bar capsule rows ─────────────────────
     // Driven from `rows[0..4]` — each descriptor carries its label, the
     // setting it binds to, and (for cycles) the visible model + persisted
     // values. Section headers are emitted when `modelData.section` is set.
-    Repeater {
+    SettingsRowRepeater {
         model: root.rows.slice(0, root._idxChecksStart)
-
-        ColumnLayout {
-            required property var modelData
-            required property int index
-            Layout.fillWidth: true
-            spacing: 0
-
-            SectionLabel {
-                visible: modelData.section !== undefined
-                text: modelData.section || ""
-            }
-
-            SettingsRowSlot {
-                selected: root.selectedRow === index
-                label: modelData.label
-
-                CyclePicker {
-                    visible: modelData.kind === "cycle"
-                    pillValue: true
-                    model: modelData.kind === "cycle" ? modelData.model : []
-                    currentIndex: modelData.kind === "cycle"
-                        ? Math.max(0, modelData.values.indexOf(UserSettings[modelData.setting]))
-                        : 0
-                    onIndexChanged: idx => {
-                        if (modelData.kind === "cycle")
-                            UserSettings[modelData.setting] = modelData.values[idx];
-                    }
-                }
-
-                SkewToggle {
-                    visible: modelData.kind === "toggle"
-                    state: modelData.kind === "toggle" && UserSettings[modelData.setting] ? 1 : 0
-                }
-            }
-        }
+        selectedRow: root.selectedRow
     }
 
     // ── Dropdown sections (2-column check grid) ────────
-    SectionLabel { text: "Dropdown sections" }
+    SectionLabel { text: "Dropdown sections"; Layout.topMargin: Theme.spacingSmall }
 
     GridLayout {
         Layout.fillWidth: true
@@ -232,6 +176,7 @@ SettingsPanelBase {
     SectionLabel {
         text: "GPUs"
         visible: SysInfo.gpus.length > 0
+        Layout.topMargin: Theme.spacingSmall
     }
 
     Repeater {
@@ -285,7 +230,7 @@ SettingsPanelBase {
                 }
 
                 Text {
-                    text: (modelData.name || "").replace(/^(NVIDIA|AMD|Intel)\s+/i, "")
+                    text: Theme.stripVendor(modelData.name)
                     font.family: Theme.fontFamily
                     font.pixelSize: Theme.fontSizeSmall
                     color: Theme.fg

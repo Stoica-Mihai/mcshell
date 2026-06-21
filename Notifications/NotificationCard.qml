@@ -19,7 +19,7 @@ Item {
     required property bool hasActions
     required property bool hasInlineReply
 
-    readonly property bool replyFocused: replyField.activeFocus
+    readonly property bool replyFocused: replyField.field.activeFocus
 
     // Function to look up the notification object (set by parent)
     property var getNotifRef: function() { return null; }
@@ -83,9 +83,9 @@ Item {
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
             onClicked: mouse => {
-                const pos = replyContainer.mapFromItem(this, mouse.x, mouse.y);
-                if (replyContainer.visible && replyContainer.contains(pos)) {
-                    replyField.forceActiveFocus();
+                const pos = replyField.mapFromItem(this, mouse.x, mouse.y);
+                if (replyField.visible && replyField.contains(pos)) {
+                    replyField.field.forceActiveFocus();
                 } else {
                     card.userClose();
                 }
@@ -237,45 +237,21 @@ Item {
             }
 
             // Inline reply
-            Rectangle {
-                id: replyContainer
+            StyledTextField {
+                id: replyField
                 visible: card.hasInlineReply
                 Layout.fillWidth: true
                 Layout.topMargin: 4
-                height: 28
-                radius: Theme.radiusSmall
-                color: Theme.bgSolid
-                border.width: 1
-                border.color: replyField.activeFocus ? Theme.accent : Theme.border
-
-                TextInput {
-                    id: replyField
-                    anchors.fill: parent
-                    anchors.leftMargin: Theme.spacingNormal
-                    anchors.rightMargin: Theme.spacingNormal
-                    verticalAlignment: TextInput.AlignVCenter
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    color: Theme.fg
-                    clip: true
-
-                    Keys.onReturnPressed: {
-                        if (text.trim() !== "") {
-                            const ref = card.getNotifRef();
-                            if (ref) ref.sendInlineReply(text);
-                            card.animateOut();
-                        }
-                    }
-                    Keys.onEscapePressed: card.userClose()
-
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "Type a reply..."
-                        color: Theme.fgDim
-                        font: parent.font
-                        visible: !parent.text && !parent.activeFocus
+                Layout.preferredHeight: 28
+                placeholder: "Type a reply..."
+                field.Keys.onReturnPressed: {
+                    if (replyField.text.trim() !== "") {
+                        const ref = card.getNotifRef();
+                        if (ref) ref.sendInlineReply(replyField.text);
+                        card.animateOut();
                     }
                 }
+                field.Keys.onEscapePressed: card.userClose()
             }
 
             // Image preview — narrowed and centered so the parallelogram's

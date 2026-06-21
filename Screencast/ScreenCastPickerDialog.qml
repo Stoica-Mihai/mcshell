@@ -74,7 +74,7 @@ Item {
 
         OverlayWindow {
             id: overlay
-            namespace: "mcshell-screencast-picker"
+            namespace: Namespaces.screencastPicker
             active: root.activeRequest !== null
 
             required property var modelData
@@ -142,26 +142,10 @@ Item {
                     anchors.margins: 20
                     spacing: Theme.spacingMedium
 
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: Theme.iconMonitor
-                        font.family: Theme.iconFont
-                        font.pixelSize: Theme.iconSizeLarge
-                        color: Theme.accent
-                    }
-
-                    Text {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: "Share Your Screen"
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeLarge
-                        font.bold: true
-                        color: Theme.fg
-                    }
-
-                    Text {
-                        Layout.fillWidth: true
-                        text: {
+                    DialogHeader {
+                        icon: Theme.iconMonitor
+                        title: "Share Your Screen"
+                        subtitle: {
                             if (!root.activeRequest) return "";
                             // Most browsers report an opaque sandbox token like
                             // "sh" or empty as the appId — surfacing that adds
@@ -175,11 +159,6 @@ Item {
                                 : "wants to share a screen.";
                             return `${app} ${verb}`;
                         }
-                        color: Theme.fgDim
-                        font.family: Theme.fontFamily
-                        font.pixelSize: Theme.fontSizeSmall
-                        horizontalAlignment: Text.AlignHCenter
-                        wrapMode: Text.Wrap
                     }
 
                     // ── The compartment strip ─────────────────────────────

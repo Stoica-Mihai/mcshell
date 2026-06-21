@@ -222,7 +222,7 @@ LauncherCategory {
                             anchors.fill: parent
                             gradient: Gradient {
                                 GradientStop { position: 0.0; color: "transparent" }
-                                GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.8) }
+                                GradientStop { position: 1.0; color: Theme.imageScrim(0.8) }
                             }
                         }
 
@@ -341,7 +341,7 @@ LauncherCategory {
 
                     gradient: Gradient {
                         GradientStop { position: 0.0; color: "transparent" }
-                        GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.7) }
+                        GradientStop { position: 1.0; color: Theme.imageScrim(0.7) }
                     }
 
                     Text {

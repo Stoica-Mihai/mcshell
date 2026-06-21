@@ -33,6 +33,14 @@ SettingsPanel {
     }
     readonly property int _profileIndex: profileEnums.indexOf(PowerProfiles.profile)
 
+    function _applyProfile(name) {
+        const idx = profileNames.indexOf(name);
+        if (idx >= 0) {
+            PowerProfiles.profile = profileEnums[idx];
+            profileCycler.currentIndex = idx;
+        }
+    }
+
     function adjustLeft() {
         if (!_profileAvailable || selectedItem !== 0) return false;
         profileCycler.cycleLeft();
@@ -58,26 +66,13 @@ SettingsPanel {
     // Restore saved profile on startup
     Connections {
         target: profileCheck
-        function onFinished() {
-            const saved = UserSettings.powerProfile;
-            const idx = root.profileNames.indexOf(saved);
-            if (idx >= 0) {
-                PowerProfiles.profile = root.profileEnums[idx];
-                profileCycler.currentIndex = idx;
-            }
-        }
+        function onFinished() { root._applyProfile(UserSettings.powerProfile); }
     }
 
     // React to external config changes
     Connections {
         target: UserSettings
-        function onPowerProfileChanged() {
-            const idx = root.profileNames.indexOf(UserSettings.powerProfile);
-            if (idx >= 0) {
-                PowerProfiles.profile = root.profileEnums[idx];
-                profileCycler.currentIndex = idx;
-            }
-        }
+        function onPowerProfileChanged() { root._applyProfile(UserSettings.powerProfile); }
     }
 
     // ── Actions ──

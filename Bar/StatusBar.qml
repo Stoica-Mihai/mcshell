@@ -383,7 +383,7 @@ Scope {
                     // Separator between clock and weather
                     Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
-                        width: 1
+                        width: Theme.strokeThin
                         height: 14
                         color: Theme.outlineVariant
                     }
@@ -459,11 +459,11 @@ Scope {
                     // Separator between tray and capsule — matches barBorderStyle
                     Rectangle {
                         Layout.alignment: Qt.AlignVCenter
-                        implicitWidth: 1
+                        implicitWidth: Theme.strokeThin
                         Layout.preferredHeight: capsule.implicitHeight
                         visible: sysTray.implicitWidth > 0
-                        color: UserSettings.barBorderStyle === "gradient" ? "transparent" : Theme.accent
-                        gradient: UserSettings.barBorderStyle === "gradient" ? _sepGrad : null
+                        color: UserSettings.barBorderGradient ? "transparent" : Theme.accent
+                        gradient: UserSettings.barBorderGradient ? _sepGrad : null
 
                         Gradient {
                             id: _sepGrad
@@ -477,8 +477,9 @@ Scope {
                     Item {
                         id: capsule
                         Layout.alignment: Qt.AlignVCenter
+                        readonly property int _height: Theme.barHeight - 10
                         implicitWidth: capsuleRow.implicitWidth + 10
-                        implicitHeight: Theme.barHeight - 10
+                        implicitHeight: _height
 
                         readonly property bool capsuleActive:
                             sharedDropdown.activePanel === "volume"
@@ -488,7 +489,7 @@ Scope {
                         // Capsule background
                         Rectangle {
                             anchors.fill: parent
-                            radius: (Theme.barHeight - 10) / 2
+                            radius: capsule._height / 2
                             color: capsule.capsuleActive ? Theme.bgHover : "transparent"
                             border.width: capsule.capsuleActive ? 1 : 0
                             border.color: Theme.outlineVariant
@@ -517,7 +518,7 @@ Scope {
                                     showWhen: wifiCapsule.hovered && root._wifiConnected
                                     text: {
                                         return root._connectedNetworks.map(n => {
-                                            const signal = Math.round(n.signalStrength * 100);
+                                            const signal = Theme.percent(n.signalStrength);
                                             const sec = n.security === WifiSecurityType.Open ? "Open" : "Secured";
                                             return `${n.name}\n${signal}% signal · ${sec}`;
                                         }).join("\n\n");
@@ -540,18 +541,12 @@ Scope {
                                 ThemedTooltip {
                                     showWhen: btCapsule.hovered && root._btConnected
                                     text: {
-                                        const types = {
-                                            "audio-headset": "Headset", "audio-headphones": "Headphones",
-                                            "audio-card": "Speaker", "input-gaming": "Controller",
-                                            "input-keyboard": "Keyboard", "input-mouse": "Mouse",
-                                            "input-tablet": "Tablet", "phone": "Phone", "computer": "Computer"
-                                        };
                                         return root._connectedBtDevices.map(d => {
                                             const name = d.name || d.deviceName || "Unknown";
-                                            const type = types[d.icon] ?? "";
+                                            const type = Theme.btDeviceLabel(d.icon);
                                             let info = type;
                                             if (d.batteryAvailable)
-                                                info += (info ? " · " : "") + Math.round(d.battery * 100) + "%";
+                                                info += (info ? " · " : "") + Theme.percent(d.battery) + "%";
                                             return info ? `${name}\n${info}` : name;
                                         }).join("\n\n");
                                     }
@@ -560,18 +555,18 @@ Scope {
 
                             // Volume
                             VolumeWaveform {
-                                rawVolume: volume.rawVolume
-                                volume: volume.volume
-                                muted: volume.muted
+                                rawVolume: VolumeService.rawVolume
+                                volume: VolumeService.volume
+                                muted: VolumeService.muted
                                 active: sharedDropdown.activePanel === "volume"
                                 onLeftClicked:   sharedDropdown.togglePanel("volume")
-                                onMiddleClicked: volume.toggleMute()
+                                onMiddleClicked: VolumeService.toggleMute()
                                 onWheel: event => {
                                     const step = Theme.volumeStep;
                                     if (event.angleDelta.y > 0)
-                                        volume.setVolume(volume.rawVolume + step);
+                                        VolumeService.setVolume(VolumeService.rawVolume + step);
                                     else
-                                        volume.setVolume(volume.rawVolume - step);
+                                        VolumeService.setVolume(VolumeService.rawVolume - step);
                                 }
                             }
 
@@ -634,14 +629,21 @@ Scope {
                         }
                     }
 
+                    // Shared dropdown-content Loader: active/visible gated on
+                    // the named panel. Anchors set per-instance.
+                    component PanelLoader: Loader {
+                        property string panel
+                        active: sharedDropdown.activePanel === panel
+                        visible: active
+                    }
+
                     // ── Volume section ────────────────────
                     // Loader-gated so PipeWire bindings (VolumeSlider /
                     // AppVolume per-stream bindings) don't churn while
                     // the panel is closed.
-                    Loader {
+                    PanelLoader {
                         id: volumeContent
-                        active: sharedDropdown.activePanel === "volume"
-                        visible: active
+                        panel: "volume"
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: parent.top
@@ -650,7 +652,7 @@ Scope {
                             spacing: Theme.spacingTiny
 
                             VolumeSlider {
-                                volumeSource: volume
+                                volumeSource: VolumeService
                                 Layout.fillWidth: true
                                 Layout.bottomMargin: 2
                             }
@@ -667,10 +669,9 @@ Scope {
                     // ── Tray icons section ────────────────
                     // Loader-gated so SystemTray icon decode bindings
                     // stop firing while the panel is closed.
-                    Loader {
+                    PanelLoader {
                         id: trayIconsContent
-                        active: sharedDropdown.activePanel === "trayicons"
-                        visible: active
+                        panel: "trayicons"
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: parent.top
@@ -681,10 +682,9 @@ Scope {
                     // ── SysInfo section ───────────────────
                     // Loader-gated so the sysinfo bindings don't churn
                     // on every SysInfo poll while the dropdown is closed.
-                    Loader {
+                    PanelLoader {
                         id: sysInfoContent
-                        active: sharedDropdown.activePanel === "sysinfo"
-                        visible: active
+                        panel: "sysinfo"
                         anchors.left: parent.left
                         anchors.right: parent.right
                         anchors.top: parent.top
@@ -695,10 +695,7 @@ Scope {
                     // ── SysInfo settings section ──────────
                     // Loader-gated so KeyboardRowNav and the per-GPU
                     // Repeater don't churn while the panel is closed.
-                    component SettingsDropdownLoader: Loader {
-                        property string panel
-                        active: sharedDropdown.activePanel === panel
-                        visible: active
+                    component SettingsDropdownLoader: PanelLoader {
                         anchors.fill: parent
                         readonly property real fullHeight: item ? item.fullHeight : 0
                     }
@@ -726,10 +723,9 @@ Scope {
                     // bindings don't stay live when the panel is closed.
                     // notifPanelOpened() fires on Loader.onLoaded (each
                     // activation cycle).
-                    Loader {
+                    PanelLoader {
                         id: notifContent
-                        active: sharedDropdown.activePanel === "notifications"
-                        visible: active
+                        panel: "notifications"
                         anchors.fill: parent
                         sourceComponent: NotificationHistory {
                             historyModel: root.notifHistoryModel
@@ -746,14 +742,13 @@ Scope {
                     // hardcoded true since the Loader's lifecycle is the
                     // source of truth — if the Loader is active the
                     // panel is meant to be live.
-                    Loader {
+                    PanelLoader {
                         id: mediaContent
+                        panel: "media"
                         // Proxy outer `media` id through a Loader-scope
                         // property; the Component below redeclares `media`
                         // so a bare `media: media` would self-reference.
                         property var _mediaRef: MediaService
-                        active: sharedDropdown.activePanel === "media"
-                        visible: active
                         anchors.horizontalCenter: parent.horizontalCenter
                         anchors.top: parent.top
                         anchors.topMargin: Theme.popupPadding
@@ -847,39 +842,23 @@ Scope {
     property bool isRecording: false
     signal toggleRecording()
 
-    // Volume state — kept at root level for accessibility
-    Volume {
-        id: volume
-        visible: false
-    }
-
-    // ── WiFi state ──
-    readonly property var _wifiDevice: {
-        const devs = Networking.devices?.values ?? [];
-        for (let i = 0; i < devs.length; i++) {
-            if (devs[i].type === DeviceType.Wifi) return devs[i];
-        }
-        return null;
-    }
-    readonly property var _connectedNetworks: {
-        const nets = _wifiDevice?.networks?.values ?? [];
-        const result = [];
-        for (let i = 0; i < nets.length; i++) {
-            if (nets[i].connected) result.push(nets[i]);
-        }
-        return result;
-    }
-    readonly property bool _wifiConnected: _connectedNetworks.length > 0
+    // ── WiFi state (single source: NetworkInfo) ──
+    readonly property var _wifiDevice: NetworkInfo.wifiDevice
+    readonly property var _connectedNetworks: NetworkInfo.connectedNetworks
+    readonly property bool _wifiConnected: NetworkInfo.wifiConnected
 
     // ── Bluetooth state ──
     readonly property var _btAdapter: Bluetooth.defaultAdapter
-    readonly property var _connectedBtDevices: {
-        const devs = _btAdapter?.devices?.values ?? [];
-        const result = [];
-        for (let i = 0; i < devs.length; i++) {
-            if (devs[i].connected) result.push(devs[i]);
-        }
-        return result;
-    }
+    readonly property var _connectedBtDevices:
+        (_btAdapter?.devices?.values ?? []).filter(d => d.connected)
     readonly property bool _btConnected: _connectedBtDevices.length > 0
+
+    // Assert the local dropdown descriptor table covers exactly the panels
+    // declared in BarPanels — catches a panel added to one and not the other.
+    Component.onCompleted: {
+        const local = Object.keys(_barPanels).sort().join(",");
+        const canon = BarPanels.names.slice().sort().join(",");
+        if (local !== canon)
+            console.warn(`mcshell IPC: bar panel table drift — descriptors [${local}] vs BarPanels [${canon}]`);
+    }
 }

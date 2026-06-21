@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.Config
+import qs.Core
 
 // Status hint shown below device cards in WiFi/Bluetooth categories.
 // Maps a StatusTracker's state to colored text with status-specific labels.
@@ -21,7 +22,7 @@ Text {
     font.family: Theme.fontFamily
     font.pixelSize: Theme.fontSizeSmall
 
-    color: activeStatus === "failed" ? Theme.red
+    color: activeStatus === ConnStatus.failed ? Theme.red
          : successStatuses.indexOf(activeStatus) >= 0 ? Theme.green
          : neutralStatuses.indexOf(activeStatus) >= 0 ? Theme.fgDim
          : activeStatus !== "" ? Theme.accent

@@ -495,6 +495,18 @@ Singleton {
 
     // Card skew (parallelogram lean factor)
     readonly property real cardSkew: -0.03
+    // Default skew lean for Skew* widgets (CyclePicker/SkewButton/SkewTextField/SliderTrack)
+    readonly property real componentSkew: -0.3
+
+    // Stroke widths
+    readonly property int strokeThin: 1       // dividers, hairlines
+    readonly property int strokeAccent: 2     // accent stripes, cursors
+
+    // Deferred model-growth debounce (LauncherCategory / device scans)
+    readonly property int modelDebounce: 350
+
+    // Shared waveform bar count (WaveformBars + threshold-fill helper)
+    readonly property int waveformBarCount: 8
 
     // Popup/panel
     readonly property int popupPadding: 12
@@ -757,5 +769,55 @@ Singleton {
         const h = Math.floor(secs / 3600);
         const m = Math.floor((secs % 3600) / 60);
         return h > 0 ? h + "h " + m + "m" : m + "m";
+    }
+
+    // Format a 0..1 fraction as an integer percent.
+    function percent(frac) { return Math.round(frac * 100); }
+
+    // Clamp a value to the unit interval [0, 1].
+    function clamp01(v) { return Math.max(0, Math.min(1, v)); }
+
+    // Active/inactive accent color — accent when on, dimmed otherwise.
+    function activeColor(on) { return on ? accent : fgDim; }
+
+    // ── Bluetooth device-class → {icon, label} ──
+    // Single source for both the bar capsule tooltip and the launcher card.
+    readonly property var btDeviceTypes: ({
+        "audio-headset":    { icon: "\u{f01d2}", label: "Headset" },
+        "audio-headphones": { icon: "\u{f02cb}", label: "Headphones" },
+        "audio-card":       { icon: "\u{f04c3}", label: "Speaker" },
+        "input-gaming":     { icon: "\u{f0eb5}", label: "Controller" },
+        "input-keyboard":   { icon: "",    label: "Keyboard" },
+        "input-mouse":      { icon: "\u{f037d}", label: "Mouse" },
+        "input-tablet":     { icon: "\u{f04f7}", label: "Tablet" },
+        "phone":            { icon: "\u{f03f2}", label: "Phone" },
+        "computer":         { icon: "\u{f0379}", label: "Computer" }
+    })
+    function btDeviceIcon(iconType) { return (btDeviceTypes[iconType]?.icon) ?? iconBluetooth; }
+    function btDeviceLabel(iconType) { return (btDeviceTypes[iconType]?.label) ?? ""; }
+
+    // Strip a leading vendor word from a GPU product name.
+    function stripVendor(name) { return (name || "").replace(/^(NVIDIA|AMD|Intel)\s+/i, ""); }
+
+    // Black scrim over imagery (e.g. wallpaper card overlays).
+    function imageScrim(alpha) { return Qt.rgba(0, 0, 0, alpha); }
+
+    // Main CPU package temperature from a SysInfo.temperatures array.
+    // Prefers the "Tctl"/"Package id 0" sensor, falls back to the first
+    // entry. Returns NaN when no sensor is present.
+    function mainCpuTemp(temps) {
+        if (!temps || temps.length === 0) return NaN;
+        const main = temps.find(t => t.label === "Tctl" || t.label === "Package id 0");
+        return main ? main.value : temps[0].value;
+    }
+
+    // Threshold-fill bar heights (0..1) from a single 0..1 value: bar i
+    // lights as the value crosses i/barCount. Used by Volume/Sys waveforms.
+    function thresholdBars(value01) {
+        const n = waveformBarCount;
+        const out = new Array(n);
+        for (let i = 0; i < n; i++)
+            out[i] = clamp01((value01 - i / n) * n);
+        return out;
     }
 }

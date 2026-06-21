@@ -16,13 +16,16 @@ LauncherCategory {
     tabLabel: "WiFi"
     tabIcon: Networking.wifiEnabled ? Theme.iconWifi : Theme.iconWifiOff
     searchPlaceholder: "Search networks..."
-    legendHint: Theme.legend(Theme.hintEnter + " connect", "Ctrl+W toggle WiFi")
-    disabledLegendHint: "Ctrl+W toggle WiFi"
+    // Single-source the toggle key so the handler (Ctrl+W) and its labels can't drift.
+    readonly property string _toggleKey: "Ctrl+W"
+    readonly property string _toggleHint: _toggleKey + " toggle WiFi"
+    legendHint: Theme.legend(Theme.hintEnter + " connect", _toggleHint)
+    disabledLegendHint: _toggleHint
 
     // ── Disabled state ──
     disabledState: !Networking.wifiEnabled
     disabledIcon: Theme.iconWifiOff
-    disabledHint: "Ctrl+W to enable"
+    disabledHint: _toggleKey + " to enable"
 
     // ── Scanning state ──
     scanningState: Networking.wifiEnabled
@@ -34,13 +37,7 @@ LauncherCategory {
 
     StatusTracker { id: wifiTracker }
 
-    readonly property var wifiDevice: {
-        const devs = Networking.devices?.values ?? [];
-        for (let i = 0; i < devs.length; i++) {
-            if (devs[i].type === DeviceType.Wifi) return devs[i];
-        }
-        return null;
-    }
+    readonly property var wifiDevice: NetworkInfo.wifiDevice
 
     // ── Frequency helpers ──
     // NM AccessPoint Frequency is in MHz.
@@ -97,19 +94,16 @@ LauncherCategory {
         function onConnectedChanged() {
             if (!_activeNet) return;
             if (_activeNet.connected) {
-                wifiTracker.status = "connected";
-            } else if (wifiTracker.status === "disconnecting") {
+                wifiTracker.set(ConnStatus.connected);
+            } else if (wifiTracker.status === ConnStatus.disconnecting) {
                 // The complementary path — flip from "disconnecting" → "disconnected"
                 // when the device actually drops the connection. Without this the
                 // status sticks at "disconnecting..." forever.
-                wifiTracker.status = "disconnected";
-            } else {
-                return; // not a transition we care about
+                wifiTracker.set(ConnStatus.disconnected);
             }
-            wifiTracker.autoClear();
         }
         function onConnectionFailed(reason) {
-            wifiTracker.status = "failed";
+            wifiTracker.set(ConnStatus.failed);
             // If the network was just-added with a wrong PSK, forget it so
             // the next connect attempt prompts again instead of silently
             // re-trying with the bad credentials. (Reason values 1=NoSecrets,
@@ -118,7 +112,6 @@ LauncherCategory {
                 _activeNet.forget();
                 root.wifiPasswordSsid = wifiTracker.targetId;
             }
-            wifiTracker.autoClear();
         }
     }
 
@@ -141,10 +134,10 @@ LauncherCategory {
         wifiTracker.targetId = net.name;
         _activeNet = net;
         if (net.connected) {
-            wifiTracker.status = "disconnecting";
+            wifiTracker.status = ConnStatus.disconnecting;
             net.disconnect();
         } else if (net.known || net.security === WifiSecurityType.Open) {
-            wifiTracker.status = "connecting";
+            wifiTracker.status = ConnStatus.connecting;
             net.connect();
         } else {
             wifiPasswordSsid = net.name;
@@ -155,7 +148,7 @@ LauncherCategory {
     function connectWithPassword(net, password) {
         if (!net) return;
         wifiTracker.targetId = net.name;
-        wifiTracker.status = "connecting";
+        wifiTracker.status = ConnStatus.connecting;
         wifiPasswordSsid = "";
         _activeNet = net;
         net.connectWithPsk(password);
@@ -170,12 +163,9 @@ LauncherCategory {
             readonly property bool showingPassword: root.wifiPasswordSsid === modelData.name
 
             // Collapsed: signal icon
-            Text {
-                anchors.centerIn: parent
+            CollapsedCardIcon {
                 visible: !wifiStrip.isCurrent
                 text: Theme.iconWifi
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.launcherIconCollapsed
                 color: modelData.connected ? Theme.accent : Theme.fgDim
                 opacity: 0.3 + modelData.signalStrength * 0.7
             }
@@ -194,7 +184,7 @@ LauncherCategory {
                 infoText: {
                     const parts = [];
                     if (UserSettings.wifiCardSignal)
-                        parts.push(Math.round(modelData.signalStrength * 100) + "%");
+                        parts.push(Theme.percent(modelData.signalStrength) + "%");
                     if (UserSettings.wifiCardSecurity) {
                         parts.push(modelData.security === WifiSecurityType.Open
                             ? "Open"

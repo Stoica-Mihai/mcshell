@@ -22,18 +22,10 @@ Item {
     implicitWidth: bars.implicitWidth
     implicitHeight: Theme.iconSize
 
-    // Each bar maps to a volume segment. Bar 0 fills at 0-12.5%,
-    // bar 1 at 12.5-25%, etc. Within its segment, fill ramps 0→1.
+    // Each bar maps to a volume segment, fill ramps 0→1 within its segment.
     // Computed once per rawVolume change and diffed against the prior
     // array by Repeater — no per-delegate JS callback fan-out.
-    readonly property var _barHeights: {
-        const out = new Array(8);
-        for (let i = 0; i < 8; i++) {
-            const threshold = i / 8;
-            out[i] = Math.max(0, Math.min(1, (rawVolume - threshold) * 8));
-        }
-        return out;
-    }
+    readonly property var _barHeights: Theme.thresholdBars(rawVolume)
 
     WaveformBars {
         id: bars

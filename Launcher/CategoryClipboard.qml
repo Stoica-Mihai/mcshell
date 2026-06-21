@@ -55,13 +55,9 @@ LauncherCategory {
             launcher: root.launcher
 
             // Collapsed: icon or thumbnail
-            Text {
-                anchors.centerIn: parent
+            CollapsedCardIcon {
                 visible: !parent.isCurrent && !(modelData.isImage ?? false)
                 text: Theme.iconClipboard
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.launcherIconCollapsed
-                color: Theme.fgDim
             }
 
             // Clipboard previews are often screenshots at full screen
@@ -89,7 +85,7 @@ LauncherCategory {
                 Text {
                     text: modelData.isImage ?? false ? Theme.iconImage : Theme.iconClipboard
                     font.family: Theme.iconFont
-                    font.pixelSize: 32
+                    font.pixelSize: Theme.iconSizeLarge
                     color: Theme.accent
                     Layout.alignment: Qt.AlignHCenter
                 }

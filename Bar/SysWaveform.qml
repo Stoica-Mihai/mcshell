@@ -33,10 +33,11 @@ Item {
     // SysInfo.cpuCores / SysHistory.cpuHistory / etc. as binding deps and
     // diffs the resulting array against the previous one.
     readonly property var _barLoads: {
-        const out = new Array(8);
+        const n = Theme.waveformBarCount;
+        const out = new Array(n);
         if (_metric === "cpu") {
             const cores = SysInfo.cpuCores;
-            for (let i = 0; i < 8; i++) {
+            for (let i = 0; i < n; i++) {
                 const a = (i * 2)     < cores.length ? cores[i * 2]     : 0;
                 const b = (i * 2 + 1) < cores.length ? cores[i * 2 + 1] : 0;
                 out[i] = (a + b) / 2;
@@ -45,7 +46,7 @@ Item {
         }
         if (_metric === "cpu-history") {
             const h = SysHistory.cpuHistory;
-            for (let i = 0; i < 8; i++) out[i] = i < h.length ? h[i] : 0;
+            for (let i = 0; i < n; i++) out[i] = i < h.length ? h[i] : 0;
             return out;
         }
         // memory / gpu fall through to a threshold style below — heights
@@ -57,26 +58,21 @@ Item {
             const g = UserSettings.primaryGpu();
             pct = g && g.utilization >= 0 ? g.utilization : 0;
         }
-        for (let i = 0; i < 8; i++) out[i] = pct;
+        for (let i = 0; i < n; i++) out[i] = pct;
         return out;
     }
 
     // Heights as 0..1 ratios. CPU modes scale load directly; threshold
     // modes (memory/gpu) light bars progressively from left to right.
     readonly property var _barHeights: {
-        const out = new Array(8);
         const loads = _barLoads;
         if (_metric === "cpu" || _metric === "cpu-history") {
-            for (let i = 0; i < 8; i++) out[i] = loads[i] / 100;
+            const out = new Array(Theme.waveformBarCount);
+            for (let i = 0; i < Theme.waveformBarCount; i++) out[i] = loads[i] / 100;
             return out;
         }
-        // threshold fill: bar i fills as pct crosses i/8.
-        const pct = loads[0]; // broadcast value
-        for (let i = 0; i < 8; i++) {
-            const threshold = i / 8;
-            out[i] = Math.max(0, Math.min(1, (pct / 100 - threshold) * 8));
-        }
-        return out;
+        // threshold fill: bar i fills as pct crosses i/n.
+        return Theme.thresholdBars(loads[0] / 100);
     }
 
     // Per-bar colors only matter in CPU modes where each bar has its own
@@ -85,8 +81,8 @@ Item {
     readonly property var _barColors: {
         if (_metric === "cpu" || _metric === "cpu-history") {
             const loads = _barLoads;
-            const out = new Array(8);
-            for (let i = 0; i < 8; i++) out[i] = Theme.loadColor(loads[i]);
+            const out = new Array(Theme.waveformBarCount);
+            for (let i = 0; i < Theme.waveformBarCount; i++) out[i] = Theme.loadColor(loads[i]);
             return out;
         }
         return null;
@@ -126,17 +122,8 @@ Item {
 
     function _tooltipText() {
         const cpu = SysInfo.cpuPercent.toFixed(0);
-        const temps = SysInfo.temperatures;
-        let cpuTemp = "";
-        for (let i = 0; i < temps.length; i++) {
-            const lbl = temps[i].label;
-            if (lbl === "Tctl" || lbl === "Package id 0") {
-                cpuTemp = Theme.formatTemp(temps[i].value);
-                break;
-            }
-        }
-        if (!cpuTemp && temps.length > 0)
-            cpuTemp = Theme.formatTemp(temps[0].value);
+        const t = Theme.mainCpuTemp(SysInfo.temperatures);
+        const cpuTemp = isNaN(t) ? "" : Theme.formatTemp(t);
         const mem = SysInfo.memPercent.toFixed(0);
         return `CPU ${cpu}%` + (cpuTemp ? ` · ${cpuTemp}` : "") + ` · ${mem}% RAM`;
     }

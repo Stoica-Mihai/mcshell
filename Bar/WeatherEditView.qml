@@ -134,7 +134,7 @@ ColumnLayout {
                     Text {
                         text: Theme.iconLocationPin
                         font.family: Theme.iconFont
-                        font.pixelSize: 13
+                        font.pixelSize: Theme.fontSizeSmall
                         color: resultRow._isSelected ? Theme.accent : Theme.fgDim
                         Layout.alignment: Qt.AlignVCenter
                     }

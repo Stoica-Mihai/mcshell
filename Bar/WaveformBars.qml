@@ -25,7 +25,7 @@ Row {
     // Minimum visible bar height — keeps the skeleton recognisable at 0%.
     property real minHeight: 2
 
-    readonly property int barCount: 8
+    readonly property int barCount: Theme.waveformBarCount
 
     spacing: 1.5
 

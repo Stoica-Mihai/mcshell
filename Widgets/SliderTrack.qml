@@ -14,11 +14,11 @@ Item {
     property int knobSize: 14
     property real step: Theme.volumeStep
 
-    property real skewAmount: -0.3
+    property real skewAmount: Theme.componentSkew
 
     signal moved(real newValue)
 
-    function _normalizeX(x) { return Math.max(0, Math.min(1, x / width)); }
+    function _normalizeX(x) { return Theme.clamp01(x / width); }
 
     readonly property bool dragging: sliderMouse.pressed
 

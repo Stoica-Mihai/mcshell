@@ -65,7 +65,7 @@ Item {
     // thing reads as one continuous glyph. Stronger skew than Theme.cardSkew
     // so the arrow triangles look like arrows, not nearly-rectangles.
     // Negative skew → top shifts right relative to bottom (italic-lean).
-    readonly property real _pillSkew: -0.3
+    readonly property real _pillSkew: Theme.componentSkew
 
     // Pin the pill to the widest label in the current model so it stays
     // the same size as the value cycles. Measured imperatively on model

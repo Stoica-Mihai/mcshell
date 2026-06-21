@@ -31,7 +31,7 @@ Singleton {
     // Push every poll, not just on cpuChanged — a long idle stretch
     // emits no signal and would otherwise leave the history frozen.
     Timer {
-        interval: SysInfo.interval > 0 ? SysInfo.interval : 2000
+        interval: SysInfo.interval > 0 ? SysInfo.interval : UserSettings.sysInfoIntervalDefault
         running: root.active
         repeat: true
         triggeredOnStart: true

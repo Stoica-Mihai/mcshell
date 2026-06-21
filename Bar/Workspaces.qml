@@ -15,16 +15,9 @@ Item {
     implicitHeight: row.implicitHeight
 
     // Reactive workspace list — filtered by screen, sorted by index
-    readonly property var workspaces: {
-        const all = Niri.workspaces.values;
-        const filtered = [];
-        for (let i = 0; i < all.length; i++) {
-            if (all[i].output === root.screenName)
-                filtered.push(all[i]);
-        }
-        filtered.sort((a, b) => a.idx - b.idx);
-        return filtered;
-    }
+    readonly property var workspaces: Niri.workspaces.values
+        .filter(w => w.output === root.screenName)
+        .sort((a, b) => a.idx - b.idx)
 
     readonly property int _ringSize: 22
     readonly property real _ringCenter: _ringSize / 2
@@ -33,7 +26,7 @@ Item {
     readonly property real _gapDeg: 20
     readonly property real _startOffset: -90
     readonly property int _maxSegments: Theme.ringColors.length
-    readonly property int _animDuration: 600
+    readonly property int _animDuration: Theme.animSlow
 
     function _sweepForCount(n) {
         return n > 0 ? (360 - _gapDeg * n) / n : 0;

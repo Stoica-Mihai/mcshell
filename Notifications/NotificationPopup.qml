@@ -42,7 +42,7 @@ Item {
     // ── Internal notification list model ──────────────────
     ListModel {
         id: notifModel
-        // Each entry: { notifId, appName, summary, body, appIconUrl, imageUrl, urgency, timeout }
+        // Each entry: see _buildEntry (full shape shared with _historyModel).
     }
 
     // ── Shared pause state (across all screens) ─────────
@@ -66,11 +66,37 @@ Item {
 
     function getNotifRef(nid) { return _notifRefs[nid] ?? null; }
 
+    // Index of the entry whose notifId matches nid, or -1.
+    function _indexById(model, nid) {
+        for (let i = 0; i < model.count; i++)
+            if (model.get(i).notifId === nid) return i;
+        return -1;
+    }
+
+    // Build the full entry object shared by the popup and history models.
+    function _buildEntry(notification, nid, appIconUrl, imageUrl, timeout) {
+        return {
+            notifId: nid,
+            appName: notification.appName || "",
+            summary: notification.summary || "",
+            body:    notification.body    || "",
+            appIconUrl: appIconUrl,
+            imageUrl:   imageUrl,
+            urgency: notification.urgency < 0 || notification.urgency > 2
+                     ? 1 : notification.urgency,
+            timeout: timeout,
+            hasActions: notification.actions && notification.actions.length > 0,
+            hasInlineReply: !!notification.hasInlineReply,
+            timestamp: new Date().toLocaleString(Qt.locale(), "hh:mm AP"),
+            epochMs: Date.now()
+        };
+    }
+
     // ── Notification history (persistent across dismissals) ──
     property alias historyModel: _historyModel
     ListModel {
         id: _historyModel
-        // Each entry: { nid, appName, summary, body, appIconUrl, imageUrl, urgency, timestamp }
+        // Same full entry shape as notifModel (see _buildEntry), plus timestamp/epochMs.
     }
 
     // Remove the history entry at index i, dropping its retained ref too and
@@ -82,12 +108,8 @@ Item {
     }
 
     function removeHistoryById(nid: string) {
-        for (let i = 0; i < _historyModel.count; i++) {
-            if (_historyModel.get(i).notifId === nid) {
-                _removeHistoryAt(i);
-                return;
-            }
-        }
+        const i = _indexById(_historyModel, nid);
+        if (i >= 0) _removeHistoryAt(i);
     }
 
     function clearHistory() {
@@ -97,9 +119,6 @@ Item {
     }
 
     // ── Auto-clean (event-driven, no polling) ──────────────
-    readonly property var _autoCleanMs: ({
-        "never": 0, "30m": 1800000, "1h": 3600000, "6h": 21600000, "24h": 86400000
-    })
     onVisibleChanged: _scheduleClean()  // re-evaluate on reload
     Connections { target: UserSettings; function onNotifAutoCleanChanged() { root._scheduleClean(); } }
 
@@ -109,7 +128,7 @@ Item {
     }
 
     function _scheduleClean() {
-        const threshold = _autoCleanMs[UserSettings.notifAutoClean] || 0;
+        const threshold = UserSettings.notifAutoCleanMs(UserSettings.notifAutoClean);
         if (threshold <= 0 || _historyModel.count === 0) { _cleanTimer.stop(); return; }
         // Oldest entry is last in the model (newest-first order)
         const oldestMs = _historyModel.get(_historyModel.count - 1).epochMs;
@@ -120,7 +139,7 @@ Item {
     }
 
     function _cleanExpired() {
-        const threshold = _autoCleanMs[UserSettings.notifAutoClean] || 0;
+        const threshold = UserSettings.notifAutoCleanMs(UserSettings.notifAutoClean);
         if (threshold <= 0) return;
         const now = Date.now();
         for (let i = _historyModel.count - 1; i >= 0; i--) {
@@ -161,19 +180,7 @@ Item {
             // Store notification reference in a lookup map (ListModel can't hold QObjects)
             root._notifRefs[nid] = notification;
 
-            const entry = {
-                notifId: nid,
-                appName: notification.appName || "",
-                summary: notification.summary || "",
-                body:    notification.body    || "",
-                appIconUrl: appIconUrl,
-                imageUrl:   imageUrl,
-                urgency: notification.urgency < 0 || notification.urgency > 2
-                         ? 1 : notification.urgency,
-                timeout: timeout,
-                hasActions: notification.actions && notification.actions.length > 0,
-                hasInlineReply: !!notification.hasInlineReply
-            };
+            const entry = root._buildEntry(notification, nid, appIconUrl, imageUrl, timeout);
 
             // Show popup only if DND is off
             if (!UserSettings.doNotDisturb) {
@@ -188,19 +195,8 @@ Item {
                 notifModel.insert(0, entry);
             }
 
-            // Always append to history
-            _historyModel.insert(0, {
-                notifId: nid,
-                appName: entry.appName,
-                summary: entry.summary,
-                body:    entry.body,
-                appIconUrl: appIconUrl,
-                imageUrl:   imageUrl,
-                urgency: entry.urgency,
-                hasInlineReply: entry.hasInlineReply,
-                timestamp: new Date().toLocaleString(Qt.locale(), "hh:mm AP"),
-                epochMs: Date.now()
-            });
+            // Always append to history (same full entry; extra roles are harmless)
+            _historyModel.insert(0, entry);
 
             // Cap history (drops the evicted entries' retained refs too)
             while (_historyModel.count > root.maxHistory)
@@ -216,25 +212,22 @@ Item {
 
     // ── Remove helper ─────────────────────────────────────
     function removeById(nid, userDismissed) {
-        for (let i = 0; i < notifModel.count; i++) {
-            if (notifModel.get(i).notifId === nid) {
-                // Close the D-Bus notification so notify-send unblocks
-                const ref = _notifRefs[nid];
-                if (ref) {
-                    try {
-                        if (userDismissed) ref.dismiss();
-                        else ref.expire();
-                    } catch(e) {}
-                }
-                if (userDismissed) {
-                    removeHistoryById(nid);
-                } else {
-                    unreadCount++;
-                }
-                notifModel.remove(i);
-                return;
-            }
+        const i = _indexById(notifModel, nid);
+        if (i < 0) return;
+        // Close the D-Bus notification so notify-send unblocks
+        const ref = _notifRefs[nid];
+        if (ref) {
+            try {
+                if (userDismissed) ref.dismiss();
+                else ref.expire();
+            } catch(e) {}
         }
+        if (userDismissed) {
+            removeHistoryById(nid);
+        } else {
+            unreadCount++;
+        }
+        notifModel.remove(i);
     }
 
     // ── One popup window per screen ───────────────────────

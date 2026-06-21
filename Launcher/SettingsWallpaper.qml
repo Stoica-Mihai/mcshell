@@ -68,7 +68,6 @@ SettingsPanel {
     // Auto-rotate interval
     SettingsRow {
         selected: root.active && root.selectedItem === 0
-        Layout.preferredHeight: Theme.settingsRowHeight
 
         SettingsRow.Icon {
             text: Theme.iconImage
@@ -86,7 +85,6 @@ SettingsPanel {
     // Rotation order
     SettingsRow {
         selected: root.active && root.selectedItem === 1
-        Layout.preferredHeight: Theme.settingsRowHeight
 
         SettingsRow.Icon {
             text: Theme.iconShuffle
@@ -107,7 +105,6 @@ SettingsPanel {
     // Rotate screen
     SettingsRow {
         selected: root.active && root.selectedItem === 2
-        Layout.preferredHeight: Theme.settingsRowHeight
 
         SettingsRow.Icon {
             text: Theme.iconMonitor
@@ -130,7 +127,6 @@ SettingsPanel {
     // Fill mode
     SettingsRow {
         selected: root.active && root.selectedItem === 3
-        Layout.preferredHeight: Theme.settingsRowHeight
 
         SettingsRow.Icon { text: Theme.iconExpand; color: Theme.accent }
         SettingsRow.Label { text: "Fill Mode"; Layout.fillWidth: true }
@@ -150,7 +146,6 @@ SettingsPanel {
     // Folder path
     SettingsRow {
         selected: root.active && root.selectedItem === 4
-        Layout.preferredHeight: Theme.settingsRowHeight
 
         SettingsRow.Icon { text: Theme.iconFolder; color: Theme.accent }
 

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 import qs.Config
+import qs.Widgets
 
 LauncherCategory {
     id: root
@@ -96,13 +97,9 @@ LauncherCategory {
             function onStripActivated() { if (settingsCard.active) root.launcher.level = "edit"; }
 
             // Collapsed icon
-            Text {
-                anchors.centerIn: parent
+            CollapsedCardIcon {
                 visible: !parent.isCurrent
                 text: modelData.icon ?? Theme.iconMissing
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.launcherIconCollapsed
-                color: Theme.fgDim
             }
 
             // Expanded content via SettingsCard

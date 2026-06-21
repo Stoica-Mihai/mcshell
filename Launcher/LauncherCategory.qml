@@ -1,4 +1,5 @@
 import QtQuick
+import qs.Config
 
 // Base interface for launcher categories.
 // All category tabs extend this and override the relevant properties/functions.
@@ -25,7 +26,7 @@ Item {
 
     Timer {
         id: _growTimer
-        interval: 350
+        interval: Theme.modelDebounce
         onTriggered: model = _sourceData.slice(0, _loadedCount)
     }
 

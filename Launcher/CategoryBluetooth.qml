@@ -5,6 +5,7 @@ import Quickshell.Bluetooth
 import Qs.BtHelper
 import qs.Config
 import qs.Core
+import qs.Widgets
 
 LauncherCategory {
     id: root
@@ -17,13 +18,16 @@ LauncherCategory {
     tabLabel: "BT"
     tabIcon: btEnabled ? Theme.iconBluetooth : Theme.iconBluetoothOff
     searchPlaceholder: "Search devices..."
-    legendHint: Theme.legend(Theme.hintEnter + " connect", "Ctrl+B toggle Bluetooth")
-    disabledLegendHint: "Ctrl+B toggle Bluetooth"
+    // Single-source the toggle key so the handler (Ctrl+B) and its labels can't drift.
+    readonly property string _toggleKey: "Ctrl+B"
+    readonly property string _toggleHint: _toggleKey + " toggle Bluetooth"
+    legendHint: Theme.legend(Theme.hintEnter + " connect", _toggleHint)
+    disabledLegendHint: _toggleHint
 
     // ── Disabled state ──
     disabledState: !btEnabled
     disabledIcon: Theme.iconBluetoothOff
-    disabledHint: "Ctrl+B to enable"
+    disabledHint: _toggleKey + " to enable"
 
     // ── Scanning state ──
     scanningState: btEnabled
@@ -94,7 +98,7 @@ LauncherCategory {
 
     Timer {
         id: _refreshDebounce
-        interval: 350
+        interval: Theme.modelDebounce
         repeat: false
         onTriggered: if (root._refreshGate) root.refreshBt(root.launcher.searchText)
     }
@@ -134,15 +138,13 @@ LauncherCategory {
         target: _activePairDev
         function onPairedChanged() {
             if (_activePairDev && _activePairDev.paired) {
-                btTracker.status = "paired";
-                btTracker.autoClear();
+                btTracker.set(ConnStatus.paired);
                 _activePairDev.connect();
             }
         }
         function onPairingChanged() {
             if (_activePairDev && !_activePairDev.pairing && !_activePairDev.paired) {
-                btTracker.status = "failed";
-                btTracker.autoClear();
+                btTracker.set(ConnStatus.failed);
                 NotificationDispatcher.send(
                     "Bluetooth",
                     `Failed to pair with ${btTracker.targetId}`,
@@ -153,30 +155,12 @@ LauncherCategory {
         }
         function onConnectedChanged() {
             if (_activePairDev && _activePairDev.connected) {
-                btTracker.status = "connected";
-                btTracker.autoClear();
+                btTracker.set(ConnStatus.connected);
             }
         }
     }
 
 
-
-    // ── Device type data ──
-    readonly property var btDeviceTypes: ({
-        "audio-headset":    { icon: "\u{f01d2}", label: "Headset" },
-        "audio-headphones": { icon: "\u{f02cb}", label: "Headphones" },
-        "audio-card":       { icon: "\u{f04c3}", label: "Speaker" },
-        "input-gaming":     { icon: "\u{f0eb5}", label: "Controller" },
-        "input-keyboard":   { icon: "\uf11c",    label: "Keyboard" },
-        "input-mouse":      { icon: "\u{f037d}", label: "Mouse" },
-        "input-tablet":     { icon: "\u{f04f7}", label: "Tablet" },
-        "phone":            { icon: "\u{f03f2}", label: "Phone" },
-        "computer":         { icon: "\u{f0379}", label: "Computer" }
-    })
-
-    function btDeviceIcon(iconType) {
-        return (btDeviceTypes[iconType]?.icon) ?? Theme.iconBluetooth;
-    }
 
     // ── Key handler ──
     function onKeyPressed(event) {
@@ -194,15 +178,14 @@ LauncherCategory {
         const dev = _sourceData[index];
         btTracker.targetId = dev.address;
         if (dev.connected) {
-            btTracker.status = "disconnecting";
+            btTracker.set(ConnStatus.disconnecting);
             dev.disconnect();
-            btTracker.autoClear();
         } else if (dev.paired) {
-            btTracker.status = "connecting";
+            btTracker.status = ConnStatus.connecting;
             _activePairDev = dev;
             dev.connect();
         } else {
-            btTracker.status = "pairing";
+            btTracker.status = ConnStatus.pairing;
             _activePairDev = dev;
             // BlueZ routes any pin / passkey / confirmation prompts to our
             // registered Agent1 (Bluetooth.pairingAgent), which the
@@ -217,12 +200,9 @@ LauncherCategory {
             launcher: root.launcher
 
             // Collapsed: device type icon
-            Text {
-                anchors.centerIn: parent
+            CollapsedCardIcon {
                 visible: !parent.isCurrent
-                text: root.btDeviceIcon(modelData.icon)
-                font.family: Theme.iconFont
-                font.pixelSize: Theme.launcherIconCollapsed
+                text: Theme.btDeviceIcon(modelData.icon)
                 color: modelData.connected ? Theme.accent : Theme.fgDim
             }
 
@@ -232,14 +212,14 @@ LauncherCategory {
                 visible: parent.isCurrent
                 width: parent.width - 40
 
-                iconText: root.btDeviceIcon(modelData.icon)
+                iconText: Theme.btDeviceIcon(modelData.icon)
                 iconColor: modelData.connected ? Theme.accent : Theme.fg
                 nameText: modelData.name || modelData.deviceName || "Unknown"
                 nameColor: modelData.connected ? Theme.accent : Theme.fg
                 infoText: {
                     const parts = [];
                     if (UserSettings.bluetoothCardType) {
-                        const devType = (root.btDeviceTypes[modelData.icon]?.label) ?? "";
+                        const devType = Theme.btDeviceLabel(modelData.icon);
                         if (devType) parts.push(devType);
                     }
                     if (UserSettings.bluetoothCardStatus) {
@@ -248,7 +228,7 @@ LauncherCategory {
                         else parts.push("Available");
                     }
                     if (UserSettings.bluetoothCardBattery && modelData.batteryAvailable)
-                        parts.push(Math.round(modelData.battery * 100) + "%");
+                        parts.push(Theme.percent(modelData.battery) + "%");
                     if (UserSettings.bluetoothCardRssi && modelData.rssi !== 0)
                         parts.push(modelData.rssi + " dBm");
                     if (UserSettings.bluetoothCardClass && modelData.bluetoothClass)

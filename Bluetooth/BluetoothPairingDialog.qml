@@ -87,31 +87,10 @@ Item {
                     }
                 }
 
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: Theme.iconBluetooth
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.iconSizeLarge
-                    color: Theme.accent
-                }
-
-                Text {
-                    Layout.alignment: Qt.AlignHCenter
-                    text: "Bluetooth Pairing"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeLarge
-                    font.bold: true
-                    color: Theme.fg
-                }
-
-                Text {
-                    Layout.fillWidth: true
-                    text: root._deviceLabel
-                    color: Theme.fgDim
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    horizontalAlignment: Text.AlignHCenter
-                    wrapMode: Text.Wrap
+                DialogHeader {
+                    icon: Theme.iconBluetooth
+                    title: "Bluetooth Pairing"
+                    subtitle: root._deviceLabel
                 }
 
                 // Confirmation passkey display

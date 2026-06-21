@@ -62,7 +62,7 @@ Singleton {
 
     // Retry when the network genuinely transitions from not-Full to Full.
     ConnectivityRetry {
-        onTriggered: if (UserSettings.weatherConfigured) root.fetch()
+        onTriggered: root.fetch()
     }
 
     function _onFetchSuccess(data) {
@@ -123,7 +123,7 @@ Singleton {
         id: errorRetry
         interval: 90 * 1000
         repeat: false
-        onTriggered: if (UserSettings.weatherConfigured) root.fetch()
+        onTriggered: root.fetch()
     }
 
     Timer {
@@ -148,7 +148,7 @@ Singleton {
         id: coordRefetch
         interval: 500
         repeat: false
-        onTriggered: if (UserSettings.weatherConfigured) root.fetch()
+        onTriggered: root.fetch()
     }
 
     Connections {
@@ -157,5 +157,5 @@ Singleton {
         function onWeatherLonChanged() { coordRefetch.restart(); }
     }
 
-    Component.onCompleted: if (UserSettings.weatherConfigured) fetch();
+    Component.onCompleted: fetch();
 }

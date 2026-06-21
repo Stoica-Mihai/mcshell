@@ -12,14 +12,6 @@ ColumnLayout {
     spacing: 0
 
     // ── Reusable inline components ───────────────────────
-    component SectionLabel: Text {
-        font.family: Theme.fontFamily
-        font.pixelSize: Theme.fontSizeMini
-        color: Theme.fgDim
-        Layout.topMargin: 8
-        Layout.bottomMargin: 2
-    }
-
     component SpeedLabel: RowLayout {
         property string arrow
         property color arrowColor
@@ -47,6 +39,32 @@ ColumnLayout {
         SpeedLabel { arrow: "↑"; arrowColor: Theme.green; value: Theme.formatSpeed(upValue) }
     }
 
+    // Dim caption text (fgDim, mini) — the panel's repeated label shape.
+    component DimLabel: Text {
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSizeMini
+        color: Theme.fgDim
+    }
+
+    // Emphasised value text (bold fg, small).
+    component ValueText: Text {
+        font.family: Theme.fontFamily
+        font.pixelSize: Theme.fontSizeSmall
+        font.bold: true
+        color: Theme.fg
+    }
+
+    // Separator + section heading with a single shared visibility predicate.
+    component SysSectionHeader: ColumnLayout {
+        property string title
+        property bool show: true
+        Layout.fillWidth: true
+        visible: show
+        spacing: 0
+        Separator { topMargin: 8 }
+        SectionLabel { text: title; Layout.topMargin: 8; Layout.bottomMargin: 2 }
+    }
+
     // ── CPU card ─────────────────────────────────────────
     ParallelogramCard {
         Layout.fillWidth: true
@@ -62,39 +80,26 @@ ColumnLayout {
 
             RowLayout {
                 Layout.fillWidth: true
-                Text {
+                DimLabel {
                     text: "PROCESSOR"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeMini
-                    color: Theme.fgDim
                     Layout.fillWidth: true
                 }
-                Text {
+                ValueText {
                     text: SysInfo.cpuPercent.toFixed(1) + "%"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.bold: true
-                    color: Theme.fg
                 }
             }
 
             RowLayout {
                 Layout.fillWidth: true
-                Text {
+                DimLabel {
                     text: SysInfo.cpuCount + " cores \u00B7 " + SysInfo.cpuFreqMhz + " MHz"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeMini
-                    color: Theme.fgDim
                     Layout.fillWidth: true
                 }
-                Text {
+                DimLabel {
                     text: "Load "
                         + SysInfo.loadAvg1.toFixed(2) + " / "
                         + SysInfo.loadAvg5.toFixed(2) + " / "
                         + SysInfo.loadAvg15.toFixed(2)
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeMini
-                    color: Theme.fgDim
                 }
             }
 
@@ -145,19 +150,12 @@ ColumnLayout {
 
             RowLayout {
                 Layout.fillWidth: true
-                Text {
+                DimLabel {
                     text: "MEMORY"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeMini
-                    color: Theme.fgDim
                     Layout.fillWidth: true
                 }
-                Text {
+                ValueText {
                     text: Theme.toGB(SysInfo.memUsed) + " / " + Theme.toGB(SysInfo.memTotal) + " GB"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeSmall
-                    font.bold: true
-                    color: Theme.fg
                 }
             }
 
@@ -187,11 +185,8 @@ ColumnLayout {
             RowLayout {
                 Layout.fillWidth: true
                 Layout.topMargin: 2
-                Text {
+                DimLabel {
                     text: "Swap " + Theme.toGB(SysInfo.swapUsed) + " / " + Theme.toGB(SysInfo.swapTotal) + " GB"
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeMini
-                    color: Theme.fgDim
                     Layout.fillWidth: true
                 }
                 Text {
@@ -205,8 +200,7 @@ ColumnLayout {
     }
 
     // ── Thermal section ──────────────────────────────────
-    Separator { Layout.topMargin: 8; visible: UserSettings.sysInfoShowThermal }
-    SectionLabel { text: "THERMAL"; visible: UserSettings.sysInfoShowThermal }
+    SysSectionHeader { title: "THERMAL"; show: UserSettings.sysInfoShowThermal }
 
     Repeater {
         model: UserSettings.sysInfoShowThermal ? SysInfo.temperatures : []
@@ -215,18 +209,13 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.preferredHeight: 22
 
-            Rectangle {
-                width: 6; height: 6; radius: 3
+            StatusDot {
                 color: Theme.tempColor(modelData.value)
-
-                Behavior on color { ColorAnimation { duration: Theme.animCarousel } }
             }
 
-            Text {
+            DimLabel {
                 text: modelData.label
-                font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeTiny
-                color: Theme.fgDim
                 Layout.fillWidth: true
                 elide: Text.ElideRight
             }
@@ -244,16 +233,8 @@ ColumnLayout {
     }
 
     // ── GPU section ──────────────────────────────────────
-    readonly property var _visibleGpus: {
-        const src = SysInfo.gpus;
-        const out = [];
-        for (let i = 0; i < src.length; i++) {
-            if (UserSettings.sysInfoGpuVisible(src[i].name)) out.push(src[i]);
-        }
-        return out;
-    }
-    Separator { Layout.topMargin: 8; visible: UserSettings.sysInfoShowGpu && root._visibleGpus.length > 0 }
-    SectionLabel { text: "GPU"; visible: UserSettings.sysInfoShowGpu && root._visibleGpus.length > 0 }
+    readonly property var _visibleGpus: SysInfo.gpus.filter(g => UserSettings.sysInfoGpuVisible(g.name))
+    SysSectionHeader { title: "GPU"; show: UserSettings.sysInfoShowGpu && root._visibleGpus.length > 0 }
 
     Repeater {
         model: UserSettings.sysInfoShowGpu ? root._visibleGpus : []
@@ -276,28 +257,19 @@ ColumnLayout {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 20
 
-                Rectangle {
-                    width: 6; height: 6; radius: 3
+                StatusDot {
                     color: gpuCol._loadColor
-
-                    Behavior on color { ColorAnimation { duration: Theme.animCarousel } }
                 }
 
-                Text {
+                DimLabel {
                     text: modelData.vendor
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeMini
                     font.bold: true
-                    color: Theme.fgDim
                 }
 
-                Text {
+                DimLabel {
                     // Strip redundant vendor prefix from device name
                     // (NVML's "NVIDIA GeForce ..." and our AMD fallback both duplicate it).
-                    text: modelData.name.replace(/^(NVIDIA|AMD|Intel)\s+/i, "")
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSizeMini
-                    color: Theme.fgDim
+                    text: Theme.stripVendor(modelData.name)
                     Layout.fillWidth: true
                     elide: Text.ElideRight
                 }
@@ -343,13 +315,11 @@ ColumnLayout {
             }
 
             // Secondary row: VRAM · power · clock
-            Text {
+            DimLabel {
                 Layout.fillWidth: true
                 Layout.leftMargin: 12
                 Layout.bottomMargin: 2
-                font.family: Theme.fontFamily
                 font.pixelSize: Theme.fontSizeTiny
-                color: Theme.fgDim
                 elide: Text.ElideRight
 
                 text: {
@@ -368,8 +338,7 @@ ColumnLayout {
     }
 
     // ── Network section ──────────────────────────────────
-    Separator { Layout.topMargin: 8; visible: UserSettings.sysInfoShowNetwork && SysInfo.netInterfaces.length > 0 }
-    SectionLabel { text: "NETWORK"; visible: UserSettings.sysInfoShowNetwork && SysInfo.netInterfaces.length > 0 }
+    SysSectionHeader { title: "NETWORK"; show: UserSettings.sysInfoShowNetwork && SysInfo.netInterfaces.length > 0 }
 
     Repeater {
         model: UserSettings.sysInfoShowNetwork ? SysInfo.netInterfaces : []
@@ -384,8 +353,7 @@ ColumnLayout {
     // ── Disk I/O section ─────────────────────────────────
     // Per whole-disk read/write throughput from /proc/diskstats. Uses the
     // same ↓/↑ SpeedLabel shape as network for visual rhythm.
-    Separator { Layout.topMargin: 8; visible: UserSettings.sysInfoShowDisk && SysInfo.diskDevices.length > 0 }
-    SectionLabel { text: "DISK I/O"; visible: UserSettings.sysInfoShowDisk && SysInfo.diskDevices.length > 0 }
+    SysSectionHeader { title: "DISK I/O"; show: UserSettings.sysInfoShowDisk && SysInfo.diskDevices.length > 0 }
 
     Repeater {
         model: UserSettings.sysInfoShowDisk ? SysInfo.diskDevices : []
@@ -404,18 +372,12 @@ ColumnLayout {
         Layout.fillWidth: true
         Layout.topMargin: 4
 
-        Text {
+        DimLabel {
             text: SysInfo.processesRunning + " / " + SysInfo.processesTotal + " procs"
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeMini
-            color: Theme.fgDim
             Layout.fillWidth: true
         }
-        Text {
+        DimLabel {
             text: "Up " + Theme.formatUptime(SysInfo.uptime)
-            font.family: Theme.fontFamily
-            font.pixelSize: Theme.fontSizeMini
-            color: Theme.fgDim
         }
     }
 }

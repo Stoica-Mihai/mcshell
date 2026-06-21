@@ -13,13 +13,7 @@ Item {
     // is locked, avoiding needless image loads behind the lock surface.
     property bool locked: false
 
-    readonly property int _intervalValue: {
-        const id = UserSettings.wallpaperRotateInterval;
-        const opts = UserSettings.wallpaperRotateOptions;
-        for (let i = 0; i < opts.length; i++)
-            if (opts[i].id === id) return opts[i].ms;
-        return 0;
-    }
+    readonly property int _intervalValue: UserSettings.wallpaperRotateMs(UserSettings.wallpaperRotateInterval)
     readonly property bool _enabled: root._intervalValue > 0
 
     function _pickNext(exclude) {

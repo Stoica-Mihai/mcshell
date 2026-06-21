@@ -38,37 +38,27 @@ SettingsPanel {
     readonly property string headerSubtitle: `${defaultSink?.description ?? "No output"}${Theme.separator}${volume}%`
     readonly property color headerColor: Theme.accent
 
-    // ── Output sinks ──
-    readonly property var outputNodes: {
+    // ── Selectable audio devices — non-stream audio nodes, partitioned by isSink ──
+    function _audioNodes(wantSink) {
         if (!Pipewire.ready) return [];
         const nodes = Pipewire.nodes.values;
-        const sinks = [];
+        const out = [];
         for (let i = 0; i < nodes.length; i++) {
             const n = nodes[i];
-            if (n.isSink && !n.isStream && n.audio)
-                sinks.push(n);
+            if (n.isSink === wantSink && !n.isStream && n.audio)
+                out.push(n);
         }
-        return sinks;
+        return out;
     }
-
-    readonly property var inputNodes: {
-        if (!Pipewire.ready) return [];
-        const nodes = Pipewire.nodes.values;
-        const sources = [];
-        for (let i = 0; i < nodes.length; i++) {
-            const n = nodes[i];
-            if (!n.isSink && !n.isStream && n.audio)
-                sources.push(n);
-        }
-        return sources;
-    }
+    readonly property var outputNodes: _audioNodes(true)
+    readonly property var inputNodes: _audioNodes(false)
 
     // QtObject (not PwNode) so the binding can hold null while Pipewire.ready
     // is still false — a PwNode-typed nullable binding fails the QML type
     // check and leaves the sink unbound, reading volume as 0.
     readonly property QtObject defaultSink: Pipewire.ready ? Pipewire.defaultAudioSink : null
     readonly property QtObject defaultSource: Pipewire.ready ? Pipewire.defaultAudioSource : null
-    readonly property int volume: Math.round((defaultSink?.audio?.volume ?? 0) * 100)
+    readonly property int volume: Theme.percent(defaultSink?.audio?.volume ?? 0)
 
     PwObjectTracker { objects: root.defaultSink ? [root.defaultSink] : [] }
 
@@ -86,7 +76,7 @@ SettingsPanel {
 
     function adjustLeft() {
         if (volumeSelected && defaultSink && defaultSink.audio) {
-            defaultSink.audio.volume = Math.max(0, defaultSink.audio.volume - Theme.volumeStep);
+            defaultSink.audio.volume = Theme.clamp01(defaultSink.audio.volume - Theme.volumeStep);
             return true;
         }
         if (rateSelected) { _cycleRate(-1); return true; }
@@ -94,7 +84,7 @@ SettingsPanel {
     }
     function adjustRight() {
         if (volumeSelected && defaultSink && defaultSink.audio) {
-            defaultSink.audio.volume = Math.min(1, defaultSink.audio.volume + Theme.volumeStep);
+            defaultSink.audio.volume = Theme.clamp01(defaultSink.audio.volume + Theme.volumeStep);
             return true;
         }
         if (rateSelected) { _cycleRate(1); return true; }

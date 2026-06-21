@@ -32,15 +32,8 @@ SettingsPanel {
     readonly property bool nightManual: UserSettings.nightLightMode === UserSettings.modeManual
 
     // ── Notification auto-clean mapping ──
-    readonly property var _cleanOptions: [
-        { value: "never", label: "Never" },
-        { value: "30m",   label: "30 min" },
-        { value: "1h",    label: "1 hour" },
-        { value: "6h",    label: "6 hours" },
-        { value: "24h",   label: "24 hours" }
-    ]
-    readonly property var _cleanValues: _cleanOptions.map(o => o.value)
-    readonly property var _cleanLabels: _cleanOptions.map(o => o.label)
+    readonly property var _cleanValues: UserSettings.notifAutoCleanOptions.map(o => o.id)
+    readonly property var _cleanLabels: UserSettings.notifAutoCleanOptions.map(o => o.label)
     readonly property int _cleanIndex: indexInList(_cleanValues, UserSettings.notifAutoClean)
 
     // ── Primary output mapping (multi-monitor only) ──
@@ -113,7 +106,6 @@ SettingsPanel {
     }
 
     itemCount: items.length
-    function _indexOf(id) { for (let i = 0; i < items.length; i++) if (items[i].id === id) return i; return -1; }
     function _dispatch(dir) {
         const item = items[selectedItem];
         if (!item) return false;
@@ -149,8 +141,7 @@ SettingsPanel {
 
     // Brightness
     SettingsRow {
-        selected: root.active && root.selectedItem === root._indexOf("brightness")
-        Layout.preferredHeight: Theme.settingsRowHeight
+        selected: root.active && root.selectedItem === root.indexInList(root.items, "brightness", "id")
 
         SettingsRow.Icon { text: Theme.iconBrightness; color: Theme.yellow }
         SettingsRow.Label { text: "Brightness"; Layout.preferredWidth: tempLabel.implicitWidth }
@@ -165,8 +156,7 @@ SettingsPanel {
 
     // Night light mode
     SettingsRow {
-        selected: root.active && root.selectedItem === root._indexOf("nightLight")
-        Layout.preferredHeight: Theme.settingsRowHeight
+        selected: root.active && root.selectedItem === root.indexInList(root.items, "nightLight", "id")
 
         SettingsRow.Icon {
             text: Theme.iconNightLight
@@ -185,8 +175,7 @@ SettingsPanel {
     SettingsRow {
         visible: root.nightOn
         opacity: root.nightAuto ? Theme.opacityMuted : 1.0
-        selected: root.active && root.selectedItem === root._indexOf("temperature")
-        Layout.preferredHeight: Theme.settingsRowHeight
+        selected: root.active && root.selectedItem === root.indexInList(root.items, "temperature", "id")
 
         SettingsRow.Icon { text: Theme.iconThermometer; color: Theme.yellow }
         SettingsRow.Label { id: tempLabel; text: "Temperature" }
@@ -200,7 +189,7 @@ SettingsPanel {
     // Sunrise (auto mode only)
     SettingsRow {
         visible: root.nightAuto
-        selected: root.active && root.selectedItem === root._indexOf("sunrise")
+        selected: root.active && root.selectedItem === root.indexInList(root.items, "sunrise", "id")
         Layout.preferredHeight: Theme.settingsRowCompact
 
         SettingsRow.Icon {
@@ -220,7 +209,7 @@ SettingsPanel {
     // Sunset (auto mode only)
     SettingsRow {
         visible: root.nightAuto
-        selected: root.active && root.selectedItem === root._indexOf("sunset")
+        selected: root.active && root.selectedItem === root.indexInList(root.items, "sunset", "id")
         Layout.preferredHeight: Theme.settingsRowCompact
 
         SettingsRow.Icon {
@@ -242,8 +231,7 @@ SettingsPanel {
     // Primary output (launcher home monitor; multi-monitor only)
     SettingsRow {
         visible: root._multiScreen
-        selected: root.active && root.selectedItem === root._indexOf("primaryOutput")
-        Layout.preferredHeight: Theme.settingsRowHeight
+        selected: root.active && root.selectedItem === root.indexInList(root.items, "primaryOutput", "id")
 
         SettingsRow.Icon { text: Theme.iconMonitor; color: Theme.accent }
         SettingsRow.Label { text: "Primary Output"; Layout.fillWidth: true }
@@ -259,8 +247,7 @@ SettingsPanel {
 
     // Auto-lock timeout
     SettingsRow {
-        selected: root.active && root.selectedItem === root._indexOf("idle")
-        Layout.preferredHeight: Theme.settingsRowHeight
+        selected: root.active && root.selectedItem === root.indexInList(root.items, "idle", "id")
 
         SettingsRow.Icon {
             text: Theme.iconLock
@@ -277,8 +264,7 @@ SettingsPanel {
 
     // Notification auto-clean
     SettingsRow {
-        selected: root.active && root.selectedItem === root._indexOf("autoClean")
-        Layout.preferredHeight: Theme.settingsRowHeight
+        selected: root.active && root.selectedItem === root.indexInList(root.items, "autoClean", "id")
 
         SettingsRow.Icon {
             text: Theme.iconBell
@@ -297,8 +283,7 @@ SettingsPanel {
 
     // System monitor
     SettingsRow {
-        selected: root.active && root.selectedItem === root._indexOf("sysInfo")
-        Layout.preferredHeight: Theme.settingsRowHeight
+        selected: root.active && root.selectedItem === root.indexInList(root.items, "sysInfo", "id")
 
         SettingsRow.Icon {
             text: Theme.iconMonitor

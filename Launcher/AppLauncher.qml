@@ -47,7 +47,7 @@ OverlayWindow {
 
     // ── Public API ──────────────────────────────────────
     property bool isOpen: false
-    property alias searchField: searchField
+    property alias searchField: searchBar.searchField
     property bool _suppressCarouselAnim: false
     Timer {
         id: _animEnableTimer
@@ -76,7 +76,7 @@ OverlayWindow {
         _openTransition();
         level = initialLevel;
         _enterTab(tab);
-        Qt.callLater(tabHighlight._snapToTab, tab);
+        Qt.callLater(searchBar.snapToTab, tab);
     }
 
     function open() { _requestOpen(0, "view", ""); }
@@ -182,7 +182,7 @@ OverlayWindow {
 
     // ── Tab state ───────────────────────────────────────
     property int activeTab: 0
-    onActiveTabChanged: tabHighlight.animateTo(activeTab)
+    onActiveTabChanged: searchBar.animateToTab(activeTab)
     readonly property int tabCount: categories.length
     readonly property var activeCategory: categories[activeTab]
     readonly property int currentCount: carouselRepeater.count
@@ -243,7 +243,7 @@ OverlayWindow {
 
     function switchTab(tab) {
         if (tab < 0 || tab >= categories.length) return;
-        if (leftAnim.running || rightAnim.running) return;
+        if (searchBar.tabAnimating) return;
         if (activeTab === tab && isOpen) {
             searchField.text = "";
             selectedIndex = 0;
@@ -269,6 +269,21 @@ OverlayWindow {
         interval: 500
         repeat: false
         onTriggered: launcher.activeCategory.onSearch(searchField.text)
+    }
+
+    // Search field input handler — selection reset is immediate, filtering is
+    // debounced (an empty query clears instantly), and typing in "view" drops
+    // to the "list" level. Called from LauncherSearchBar's onTextChanged.
+    function _handleSearchInput(text) {
+        selectedIndex = 0;
+        if (text === "") {
+            searchDebounce.stop();
+            activeCategory.onSearch("");
+        } else {
+            searchDebounce.restart();
+        }
+        if (text !== "" && inView)
+            level = "list";
     }
 
     // Apply any pending debounced query now (e.g. before activating on Enter
@@ -351,228 +366,15 @@ OverlayWindow {
         transformOrigin: Item.Center
 
     // Search bar — fixed position above carousel
-    Item {
+    LauncherSearchBar {
         id: searchBar
+        launcher: launcher
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottom: carouselArea.top
         anchors.bottomMargin: 20
         width: Math.min(740, parent.width - 80)
         height: 44
-
-            Canvas {
-                id: searchBarBg
-                anchors.fill: parent
-                Connections {
-                    target: Theme
-                    function onSurfaceContainerChanged() { searchBarBg.requestPaint(); }
-                    function onOutlineVariantChanged() { searchBarBg.requestPaint(); }
-                }
-                Connections {
-                    target: UserSettings
-                    function onBlurEnabledChanged() { searchBarBg.requestPaint(); }
-                }
-                onPaint: {
-                    var ctx = getContext("2d"), s = Theme.barDiagSlant;
-                    ctx.clearRect(0, 0, width, height);
-                    ctx.beginPath();
-                    ctx.moveTo(s, 0);
-                    ctx.lineTo(width, 0);
-                    ctx.lineTo(width - s, height);
-                    ctx.lineTo(0, height);
-                    ctx.closePath();
-                    ctx.fillStyle = Theme.withAlpha(Theme.surfaceContainer,
-                        UserSettings.blurEnabled ? Theme.blurAlpha : Theme.searchBarAlpha);
-                    ctx.fill();
-                    ctx.strokeStyle = Theme.outlineVariant;
-                    ctx.lineWidth = 1;
-                    ctx.stroke();
-                }
-            }
-
-            // ── Tab underline highlight ────────────────────
-            Item {
-                id: tabHighlight
-                anchors.fill: parent
-                visible: false
-
-                readonly property real _pad: 4
-                property real _lineLeft: 0
-                property real _lineRight: 0
-
-                NumberAnimation {
-                    id: leftAnim
-                    target: tabHighlight; property: "_lineLeft"
-                    easing.type: Easing.InOutQuad
-                }
-                NumberAnimation {
-                    id: rightAnim
-                    target: tabHighlight; property: "_lineRight"
-                    easing.type: Easing.InOutQuad
-                }
-
-                // ── Snap (no animation) ──
-                property var _pendingConn: null
-                function _snapToTab(idx) {
-                    if (_pendingConn) { _pendingConn.enabled = false; _pendingConn = null; }
-                    const item = tabRepeater.itemAt(idx);
-                    if (!item) return;
-                    if (item.width > 0) {
-                        _applySnap(item);
-                    } else {
-                        _pendingConn = item.widthChanged.connect(function() {
-                            if (item.width > 0) {
-                                item.widthChanged.disconnect(arguments.callee);
-                                tabHighlight._applySnap(item);
-                            }
-                        });
-                    }
-                }
-
-                function _applySnap(item) {
-                    const pos = item.mapToItem(searchBar, 0, 0);
-                    leftAnim.stop(); rightAnim.stop();
-                    _lineLeft = pos.x - _pad;
-                    _lineRight = pos.x + item.width + _pad;
-                    visible = true;
-                }
-
-                // ── Animated transition ──
-                function animateTo(idx) {
-                    const item = tabRepeater.itemAt(idx);
-                    if (!item) return;
-                    if (!visible) { _snapToTab(idx); return; }
-                    const pos = item.mapToItem(searchBar, 0, 0);
-                    const targetLeft = pos.x - _pad;
-                    const targetRight = pos.x + item.width + _pad;
-                    const movingRight = targetLeft > _lineLeft;
-
-                    leftAnim.stop(); rightAnim.stop();
-                    leftAnim.to = targetLeft;
-                    rightAnim.to = targetRight;
-                    // Leading edge is fast, trailing is slower
-                    leftAnim.duration = movingRight ? 250 : 120;
-                    rightAnim.duration = movingRight ? 120 : 250;
-                    leftAnim.start();
-                    rightAnim.start();
-                }
-
-                // ── The underline ──
-                Rectangle {
-                    x: tabHighlight._lineLeft
-                    y: searchBar.height - 3
-                    width: tabHighlight._lineRight - tabHighlight._lineLeft
-                    height: 2
-                    radius: 1
-                    color: launcher.inView ? Theme.accent : Theme.fgDim
-                    Behavior on color { ColorAnimation { duration: Theme.animNormal } }
-                }
-            }
-
-            RowLayout {
-                anchors.fill: parent
-                anchors.leftMargin: 14
-                anchors.rightMargin: 14
-                spacing: Theme.spacingMedium
-
-                // Tab buttons — driven by categories
-                Repeater {
-                    id: tabRepeater
-                    model: launcher.categories
-
-                    delegate: Item {
-                        required property var modelData
-                        required property int index
-                        Layout.preferredWidth: tabContent.implicitWidth + 16
-                        Layout.preferredHeight: 28
-
-                        RowLayout {
-                            id: tabContent
-                            anchors.centerIn: parent
-                            spacing: Theme.spacingTiny
-
-                            Text {
-                                text: modelData.tabIcon
-                                font.family: Theme.iconFont
-                                font.pixelSize: Theme.fontSizeSmall
-                                color: Theme.fg
-                            }
-
-                            Text {
-                                text: modelData.tabLabel
-                                font.family: Theme.fontFamily
-                                font.pixelSize: Theme.fontSizeSmall
-                                color: Theme.fg
-                            }
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: launcher.switchTab(index)
-                        }
-                    }
-                }
-
-                // Separator
-                Rectangle { width: 1; Layout.preferredHeight: 20; color: Theme.outlineVariant }
-
-                // Search icon
-                Text {
-                    text: Theme.iconSearch
-                    font.family: Theme.iconFont
-                    font.pixelSize: Theme.fontSizeMedium
-                    color: Theme.fg
-                    Layout.alignment: Qt.AlignVCenter
-                }
-
-                TextInput {
-                    id: searchField
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignVCenter
-                    font.family: Theme.fontFamily
-                    font.pixelSize: Theme.fontSize
-                    color: Theme.fg
-                    clip: true
-                    selectByMouse: true
-
-                    onTextChanged: {
-                        launcher.selectedIndex = 0;
-                        if (text === "") {
-                            searchDebounce.stop();
-                            launcher.activeCategory.onSearch("");
-                        } else {
-                            searchDebounce.restart();
-                        }
-                        if (text !== "" && launcher.inView)
-                            launcher.level = "list";
-                    }
-
-                    Keys.onPressed: event => {
-                        // Category-specific keys always get first chance
-                        if (launcher.activeCategory.onKeyPressed(event)) {
-                            event.accepted = true;
-                            return;
-                        }
-                        if (launcher.inView)      event.accepted = launcher._viewKey(event.key);
-                        else if (launcher.inList) event.accepted = launcher._listKey(event.key);
-                        else if (launcher.inEdit) event.accepted = launcher._editKey(event.key);
-                    }
-
-                    Keys.onReleased: event => {
-                        if (launcher.activeCategory.onKeyReleased?.(event))
-                            event.accepted = true;
-                    }
-
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: launcher.activeCategory.searchPlaceholder
-                        color: Theme.fg
-                        font: parent.font
-                        visible: !parent.text
-                    }
-                }
-            }
-        }
+    }
 
     // Carousel — centered on screen, shifted down when header is visible
     Item {

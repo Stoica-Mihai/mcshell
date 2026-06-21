@@ -27,7 +27,7 @@ ParallelogramCard {
             Layout.alignment: Qt.AlignHCenter
             text: root.icon
             font.family: Theme.iconFont
-            font.pixelSize: 48
+            font.pixelSize: Theme.iconSizeXLarge
             color: root.iconColor
             opacity: root.iconOpacity
         }

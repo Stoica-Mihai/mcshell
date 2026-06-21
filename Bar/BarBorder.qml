@@ -11,7 +11,7 @@ Item {
     required property var pts
     property real borderWidth: 1
 
-    readonly property bool useGradient: UserSettings.barBorderStyle === "gradient"
+    readonly property bool useGradient: UserSettings.barBorderGradient
 
     // Solid border (simple stroke)
     Shape {

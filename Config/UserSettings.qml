@@ -42,6 +42,10 @@ Singleton {
         { id: "6h",  label: "6 hours",  ms: 6 * 60 * 60 * 1000 },
         { id: "12h", label: "12 hours", ms: 12 * 60 * 60 * 1000 }
     ]
+    function wallpaperRotateMs(id) {
+        const opt = wallpaperRotateOptions.find(o => o.id === id);
+        return opt ? opt.ms : 0;
+    }
     readonly property var wallpaperFillModes: [
         { id: "crop",    label: "Crop" },
         { id: "fit",     label: "Fit" },
@@ -54,9 +58,24 @@ Singleton {
     property alias powerProfile: adapter.powerProfile            // "PowerSaver", "Balanced", "Performance"
     property alias borderAnimation: adapter.borderAnimation      // "midpoint", "clockwise", "corners", "fade"
     property alias barBorderStyle: adapter.barBorderStyle        // "solid", "gradient"
+    readonly property bool barBorderGradient: barBorderStyle === "gradient"
     property alias primaryOutput: adapter.primaryOutput          // output name (e.g. "HDMI-A-2"); "" = first screen
     property alias blurEnabled: adapter.blurEnabled              // bool — surface blur via ext-background-effect
     property alias notifAutoClean: adapter.notifAutoClean        // "never", "30m", "1h", "6h", "24h"
+    // Canonical list for both the settings UI (ids + labels) and the popup
+    // auto-clean timer (ms). Adding or renaming an interval means editing
+    // exactly this array.
+    readonly property var notifAutoCleanOptions: [
+        { id: "never", label: "Never",    ms: 0 },
+        { id: "30m",   label: "30 min",   ms: 30 * 60 * 1000 },
+        { id: "1h",    label: "1 hour",   ms: 60 * 60 * 1000 },
+        { id: "6h",    label: "6 hours",  ms: 6 * 60 * 60 * 1000 },
+        { id: "24h",   label: "24 hours", ms: 24 * 60 * 60 * 1000 }
+    ]
+    function notifAutoCleanMs(id) {
+        const opt = notifAutoCleanOptions.find(o => o.id === id);
+        return opt ? opt.ms : 0;
+    }
     property alias weatherLocation: adapter.weatherLocation      // display name, e.g. "Bucharest, Romania"
     property alias weatherLat: adapter.weatherLat                // latitude (real)
     property alias weatherLon: adapter.weatherLon                // longitude (real)
@@ -66,6 +85,7 @@ Singleton {
     property alias clockDateFormat: adapter.clockDateFormat      // Qt format pattern, e.g. "ddd d MMM yyyy"
     property alias weekStartsOnMonday: adapter.weekStartsOnMonday // bool
     property alias sysInfoEnabled: adapter.sysInfoEnabled        // bool — show waveform + dropdown in bar
+    readonly property int sysInfoIntervalDefault: 2000           // ms — fallback poll interval
     property alias sysInfoInterval: adapter.sysInfoInterval      // ms between polls (1000/2000/5000/10000)
     property alias sysInfoTempUnit: adapter.sysInfoTempUnit      // "C" or "F"
     property alias sysInfoNetUnit: adapter.sysInfoNetUnit        // "bytes" or "bits"
@@ -144,6 +164,8 @@ Singleton {
         if (adapter.clockTimeFormat === "12h") fmt += " AP";
         return fmt;
     }
+    // Time format without seconds — for compact readouts (e.g. weather footer).
+    readonly property string clockTimeFormatStringNoSeconds: adapter.clockTimeFormat === "12h" ? "h:mm AP" : "HH:mm"
     // Full bar string = date + double space + time.
     readonly property string clockFormatString: adapter.clockDateFormat + "  " + clockTimeFormatString
 
@@ -268,7 +290,7 @@ Singleton {
             property string clockDateFormat: "ddd d MMM yyyy"
             property bool weekStartsOnMonday: true
             property bool sysInfoEnabled: true
-            property int sysInfoInterval: 2000
+            property int sysInfoInterval: root.sysInfoIntervalDefault
             property string sysInfoTempUnit: "C"
             property string sysInfoNetUnit: "bytes"
             property string sysInfoBarMetric: "cpu"

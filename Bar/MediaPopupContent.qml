@@ -149,7 +149,7 @@ ColumnLayout {
             Layout.fillWidth: true
             visible: !root.media.isLive
             value: root.trackLen > 0
-                ? Math.max(0, Math.min(1, root.currentPos / root.trackLen)) : 0
+                ? Theme.clamp01(root.currentPos / root.trackLen) : 0
             accentColor: Theme.accent
             trackHeight: Theme.sliderTrackHeight
             knobSize: Theme.sliderKnobSize
@@ -246,10 +246,7 @@ ColumnLayout {
 
         IconButton {
             size: Theme.iconSize
-            icon: mediaVolumeRow._muted ? Theme.iconVolMuted
-                : mediaVolumeRow._vol < 0.3 ? Theme.iconVolLow
-                : mediaVolumeRow._vol < 0.7 ? Theme.iconVolMid
-                : Theme.iconVolHigh
+            icon: Theme.volumeIcon(mediaVolumeRow._vol, mediaVolumeRow._muted)
             normalColor: mediaVolumeRow._muted ? Theme.red : Theme.fg
             onClicked: {
                 if (!root.media.player) return;
@@ -277,7 +274,7 @@ ColumnLayout {
         Text {
             Layout.preferredWidth: 32
             horizontalAlignment: Text.AlignRight
-            text: Math.round(mediaVolumeRow._vol * 100) + "%"
+            text: Theme.percent(mediaVolumeRow._vol) + "%"
             color: Theme.fgDim
             font.family: Theme.fontFamily
             font.pixelSize: Theme.fontSizeTiny

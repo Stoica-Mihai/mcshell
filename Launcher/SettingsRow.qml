@@ -36,7 +36,7 @@ Rectangle {
     Layout.fillWidth: true
     Layout.leftMargin: 4
     Layout.rightMargin: 4
-    Layout.preferredHeight: 38
+    Layout.preferredHeight: Theme.settingsRowHeight
     radius: Theme.radiusSmall
     color: selected ? selectedColor : "transparent"
 

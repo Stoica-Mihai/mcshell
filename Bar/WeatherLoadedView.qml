@@ -110,7 +110,7 @@ ColumnLayout {
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: WeatherCodes.icon(modelData.code)
                         font.family: Theme.iconFont
-                        font.pixelSize: 13
+                        font.pixelSize: Theme.fontSizeSmall
                         color: index === 0 ? Theme.bgSolid : WeatherCodes.color(modelData.code)
                     }
 
@@ -162,7 +162,7 @@ ColumnLayout {
                         horizontalAlignment: Text.AlignHCenter
                         text: WeatherCodes.icon(modelData.code)
                         font.family: Theme.iconFont
-                        font.pixelSize: 13
+                        font.pixelSize: Theme.fontSizeSmall
                         color: WeatherCodes.color(modelData.code)
                     }
 
@@ -201,7 +201,7 @@ ColumnLayout {
         text: root.weather
             ? `Updated ${root.weather.lastRefresh.toLocaleTimeString(
                 Qt.locale(),
-                UserSettings.clockTimeFormat === "12h" ? "h:mm AP" : "HH:mm")}`
+                UserSettings.clockTimeFormatStringNoSeconds)}`
             : ""
         font.family: Theme.fontFamily
         font.pixelSize: Theme.fontSizeMini

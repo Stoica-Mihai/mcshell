@@ -4,6 +4,7 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Services.Pam
 import qs.Config
+import qs.Core
 import qs.Widgets
 
 // Lock screen module using the Wayland ext_session_lock_v1 protocol.
@@ -205,13 +206,9 @@ Item {
                         }
                     }
 
-                    // Large clock — SystemClock matches Bar/Clock.qml:19-22
-                    // and avoids per-minute Date allocation on the lock surface.
-                    SystemClock {
-                        id: clockTimer
-                        precision: SystemClock.Minutes
-                    }
-
+                    // Large clock — time/date come from the shared
+                    // Core/ClockService singleton (one SystemClock for the
+                    // whole shell) using the user's configured formats.
                     Text {
                         id: clockText
                         Layout.alignment: Qt.AlignHCenter
@@ -219,7 +216,7 @@ Item {
                         font.pixelSize: Theme.fontSizeDisplay
                         font.weight: Font.Bold
                         color: Theme.fg
-                        text: Qt.formatTime(clockTimer.date, "HH:mm")
+                        text: ClockService.date.toLocaleTimeString(Qt.locale(), UserSettings.clockTimeFormatString)
                     }
 
                     // Date
@@ -228,7 +225,7 @@ Item {
                         font.family: Theme.fontFamily
                         font.pixelSize: Theme.fontSizeLarge
                         color: Theme.fgDim
-                        text: Qt.formatDate(clockTimer.date, "dddd, MMMM d")
+                        text: ClockService.date.toLocaleDateString(Qt.locale(), UserSettings.clockDateFormat)
                     }
 
                     // Spacer

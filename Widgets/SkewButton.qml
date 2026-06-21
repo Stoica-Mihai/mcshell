@@ -13,7 +13,7 @@ Item {
 
     property string label: ""
     property bool primary: false
-    property real skewAmount: -0.3
+    property real skewAmount: Theme.componentSkew
     signal clicked()
 
     implicitWidth: text.implicitWidth + 32

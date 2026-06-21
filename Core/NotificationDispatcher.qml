@@ -29,6 +29,13 @@ Singleton {
         Quickshell.execDetached({ command: cmd });
     }
 
+    // Connect/disconnect notice for a named device (shared by BT + WiFi watchers).
+    function _connectionNotice(title, device) {
+        if (!device?.name) return;
+        root.send(title,
+            (device.connected ? "Connected to " : "Disconnected from ") + device.name, Theme.notifNormal);
+    }
+
     // ── Bluetooth watchers ──────────────────────────────
     // Debounce — BlueZ bounces enabled during state transitions
     Timer {
@@ -49,11 +56,7 @@ Singleton {
         delegate: Connections {
             required property var modelData
             target: modelData
-            function onConnectedChanged() {
-                if (!modelData?.name) return;
-                root.send("Bluetooth",
-                    (modelData.connected ? "Connected to " : "Disconnected from ") + modelData.name, Theme.notifNormal);
-            }
+            function onConnectedChanged() { root._connectionNotice("Bluetooth", modelData); }
         }
     }
 
@@ -69,23 +72,14 @@ Singleton {
         function onWifiEnabledChanged() { _wifiDebounce.restart(); }
     }
 
-    readonly property var _wifiDevice: {
-        const devs = Networking.devices?.values ?? [];
-        for (let i = 0; i < devs.length; i++)
-            if (devs[i].type === DeviceType.Wifi) return devs[i];
-        return null;
-    }
+    readonly property var _wifiDevice: NetworkInfo.wifiDevice
 
     Variants {
         model: root._wifiDevice?.networks.values ?? []
         delegate: Connections {
             required property var modelData
             target: modelData
-            function onConnectedChanged() {
-                if (!modelData?.name) return;
-                root.send("WiFi",
-                    (modelData.connected ? "Connected to " : "Disconnected from ") + modelData.name, Theme.notifNormal);
-            }
+            function onConnectedChanged() { root._connectionNotice("WiFi", modelData); }
         }
     }
 }

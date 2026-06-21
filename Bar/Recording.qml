@@ -29,6 +29,12 @@ Item {
         recorder.signal(2); // SIGINT
     }
 
+    // Notify the failure and reset recording state.
+    function _fail(msg) {
+        NotificationDispatcher.send("Recording failed", msg, Theme.notifLong);
+        _currentPath = "";
+    }
+
     // Ensure output directory exists, then start wf-recorder scoped to the
     // focused niri output.
     SafeProcess {
@@ -50,8 +56,7 @@ Item {
             }
             if (!output) {
                 console.warn("[mcshell] Recording: no output to capture");
-                NotificationDispatcher.send("Recording failed", "no output to capture", Theme.notifLong);
-                root._currentPath = "";
+                root._fail("no output to capture");
                 return;
             }
             recorder.command = ["wf-recorder", "-o", output, "-f", root._currentPath];
@@ -66,8 +71,7 @@ Item {
             // SIGINT stop returns 0, so only a non-zero code here means the recording failed.
             if (code !== 0) {
                 console.warn("[mcshell] wf-recorder failed: exit code", code);
-                NotificationDispatcher.send("Recording failed", `wf-recorder exit code ${code}`, Theme.notifLong);
-                root._currentPath = "";
+                root._fail(`wf-recorder exit code ${code}`);
                 return;
             }
             ClipboardHistory.addText(root._currentPath);

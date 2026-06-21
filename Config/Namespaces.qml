@@ -15,6 +15,7 @@ Singleton {
     readonly property string polkit:           _prefix + "-polkit"
     readonly property string bluetoothPair:    _prefix + "-btpair"
     readonly property string screenshot:       _prefix + "-screenshot"
+    readonly property string screencastPicker: _prefix + "-screencast-picker"
     readonly property string wallpaper:        _prefix + "-wallpaper"
     readonly property string notifications:    _prefix + "-notifications"
 }

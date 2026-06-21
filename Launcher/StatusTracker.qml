@@ -8,6 +8,7 @@ QtObject {
 
     function clear() { status = ""; targetId = ""; }
     function autoClear() { _timer.start(); }
+    function set(newStatus) { status = newStatus; autoClear(); }
 
     property var _timer: Timer {
         interval: 3000

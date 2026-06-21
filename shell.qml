@@ -47,21 +47,8 @@ ShellRoot {
         value: UserSettings.sysInfoInterval
     }
 
-    readonly property var _panelModes: ({
-        weather:         ["view", "edit"],
-        calendar:        ["view"],
-        clockSettings:   ["view"],
-        sysInfoSettings: ["view"],
-        wifiSettings:    ["view"],
-        bluetoothSettings: ["view"],
-        keybinds:        ["view"],
-        volume:          ["view"],
-        notifications:   ["view"],
-        media:           ["view"],
-        tray:            ["view"],
-        trayicons:       ["view"],
-        sysinfo:         ["view"]
-    })
+    // Panel names + supported modes live in the Config/BarPanels singleton,
+    // shared with StatusBar's dropdown descriptor table (single source).
 
     // Validate a mode against a panel/tab's supported modes. Returns the
     // resolved mode string (falls back to modes[0] when empty), or null
@@ -82,7 +69,7 @@ ShellRoot {
     }
 
     function _dispatchPanel(name, mode) {
-        const resolved = _resolveMode("panel", name, _panelModes[name], mode);
+        const resolved = _resolveMode("panel", name, BarPanels.modes[name], mode);
         if (resolved === null) return;
         shell._togglePanel = name;
         shell._toggleMode = resolved;
@@ -230,13 +217,8 @@ ShellRoot {
     // IdleMonitor created dynamically in Component.onCompleted above
 
     // Media inhibitor: true when any MPRIS player is actively playing
-    readonly property bool _mediaPlaying: {
-        if (!Mpris.players || !Mpris.players.values) return false;
-        const all = Mpris.players.values;
-        for (let i = 0; i < all.length; i++)
-            if (all[i].playbackState === MprisPlaybackState.Playing) return true;
-        return false;
-    }
+    readonly property bool _mediaPlaying:
+        (Mpris.players?.values ?? []).some(p => p.playbackState === MprisPlaybackState.Playing)
 
     // ── Screenshot functions ────────────────────────────
     function screenshotFull() { screenshot.captureFullScreen(); }

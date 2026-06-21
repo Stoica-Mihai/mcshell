@@ -26,7 +26,7 @@ Item {
     property int echoMode: TextInput.Normal
     property string placeholder: ""
     property string icon: ""
-    property real skewAmount: -0.3
+    property real skewAmount: Theme.componentSkew
     property int iconSize: 12
     property bool showVisibilityToggle: false
     property int compartmentWidth: 36

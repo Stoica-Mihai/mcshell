@@ -7,10 +7,12 @@ Rectangle {
     id: root
 
     property string label: ""
-    property color baseColor: Theme.overlay
-    property color hoverColor: Theme.overlayHover
-    property color textColor: Theme.fgDim
-    property bool bold: false
+    // `primary: true` paints with the accent fill + accentFg bold label.
+    property bool primary: false
+    property color baseColor: primary ? Theme.accent : Theme.overlay
+    property color hoverColor: primary ? Qt.lighter(Theme.accent, 1.1) : Theme.overlayHover
+    property color textColor: primary ? Theme.accentFg : Theme.fgDim
+    property bool bold: primary
 
     signal clicked()
 

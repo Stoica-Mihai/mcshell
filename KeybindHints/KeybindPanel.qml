@@ -17,8 +17,6 @@ Item {
 
     readonly property real fullHeight: 460
 
-    KeybindParser { id: parser }
-
     anchors.fill: parent
 
     ColumnLayout {
@@ -44,7 +42,7 @@ Item {
 
             Text {
                 text: {
-                    const n = parser.allBindings.length;
+                    const n = KeybindParser.allBindings.length;
                     return n > 0 ? `niri · ${n} binding${n !== 1 ? "s" : ""}`
                                  : "loading...";
                 }
@@ -69,7 +67,7 @@ Item {
             Layout.rightMargin: 6
             Layout.topMargin: 4
             clip: true
-            model: parser.filteredGroups
+            model: KeybindParser.filteredGroups
             boundsBehavior: Flickable.StopAtBounds
             flickDeceleration: 3000
             maximumFlickVelocity: 4000

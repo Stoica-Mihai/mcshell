@@ -4,6 +4,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Logind
+import qs.Config
 
 // Brightness state provider — single source of truth for screen brightness.
 // Reads sysfs backlight files directly (event-driven via FileView, no
@@ -14,7 +15,7 @@ Singleton {
 
     property int value: 0
     property int max: 1
-    readonly property int percent: max > 0 ? Math.round(value / max * 100) : 0
+    readonly property int percent: max > 0 ? Theme.percent(value / max) : 0
 
     // Track previous value for OSD change detection
     property int _prev: -1
@@ -25,6 +26,8 @@ Singleton {
         const target = Math.max(0, Math.min(root.max, Math.round(root.max * pct / 100)));
         Logind.setBrightness("backlight", _deviceName, target);
     }
+
+    function _parseFileInt(t) { return parseInt(t.trim(), 10); }
 
     // Basename of _device — used as the SetBrightness device argument.
     readonly property string _deviceName: {
@@ -72,7 +75,7 @@ Singleton {
             reload();
         }
         onLoaded: {
-            const val = parseInt(text().trim(), 10);
+            const val = root._parseFileInt(text());
             if (!isNaN(val)) {
                 if (root._prev >= 0 && val !== root._prev) root.changed();
                 root._prev = val;
@@ -84,7 +87,7 @@ Singleton {
     FileView {
         path: root._maxPath
         onLoaded: {
-            const val = parseInt(text().trim(), 10);
+            const val = root._parseFileInt(text());
             if (!isNaN(val) && val > 0) root.max = val;
         }
     }
