@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Qs.DataControl
+import qs.Config
 import qs.Core
 
 // Screen recording state — managed via wf-recorder process lifecycle.
@@ -49,7 +50,7 @@ Item {
             }
             if (!output) {
                 console.warn("[mcshell] Recording: no output to capture");
-                NotificationDispatcher.send("Recording failed", "no output to capture", 5000);
+                NotificationDispatcher.send("Recording failed", "no output to capture", Theme.notifLong);
                 root._currentPath = "";
                 return;
             }
@@ -65,12 +66,12 @@ Item {
             // SIGINT stop returns 0, so only a non-zero code here means the recording failed.
             if (code !== 0) {
                 console.warn("[mcshell] wf-recorder failed: exit code", code);
-                NotificationDispatcher.send("Recording failed", `wf-recorder exit code ${code}`, 5000);
+                NotificationDispatcher.send("Recording failed", `wf-recorder exit code ${code}`, Theme.notifLong);
                 root._currentPath = "";
                 return;
             }
             ClipboardHistory.addText(root._currentPath);
-            NotificationDispatcher.send("Recording saved", root._currentPath, 5000);
+            NotificationDispatcher.send("Recording saved", root._currentPath, Theme.notifLong);
             root._currentPath = "";
         }
     }
