@@ -13,7 +13,7 @@ Item {
     property color fillColor: Theme.accent
     property real skewAmount: Theme.cardSkew
 
-    readonly property real _sp: skewAmount * height / 2
+    readonly property real _sp: Theme.skewPixels(skewAmount, height)
     readonly property bool _left: direction === "left"
 
     Shape {

@@ -19,7 +19,7 @@ Item {
     property real strokeWidth: 0
     property real skewAmount: Theme.cardSkew
 
-    readonly property real _skewPx: skewAmount * height / 2
+    readonly property real _skewPx: Theme.skewPixels(skewAmount, height)
     readonly property real _absSkew: Math.abs(_skewPx)
 
     Canvas {
@@ -34,11 +34,7 @@ Item {
             ctx.clearRect(0, 0, width, height);
             const ox = pad;
             ctx.beginPath();
-            ctx.moveTo(-root._skewPx + ox,             0);
-            ctx.lineTo(root.width - root._skewPx + ox, 0);
-            ctx.lineTo(root.width + root._skewPx + ox, root.height);
-            ctx.lineTo(root._skewPx + ox,              root.height);
-            ctx.closePath();
+            Theme.traceParallelogram(ctx, ox, root.width, root.height, root._skewPx);
             ctx.fillStyle = root.fillColor;
             ctx.fill();
             if (root.strokeWidth > 0) {

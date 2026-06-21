@@ -381,6 +381,21 @@ Singleton {
 
     function withAlpha(c, a) { return Qt.rgba(c.r, c.g, c.b, a); }
 
+    // Pixel offset that slants a quad of height `h` by skew factor `skew`.
+    // Single source for the parallelogram geometry used across Skew* widgets,
+    // ParallelogramCard, and AnimatedBorder.
+    function skewPixels(skew, h) { return skew * h / 2; }
+
+    // Trace the shell's parallelogram outline into a Canvas 2D context.
+    // `ox` is the horizontal draw offset (canvas padding), `sp` the skew px.
+    function traceParallelogram(ctx, ox, w, h, sp) {
+        ctx.moveTo(-sp + ox, 0);
+        ctx.lineTo(w - sp + ox, 0);
+        ctx.lineTo(w + sp + ox, h);
+        ctx.lineTo(sp + ox, h);
+        ctx.closePath();
+    }
+
     // Accent tints (derived — adapt automatically to palette changes)
     readonly property color accentLight: withAlpha(accent, 0.12)
     readonly property color accentBorder: withAlpha(accent, 0.25)

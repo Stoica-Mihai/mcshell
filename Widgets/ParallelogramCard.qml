@@ -29,7 +29,7 @@ Item {
     // Skew geometry (public — derived values are useful for callers placing
     // visuals along the slanted edges).
     property real skew: Theme.cardSkew
-    readonly property real skewPx: skew * height / 2
+    readonly property real skewPx: Theme.skewPixels(skew, height)
     readonly property real tl: -skewPx
     readonly property real tr: width - skewPx
     readonly property real bl: skewPx
@@ -51,11 +51,7 @@ Item {
             ctx.clearRect(0, 0, width, height);
             const ox = pad;
             ctx.beginPath();
-            ctx.moveTo(card.tl + ox, 0);
-            ctx.lineTo(card.tr + ox, 0);
-            ctx.lineTo(card.br + ox, card.height);
-            ctx.lineTo(card.bl + ox, card.height);
-            ctx.closePath();
+            Theme.traceParallelogram(ctx, ox, card.width, card.height, card.skewPx);
             ctx.fillStyle = card.backgroundColor;
             ctx.fill();
             if (card.bgStrokeWidth > 0) {

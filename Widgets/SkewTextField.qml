@@ -34,7 +34,7 @@ Item {
     readonly property bool _isPassword: echoMode === TextInput.Password
     readonly property bool _hasIcon: icon !== ""
     readonly property bool _hasEye: showVisibilityToggle && _isPassword
-    readonly property real _skewPx: skewAmount * height / 2
+    readonly property real _skewPx: Theme.skewPixels(skewAmount, height)
     property bool _revealed: false
 
     function reset() {

@@ -155,7 +155,7 @@ Item {
     Canvas {
         id: canvas
 
-        readonly property real _skewPx: Theme.cardSkew * root.height / 2
+        readonly property real _skewPx: Theme.skewPixels(Theme.cardSkew, root.height)
         readonly property real _pad: Math.ceil(Math.abs(_skewPx)) + root.thickness
 
         x: -_pad
