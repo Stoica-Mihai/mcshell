@@ -36,7 +36,7 @@ Item {
     Component.onCompleted: slideX = 0;
 
     Behavior on slideX {
-        NumberAnimation { duration: Theme.animSmooth; easing.type: Easing.OutCubic }
+        SmoothAnim {}
     }
 
     readonly property bool countdownPaused: countdownItem.paused

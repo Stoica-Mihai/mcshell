@@ -34,7 +34,7 @@ PopupWindow {
     property real _smoothHeight: fullHeight
     Behavior on _smoothHeight {
         enabled: root.isOpen && !root.animating
-        NumberAnimation { duration: Theme.animSmooth; easing.type: Easing.OutCubic }
+        SmoothAnim {}
     }
 
     property bool autoPosition: true

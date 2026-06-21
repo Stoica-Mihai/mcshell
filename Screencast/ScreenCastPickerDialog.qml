@@ -121,7 +121,7 @@ Item {
                 Keys.onReturnPressed: root._approve()
 
                 Behavior on opacity { NumberAnimation { duration: Theme.animSmooth } }
-                Behavior on scale { NumberAnimation { duration: Theme.animSmooth; easing.type: Easing.OutCubic } }
+                Behavior on scale { SmoothAnim {} }
 
                 // Dialog chrome shares the strip's skew angle so the
                 // dialog's left/right slants run parallel to each

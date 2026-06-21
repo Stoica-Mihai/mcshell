@@ -119,7 +119,7 @@ Item {
 
                 Behavior on opacity { NumberAnimation { duration: Theme.animSmooth } }
                 Behavior on scale {
-                    NumberAnimation { duration: Theme.animSmooth; easing.type: Easing.OutCubic }
+                    SmoothAnim {}
                 }
 
                 transform: Translate { x: root.shakeOffsetX }

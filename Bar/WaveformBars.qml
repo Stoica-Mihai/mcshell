@@ -1,5 +1,6 @@
 import QtQuick
 import qs.Config
+import qs.Widgets
 
 // Shared 8-bar waveform skeleton used by VolumeWaveform and SysWaveform.
 // Callers feed in a heights array (0..1 ratios) via `model` and either
@@ -41,7 +42,7 @@ Row {
             }
             color: (root.colors && index < root.colors.length) ? root.colors[index] : root.color
 
-            Behavior on height { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
+            Behavior on height { CarouselAnim {} }
             Behavior on color  { ColorAnimation  { duration: Theme.animCarousel } }
         }
     }

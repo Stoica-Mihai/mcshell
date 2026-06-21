@@ -598,7 +598,7 @@ OverlayWindow {
             width: parent.width
             readonly property real _extraHeight: categoryHeader._show ? categoryHeader.height + Theme.spacingLarge : 0
             height: launcher.carouselHeight + _extraHeight
-            Behavior on height { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
+            Behavior on height { CarouselAnim {} }
             clip: true
 
             // Empty state — text for search/generic
@@ -653,7 +653,7 @@ OverlayWindow {
                 visible: y > -height
                 Behavior on y {
                     enabled: launcher.isOpen && !launcher._suppressCarouselAnim
-                    NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic }
+                    CarouselAnim {}
                 }
             }
 
@@ -663,7 +663,7 @@ OverlayWindow {
                 x: launcher.calcRowX()
                 y: carouselArea._extraHeight
                 height: launcher.carouselHeight
-                Behavior on y { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
+                Behavior on y { CarouselAnim {} }
                 spacing: launcher.stripSpacing
                 visible: launcher.hasItems
 

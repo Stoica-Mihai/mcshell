@@ -245,7 +245,7 @@ Item {
                         opacity: visible ? 1.0 : 0.0
 
                         Behavior on opacity {
-                            NumberAnimation { duration: Theme.animSmooth; easing.type: Easing.OutCubic }
+                            SmoothAnim {}
                         }
                     }
 

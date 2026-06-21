@@ -120,7 +120,7 @@ ColumnLayout {
                         height: Math.max(2, _load / 100 * 20)
                         fillColor: Theme.loadColor(_load)
 
-                        Behavior on height { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
+                        Behavior on height { CarouselAnim {} }
                         Behavior on fillColor { ColorAnimation { duration: Theme.animCarousel } }
                     }
                 }
@@ -180,7 +180,7 @@ ColumnLayout {
                     fillColor: Theme.accent
                     skewAmount: Theme.cardSkew
 
-                    Behavior on width { NumberAnimation { duration: Theme.animCarousel; easing.type: Easing.OutCubic } }
+                    Behavior on width { CarouselAnim {} }
                 }
             }
 
