@@ -221,6 +221,12 @@ ShellRoot {
 
     function _toggleRecording() { recordingLoader.active = true; recordingLoader.item.toggleRecording(); }
 
+    // Shared toggle bodies — both the DBus and CLI IPC handlers delegate here
+    // so the logic lives once.
+    function _toggleDnd() { UserSettings.doNotDisturb = !UserSettings.doNotDisturb; }
+    function _toggleBluetooth() { const a = Bluetooth.defaultAdapter; if (a) a.enabled = !a.enabled; }
+    function _toggleWifi() { Networking.wifiEnabled = !Networking.wifiEnabled; }
+
     // IdleMonitor created dynamically in Component.onCompleted above
 
     // Media inhibitor: true when any MPRIS player is actively playing
@@ -264,12 +270,12 @@ ShellRoot {
         // Methods
         function toggleLauncher(): void { shell._toggleLauncher(); }
         function lock(): void { ShellActions.lock(); }
-        function toggleDnd(): void { UserSettings.doNotDisturb = !UserSettings.doNotDisturb; }
+        function toggleDnd(): void { shell._toggleDnd(); }
         function toggleVolume(mode: string): void { shell._dispatchPanel("volume", mode); }
         function toggleNotifications(mode: string): void { shell._dispatchPanel("notifications", mode); }
         function toggleSysInfo(mode: string): void { shell._dispatchPanel("sysinfo", mode); }
-        function toggleBluetooth(): void { const a = Bluetooth.defaultAdapter; if (a) a.enabled = !a.enabled; }
-        function toggleWifi(): void { Networking.wifiEnabled = !Networking.wifiEnabled; }
+        function toggleBluetooth(): void { shell._toggleBluetooth(); }
+        function toggleWifi(): void { shell._toggleWifi(); }
 
         // Read-only state — PropertiesChanged fires automatically from notify signals.
         property bool doNotDisturb: UserSettings.doNotDisturb
@@ -295,7 +301,7 @@ ShellRoot {
 
         function toggleKeybinds(mode: string): void { shell._dispatchPanel("keybinds", mode); }
         function lock(): void { ShellActions.lock(); }
-        function toggleDnd(): void { UserSettings.doNotDisturb = !UserSettings.doNotDisturb; }
+        function toggleDnd(): void { shell._toggleDnd(); }
         function setWallpaper(path: string): void { ShellActions.setWallpaper(path); }
 
         function toggleCalendar(mode: string): void { shell._dispatchPanel("calendar", mode); }
@@ -322,7 +328,7 @@ ShellRoot {
         function screenshotArea(): void { shell.screenshotArea(); }
         function screenshotWindow(): void { shell.screenshotWindow(); }
 
-        function toggleBluetooth(): void { const a = Bluetooth.defaultAdapter; if (a) a.enabled = !a.enabled; }
-        function toggleWifi(): void { Networking.wifiEnabled = !Networking.wifiEnabled; }
+        function toggleBluetooth(): void { shell._toggleBluetooth(); }
+        function toggleWifi(): void { shell._toggleWifi(); }
     }
 }
