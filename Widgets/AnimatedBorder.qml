@@ -21,7 +21,15 @@ Item {
     on_ProgressChanged: canvas.requestPaint()
     onColorChanged: canvas.requestPaint()
 
+    // False until the item finishes construction. A delegate created already
+    // active (e.g. the selected card after the search filter rebuilds the
+    // list every keystroke) must show the border drawn, not replay the
+    // animation — otherwise it flickers on each keystroke. Only genuine
+    // active transitions during the item's life animate.
+    property bool _ready: false
+
     onActiveChanged: {
+        if (!_ready) return;
         if (active) {
             reverseAnim.stop();
             _progress = 0;
@@ -30,6 +38,11 @@ Item {
             progressAnim.stop();
             reverseAnim.restart();
         }
+    }
+
+    Component.onCompleted: {
+        _progress = active ? 1 : 0;
+        _ready = true;
     }
 
     NumberAnimation {
