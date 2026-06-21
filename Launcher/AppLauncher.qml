@@ -283,8 +283,43 @@ OverlayWindow {
     // ── Activate selected item ──────────────────────────
     function activate() {
         flushSearch();
-        if (selectedIndex < 0 || selectedIndex >= currentCount) return;
+        // Guard on the category's source data, not the Repeater's count, which
+        // may not have updated synchronously right after flushSearch().
+        if (!activeCategory._validIndex(selectedIndex)) return;
         activeCategory.onActivate(selectedIndex);
+    }
+
+    // Per-level key handlers — return true if the key was consumed.
+    function _viewKey(key) {
+        switch (key) {
+        case Qt.Key_Escape: close(); return true;
+        case Qt.Key_Left:  switchTab((activeTab - 1 + tabCount) % tabCount); return true;
+        case Qt.Key_Right: switchTab((activeTab + 1) % tabCount); return true;
+        case Qt.Key_Return:
+        case Qt.Key_Enter:
+        case Qt.Key_Down:
+            if (hasItems) { level = "list"; return true; }
+            return false;
+        }
+        return false;
+    }
+    function _listKey(key) {
+        switch (key) {
+        case Qt.Key_Escape: level = "view"; return true;
+        case Qt.Key_Left:  navigate(-1); return true;
+        case Qt.Key_Right: navigate(1); return true;
+        case Qt.Key_Down:
+            // Only consume Down if there's an edit level to drop into.
+            if (activeCategory.supportedModes.indexOf("edit") >= 0) { level = "edit"; return true; }
+            return false;
+        case Qt.Key_Return:
+        case Qt.Key_Enter: activate(); return true;
+        }
+        return false;
+    }
+    function _editKey(key) {
+        if (key === Qt.Key_Escape) { level = "list"; return true; }
+        return false;
     }
 
     // ── UI ──────────────────────────────────────────────
@@ -518,61 +553,9 @@ OverlayWindow {
                             event.accepted = true;
                             return;
                         }
-
-                        if (launcher.inView) {
-                            switch (event.key) {
-                            case Qt.Key_Escape:
-                                launcher.close();
-                                event.accepted = true;
-                                break;
-                            case Qt.Key_Left:
-                                launcher.switchTab((launcher.activeTab - 1 + launcher.tabCount) % launcher.tabCount);
-                                event.accepted = true;
-                                break;
-                            case Qt.Key_Right:
-                                launcher.switchTab((launcher.activeTab + 1) % launcher.tabCount);
-                                event.accepted = true;
-                                break;
-                            case Qt.Key_Return:
-                            case Qt.Key_Enter:
-                            case Qt.Key_Down:
-                                if (launcher.hasItems) {
-                                    launcher.level = "list";
-                                    event.accepted = true;
-                                }
-                                break;
-                            }
-                        } else if (launcher.inList) {
-                            switch (event.key) {
-                            case Qt.Key_Escape:
-                                launcher.level = "view";
-                                event.accepted = true;
-                                break;
-                            case Qt.Key_Left:
-                                launcher.navigate(-1);
-                                event.accepted = true;
-                                break;
-                            case Qt.Key_Right:
-                                launcher.navigate(1);
-                                event.accepted = true;
-                                break;
-                            case Qt.Key_Down:
-                                if (launcher.activeCategory.supportedModes.indexOf("edit") >= 0)
-                                    launcher.level = "edit";
-                                event.accepted = true;
-                                break;
-                            case Qt.Key_Return:
-                            case Qt.Key_Enter:
-                                launcher.activate();
-                                event.accepted = true;
-                                break;
-                            }
-                        } else if (launcher.inEdit) {
-                            if (event.key === Qt.Key_Escape) {
-                                launcher.level = "list";
-                                event.accepted = true;
-                            }
-                        }
+                        if (launcher.inView)      event.accepted = launcher._viewKey(event.key);
+                        else if (launcher.inList) event.accepted = launcher._listKey(event.key);
+                        else if (launcher.inEdit) event.accepted = launcher._editKey(event.key);
                     }
 
                     Keys.onReleased: event => {
