@@ -94,12 +94,16 @@ SettingsPanel {
     function activateItem() {
         if (selectedItem <= 1) return;
         const outIdx = selectedItem - 2;
+        // Use the invokable rather than assigning preferredDefaultAudioSink:
+        // Qt 6.11's QML won't coerce an ObjectModel.values element (QObject*)
+        // to the PwNode*-typed property. setDefaultAudioSink takes QObject*
+        // and casts internally (mcs-qs addition).
         if (outIdx < outputNodes.length) {
-            Pipewire.preferredDefaultAudioSink = outputNodes[outIdx];
+            Pipewire.setDefaultAudioSink(outputNodes[outIdx]);
         } else {
             const idx = outIdx - outputNodes.length;
             if (idx < inputNodes.length)
-                Pipewire.preferredDefaultAudioSource = inputNodes[idx];
+                Pipewire.setDefaultAudioSource(inputNodes[idx]);
         }
     }
 
