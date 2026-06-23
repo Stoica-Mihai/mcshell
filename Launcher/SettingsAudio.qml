@@ -35,7 +35,16 @@ SettingsPanel {
     readonly property string headerIcon: Theme.iconVolHigh
     readonly property string headerTitle: "Audio"
     readonly property string panelLegend: Theme.legend(Theme.hintUpDown, Theme.hintAdjust, Theme.hintEnter + " select", Theme.hintBack)
-    readonly property string headerSubtitle: `${Pipewire.defaultSinkName || "No output"}${Theme.separator}${volume}%`
+    // Friendly description of the current default sink. defaultAudioSink.description
+    // reads undefined under Qt 6.11, so match the name string to an output node.
+    readonly property string _currentSinkLabel: {
+        const name = Pipewire.defaultSinkName;
+        for (let i = 0; i < outputNodes.length; i++)
+            if (outputNodes[i].name === name)
+                return outputNodes[i].description || outputNodes[i].name;
+        return name || "No output";
+    }
+    readonly property string headerSubtitle: `${_currentSinkLabel}${Theme.separator}${volume}%`
     readonly property color headerColor: Theme.accent
 
     // ── Selectable audio devices — non-stream audio nodes, partitioned by isSink ──
