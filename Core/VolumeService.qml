@@ -31,4 +31,56 @@ Singleton {
         if (!sink?.audio) return;
         sink.audio.muted = !sink.audio.muted;
     }
+
+    // ── Auto-switch to newly-connected output (opt-in) ──
+    // Armed a moment after the initial Pipewire sync so the startup burst of
+    // node inserts doesn't trigger a switch — only genuine hotplugs do.
+    property bool _armed: false
+    Timer {
+        id: _armTimer
+        interval: 1500
+        onTriggered: root._armed = true
+    }
+    Connections {
+        target: Pipewire
+        function onReadyChanged() { if (Pipewire.ready) _armTimer.restart(); }
+    }
+    Component.onCompleted: if (Pipewire.ready) _armTimer.restart();
+
+    Connections {
+        target: Pipewire.nodes
+        function onObjectInsertedPost(object, index) {
+            if (!root._armed || !UserSettings.audioAutoSwitch) return;
+            if (!object || !object.isSink || object.isStream || !object.audio) return;
+            if (UserSettings.audioSinkHidden(object.name)) return;
+            Pipewire.setDefaultAudioSink(object);
+            NotificationDispatcher.send("Audio",
+                "Switched to " + (object.description || object.name || "new device"),
+                Theme.notifShort);
+        }
+    }
+
+    // A hidden sink must never be the default — if it becomes one (e.g.
+    // WirePlumber's fallback after the active device disconnects), redirect
+    // to the first non-hidden output. Independent of audioAutoSwitch:
+    // hiding a sink is itself the opt-in.
+    function _redirectIfHidden() {
+        if (!root._armed) return;
+        // Read the default's name as a string — Qt 6.11 returns undefined for
+        // .name on a PwNode received from defaultAudioSink (mcs-qs property).
+        const name = Pipewire.defaultSinkName;
+        if (!name || !UserSettings.audioSinkHidden(name)) return;
+        const ns = Pipewire.nodes.values;
+        for (let i = 0; i < ns.length; i++) {
+            const n = ns[i];
+            if (n.isSink && !n.isStream && n.audio && !UserSettings.audioSinkHidden(n.name)) {
+                Pipewire.setDefaultAudioSink(n);
+                return;
+            }
+        }
+    }
+    Connections {
+        target: Pipewire
+        function onDefaultAudioSinkChanged() { root._redirectIfHidden(); }
+    }
 }

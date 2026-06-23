@@ -103,6 +103,21 @@ Singleton {
     // honors the value if the device's profile supports it; setting 192000
     // on a card that maxes at 48000 silently falls back to 48000.
     property alias audioForceRate: adapter.audioForceRate
+    // Auto-switch the default output/input to a newly-connected device.
+    property alias audioAutoSwitch: adapter.audioAutoSwitch
+    // Hidden output sinks (by node.name): never auto-selected; the shell
+    // redirects away if one becomes default. Stored as JSON string[]
+    // (same pattern as sysInfoHiddenGpusJson).
+    property alias audioHiddenSinksJson: adapter.audioHiddenSinksJson
+    readonly property var audioHiddenSinks: JSON.parse(adapter.audioHiddenSinksJson || "[]")
+    function audioSinkHidden(name) { return audioHiddenSinks.indexOf(name) >= 0; }
+    function setAudioSinkHidden(name, hidden) {
+        const cur = audioHiddenSinks.slice();
+        const i = cur.indexOf(name);
+        if (hidden && i < 0) cur.push(name);
+        else if (!hidden && i >= 0) cur.splice(i, 1);
+        adapter.audioHiddenSinksJson = JSON.stringify(cur);
+    }
 
     // ── WiFi launcher card field visibility ──
     property alias wifiCardSignal: adapter.wifiCardSignal
@@ -302,6 +317,8 @@ Singleton {
             property bool sysInfoShowDisk: false
             property string sysInfoHiddenGpusJson: "[]"
             property int audioForceRate: 0
+            property bool audioAutoSwitch: false
+            property string audioHiddenSinksJson: "[]"
             property bool wifiCardSignal: true
             property bool wifiCardSecurity: true
             property bool wifiCardStatus: true

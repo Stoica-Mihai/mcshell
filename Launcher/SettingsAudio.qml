@@ -35,7 +35,7 @@ SettingsPanel {
     readonly property string headerIcon: Theme.iconVolHigh
     readonly property string headerTitle: "Audio"
     readonly property string panelLegend: Theme.legend(Theme.hintUpDown, Theme.hintAdjust, Theme.hintEnter + " select", Theme.hintBack)
-    readonly property string headerSubtitle: `${defaultSink?.description ?? "No output"}${Theme.separator}${volume}%`
+    readonly property string headerSubtitle: `${Pipewire.defaultSinkName || "No output"}${Theme.separator}${volume}%`
     readonly property color headerColor: Theme.accent
 
     // ── Selectable audio devices — non-stream audio nodes, partitioned by isSink ──
@@ -62,10 +62,16 @@ SettingsPanel {
 
     PwObjectTracker { objects: root.defaultSink ? [root.defaultSink] : [] }
 
-    // Item 0 = volume bar, 1 = sample rate, 2..N+1 = outputs, N+2..M+1 = inputs
-    itemCount: 2 + outputNodes.length + inputNodes.length
+    // Item 0 = volume, 1 = sample rate, 2 = auto-switch, 3.. = outputs then inputs
+    itemCount: 3 + outputNodes.length + inputNodes.length
     readonly property bool volumeSelected: selectedItem === 0
     readonly property bool rateSelected: selectedItem === 1
+    readonly property bool autoSwitchSelected: selectedItem === 2
+
+    function _flipAutoSwitch() {
+        UserSettings.audioAutoSwitch = !UserSettings.audioAutoSwitch;
+        return true;
+    }
     readonly property int _rateIndex: Math.max(0, _rateValues.indexOf(UserSettings.audioForceRate))
 
     function _cycleRate(dir) {
@@ -80,6 +86,8 @@ SettingsPanel {
             return true;
         }
         if (rateSelected) { _cycleRate(-1); return true; }
+        if (autoSwitchSelected) return _flipAutoSwitch();
+        if (_outputAt(selectedItem)) return _toggleHide();
         return false;
     }
     function adjustRight() {
@@ -88,18 +96,38 @@ SettingsPanel {
             return true;
         }
         if (rateSelected) { _cycleRate(1); return true; }
+        if (autoSwitchSelected) return _flipAutoSwitch();
+        if (_outputAt(selectedItem)) return _toggleHide();
         return false;
     }
 
+    // The output node at a given nav index, or null if it's not an output row.
+    function _outputAt(item) {
+        const oi = item - 3;
+        return (oi >= 0 && oi < outputNodes.length) ? outputNodes[oi] : null;
+    }
+    function _toggleHide() {
+        const n = _outputAt(selectedItem);
+        if (!n || !n.name) return false;
+        UserSettings.setAudioSinkHidden(n.name, !UserSettings.audioSinkHidden(n.name));
+        return true;
+    }
+
     function activateItem() {
+        if (autoSwitchSelected) { _flipAutoSwitch(); return; }
         if (selectedItem <= 1) return;
-        const outIdx = selectedItem - 2;
+        const outIdx = selectedItem - 3;
         // Use the invokable rather than assigning preferredDefaultAudioSink:
         // Qt 6.11's QML won't coerce an ObjectModel.values element (QObject*)
         // to the PwNode*-typed property. setDefaultAudioSink takes QObject*
         // and casts internally (mcs-qs addition).
         if (outIdx < outputNodes.length) {
-            Pipewire.setDefaultAudioSink(outputNodes[outIdx]);
+            const n = outputNodes[outIdx];
+            // Explicitly choosing a hidden sink unhides it (intent wins),
+            // else the redirect-away watcher would bounce it immediately.
+            if (n && n.name && UserSettings.audioSinkHidden(n.name))
+                UserSettings.setAudioSinkHidden(n.name, false);
+            Pipewire.setDefaultAudioSink(n);
         } else {
             const idx = outIdx - outputNodes.length;
             if (idx < inputNodes.length)
@@ -141,6 +169,22 @@ SettingsPanel {
         }
     }
 
+    // Auto-switch to a newly-connected output device
+    SelectionRow {
+        selected: root.active && root.autoSwitchSelected
+        label: "Auto-switch to new device"
+        isCurrent: UserSettings.audioAutoSwitch
+
+        Item {
+            Layout.preferredWidth: 120
+            Layout.preferredHeight: parent.height
+            SkewToggle {
+                anchors.centerIn: parent
+                state: UserSettings.audioAutoSwitch ? 1 : 0
+            }
+        }
+    }
+
     Separator { topMargin: 4 }
 
     // Output section
@@ -150,11 +194,26 @@ SettingsPanel {
         id: outputRepeater
         model: root.outputNodes
         delegate: SelectionRow {
+            id: outRow
             required property var modelData
             required property int index
-            selected: root.active && root.selectedItem === (index + 2)
+            readonly property bool hidden: UserSettings.audioSinkHidden(modelData.name)
+            selected: root.active && root.selectedItem === (index + 3)
+            opacity: hidden ? Theme.opacityDim : 1.0
             label: modelData.description || modelData.name || "Unknown"
-            isCurrent: modelData === root.defaultSink
+            isCurrent: modelData.name === Pipewire.defaultSinkName
+
+            // ←/→ toggles Hidden/Shown; hidden sinks are skipped by auto-switch
+            // and the default redirects away from them.
+            Item {
+                Layout.preferredWidth: 90
+                Layout.preferredHeight: parent.height
+                SkewToggle {
+                    anchors.centerIn: parent
+                    state: outRow.hidden ? 0 : 1
+                    labels: ["Hidden", "Shown"]
+                }
+            }
         }
     }
 
@@ -169,9 +228,9 @@ SettingsPanel {
         delegate: SelectionRow {
             required property var modelData
             required property int index
-            selected: root.active && root.selectedItem === (2 + root.outputNodes.length + index)
+            selected: root.active && root.selectedItem === (3 + root.outputNodes.length + index)
             label: modelData.description || modelData.name || "Unknown"
-            isCurrent: modelData === root.defaultSource
+            isCurrent: modelData.name === Pipewire.defaultSourceName
         }
     }
 }
