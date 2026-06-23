@@ -176,10 +176,11 @@ SettingsPanel {
         isCurrent: UserSettings.audioAutoSwitch
 
         Item {
-            Layout.preferredWidth: 120
+            Layout.preferredWidth: 90
             Layout.preferredHeight: parent.height
             SkewToggle {
-                anchors.centerIn: parent
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
                 state: UserSettings.audioAutoSwitch ? 1 : 0
             }
         }
@@ -199,7 +200,6 @@ SettingsPanel {
             required property int index
             readonly property bool hidden: UserSettings.audioSinkHidden(modelData.name)
             selected: root.active && root.selectedItem === (index + 3)
-            opacity: hidden ? Theme.opacityDim : 1.0
             label: modelData.description || modelData.name || "Unknown"
             isCurrent: modelData.name === Pipewire.defaultSinkName
 
@@ -209,7 +209,8 @@ SettingsPanel {
                 Layout.preferredWidth: 90
                 Layout.preferredHeight: parent.height
                 SkewToggle {
-                    anchors.centerIn: parent
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
                     state: outRow.hidden ? 0 : 1
                     labels: ["Hidden", "Shown"]
                 }
