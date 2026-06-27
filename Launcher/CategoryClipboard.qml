@@ -71,6 +71,12 @@ LauncherCategory {
                 visible: !parent.isCurrent && (modelData.isImage ?? false)
                 source: modelData.imageUrl ?? ""
                 fillMode: Image.PreserveAspectFit
+                // Pin sourceSize to the stable carousel height. OptImage's
+                // default binds it to the card's width/height, which animate
+                // on scroll/expand — re-decoding every frame and causing the
+                // thumbnail to flicker / stay blank until the width settles.
+                sourceSize.width: 0
+                sourceSize.height: clipStrip.carouselHeight
             }
 
             // Expanded content
@@ -97,9 +103,13 @@ LauncherCategory {
                     visible: modelData.isImage ?? false
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    source: modelData.imageUrl ?? ""
+                    // Only the current card holds the full decode; pin
+                    // sourceSize so the expand animation doesn't re-decode.
+                    source: clipStrip.isCurrent ? (modelData.imageUrl ?? "") : ""
+                    sourceSize.width: 0
+                    sourceSize.height: clipStrip.carouselHeight
                     fillMode: Image.PreserveAspectFit
-                    }
+                }
 
                 // Text content (non-image)
                 Text {
